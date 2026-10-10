@@ -169,6 +169,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     public override void QStart(QuantumGame game)
     {
         UpdateDifficultyLabel(game);
+        PingFeedWidget.Ensure(this);
     }
 
     // Read off RuntimeConfig rather than the Global.Difficulty snapshot - the snapshot stays all-zero
@@ -331,7 +332,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                     weaponCardData[j] = data;
                 }
 
-                choiceWindows[i].RefreshWeaponChoice(title, frame.Global->LevelUpTimeRemaining.AsFloat, weaponCardData, confirmedIndex);
+                choiceWindows[i].RefreshWeaponChoice(title, frame.Global->LevelUpTimeRemaining.AsFloat, weaponCardData, confirmedIndex,
+                    currentWeapon: BuildCurrentWeaponCardData(frame, slots[i].EntityRef, levelUpConfig));
             }
             else
             {
@@ -530,7 +532,13 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 : default;
         }
 
-        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: BuildCoinWalletSubtitle(frame, entity), allowCancel: true, allowReroll: false);
+        // The perks on offer are added to the weapon the player is holding, so show it for reference.
+        LevelUpConfig levelUpConfig = frame.RuntimeConfig.LevelUpConfig.IsValid
+            ? frame.FindAsset(frame.RuntimeConfig.LevelUpConfig)
+            : null;
+
+        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: BuildCoinWalletSubtitle(frame, entity), allowCancel: true, allowReroll: false,
+            currentWeapon: BuildCurrentWeaponCardData(frame, entity, levelUpConfig));
     }
 
     // Store food/utility card - mirrors BuildSacrificeCardData's own shape (reads the offer asset's
@@ -632,13 +640,12 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             Icon = ResolveAccessoryIcon(frame, entity),
             DisplayName = isReplacement ? $"Replace {accessoryName}" : $"Repair {accessoryName}",
             Description = isReplacement
-                ? $"Your {accessoryName} is broken. A replacement restores it to full durability."
-                : $"Restores your {accessoryName} to full durability. It blocks one hit per point.",
+                ? $"Your {accessoryName} is broken. A replacement puts it back on with 1 durability."
+                : $"Restores 1 durability to your {accessoryName}. It blocks one hit per point.",
             KindText = "FOOD & UTILITY",
             TopLabelOverride = isReplacement ? "REPLACE" : "REPAIR",
-            // Repair ALWAYS goes straight to full - there are no per-point purchases (see
-            // docs/accessory-guard.md), so this preview can always name MaxDurability as the result.
-            ValuePreview = $"DURABILITY {guard->CurrentDurability}/{guard->MaxDurability} -> {guard->MaxDurability}/{guard->MaxDurability}",
+            // Each purchase restores exactly one point (see AccessoryServiceUtility.TryPurchaseService).
+            ValuePreview = $"DURABILITY {guard->CurrentDurability}/{guard->MaxDurability} -> {guard->CurrentDurability + 1}/{guard->MaxDurability}",
             ButtonLabel = "BUY",
             IconScale = 0.75f,
             Purchase = new PurchasableCardState
@@ -647,9 +654,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 Price = price.AsFloat,
                 Currency = CurrencyType.Coin,
                 CanAfford = coins >= price,
-                // Never "sold out" - a completed service restores to full, which resolves the
-                // service to None and removes this card entirely on the very next refresh, so there
-                // is no already-bought state for it to sit in.
+                // Never "sold out" - the card stays up for the next point until the accessory is
+                // full, at which point the service resolves to None and the card disappears.
                 IsSoldOut = false
             }
         };
@@ -737,7 +743,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             HasOption = true,
             Icon = data.Icon,
             DisplayName = data.DisplayName,
-            Description = data.GetDescription(),
+            // The card has its own title field, so the effect alone (GetDescription() would repeat the title).
+            Description = data.GetFormattedDescription(),
             RarityIndex = (int)data.Rarity,
             KindText = "Weapon Perk",
             ButtonLabel = "BUY",
@@ -931,7 +938,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         int currentStacks = 0;
         int maxStacks = 0;
         bool isRanked = false;
-        string description = data.GetDescription();
+        // A weapon perk card has its own title field: effect only (its GetDescription() prepends the title).
+        string description = data is WeaponPerkData perkData ? perkData.GetFormattedDescription() : data.GetDescription();
 
         // Hero Ascension lines (Passive Upgrade or Skill Upgrade) with MaxRank > 1 - generic over
         // both kinds via IRankedUpgrade, so a future ranked ascension for any hero/pool gets the same
@@ -1020,11 +1028,15 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             perks[i] = new WeaponCardWidget.PerkRowData
             {
                 Icon = perk.Icon,
-                Title = perk.DisplayName,
+                // One line: "<b>Title</b> - effect" (the row hides its separate title when empty).
+                Title = string.Empty,
                 Description = perk.GetDescription(),
                 RarityIndex = (int)perk.Rarity
             };
         }
+
+        // Highest rarity first (stable, so perks of the same rarity keep the order they were rolled in).
+        perks = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OrderByDescending(perks, row => row.RarityIndex));
 
         // DisplayName isn't authored on most WeaponDataAsset instances yet (see docs/weapon-perks.md) -
         // fall back to the asset's own file name, beautified (e.g. "AssaultRifleWeaponData" -> "Assault Rifle").
@@ -1051,6 +1063,34 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             WeightIndex = (int)weaponData.Weight,
             Perks = perks
         };
+    }
+
+    // The weapon the player is holding right now, shown read-only beside a Choose-Weapon screen's
+    // offers so they can be compared. Same stat basis as the offers (asset base stats + Level's
+    // damage bonus, perks listed as rows rather than folded in) so the numbers line up like-for-like.
+    private static unsafe WeaponCardWidget.CardData BuildCurrentWeaponCardData(Frame frame, EntityRef entity, LevelUpConfig levelUpConfig)
+    {
+        if (frame.Unsafe.TryGetPointer<Weapon>(entity, out var weapon) == false || weapon->WeaponData.IsValid == false)
+            return default;
+
+        int perkCount = 0;
+
+        for (int i = 0; i < weapon->Perks.Length; i++)
+        {
+            if (weapon->Perks[i].IsValid)
+                perkCount++;
+        }
+
+        WeaponCardWidget.CardData data = BuildWeaponCardData(frame, weapon->WeaponData, weapon->Perks, perkCount, weapon->Level);
+
+        if (weapon->Level > 0 && levelUpConfig != null)
+        {
+            FP multiplier = WeaponSystem.ResolveLevelDamageMultiplier(weapon->Level, levelUpConfig.WeaponLevelDamageBonusPerLevel);
+            data.Damage *= multiplier.AsFloat;
+        }
+
+        data.ReadOnly = true;
+        return data;
     }
 
     // SkillUpgrade is the one kind that isn't self-descriptive - it needs SkillUpgradeSlot to say

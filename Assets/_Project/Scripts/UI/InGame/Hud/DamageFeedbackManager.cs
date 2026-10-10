@@ -4,6 +4,7 @@ using Quantum;
 using QuantumUser.View;
 using QuantumUser.View.Util;
 using UnityEngine;
+using Unity.Profiling;
 using UnityEngine.Pool;
 
 // Spawns one floating number per EventEntityDamaged/EventEntityHealed the local player was part of -
@@ -371,14 +372,19 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         return true;
     }
 
+    private static readonly ProfilerMarker SpawnMarker = new ProfilerMarker("DamageNumber.Spawn");
+
     private void Spawn(DamageNumberKind kind, float damage, Vector3 worldPosition)
     {
-        DamageNumberStyle style = FindStyle(kind);
-        if (style == null)
-            return;
+        using (SpawnMarker.Auto())
+        {
+            DamageNumberStyle style = FindStyle(kind);
+            if (style == null)
+                return;
 
-        DamageNumberUiWidget widget = _pool.Get();
-        widget.Play(style, damage, worldPosition, ResolveBurstStaggerDelay(), _pool.Release);
+            DamageNumberUiWidget widget = _pool.Get();
+            widget.Play(style, damage, worldPosition, ResolveBurstStaggerDelay(), _pool.Release);
+        }
     }
 
     // Numbers landing in the same Unity frame get an increasing spawn delay instead of all

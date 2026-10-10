@@ -217,6 +217,21 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private readonly HashSet<EntityRef> _seenClearEnemiesThisFrame = new();
     private List<EntityRef> _staleClearEnemyBuffer;
 
+    // Ping radar (see docs/ping.md) - one pulsing ring per player who pinged, replaced by their next
+    // ping and removed after PingLifetime. Built from code (no authored prefab) and keyed by player.
+    private const float PingLifetime = 8f;
+    private sealed class PingRadar
+    {
+        public RectTransform Rect;
+        public RectTransform Ring;
+        public Image RingImage;
+        public Image DotImage;
+        public Vector2 WorldPos;
+        public float StartTime;
+    }
+    private readonly Dictionary<int, PingRadar> _pingRadars = new();
+    private List<int> _expiredPingBuffer;
+
     // One overlay element (chunk-type icon or marker) under mapRect.
     private sealed class MapOverlay
     {
@@ -258,19 +273,6 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
                 UnityEngine.Object.Destroy(Rect.gameObject);
         }
     }
-
-    // Named Input Manager button (ProjectSettings/InputManager.asset) for toggling from a gamepad -
-    // unbound by default (Select opens HeroInfoPopupWidget's OpenHeroInfo; R2 below still toggles
-    // the map). Assign a button in Project Settings > Input Manager, no code change.
-    private static readonly string OpenMiniMapToggle = Quantum.GamepadInputNames.Get("OpenMiniMapToggle");
-
-    // Named Input Manager Joystick Axis (default: 12th axis, any joystick) - R2 on most Android
-    // Bluetooth pads (e.g. MOGA Pro 2; L2 is the 13th) is an analog trigger axis, not a button, so
-    // it can't live on OpenMiniMapToggle. Rising edge past TriggerPressThreshold, so holding the
-    // trigger toggles once rather than every frame.
-    private static readonly string OpenMiniMapTrigger = Quantum.GamepadInputNames.Get("OpenMiniMapTrigger");
-    private const float TriggerPressThreshold = 0.5f;
-    private bool _triggerHeld;
 
     // Expand state - _expandTarget is what the player asked for. Each toggle restarts a tween
     // (_tweenP 0 -> 1) from wherever _expandAmount currently is (_tweenStart) toward the target;
@@ -345,6 +347,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
     public override void QStart(QuantumGame game)
     {
+        QuantumEvent.Subscribe<EventPingPlaced>(this, OnPingPlaced);
+
         _worldToTexelScale = 1f / worldUnitsPerTexel;
         _textureResolution = Mathf.Max(Mathf.CeilToInt(worldExtent * 2f * _worldToTexelScale), 1);
         _effectiveWorldCenter = worldCenter;
@@ -416,6 +420,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         ApplyOverlayScale();
         CenterOnLocalPlayer(frame);
         PinActiveIconsToViewportEdge();
+        UpdatePingRadars();
     }
 
     // Shifts the whole content layer (mapRect - texture, icons, and markers all live under it) so
@@ -493,11 +498,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // HeroInfoPopupWidget.QUpdate. Fully-qualified: Quantum.Input also has this name.
     private void PollToggleInput()
     {
-        bool triggerDown = UnityEngine.Input.GetAxisRaw(OpenMiniMapTrigger) > TriggerPressThreshold;
-        bool triggerPressed = triggerDown && _triggerHeld == false;
-        _triggerHeld = triggerDown;
-
-        if (triggerPressed || UnityEngine.Input.GetButtonDown(OpenMiniMapToggle) || UnityEngine.Input.GetKeyDown(toggleKey))
+        // R2 (GamepadControls.ToggleMapPressed) is a rising edge past the trigger's press point, so
+        // holding it toggles once rather than every frame.
+        if (Quantum.GamepadControls.ToggleMapPressed || UnityEngine.Input.GetKeyDown(toggleKey))
             ToggleExpanded();
     }
 
@@ -1713,6 +1716,126 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         }
 
         _seenElitesThisFrame.Clear();
+    }
+
+    private void OnPingPlaced(EventPingPlaced e)
+    {
+        if (mapRect == null)
+            return;
+
+        int key = (int)e.Player;
+        if (_pingRadars.TryGetValue(key, out PingRadar old))
+        {
+            if (old.Rect != null)
+                Destroy(old.Rect.gameObject);
+            _pingRadars.Remove(key);
+        }
+
+        Color color = PingPresentation.GetPlayerColor(e.Player);
+
+        var root = new GameObject("PingRadar", typeof(RectTransform));
+        var rootRect = (RectTransform)root.transform;
+        rootRect.SetParent(mapRect, false);
+        rootRect.sizeDelta = new Vector2(24f, 24f);
+
+        var ringGo = new GameObject("Ring", typeof(RectTransform), typeof(Image));
+        var ringRect = (RectTransform)ringGo.transform;
+        ringRect.SetParent(rootRect, false);
+        ringRect.sizeDelta = new Vector2(24f, 24f);
+        var ringImage = ringGo.GetComponent<Image>();
+        ringImage.sprite = PingPresentation.GetSprite(ring: true);
+        ringImage.color = color;
+        ringImage.raycastTarget = false;
+
+        var dotGo = new GameObject("Dot", typeof(RectTransform), typeof(Image));
+        var dotRect = (RectTransform)dotGo.transform;
+        dotRect.SetParent(rootRect, false);
+        dotRect.sizeDelta = new Vector2(8f, 8f);
+        var dotImage = dotGo.GetComponent<Image>();
+        dotImage.sprite = PingPresentation.GetSprite(ring: false);
+        dotImage.color = color;
+        dotImage.raycastTarget = false;
+
+        _pingRadars[key] = new PingRadar
+        {
+            Rect = rootRect,
+            Ring = ringRect,
+            RingImage = ringImage,
+            DotImage = dotImage,
+            WorldPos = new Vector2(e.Position.X.AsFloat, e.Position.Z.AsFloat),
+            StartTime = Time.unscaledTime
+        };
+    }
+
+    // Pulses each ring outward once a second and fades the whole radar over its last 1.5s. Overlays
+    // under mapRect are counter-scaled against zoom (see ApplyOverlayScale) so it keeps its size on
+    // both the corner view and the expanded whole-level view - same surface, no separate layer.
+    private void UpdatePingRadars()
+    {
+        if (_pingRadars.Count == 0)
+            return;
+
+        float scale = Mathf.Lerp(1f, expandedOverlayScale, _expandAmount01) * _collapsedMapScale / _mapScale;
+        var localScale = new Vector3(scale, scale, 1f);
+
+        foreach (var pair in _pingRadars)
+        {
+            PingRadar radar = pair.Value;
+            float age = Time.unscaledTime - radar.StartTime;
+
+            if (age >= PingLifetime || radar.Rect == null)
+            {
+                (_expiredPingBuffer ??= new List<int>()).Add(pair.Key);
+                continue;
+            }
+
+            radar.Rect.localScale = localScale;
+
+            // Off the masked viewport -> pinned to its edge along the center->ping direction, same
+            // as a usable POI icon (see PinActiveIconsToViewportEdge), so the team still reads which
+            // way the ping is. Runs after CenterOnLocalPlayer so mapRect has already panned.
+            Vector2 natural = WorldToMapPosition(radar.WorldPos);
+            bool pinned = false;
+            var viewport = mapRect.parent as RectTransform;
+            if (pinActivePoisToEdge && viewport != null && viewport.rect.width > 0f && viewport.rect.height > 0f)
+            {
+                Vector2 inViewport = viewport.InverseTransformPoint(mapRect.TransformPoint(natural));
+                Vector2 half = Vector2.Scale(radar.Rect.rect.size, localScale) * (0.5f * _mapScale);
+                Vector2 clamped = ClampInsideViewport(inViewport, viewport.rect, Mathf.Max(half.x, half.y) + edgePinPadding);
+                Vector2 placed = mapRect.InverseTransformPoint(viewport.TransformPoint(clamped));
+                if (float.IsNaN(placed.x) == false && float.IsNaN(placed.y) == false)
+                {
+                    pinned = clamped != inViewport;
+                    natural = placed;
+                }
+            }
+
+            radar.Rect.anchoredPosition = natural;
+
+            float pulse = age % 1f;
+            radar.Ring.localScale = pinned ? Vector3.one : Vector3.one * Mathf.Lerp(0.5f, 1.8f, pulse);
+
+            float fade = Mathf.Clamp01((PingLifetime - age) / 1.5f);
+            Color ring = radar.RingImage.color;
+            ring.a = pinned ? fade * 0.8f : (1f - pulse) * fade;
+            radar.RingImage.color = ring;
+
+            Color dot = radar.DotImage.color;
+            dot.a = fade;
+            radar.DotImage.color = dot;
+        }
+
+        if (_expiredPingBuffer != null)
+        {
+            foreach (int key in _expiredPingBuffer)
+            {
+                if (_pingRadars.TryGetValue(key, out PingRadar radar) && radar.Rect != null)
+                    Destroy(radar.Rect.gameObject);
+                _pingRadars.Remove(key);
+            }
+
+            _expiredPingBuffer.Clear();
+        }
     }
 
     // One Elite/Special/Clear-Enemy marker - shows whatever sprite the template's own Image is

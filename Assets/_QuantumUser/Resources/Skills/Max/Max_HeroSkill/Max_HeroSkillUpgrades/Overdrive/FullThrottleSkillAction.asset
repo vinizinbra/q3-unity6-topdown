@@ -16,19 +16,21 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/FullThrottleSkillAction
     Guid:
       Value: 503198828803139370
-  Icon: {fileID: 120216522, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
+  Icon: {fileID: 21300000, guid: cff4fd4c2a5e415f9a9043f6f238da01, type: 3}
   DisplayName: Full Throttle
   RankDescriptions:
-  - "At maximum Rage, gain <color=#FD3971>+20%</color> Weapon Damage."
-  - "At maximum Rage, gain <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color> Reload Speed."
-  - "At maximum Rage, gain <color=#FD3971>+40%</color> Weapon Damage and reloads are instant."
+  - At maximum Rage, gain <color=#FD3971>+20%</color> Weapon Damage.
+  - At maximum Rage, gain <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color>
+    Reload Speed.
+  - At maximum Rage, gain <color=#FD3971>+40%</color> Weapon Damage and reloads are
+    instant.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: "At max Rage, gain bonus Weapon Damage and faster reloads."
+  Description: At max Rage, gain bonus Weapon Damage and faster reloads.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

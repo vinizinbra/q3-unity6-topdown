@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/PressureCooker
     Guid:
       Value: 533476228992090200
-  Icon: {fileID: 1556853703, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: -3285156346186202997, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Pressure Cooker
   Rarity: 2
   Scope: 0

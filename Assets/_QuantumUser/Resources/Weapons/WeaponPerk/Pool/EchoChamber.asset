@@ -16,9 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/EchoChamber
     Guid:
       Value: 403673336391302759
-  Icon: {fileID: 152909490, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 69a1e163665d4bd3abb6d2b98d2ad46c, type: 3}
   DisplayName: Echo Chamber
   Rarity: 2
-  Description: 'First <color=#FD3971>3</color> shots of every magazine repeat after <color=#FD3971>{0:0.##}s</color>'
+  Description: 'First 3 shots of each mag repeat'
   Delay:
     RawValue: 16384

@@ -39,6 +39,10 @@ MonoBehaviour:
       Value: 1432619171735973079
   Duration:
     RawValue: 655360
+  Scale:
+    RawValue: 65536
+  DamageMultiplier:
+    RawValue: 0
   TickInterval:
     RawValue: 65536
   HealTargetMask: 1
@@ -76,7 +80,7 @@ MonoBehaviour:
   Speed:
     RawValue: 655360
   LaunchVelocityY:
-    RawValue: 327680
+    RawValue: 65536
   Gravity:
     RawValue: 2621440
 --- !u!114 &-1040125361856726580

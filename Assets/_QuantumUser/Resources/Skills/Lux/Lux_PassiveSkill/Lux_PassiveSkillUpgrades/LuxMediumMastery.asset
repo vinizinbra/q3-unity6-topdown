@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/LuxMediumMastery
     Guid:
       Value: 498921966915144410
-  Icon: {fileID: 0}
+  Icon: {fileID: 21300000, guid: 774dc4d192b14a09b845e0a8ce8e6e26, type: 3}
   DisplayName: Medium Weapon Mastery
   Description: Lux's Medium weapons hit harder, and at rank 3, paint targets for
     her Sentries to finish.

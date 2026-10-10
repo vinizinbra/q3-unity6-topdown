@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Rift Events
   kindLabel: EXPLORATION UPGRADE
   description: Unlocks events that can appear during runs.
-  icon: {fileID: -4639002092766707009, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
-  accentColor: {r: 0.9, g: 0.9, b: 0.95, a: 1}
+  icon: {fileID: 9199995792764301889, guid: 7bf46803273b24220ba60766158daf78, type: 3}
+  accentColor: {r: 0.40392157, g: 0.05490196, b: 0.95686275, a: 1}
   category: 1
   group: 2
   maxLevel: 3

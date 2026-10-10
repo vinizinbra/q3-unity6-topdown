@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/FieldModifications
     Guid:
       Value: 369611404177242297
-  Icon: {fileID: 65697102, guid: 355e00907e214470bac0029f70064510, type: 3}
+  Icon: {fileID: 21300000, guid: 7864347182f34382b77ca9ca0dca4e39, type: 3}
   DisplayName: Field Modifications
   Description: "Scrap collected while a Sentry is deployed upgrades that Sentry, for as long as it lives."
   <MaxRank>k__BackingField: 3

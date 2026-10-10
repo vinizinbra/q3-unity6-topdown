@@ -49,6 +49,16 @@ public class ChooseWindow : UiWindow
     [SerializeField] private WeaponCardWidget weaponCardPrefab;
     [SerializeField] private int weaponCardCount = 3;
 
+    // Read-only comparison card showing the weapon the player holds right now, visible only on a
+    // Choose-Weapon screen. Optional - when left empty, Awake clones weaponCardPrefab and parks the
+    // clone just left of the offer row (outside its layout group); assign your own card (a
+    // WeaponCardWidget placed wherever you like) to control the position.
+    [Header("Current Weapon (comparison)")]
+    [SerializeField] private WeaponCardWidget currentWeaponCard;
+    [SerializeField] private string currentWeaponLabel = "CURRENT WEAPON";
+    [SerializeField, Tooltip("Gap between the auto-created current-weapon card and the offer row. Only used when currentWeaponCard is not assigned.")]
+    private float currentWeaponCardGap = 40f;
+
     [SerializeField] private TMP_Text countdownText;
 
     // "Level Up!" for a plain level-up, the rolled category's display name (e.g. "Weapon Perk")
@@ -218,6 +228,12 @@ public class ChooseWindow : UiWindow
             weaponCards[i].gameObject.SetActive(false);
         }
 
+        if (currentWeaponCard == null)
+            currentWeaponCard = CreateCurrentWeaponCard();
+
+        if (currentWeaponCard != null)
+            currentWeaponCard.gameObject.SetActive(false);
+
         weaponCardPrefab.gameObject.SetActive(false);
 
         for (int i = 0; i < weaponCards.Length; i++)
@@ -239,6 +255,33 @@ public class ChooseWindow : UiWindow
             _secondaryButtonText = secondaryButton.GetComponentInChildren<TMP_Text>(true);
             secondaryButton.onClick.AddListener(() => onSecondaryButtonClicked?.Invoke());
         }
+    }
+
+    // Must run before weaponCardPrefab is disabled below it in Awake - Instantiate copies the
+    // template's active state, and the clone is switched on/off by RefreshWeaponChoice anyway.
+    private WeaponCardWidget CreateCurrentWeaponCard()
+    {
+        WeaponCardWidget card = Instantiate(weaponCardPrefab, weaponCardPrefab.transform.parent);
+        card.name = "CurrentWeaponCard";
+
+        // Not a ShakeGrowImpact-driven offer card - drop its intro so it just appears.
+        var intro = card.GetComponent<ShakeGrowImpactAnimation>();
+        if (intro != null)
+            Destroy(intro);
+
+        var layoutElement = card.GetComponent<LayoutElement>() ?? card.gameObject.AddComponent<LayoutElement>();
+        layoutElement.ignoreLayout = true;
+
+        var rect = (RectTransform)card.transform;
+
+        // Anchored to the offer row's left edge, pivoted on its own right edge so it sits outside it.
+        rect.anchorMin = new Vector2(0f, 0.5f);
+        rect.anchorMax = new Vector2(0f, 0.5f);
+        rect.pivot = new Vector2(1f, 0.5f);
+        rect.anchoredPosition = new Vector2(-currentWeaponCardGap, 0f);
+        rect.localScale = Vector3.one;
+
+        return card;
     }
 
     // Fires once per screen-open (WindowManager.ShowWindow<ChooseWindow>() for Level-Up, or a
@@ -264,6 +307,33 @@ public class ChooseWindow : UiWindow
     // SelectFirstInteractableOnce (driven by Refresh, once real card data is live) already handles
     // it more specifically.
     protected override void AutoSelectFirstInteractable() { }
+
+    private void Update()
+    {
+        // A popup over this screen (settings) owns input - its Cancel closes it, not this screen.
+        if (EventSystem.current == null || (InMatchPopupManager.instance != null && InMatchPopupManager.instance.currentPopup != null))
+            return;
+
+        // Gamepad Cancel (B) takes the screen's way out - Keep Current / Cancel / Close - when it offers one.
+        if (Quantum.GamepadControls.CancelPressed && secondaryButton != null
+            && secondaryButton.gameObject.activeInHierarchy && secondaryButton.interactable)
+        {
+            secondaryButton.onClick.Invoke();
+            return;
+        }
+
+        // Focus can be lost (a mouse click that leaves nothing selected, a card that vanished): the next
+        // stick or Submit input puts it back on the first pickable card instead of doing nothing.
+        // Waits for the intro so it never grabs focus from the delayed first selection.
+        GameObject selected = EventSystem.current.currentSelectedGameObject;
+        bool lost = selected == null || !selected.activeInHierarchy;
+        if (lost && _hasAutoSelectedThisShow && (Quantum.GamepadControls.NavigateActive || Quantum.GamepadControls.SubmitPressed))
+        {
+            Selectable target = ResolveDefaultTarget();
+            if (target != null && !UiSelectionUtility.IsAnimatingAbove(target.transform))
+                EventSystem.current.SetSelectedGameObject(target.gameObject);
+        }
+    }
 
     private void ResetIntroParticles()
     {
@@ -386,9 +456,10 @@ public class ChooseWindow : UiWindow
     // changes at UpdateUpgradeScreen) - Cursed Rift passes false (RefreshCursedRiftWindow), since
     // redrawing its one rolled sacrifice+mutation pair makes no sense and
     // RerollLevelUpOptionsCommand has no meaning outside a real LevelUpChoice anyway.
-    public void Refresh(string title, float timeRemaining, UpgradeCardWidget.CardData[] cardData, int? confirmedIndex, string subtitle = null, bool allowCancel = false, bool allowReroll = true)
+    public void Refresh(string title, float timeRemaining, UpgradeCardWidget.CardData[] cardData, int? confirmedIndex, string subtitle = null, bool allowCancel = false, bool allowReroll = true, WeaponCardWidget.CardData currentWeapon = default)
     {
         SetCardFamilyActive(showCards: true, showWeaponCards: false);
+        RefreshCurrentWeaponCard(currentWeapon);
         RefreshTitle(title);
         RefreshSubtitle(subtitle);
         RefreshCountdown(timeRemaining);
@@ -419,9 +490,10 @@ public class ChooseWindow : UiWindow
     // CURRENT") - all 3 weaponCards stay real rolled weapons (see
     // LevelUpUtility.RollChooseWeaponOptionsFor), the button is the sole way to decline them.
     // Reroll always shows too - only Cursed Rift's own Refresh calls ever hide it.
-    public void RefreshWeaponChoice(string title, float timeRemaining, WeaponCardWidget.CardData[] cardData, int? confirmedIndex, string subtitle = null)
+    public void RefreshWeaponChoice(string title, float timeRemaining, WeaponCardWidget.CardData[] cardData, int? confirmedIndex, string subtitle = null, WeaponCardWidget.CardData currentWeapon = default)
     {
         SetCardFamilyActive(showCards: false, showWeaponCards: true);
+        RefreshCurrentWeaponCard(currentWeapon);
         RefreshTitle(title);
         RefreshSubtitle(subtitle);
         RefreshCountdown(timeRemaining);
@@ -440,6 +512,22 @@ public class ChooseWindow : UiWindow
             secondaryButton.interactable = interactable;
 
         SelectFirstInteractableOnce();
+    }
+
+    private void RefreshCurrentWeaponCard(WeaponCardWidget.CardData data)
+    {
+        if (currentWeaponCard == null)
+            return;
+
+        currentWeaponCard.gameObject.SetActive(data.HasOption);
+
+        if (data.HasOption == false)
+            return;
+
+        if (string.IsNullOrEmpty(currentWeaponLabel) == false)
+            data.WeaponName = $"<size=60%>{currentWeaponLabel}</size>\n{data.WeaponName}";
+
+        currentWeaponCard.Setup(data, interactable: false);
     }
 
     private void SetSecondaryButtonActive(bool active, string label)
@@ -511,6 +599,10 @@ public class ChooseWindow : UiWindow
 
         for (int i = 0; i < weaponCards.Length; i++)
             weaponCards[i].gameObject.SetActive(showWeaponCards);
+
+        // Only RefreshWeaponChoice turns this back on - every other screen (Level-Up, Store, ...) hides it.
+        if (currentWeaponCard != null)
+            currentWeaponCard.gameObject.SetActive(false);
     }
 
     // Store's own screen - food/utility offers (cards[]) AND weapon offers (weaponCards[]) shown

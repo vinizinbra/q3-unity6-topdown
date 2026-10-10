@@ -17,7 +17,7 @@ namespace Quantum
     // catch-up tween and the delayed release below are both targeted on the particle instance itself
     // (not on this component/transform) for the same reason: PrimeTween auto-kills a tween when its
     // target is destroyed, and this component dies together with the projectile.
-    public class ProjectileElementalFxView : CustomQuantumEntityViewComponent
+    public class ProjectileElementalFxView : CustomQuantumEntityViewComponent, IProjectilePoolPart
     {
         [Header("Per-element particle (Neutral = none)")]
         [SerializeField, Tooltip("Looping prefab pulled from EffectsManager's pool - lifetime is owned by this component via GetHeldInstance/ReleaseHeldInstance, not EffectsManager.PlayEffect's fire-and-forget shape. Leave a slot empty to skip that element entirely.")]
@@ -130,6 +130,24 @@ namespace Quantum
                     if (EffectsManager.Instance != null)
                         EffectsManager.Instance.ReleaseHeldInstance(prefab, instance);
                 }, useUnscaledTime: true));
+        }
+
+        // The view goes back to ProjectileViewUpdater's pool after this shot (see ProjectileView): all
+        // of the above is per-shot state and would otherwise carry into the next one - most visibly
+        // _resolved, which would make a reused view never pick its new projectile's element.
+        // _ownEntityRef is cleared too, so a late destroy event for the old entity can't match.
+        public void ResetForPool()
+        {
+            // No destroy event ever arrived for this shot (a disconnect/resync tears views down
+            // without one): give the held particle back instead of leaking it from EffectsManager's pool.
+            if (_instance != null && EffectsManager.Instance != null)
+                EffectsManager.Instance.ReleaseHeldInstance(_prefab, _instance);
+
+            _instance = null;
+            _prefab = null;
+            _resolved = false;
+            _following = false;
+            _ownEntityRef = default;
         }
 
         private ParticleSystem ResolveParticlePrefab(ElementType element)

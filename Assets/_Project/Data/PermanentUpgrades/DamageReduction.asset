@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Damage Reduction
   kindLabel: DEFENSE UPGRADE
   description: Reduces damage taken.
-  icon: {fileID: 345698372, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
-  accentColor: {r: 0.45, g: 0.6, b: 1, a: 1}
+  icon: {fileID: -5022803310290238322, guid: 540e2ba2a8ab94c92bde01a964437bf7, type: 3}
+  accentColor: {r: 0.011764706, g: 0.7529412, b: 0.99215686, a: 1}
   category: 0
   group: 0
   maxLevel: 5

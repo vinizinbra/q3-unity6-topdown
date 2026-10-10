@@ -16,10 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/CryoRounds
     Guid:
       Value: 345357713320602159
-  Icon: {fileID: -1669506346, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: cb294511ea0645bfb8b1c6152019f0fd, type: 3}
   DisplayName: Cryo Rounds
-  Rarity: 1
-  Description: Adds ice element
+  Rarity: 2
+  Description: 'Applies Slow on Hit'
   Element: 2
   ProcChance:
     RawValue: 65536

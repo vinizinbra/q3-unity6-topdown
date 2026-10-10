@@ -4,6 +4,7 @@ namespace QuantumUser.View.Managers
     using System.Collections.Generic;
     using Quantum;
     using UnityEngine;
+    using Unity.Profiling;
     using UnityEngine.Pool;
 
     // Plays one-shot particle effects (e.g. projectile destroy VFX) from a pool keyed by prefab
@@ -1474,25 +1475,30 @@ namespace QuantumUser.View.Managers
                 ReleaseHeldInstance(anticipationIconEffectPrefab, instance);
         }
 
+        private static readonly ProfilerMarker PooledInstanceMarker = new ProfilerMarker("Effects.GetPooledInstance");
+
         private ParticleSystem GetPooledInstance(ParticleSystem prefab, Vector3 position, Quaternion rotation, Vector3 scale, out ObjectPool<ParticleSystem> pool)
         {
             pool = null;
             if (prefab == null) return null;
 
-            ParticleSystem instance;
-            if (disablePooling)
+            using (PooledInstanceMarker.Auto())
             {
-                instance = Instantiate(prefab, transform);
-            }
-            else
-            {
-                pool = GetOrCreatePool(prefab);
-                instance = pool.Get();
-            }
-            instance.transform.SetPositionAndRotation(position, rotation);
-            instance.transform.localScale = scale;
+                ParticleSystem instance;
+                if (disablePooling)
+                {
+                    instance = Instantiate(prefab, transform);
+                }
+                else
+                {
+                    pool = GetOrCreatePool(prefab);
+                    instance = pool.Get();
+                }
+                instance.transform.SetPositionAndRotation(position, rotation);
+                instance.transform.localScale = scale;
 
-            return instance;
+                return instance;
+            }
         }
 
         private void Prewarm(ParticleSystem prefab, int count)

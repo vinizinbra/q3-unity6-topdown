@@ -66,6 +66,8 @@ public class DamageNumberUiWidget : MonoBehaviour
     private Sequence _sequence;
     private Action<DamageNumberUiWidget> _onFinished;
 
+    private static readonly Unity.Profiling.ProfilerMarker SetTextMarker = new Unity.Profiling.ProfilerMarker("DamageNumber.SetText");
+
     private void Awake()
     {
         _restFontSize = valueText.fontSize;
@@ -82,9 +84,12 @@ public class DamageNumberUiWidget : MonoBehaviour
         _worldPosition = worldPosition;
         _onFinished = onFinished;
 
-        valueText.text = style.Prefix + Mathf.RoundToInt(damage).ToString() + style.Suffix;
-        valueText.color = style.Color;
-        valueText.fontSize = _restFontSize * style.FontSizeMultiplier * ResolveDamageScale(damage);
+        using (SetTextMarker.Auto())
+        {
+            valueText.text = style.Prefix + Mathf.RoundToInt(damage).ToString() + style.Suffix;
+            valueText.color = style.Color;
+            valueText.fontSize = _restFontSize * style.FontSizeMultiplier * ResolveDamageScale(damage);
+        }
 
         Launch(style, startDelay);
     }

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/Greed
     Guid:
       Value: 536002132847580972
-  Icon: {fileID: -252217315, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: 6461316178986444646, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Greed
   Rarity: 3
   Scope: 1

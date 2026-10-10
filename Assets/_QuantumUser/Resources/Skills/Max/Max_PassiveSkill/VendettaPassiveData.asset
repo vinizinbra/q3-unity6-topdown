@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 294791046206285621
   Description: Enemies that damage you get marked - killing one heals you.
-  Icon: {fileID: 295731791, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
+  Icon: {fileID: 21300000, guid: 61378c06b1c74335b29853e253ac6449, type: 3}
   DisplayName: Vendetta
   BaseHealMultiplier:
     RawValue: 32768

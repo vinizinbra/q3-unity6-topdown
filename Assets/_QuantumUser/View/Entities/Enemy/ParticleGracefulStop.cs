@@ -24,7 +24,34 @@ namespace Quantum
         // TrailRenderer point ages run on scaled time, so this is Time.time, not unscaled.
         private float _trailLingerUntil;
 
+        // Return mode (StopAndReturnWhenFinished): the GameObject belongs to a POOLED projectile view
+        // (ProjectileView/ProjectileViewUpdater) and must survive the fade, so instead of being
+        // destroyed it is handed back to the parent it came from and only this component goes away.
+        private bool _returnMode;
+        private Transform _home;
+        private System.Action _onReturned;
+
         public void StopAndDestroyWhenFinished()
+        {
+            Begin();
+        }
+
+        // Same fade as StopAndDestroyWhenFinished, but the object is re-parented under `home` when it
+        // finishes (its local pose is the caller's business - ProjectileViewSnapshot.Restore replays
+        // it) and this component is removed so the same object can be faded again on its next use.
+        // `onReturned` fires once it is back (or once it is clear it never will be).
+        public void StopAndReturnWhenFinished(Transform home, System.Action onReturned)
+        {
+            if (_stopping == true)
+                return;
+
+            _returnMode = true;
+            _home = home;
+            _onReturned = onReturned;
+            Begin();
+        }
+
+        private void Begin()
         {
             if (_stopping == true)
                 return;
@@ -55,11 +82,46 @@ namespace Quantum
 
             foreach (ParticleSystem system in _systems)
             {
-                if (system.IsAlive(true) == true)
+                if (system != null && system.IsAlive(true) == true)
                     return; // at least one system (or its children) still has live particles
             }
 
-            Destroy(gameObject);
+            if (_returnMode == false)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Return();
+        }
+
+        private void Return()
+        {
+            System.Action onReturned = _onReturned;
+            _onReturned = null;
+
+            // The pooled view this belonged to is gone (scene unload / abandoned after a timeout):
+            // there is nowhere to go home to, so it is just a leftover now.
+            if (_home == null)
+            {
+                onReturned?.Invoke();
+                Destroy(gameObject);
+                return;
+            }
+
+            foreach (ParticleSystem system in _systems)
+            {
+                if (system != null)
+                    system.Clear(withChildren: false);
+            }
+
+            foreach (TrailRenderer trail in GetComponentsInChildren<TrailRenderer>(includeInactive: true))
+                trail.Clear();
+
+            transform.SetParent(_home, worldPositionStays: false);
+
+            onReturned?.Invoke();
+            Destroy(this);
         }
     }
 }

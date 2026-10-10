@@ -690,6 +690,9 @@ public class AudioManager : MonoBehaviour
             source.volume = voice.BaseVolume * (fadeIn > 0f ? 0f : 1f) * manager.ResolveBusVolume(data);
         }
 
+        // Here, past every gate (cooldown, culling, voice budget), so the haptic only fires for a play that is heard.
+        Haptics.Play(data.haptic);
+
         manager.PlayLayers(data, follow, position, positioned, volumeScale, depth);
 
         return new SoundHandle(manager._voices.IndexOf(voice), voice.Generation);

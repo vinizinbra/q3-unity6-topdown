@@ -1,12 +1,16 @@
-# Local-testing Bots
+# Local-testing Bots (co-op autopilot)
 
 A bot is a **real Quantum player slot whose `Input` is produced by the simulation instead of a
-device**, so one person can start a full co-op party and watch a hero's kit fire in a real match.
-It exists to make heroes easy to test and easy to play with locally - it is deliberately not an AI
-opponent system, and nothing here is intended to ship as a gameplay feature.
+device**. It exists so a solo developer can test co-op: open several clients, flip the extra ones
+to bots, and play alongside them. Two ways to get one:
 
-Target scenario from the brief: **1 human + 2 bots**, started from `QuantumRunnerLocalDebug` in
-`QuantumGameScene`.
+- **Spawned bot** - `RuntimePlayer.IsBot` on a `LocalPlayers`/`RuntimePlayers` entry (e.g. 1 human +
+  2 bots from `QuantumRunnerLocalDebug`).
+- **Cheat** - CheatMenu ▸ Player ▸ **Become Bot** adds `BotBrain` to your own hero (your camera/HUD
+  stay yours, the autopilot plays); **Recover From Bot** removes it and hands control back. Neither
+  survives a death/respawn (Spawn re-reads the real `IsBot`).
+
+It is a testing tool, not a shipping AI.
 
 ## The two halves
 
@@ -14,8 +18,14 @@ Target scenario from the brief: **1 human + 2 bots**, started from `QuantumRunne
 
 | File | Role |
 | --- | --- |
-| `Simulation/QTN/Bot/BotBrain.qtn` | `component BotBrain { Input Data; FP HeroSkillTimer; FP DashSkillTimer; FP LeashTimer; }` |
-| `Simulation/Systems/Bot/BotInputSystem.cs` | Writes `BotBrain.Data` every tick - the whole AI |
+| `Simulation/QTN/Bot/BotBrain.qtn` | `component BotBrain` (Input Data + goal/heading/formation/path state) and `enum BotGoal` |
+| `Simulation/Systems/Bot/BotInputSystem.cs` | The brain: perceive, pick one goal, execute it - writes `BotBrain.Data` every tick |
+| `Simulation/Systems/Bot/BotPerception.cs` | One enemy scan per tick (counts, nearest, Elites, threat direction) shared by everything |
+| `Simulation/Systems/Bot/BotNavGrid.cs` | Level-wide walkability grid + A* + string-pulling |
+| `Simulation/Systems/Bot/BotNavigation.cs` | Path following, steering, void avoidance, heading smoothing, leash teleport |
+| `Simulation/Systems/Bot/BotSkillUtility.cs` | Per-hero Hero Skill rules + safe Dash |
+| `Simulation/Systems/Bot/BotPoiUtility.cs` | Breathing POI use (Store/Blacksmith/Shrine/Cursed Rift) |
+| `Simulation/Commands/CheatCommand.cs` + `CheatSystem` | `BecomeBot` / `RecoverFromBot` |
 | `Simulation/Systems/Player/PlayerInputUtility.cs` | `Resolve(f, entity, playerLink)` -> `Input*`, bot or human |
 | `RuntimePlayer.User.cs` | `public bool IsBot` - the authored checkbox |
 | `RuntimeConfig.User.cs` | `BotSettings Bots` - all tuning, under the existing `[Header("Debug")]` |
@@ -57,173 +67,116 @@ would have needed zero simulation changes, but it puts AI in the View, reading a
 and it only works for whichever client owns that slot. Keeping it in the simulation means it is
 deterministic, replay-correct, and would survive a bot being added to an online match.
 
-## What the bot actually does
+## The brain
 
-`BotInputSystem` runs inside `GameplaySystemGroup`, immediately before `KCCSystem` - so the
-decision it makes is the one this same tick's movement resolves, and a bot freezes along with
-everyone else when an upgrade screen pauses the group.
+Each tick `BotInputSystem` gathers a `BotPerception`, picks **one** `BotGoal` (`SelectGoal`), executes
+it through `BotNavigation`, then lets `BotSkillUtility` decide Dash/Hero Skill. Goals, highest first:
 
-- **Follow the first player.** Lowest-`PlayerRef` non-bot wins, so a bot trails the same person all
-  run rather than swapping to whoever is closest. Falls back to another bot if there is no human.
-- **Stop-and-go with hysteresis.** Parks at `FollowDistance` and won't set off again until the
-  target is a `FollowSlack` further out. Holds `Run` past `RunDistance`.
-- **Formation slot, not the target's exact spot.** Each bot has its own randomized (angle, distance)
-  offset - resolved every tick against the target's *current* facing (`Aim.Angle`), so the slot
-  swings around as the target turns, and re-rolled to a new angle/distance only on its own
-  `[FormationRerollIntervalMin, FormationRerollIntervalMax]` timer, not every tick. This is what
-  keeps two bots following the same person from stacking on top of them or each other (replaces the
-  old fixed per-slot spread). A Downed/KO target is the one exception - the bot walks to their
-  *exact* position instead, since it needs to be inside the Revive Interactable's radius.
-- **Wall deflection, no pathfinding.** Reuses `EnemyMovementUtility.SteerAroundWalls` - the same
-  deflection an `AvoidWalls` enemy gets.
-- **Ledge avoidance.** See below - the bot will not walk into a pit, and walks along the lip of one
-  to get where it is going. Wall deflection and ledge avoidance together are the entire navigation
-  story.
-- **Leash.** Stranded for `LeashTimeout` seconds -> `KCC.Teleport` back next to the target, velocity
-  zeroed. "Stranded" is either further than `LeashDistance` away **or** blocked by a ledge with no
-  safe route at all. This is the recovery for the missing pathfinding, not a movement mode.
-- **Skills on a timer.** Dash and Hero Skill each pulse on their own countdown, re-rolled inside a
-  `[min, max]` band after every press so two bots never lock into unison. Hero Skill additionally
-  requires an enemy within `HeroSkillEnemyRange` - watching a bot fire its ultimate into an empty
-  room is exactly the thing that wastes a test run.
-- **Never fires a weapon.** It doesn't have to: firing is auto-attack off `Aim.Target`
-  (`WeaponSystem.HasFireDriver`), and `AimSystem` treats a bot like any other player. `Input.Fire`
-  is never written.
-- **Revives a downed teammate**, and closes to `DownedTargetFollowDistance` to do it. This is the
-  one interaction a bot takes deliberately, because otherwise solo-testing means every death waits
-  out `Global.BreathingAreaSecured` (see `docs/revive.md`).
-- **Touches nothing else interactive while it has a leader.** The Hero Skill button is also the
-  interact button, so the bot skips its cast entirely while standing on any other
-  `Available`/`NotNeeded` POI - no bots quietly drinking the Healing Shrine or opening the Store.
-  This does not apply to a **solo** bot's own Store visit - see below.
+| Goal | When | What it does |
+| --- | --- | --- |
+| Revive | A Downed teammate within 40 that nobody else is holding | Walks onto them, holds Hero Skill once `ContextInteraction` reports the Revive Available |
+| Interact | Breathing, `BreathingAreaSecured`, no enemy within 6, a POI still wanted this Break | Walks into the POI's radius, then `BotPoiUtility.Use` |
+| Retreat | Health < `RetreatHealthFraction` with an enemy within 6 | Moves along the threat direction, pulled toward the leader |
+| Follow (regroup) | Leader further than `LeaderMaxDistance` | Back to the formation slot until within FollowDistance+Slack |
+| Loot (close) | A pickup within 4 and no enemy within 3 | Walks onto it |
+| Fight | Enemy within `EngageRange` **and** within `LeaderTetherRadius` of the leader (or within 4 of the bot - self-defence) | Holds 60 % of weapon range (1.5-8), strafes, backs off when crowded |
+| Loot | Orb (XP/Coin/Rift Shard) or unopened Chest within `LootRange` (and the leader's tether) | Walks onto it |
+| Recover | A landed `DroppedAccessory` within 30 - own, or a teammate's with `AccessoryGuardConfig.AllowAllyRecovery` (pickup returns it to its owner); with a leader, also within LeaderMaxDistance-2 of them so fetching it can't trip a regroup | Walks onto it; gives up for 8 s if standing on it 10 s without collecting |
+| Follow | There is a leader | Formation slot |
+| Explore | No leader at all | Elite anywhere reachable → nearest undiscovered chunk → nearest enemy anywhere |
 
-## Solo behavior (nobody to follow)
+- **Leader** = the lowest-PlayerRef **human** (no `BotBrain`) who isn't KO. With one, the bot plays
+  the game but stays around them (tether + regroup); with none, it plays the whole map. Bots never
+  follow other bots.
+- **Sticky targets.** A Fight target is held 3 s, Explore 10 s, a POI/loot until used/collected
+  (loot gives up after 6 s standing on it). Any goal change clears paths and stuck tracking
+  (`SetGoal`).
+- **Stuck** = wanted to move but stayed within 1 unit for 2.5 s → the target is ignored for 8 s
+  (`IgnoredTarget`). While following, being stuck/blocked/too far for `LeashTimeout` teleports the
+  bot to the leader - only onto solid ground, never while the leader is airborne.
+- **Formation.** Each bot gets a side by its index among bots (145°, 215°, 100°, 260° off the
+  leader's travel direction, 180 = behind), jittered ±15° every 15-25 s. The leader's heading is
+  smoothed from **position deltas**, not `Aim.Angle` (auto-aim retargets constantly - that's what
+  used to swing bots around in arcs). A slot without standable ground falls back to its mirror, then
+  to the leader's spot.
+- **Brute** closes to melee while Juggernaut is active (his damage lands on contact).
 
-`TryResolveFollowTarget` fails only when this bot is genuinely the last player standing - no
-human, no other bot. A bot with a leader is completely unaffected by this section; only the one
-leaderless bot gets it, instead of standing frozen for the rest of the run.
+### Skills (BotSkillUtility)
 
-- **Breathing Break, area secured: walk to the Store and buy one weapon.** Only once
-  `Global.BreathingAreaSecured` is true - the same flag `PoiAvailabilityUtility.IsAvailable` itself
-  gates the Store on for anyone, since the whole point of that flag is "the encounter is actually
-  cleared." Bypasses the normal `ContextInteraction`/Command dance entirely - a bot has no screen
-  to open a `ChooseWindow` on - and calls `StoreUtility.TryBeginInteraction`/`BuyWeapon`/`Close`
-  directly instead, the same "call the utility, skip the Command" idiom
-  `LevelUpSystem.AutoPickForBots` already uses via `LevelUpUtility.AutoConfirm`. Buys the first
-  offer it hasn't already bought this Break, regardless of Coin balance -
-  `StoreUtility.BuyWeapon`'s own `CoinUtility.TrySpend` guard just no-ops if it can't afford it.
-  Once per Breathing Break (`BotBrain.StoreAttemptedAtBreathingIndex`, compared against
-  `Global.BreathingIndex` the same way `StorePurchaseEntry` already is), and only marked attempted
-  once the interaction actually opens.
-- **Breathing Break, area NOT yet secured: fight instead.** `Global.BreathingAreaSecured` starting
-  false means enemies from the encounter are still alive - a bot that beelined for the Store anyway
-  would just stand there uselessly retrying `TryBeginInteraction` every tick while its teammates
-  fight. Runs the same Elite-priority/combat-target hunt as normal Survival (below), just with
-  chunk exploration turned off (`allowExploration: false` - map discovery isn't the point of a
-  Breathing Break) - kill what's left, then the Store becomes reachable on its own.
-- **Otherwise (normal Survival): hunt enemies/XP while also discovering the map.** Re-picks a goal
-  (`BotBrain.SoloTarget`) every `SoloRepickInterval` seconds, or immediately if the current one
-  stops being valid (its `Chunk` got `Discovered`, its enemy died - or is merely lingering through
-  its death animation, `EnemyActionPhase.Dead` - its `CurrencyOrb` got collected). An **Elite**
-  enemy (`EnemyDataAsset.Tier == EnemyTier.Elite`) always wins outright over everything else,
-  map-wide rather than range-limited - a Director Elite spawn is a deliberate, rare encounter the
-  run wants dealt with, not just something to bump into. Short of that, while any `Chunk` is still
-  undiscovered, a coin flip decides whether to prioritize walking into the nearest undiscovered one
-  or chasing the nearest enemy/XP orb (falling back to the other if its own pick comes up empty);
-  once every `Chunk.Discovered` is true, it always hunts. Reuses the exact same wall-deflection/
-  ledge-avoidance steering as following a player - see `BotInputSystem.SteerToward` - just
-  retargeted at a `Chunk`'s center or an enemy's/orb's `Transform3D.Position` instead of a player.
-  If every direction runs off a ledge, the goal is dropped (not leashed - there's no "home"
-  position to return to while solo) and a new one is picked next tick.
-- **Every candidate is filtered to what's actually reachable BY LAND.** This project has no
-  distinct water collider (every body of water is mechanically identical to a bottomless pit -
-  see `PlayerMovementProcessor`'s own comment), so straight-line "nearest" alone would happily send
-  a solo bot marching into a lake separating it from an undiscovered chunk, an Elite, or any other
-  target on the far side. `BotInputSystem.CollectReachableChunks` walks `Chunk.ConnectedChunks` (the
-  same land-adjacency graph `ChunkConnectivityUtility`/Director spawning already trusts) from the
-  bot's own chunk, and every search checks candidates against that set. Falls back to unfiltered if
-  the bot's own position can't be resolved to a containing chunk at all, rather than refusing to
-  pick anything.
+Only pressed when the slot is `Ready` with a stack (never mid-activation - that would cancel and
+recast), with a 1 s / 2 s re-press guard. Keyed off the Hero Skill's `SkillData` type:
 
-## Void avoidance
+| Hero | Rule |
+| --- | --- |
+| Brute (`JuggernautSkillData`) | 3+ enemies within AftershockRadius+1, an Elite there, or <50 % Health with an enemy within 3 |
+| Max (`BerserkSkillData`) | 3+ enemies within 8, or an Elite within 8 |
+| Pixie / Zara / Kai (`ProjectileSkillData`) | `Aim.Target` within the skill's Range and 3+ enemies within 4 of it, or it's an Elite |
+| Lux (Sentry spawn action) | Any enemy within 10 and none of her sentries alive |
+| anything else | 2+ enemies within 8 |
 
-Following a player in a straight line means that line eventually points across a chasm - and the
-player **auto-hop makes that actively dangerous rather than merely clumsy**. `PlayerMovementProcessor`
-reacts to "no ground ahead" by *jumping*, so a bot that walks at a pit doesn't stop at the edge, it
-gets launched into it. Falling forever was the observed symptom.
+**Dash** is never fired blind (it moves 6 units with the KCC off and no ground check - the main way
+bots used to land in water). Only to **escape** (enemy within 2.5 and low Health or 3+ around it),
+away from the threat, trying ±30/60/90°; or to **catch up** to a leader >12 away along the heading
+it's already safely walking with no enemy within 6. Both require `IsDashLandingSafe` (end point,
+both sides of it, and the midpoint all standable).
 
-So the bot rejects an unsafe direction **before** auto-hop's own probe can fire, which is the whole
-reason `LedgeProbeDistance` (1.5) reaches further than `MovementDataAsset.EdgeProbeDistance` (0.75).
+### Breathing POIs (BotPoiUtility)
 
-`TryFindSafeDirection` tries the direct route, then mirrored deflections at ±45° and ±90°, and takes
-the first one that is safe. The ±90° candidates are what let it walk **along** the lip of a chasm
-toward the target instead of stopping dead at it. This runs *after* `SteerAroundWalls`, on purpose -
-a direction slid along a wall can just as easily end up pointing off a ledge as the original did.
+Opened, decided and closed **in the same tick** through each POI's own utility (no ChooseWindow
+flashes on the bot's client), each kind once per Break (`*AttemptedAtBreathingIndex`):
 
-`IsDirectionSafe` accepts a direction on either of two grounds, cheapest first:
+- **Store** - only the weapon level-up, only if affordable. Never buys a new weapon (a random swap
+  would throw away the hero's picks/perks mid-test).
+- **Blacksmith** - cheapest affordable perk on offer, else walks away free.
+- **Healing Shrine** - below 80 % Health.
+- **Cursed Rift** - always confirms the rolled sacrifice.
 
-1. `HasGroundAhead` within `LedgeMaxDropDistance` (4) - flat floor, a step down, or a real ledge the
-   bot can walk off and live.
-2. `TryFindGapLanding` out to `LedgeMaxCrossableGap` (1.5) - nothing at the probe point, but solid
-   ground reappears close enough that the auto-hop clears it. This case exists mostly for **chunk
-   seams**, which are sub-unit and far more common than actual chasms; without it a bot stops dead
-   at every seam it meets. The landing's *height* is re-tested against the same drop limit, because
-   `TryFindGapLanding` samples via `TryFindGroundHeight`, which looks 20 units down - otherwise a
-   deep-but-floored pit would come back as a crossable gap.
+Each can be turned off in `RuntimeConfig.Bots` (`DisableStore`, ...). Level-ups, the Breathing skip
+vote and Team Challenge Ready are auto-handled as before (below). Chests are walk-in auto-collect, so
+Loot covers them.
 
-Anything else is a pit, and if **every** candidate is a pit the bot stands still and reports itself
-blocked, which promotes it to "stranded" for the leash. That matters because the target can be only
-a few units away on the far side of a chasm, where a distance-only leash would never fire and the
-bot would stand there for the rest of the run.
+## Navigation (BotNavGrid + BotNavigation)
 
-The probes are skipped entirely while airborne - they measure the ground under a *walking* path,
-which says nothing useful mid-jump, and there is no steering decision left to protect. A bot that
-gets knocked into a pit anyway is handled the same way a player is: `PlayerFallSystem` catches it at
-`LevelConfig.FallDeathHeight`, deals fall damage and respawns it.
+**Grid pathfinding.** `BotNavGrid` is a level-wide 1x1-unit walkability grid built once per level
+(first time a bot asks, once `LevelGenerated` and 0.5 s of collider settling have passed): one
+raycast straight down per cell over every Chunk footprint (plus 4 inner re-tries so a chunk seam
+doesn't punch a hole) records the top-most Ground-layer height, or *void* (water and pits are the
+same thing here). A step between neighbours is walkable when the rise is ≤ 1.05
+(`MovementDataAsset.MaxLedgeHeight` = 1, auto-mantle) and the drop ≤ 4 - so walls (their tops read
+as tall ground) and water both fall out of the same data. Cells touching void are **Edge** cells. A cell topped by a `GroundNotJumpable` collider (solid,
+never mantled - the Ground-layer ray passes through it, so it's checked separately) is **Blocked**:
+not walkable, but not a fall either, so it doesn't make its neighbours Edge cells.
 
-### Two path tiers - a chunk-level macro route, and a local grid detour per leg
+- **Straight first.** If the grid says the line from bot to target stays on walkable, non-Edge cells
+  with valid steps (`IsStraightWalkable`), the bot steers straight there - no A*.
+- **Otherwise A\*** (8-connected, integer costs 10/14, no corner-cutting past void; Edge cells +25,
+  climbs +4, drops past the auto-hop height +30 - so routes keep off shorelines), capped at 25k
+  expansions, then **string-pulled** into a few straight legs stored in `BotBrain.Path` (32 max; a
+  longer route re-plans from its end). Re-planned when the goal moves > 2.5, every 1.5 s, or when a
+  leg is blocked by something the grid doesn't know (props, barrels).
+- **Raycasts** use `BotNavigation.BotQuery` = Statics | Kinematics | **Dynamics** (some level geometry
+is a dynamic entity) | **ComputeDetailedInfo** (`Hit3D.Point`/`Normal` are only real with it).
+- **Not simulation state.** The grid is a pure function of static geometry, built in one go (never
+  across ticks) and cached statically, keyed by `LevelGenSeed` + the chunk layout - every client,
+  late joiners and resimulations included, sees the same grid at every tick it's used, so it can't
+  desync. Geometry spawned later (Traversal platforms) isn't in it.
 
-`TryFindSafeDirection`'s 5 candidates are a single-step heuristic that only looks ~2-3 units ahead
-of THIS tick's position. That is exactly wide enough to match `MovementDataAsset`'s own
-`WaterMaxCrossableGap`-style auto-hop reach for a legitimate narrow gap - which is also exactly wide
-enough to misread a real body of water as "just hop it" one step at a time, since nothing about the
-check looks further than one hop past the current edge. A bot that only re-checks reactively AFTER
-`SteerToward` reports blocked can therefore walk (or auto-hop) straight into open water without
-`SteerToward` ever once returning blocked - the false "safe" reading never lets a reactive-only
-fallback trigger at all. This is why solo movement doesn't wait to be told it's stuck, and why it
-routes chunk-to-chunk instead of trusting one long straight line:
-
-- **`RoutePath` (macro, solo-only, PROACTIVE): `TryFindChunkRoutePath`** walks the level's own
-  authored `Chunk.ConnectedChunks` adjacency graph (the same graph
-  `CollectReachableChunks`/`ChunkConnectivityUtility`/Director spawning already trust) from the
-  bot's own chunk to the target's chunk, turning the resulting chunk SEQUENCE into one waypoint per
-  intermediate chunk's center plus the real target position as the final waypoint. `EnsureRoutePath`
-  builds this BEFORE the bot ever takes a step toward a stationary-ish goal (a Chunk/enemy/orb/
-  Store) - a route through chunks the level itself guarantees are land-connected is far more
-  trustworthy than raycasting one flat grid across the whole straight-line distance with no notion
-  of chunk boundaries at all. Declines (same chunk, or a position that can't be resolved to a chunk)
-  rather than building a meaningless single-chunk "route".
-- **`DetourPath` (local, shared, REACTIVE): `TryFindGridPath`** is a BFS over a grid of raycast-down
-  samples (`GridStep` apart, spanning the straight line between bot and target plus
-  `GridSearchPadding`, step size scaling up via Chebyshev distance / `MaxGridPathWaypoints` to stay
-  inside the array's capacity regardless of distance) - tried only once `SteerToward`'s direct route
-  for the CURRENT leg is found blocked. Each grid edge only checks floor presence and a walkable
-  height step between neighboring cells (`GridStepMaxHeightDelta`, same spirit as
-  `LedgeMaxDropDistance`) - this is about routing around voids/water, not indoor walls, which
-  `SteerAroundWalls` still handles per leg once a waypoint is resolved. It always leads back to
-  whichever leg's own destination was blocked (a `RoutePath` waypoint, the real target, or a follow
-  target directly) - never the far end of the whole journey - so one pond inside one chunk along a
-  macro route only reroutes that single hop; the rest of `RoutePath` is untouched. This is also the
-  whole mechanism for a follow target (no macro route - a live player moves every tick, so one
-  computed against last tick's position would already be stale) and for solo's same-chunk case.
-
-**`TryMoveToward`** is the shared entry point every bot movement path goes through - checks
-`DetourPath` first (an in-progress local detour), then `RoutePath` (the current macro leg, if any),
-else the real target directly - and only reports true "stuck" once the current leg's direct route
-AND a fresh `TryFindGridPath` for it have both failed. That's what UpdateFollow promotes to the
-leash, and what solo wander drops the whole goal over (picking a new one next tick).
-
-Entirely bot-only - nothing here is shared with or reused by any real gameplay/enemy system.
+**Steering safety on top** (`BotNavigation.SteerToward`), the last line of defence:
+Moves that come from the nav grid (straight-walkable or A* legs) **skip the wall slide entirely**:
+the grid already knows every Ground-layer wall and which are climbable steps, and the slide's 2.5-unit
+sphere-cast kept bots shuffling sideways short of a step they could walk up. Free directions (Retreat,
+strafing) still slide, guarded by `IsClimbableStepAhead`, which mirrors the auto-mantle test (feet ray blocked within 2.5 - the slide's own reach - by a near-vertical
+face - ramps don't count -, ray at 1 unit clear, not GroundNotJumpable). Seeing one **commits** the bot
+to walking straight into it for 0.4 s (`ClimbCommitTimer` - no wall slide, no heading blend; without
+it the slide and the climb alternated every tick and the bot flickered) - walking straight at it is
+all the player processor's auto-mantle needs, the bot never presses Jump. Otherwise
+`SteerAroundWalls` slides along walls; otherwise `SteerAroundWalls` slides along walls; `TryFindSafeDirection` rejects a direction whose ground runs
+out (centre + two lateral probes 0.4 either side at 1.5 ahead, gaps > 1 unit = water), the ground ray starts above the climb
+height and looks down, so a step up reads as floor rather than a hole; trying
+±35/70/105°, last-used side first; `ApplyHeading` blends 50 % of last tick's heading so one-tick
+corrections don't jitter. Probes are skipped while airborne; a bot knocked into a pit is handled by
+`PlayerFallSystem` like any player. Explore/Interact target picks still pre-filter by
+`Chunk.ConnectedChunks` reachability.
 
 ## Not making the human wait
 
@@ -292,47 +245,31 @@ What bots DO still get is everything the project already gives a remote teammate
 
 ## Authoring
 
-Nothing needs to be generated or assigned. Bots work off the existing scene configuration:
+Nothing needs to be generated or assigned.
 
-1. Open `QuantumGameScene`, select the `QuantumRunnerLocalDebug` object.
-2. Set `LocalPlayers` to size 3. Leave entry 0 as the human; tick **Is Bot** on entries 1 and 2.
-3. Give each bot entry its own `PlayerAvatar` (a different hero prototype per bot is the point).
-4. Optionally tune `RuntimeConfig` -> **Debug** -> **Bots**. Every `FP` there treats `0` as "use
-   the built-in default", so an untouched config already behaves sensibly.
-
-The menu/networked path (`MatchMakingConfig.RuntimePlayers`) works the same way, and deliberately
-skips its usual `PlayerAvatar = localCharacterAvatar` overwrite for a bot entry so its authored
-hero survives.
+- **Spawned bots:** select `QuantumRunnerLocalDebug`, give `LocalPlayers` extra entries with **Is
+  Bot** ticked and their own `PlayerAvatar`. The menu/networked path (`MatchMakingConfig.RuntimePlayers`)
+  works the same way.
+- **Multi-client testing:** open the clients, and on each one you want automated press CheatMenu ▸
+  Player ▸ **Become Bot**; **Recover From Bot** takes it back.
+- Tuning: `RuntimeConfig` → **Debug** → **Bots** (Follow, Leash, Leader, Combat, Formation, Breathing
+  POIs, Flow). Every `FP` treats `0` as "use the built-in default".
 
 ## Current status
 
-Code-complete; compiles once Quantum codegen picks up the new `BotBrain.qtn`. `BotInputSystem` is
-registered in `SystemSetup.User.cs` inside `GameplaySystemGroup`, immediately before `KCCSystem`.
-No asset authoring is required at all - only the scene steps above. **Not yet verified in-Editor.**
+Rewritten 2026-10-07 (goal-based brain, per-hero skill rules, safe dash, POI use, heading smoothing,
+lateral ledge probes, Recover From Bot cheat). Compiles; **not yet play-tested** - expect tuning of
+the distances/thresholds in `BotInputSystem`'s defaults.
 
 ## Known simplifications
 
-- **No combat positioning.** Bots don't kite, take cover, spread from AoE, or aim their skill at
-  anything - `AimSystem` picks the weapon target, and a skill fires wherever the bot is facing.
-- **No pathfinding.** Wall deflection plus the leash teleport is the whole navigation budget.
-- **`BotSettings` is a struct, so it has no field initializers** - which is why every `FP` treats 0
-  as "unauthored" (`BotInputSystem.Or`) and both booleans are phrased as opt-*outs*
-  (`DisableAutoLevelUpPick`, `DisableAutoBreathingSkipVote`).
-- **Bots count as players everywhere else**, on purpose - `f.PlayerCount`-driven co-op scaling,
-  `TalentUtility`'s shared talent OR, `RunFailureSystem`, XP thresholds. That is what makes a bot
-  party a realistic test of co-op balance, but it does mean a 1-human/2-bot run is scaled as a
-  3-player run.
-- **A bot never uses a Chest, Cursed Rift or Blacksmith**, and never spends its Reroll charges. The
-  one exception is the Store, and only for a **solo** bot (see "Solo behavior" above) - a bot with
-  a leader still never opens it.
-- **No cross-chunk pathfinding for a followed player** - wall deflection + ledge avoidance + the
-  brute-force local grid detour (`TryMoveToward`/`TryFindGridPath`, see "Void avoidance" above) is
-  the whole budget; there's no map-scale reachability check the way solo wander's
-  `CollectReachableChunks` gives chunk/enemy/orb picking (a followed player is a live entity going
-  wherever a human/other bot decides, not a pickable goal to reachability-filter in advance) - a
-  genuinely stuck follow still falls through to the leash teleport, same as ever. Solo wander goes
-  one step further: it also reachability-filters its own goal PICKS up front, and a goal that turns
-  out unreachable even to the grid search is dropped and re-picked instead of leashed (there's no
-  "home" position to return to while solo).
-- **`MyLocalPlayer` is still capped at 2 local slots** - unchanged, and now only humans count
-  toward it.
+- **No dodging** of enemy telegraphs/projectiles - Retreat and the escape Dash react to proximity and
+  Health only.
+- **Level-up picks are random** (`LevelUpUtility.AutoConfirm`), rerolls never used.
+- **Grid is static** - built from the level once; moving obstacles are only handled by steering and
+  re-planning. A one-time build spike (one raycast per cell) happens the first time a bot moves.
+- **`BotSettings` is a struct**, so every `FP` treats 0 as "unauthored" and booleans are opt-outs.
+- **Bots count as players everywhere else** on purpose (co-op scaling, XP thresholds, talents) - a
+  1-human/2-bot run is scaled as a 3-player run.
+- **Never uses Traversal Challenges, Team Challenge rewards or Rerolls.**
+- **`MyLocalPlayer` is still capped at 2 local slots** - only humans count toward it.

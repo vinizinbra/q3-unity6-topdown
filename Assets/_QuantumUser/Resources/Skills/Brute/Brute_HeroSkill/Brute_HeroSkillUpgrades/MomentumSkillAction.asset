@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/Brute_HeroSkillUpgrades/MomentumSkillAction
     Guid:
       Value: 322865589759255595
-  Icon: {fileID: 1679328721, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 21300000, guid: 175b3d5d4c8d446da5ca6c08b500a454, type: 3}
   DisplayName: Momentum
   RankDescriptions:
   - "During Juggernaut, Momentum builds <color=#FD3971>25%</color> faster. While Charged, gain <color=#FD3971>+10%</color> Move Speed. Discharge keeps <color=#FD3971>30%</color> of your Charge."

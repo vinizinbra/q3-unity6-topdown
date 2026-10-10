@@ -132,7 +132,7 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
   rarity tuning), price `WeaponOfferBasePrice + WeaponOfferPricePerPerk x perks` (asset: 1000 + 250),
   bought when predicted DPS >= current x `WeaponBuyThreshold` (1 = never downgrade); **1 perk** -
   Blacksmith `PerkChoiceCount` offers by `BreakTuning[BreathingIndex]`, best DPS-per-coin (asset
-  prices 500/1000/1750/3000); **1 accessory repair** (`StoreConfig.ResolveAccessoryRepairCost(2)`,
+  prices 500/1000/1750/3000); **1 accessory repair** (2 points × `StoreConfig.AccessoryRepairCostPerPoint`,
   only if `OfferAccessoryService`); **1 food** (weighted roll from `StoreConfig.FoodPool`, its
   `Price`, no DPS effect). Counts are the `*PerBreak` knobs; "Increase Weapon Level" only if
   `StoreConfig.OfferWeaponLevelUp`. Skipped offers are written to the pick log with the reason.

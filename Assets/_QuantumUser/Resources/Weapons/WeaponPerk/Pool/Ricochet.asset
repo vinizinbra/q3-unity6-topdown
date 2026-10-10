@@ -16,8 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/Ricochet
     Guid:
       Value: 456316048361573836
-  Icon: {fileID: -1107615987, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 933088a23e564ea094b7d919bb9c90bd, type: 3}
   DisplayName: Ricochet
   Rarity: 1
-  Description: '+<color=#FD3971>{0:0}</color> Bounce'
+  Description: +<color=#FD3971><b>{0:0}</b></color> Bounce
   BonusBounces: 1

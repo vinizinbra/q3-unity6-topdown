@@ -16,10 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/OpeningBurst
     Guid:
       Value: 452779746857446377
-  Icon: {fileID: 1024857288, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 8b7e9e5b45684b80965774ad3fe7f325, type: 3}
   DisplayName: Opening Burst
   Rarity: 1
-  Description: 'First <color=#FD3971>{0:0}%</color> of magazine: <color=#FD3971>{1:+0;-0}%</color> Fire Rate'
+  Description: 'First <color=#FD3971><b>{0:0}%</b></color> of mag: <color=#FD3971><b>{1:+0;-0}%</b></color>
+    Fire Rate'
   FireRateBonus:
     RawValue: 16384
   Threshold:

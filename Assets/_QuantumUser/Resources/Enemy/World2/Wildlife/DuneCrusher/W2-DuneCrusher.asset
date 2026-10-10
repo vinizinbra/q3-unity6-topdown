@@ -147,7 +147,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -227,7 +228,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -307,7 +309,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -387,7 +390,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -622,5 +626,6 @@ MonoBehaviour:
       Value: 0
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 91839dc39bf60469d9594f381d93b9ee, type: 2}
+  Description: Crushes everything in a wide cone.
   ViewPrefab: {fileID: 5043495445576312837, guid: 17df5364bf41342da8ba2a4ca0d0121c, type: 3}
-  FactionSkins: []

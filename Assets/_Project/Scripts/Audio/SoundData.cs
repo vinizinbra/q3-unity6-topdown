@@ -155,6 +155,10 @@ public class SoundData : ScriptableObject, ISerializationCallbackReceiver
     [Tooltip("Skip this sound entirely unless the LOCAL player produced it - not quietened, not played at all, and it never takes a voice. The stronger form of Quieter When Remote, for feedback that is only ever about you: a reload click, an ability-ready cue, a low-ammo warning. Hearing three teammates' versions of those is noise, not information.\n\nOverrides Quieter When Remote when both are set. Like it, this only applies where a call site passes an owning entity (see EntitySound) - a sound with no owner always plays.")]
     public bool localPlayerOnly;
 
+    [Header("Haptics")]
+    [Tooltip("Vibration (phone) / rumble (gamepad) played whenever this sound actually plays - after its cooldown and Local Player Only gates, so it never fires for a play that was dropped. None = no haptic.\n\nOnly put one on a sound that is about YOU: flat UI/global cues, or sounds with Local Player Only ticked. A spatial sound anyone can trigger (an enemy explosion across the map) would vibrate for it too. Gameplay haptics with no sound of their own are on HapticsConfig.")]
+    public HapticPreset haptic;
+
     [Header("Spatialisation")]
     [Tooltip("ON = positioned in the world, so it pans and falls off with distance from the listener (weapons, enemies, impacts). OFF = heard flat everywhere, at the same volume (UI, music, global cues).\n\nHOW FAR it carries is not authored here - the falloff curve lives once on the AudioManager (Min/Max Distance, Rolloff), because a fixed-camera top-down game wants one consistent curve rather than a different guess per asset. Only meaningful for PlayAt/PlayAttached; a plain Play() has no position and is always flat.")]
     public bool spatial = true;

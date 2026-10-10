@@ -16,10 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/HeavyCaliber
     Guid:
       Value: 401600444918086180
-  Icon: {fileID: -1193748359, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 9cf49bbebae649f98f5c549e460576e9, type: 3}
   DisplayName: Heavy Caliber
   Rarity: 0
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Damage, <color=#FD3971>{1:+0;-0}%</color> Fire Rate'
+  Description: <color=#FD3971><b>{0:+0;-0}%</b></color> Damage, <color=#FD3971><b>{1:+0;-0}%</b></color>
+    Fire Rate
   DamageMultiplier:
     RawValue: 78643
   FireRateMultiplier:

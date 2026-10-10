@@ -1,9 +1,9 @@
 // Marks a player entity whose Input is produced by the SIMULATION itself (BotInputSystem) every
-// tick instead of being polled from a real device - a local-testing convenience so one person can
-// play a full co-op party (see docs/bots.md). Added at spawn by PlayerSpawnUtility purely from
-// RuntimePlayer.IsBot, so nothing else in the codebase has to know what a bot is: every
-// Input-consuming system reads PlayerInputUtility.Resolve, which hands back this component's own
-// Data for a bot and f.GetPlayerInput for everyone else.
+// tick instead of being polled from a real device - a co-op testing autopilot so one person can
+// run several clients and let the extra heroes play themselves (see docs/bots.md). Added at spawn
+// by PlayerSpawnUtility from RuntimePlayer.IsBot, or at runtime by the Become Bot cheat (removed
+// again by Recover From Bot). Every Input-consuming system reads PlayerInputUtility.Resolve, which
+// hands back this component's own Data for a bot and f.GetPlayerInput for everyone else.
 //
 // Same "fake a player's Input on an entity that has no real one behind it" shape InputSource.qtn
 // already established for Lux's sentry gun - deliberately a SECOND component rather than reusing
@@ -17,68 +17,100 @@ component BotBrain
     // decision, never a held button that re-triggers every tick.
     Input Data;
 
-    // Countdown to this bot's next Hero Skill / Dash press. Re-rolled inside the configured
-    // [min, max] band on every press so two bots spawned on the same tick drift apart instead of
-    // casting in lockstep. Seeded at spawn (PlayerSpawnUtility) rather than left at 0, which would
-    // make every bot cast on its very first tick.
-    FP HeroSkillTimer;
-    FP DashSkillTimer;
+    // What the bot is doing right now and what it is doing it TO (see BotInputSystem.SelectGoal).
+    // GoalTarget is an entity for Revive/Fight/Loot/Interact/Explore (a teammate, enemy, pickup,
+    // POI or Chunk), None for Follow/Retreat. GoalTimer counts up while the goal is unchanged - it
+    // is what makes a picked target sticky instead of re-chosen every tick.
+    BotGoal Goal;
+    EntityRef GoalTarget;
+    FP GoalTimer;
 
-    // How long this bot has been further than BotSettings.LeashDistance from its follow target.
-    // Once it passes LeashTimeout the bot is teleported back next to the target - the follow
-    // steering is deliberately dumb (no pathfinding), so this is what stops a bot that walked into
-    // a dead end from being lost for the rest of the run.
-    FP LeashTimer;
+    // A target the bot just failed to reach (stuck or unreachable) - skipped by every target pick
+    // until IgnoreTimer runs out, so the bot doesn't pick the same unreachable thing straight back.
+    EntityRef IgnoredTarget;
+    FP IgnoreTimer;
 
-    // This bot's own formation slot, relative to its follow target's CURRENT facing (Aim.Angle) -
-    // 0 degrees is directly in front, 180 behind, re-resolved into a world offset every tick so the
-    // slot swings around as the target turns. FormationAngle/FormationDistance themselves only
-    // change when FormationRerollTimer runs out, so the slot holds still rather than drifting
-    // every tick - see BotInputSystem.ResolveFormationOffset.
+    // Smoothed movement heading - last tick's output direction, blended toward each new decision
+    // (BotNavigation.ApplyHeading) so steering corrections don't flip the bot left/right every tick.
+    FPVector2 Heading;
+
+    // Climbing a 1-unit step (BotNavigation.SteerToward): once a climbable step is seen ahead the
+    // bot commits to walking straight into it for ClimbCommitTimer - no wall slide, no heading
+    // blend - and the player processor's auto-mantle climbs it. Without the commit the wall slide
+    // and the climb alternated every tick (flicker) and the bot never walked into it.
+    FP ClimbCommitTimer;
+    FPVector2 ClimbDirection;
+
+    // +1/-1: which way the ledge/wall deflection last turned. Mirrored candidates are tried this
+    // side first, so a bot sliding along a lip keeps sliding the same way instead of zig-zagging.
+    Int32 DeflectSide;
+
+    // Leader formation. LeaderHeading is the leader's smoothed TRAVEL direction (from position
+    // deltas, not Aim.Angle - auto-aim swings constantly, travel doesn't). The slot is an angle
+    // relative to it (180 = directly behind) plus a distance, re-rolled only on
+    // FormationRerollTimer. LastLeaderPosition feeds the delta.
+    FPVector2 LeaderHeading;
+    FPVector3 LastLeaderPosition;
     FP FormationAngle;
     FP FormationDistance;
     FP FormationRerollTimer;
 
-    // Solo behavior (no human or bot left to follow, see BotInputSystem.UpdateSolo) - a bot's own
-    // current goal while wandering: a Chunk entity it's walking into to discover it, or an
-    // Enemy/CurrencyOrb entity it's chasing down. Re-picked on SoloRepickTimer, or immediately if
-    // the current one stops being valid (chunk got discovered, enemy died, orb got collected).
-    EntityRef SoloTarget;
-    FP SoloRepickTimer;
+    // True while regrouping with a leader that got too far away - cleared once back within the
+    // follow distance (hysteresis between BotSettings.LeaderMaxDistance and FollowDistance).
+    Boolean Regrouping;
 
-    // Macro route for a solo goal (see BotInputSystem.EnsureRoutePath/TryFindChunkRoutePath) - one
-    // waypoint per chunk crossed on the way there (each chunk's own center), walking the level's own
-    // authored Chunk.ConnectedChunks adjacency graph, plus the real target position as the final
-    // waypoint. Built PROACTIVELY the moment a solo goal needs to move (before the bot ever takes a
-    // step toward it), because a straight-line "is this direction safe" check can read "safe" for
-    // several consecutive steps into open water before ever noticing it - see DetourPath below for
-    // why that reactive check alone isn't enough. Never used by a follow target (a live player moves
-    // every tick, so a route computed against last tick's position would already be stale) - see
-    // BotInputSystem.Update, which clears this the instant a follow target exists. 16 is
-    // MaxRouteChunkWaypoints in BotInputSystem - keep them in sync.
-    array<FPVector3>[16] RoutePath;
-    Byte RoutePathCount;
-    Byte RoutePathCursor;
+    // Stuck detection: where the bot was when it last made real progress, and how long it has
+    // wanted to move without getting LedgeProgressDistance away from it.
+    FPVector3 ProgressAnchor;
+    FP StuckTimer;
 
-    // A brute-force LOCAL detour around whichever single leg the bot is currently walking (a follow
-    // target directly, a RoutePath waypoint, or - if chunk routing wasn't applicable, e.g. same
-    // chunk - the solo target directly), filled in by BotInputSystem.TryFindGridPath: a BFS over a
-    // grid of raycast-down samples around the straight line to that leg's own destination, so a
-    // pond/building/other obstacle that defeats SteerToward's own single-step heuristic doesn't just
-    // strand the bot or drop the whole goal. Always reactive - only tried once SteerToward's direct
-    // route for the CURRENT leg is found blocked - and always leads back to that leg's own
-    // destination, never the far end of the whole journey, so the rest of RoutePath (if any) is left
-    // untouched. Walked waypoint by waypoint (DetourPathCursor) with the exact same steering as
-    // everything else; cleared (DetourPathCount = 0) once fully walked or if a waypoint itself later
-    // turns out blocked too. 32 is MaxGridPathWaypoints in BotInputSystem - keep them in sync.
-    array<FPVector3>[32] DetourPath;
-    Byte DetourPathCount;
-    Byte DetourPathCursor;
+    // Seconds a Follow/Regroup has been stranded (blocked, stuck, or past LeashDistance) - past
+    // LeashTimeout the bot is teleported next to its leader.
+    FP LeashTimer;
 
-    // Guards the Breathing Store visit to once per Break - compared directly against
-    // Global.BreathingIndex rather than a bool, the same "compare against the live index, don't
-    // reset a flag on a phase transition" idiom StorePurchaseEntry.PurchasedAtBreathingIndex
-    // already uses. Seeded to -1 at spawn (PlayerSpawnUtility) so it never false-matches
-    // BreathingIndex's own 0 default on the very first Break.
+    // Minimum gap between two presses of the same skill button, so a press SkillSystem refused
+    // (no stack, mid-activation) isn't retried every tick.
+    FP HeroSkillGuardTimer;
+    FP DashGuardTimer;
+
+    // Fight strafing: which way the bot circles its target and when it next flips.
+    Int32 StrafeSign;
+    FP StrafeTimer;
+
+    // Current A* route (BotNavGrid.FindPath, string-pulled into straight segments) toward
+    // PathGoal, walked waypoint by waypoint. Rebuilt when the goal moves more than
+    // BotNavigation.RepathDistance, every RepathInterval while in use, or when a leg is blocked;
+    // cleared whenever the bot can walk straight to its target. 32 is
+    // BotNavigation.MaxPathWaypoints - keep them in sync (a longer route is re-planned from its
+    // last stored waypoint).
+    array<FPVector3>[32] Path;
+    Byte PathCount;
+    Byte PathCursor;
+    FPVector3 PathGoal;
+    FP RepathTimer;
+
+    // Once-per-Breathing-Break guards for each POI kind the bot uses, compared against
+    // Global.BreathingIndex (same idiom as StorePurchaseEntry.PurchasedAtBreathingIndex). Seeded to
+    // -1 (PlayerSpawnUtility.ConvertToBot) so they never false-match BreathingIndex 0.
     Int32 StoreAttemptedAtBreathingIndex;
+    Int32 BlacksmithAttemptedAtBreathingIndex;
+    Int32 CursedRiftAttemptedAtBreathingIndex;
+    Int32 ShrineAttemptedAtBreathingIndex;
+}
+
+// See BotInputSystem.SelectGoal for the priority order.
+enum BotGoal : Byte
+{
+    None,
+    Follow,
+    Revive,
+    Retreat,
+    Fight,
+    Loot,
+    Interact,
+    Explore,
+
+    // Walk onto a landed, recoverable DroppedAccessory (own, or a teammate's with
+    // AccessoryGuardConfig.AllowAllyRecovery) - low priority, see BotInputSystem.SelectGoal.
+    Recover
 }

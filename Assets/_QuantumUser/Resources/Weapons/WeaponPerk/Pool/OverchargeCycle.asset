@@ -16,10 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/OverchargeCycle
     Guid:
       Value: 277574942251946638
-  Icon: {fileID: 1932915218, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 7ceb5909c3a844a9b82196ac3aa3c45b, type: 3}
   DisplayName: Overcharge Cycle
   Rarity: 2
-  Description: 'Continuous fire builds <color=#FD3971>{0:0}%</color> Damage and <color=#FD3971>{1:0}%</color> Fire Rate per stack (max <color=#FD3971>{2:0}</color> stacks)'
+  Description: Firing stacks <color=#FD3971><b>{0:+0;-0}%</b></color> Damage, <color=#FD3971><b>{1:+0;-0}%</b></color>
+    Fire Rate (max <color=#FD3971><b>{2:0}</b></color>)
   MaxStacks: 8
   DamageBonusPerStack:
     RawValue: 1966

@@ -114,7 +114,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -194,7 +195,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -274,7 +276,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -354,7 +357,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -589,5 +593,6 @@ MonoBehaviour:
       Value: 0
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: a949f9ebce4e54cffac2e3b5d516a911, type: 2}
+  Description: Holds a shield up to cover its allies.
   ViewPrefab: {fileID: 4669263682667838074, guid: 7d2a140b006624b6dae0b1e74d7f6e12, type: 3}
-  FactionSkins: []

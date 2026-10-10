@@ -504,23 +504,38 @@ namespace Quantum.Prototypes {
   [Quantum.Prototypes.Prototype(typeof(Quantum.BotBrain))]
   public unsafe class BotBrainPrototype : ComponentPrototype<Quantum.BotBrain> {
     public Quantum.Prototypes.InputPrototype Data;
-    public FP HeroSkillTimer;
-    public FP DashSkillTimer;
-    public FP LeashTimer;
+    public Quantum.QEnum8<BotGoal> Goal;
+    public MapEntityId GoalTarget;
+    public FP GoalTimer;
+    public MapEntityId IgnoredTarget;
+    public FP IgnoreTimer;
+    public FPVector2 Heading;
+    public FP ClimbCommitTimer;
+    public FPVector2 ClimbDirection;
+    public Int32 DeflectSide;
+    public FPVector2 LeaderHeading;
+    public FPVector3 LastLeaderPosition;
     public FP FormationAngle;
     public FP FormationDistance;
     public FP FormationRerollTimer;
-    public MapEntityId SoloTarget;
-    public FP SoloRepickTimer;
-    [ArrayLengthAttribute(16)]
-    public FPVector3[] RoutePath = new FPVector3[16];
-    public Byte RoutePathCount;
-    public Byte RoutePathCursor;
+    public QBoolean Regrouping;
+    public FPVector3 ProgressAnchor;
+    public FP StuckTimer;
+    public FP LeashTimer;
+    public FP HeroSkillGuardTimer;
+    public FP DashGuardTimer;
+    public Int32 StrafeSign;
+    public FP StrafeTimer;
     [ArrayLengthAttribute(32)]
-    public FPVector3[] DetourPath = new FPVector3[32];
-    public Byte DetourPathCount;
-    public Byte DetourPathCursor;
+    public FPVector3[] Path = new FPVector3[32];
+    public Byte PathCount;
+    public Byte PathCursor;
+    public FPVector3 PathGoal;
+    public FP RepathTimer;
     public Int32 StoreAttemptedAtBreathingIndex;
+    public Int32 BlacksmithAttemptedAtBreathingIndex;
+    public Int32 CursedRiftAttemptedAtBreathingIndex;
+    public Int32 ShrineAttemptedAtBreathingIndex;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.BotBrain component = default;
         Materialize((Frame)f, ref component, in context);
@@ -528,25 +543,39 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.BotBrain result, in PrototypeMaterializationContext context = default) {
         this.Data.Materialize(frame, ref result.Data, in context);
-        result.HeroSkillTimer = this.HeroSkillTimer;
-        result.DashSkillTimer = this.DashSkillTimer;
-        result.LeashTimer = this.LeashTimer;
+        result.Goal = this.Goal;
+        PrototypeValidator.FindMapEntity(this.GoalTarget, in context, out result.GoalTarget);
+        result.GoalTimer = this.GoalTimer;
+        PrototypeValidator.FindMapEntity(this.IgnoredTarget, in context, out result.IgnoredTarget);
+        result.IgnoreTimer = this.IgnoreTimer;
+        result.Heading = this.Heading;
+        result.ClimbCommitTimer = this.ClimbCommitTimer;
+        result.ClimbDirection = this.ClimbDirection;
+        result.DeflectSide = this.DeflectSide;
+        result.LeaderHeading = this.LeaderHeading;
+        result.LastLeaderPosition = this.LastLeaderPosition;
         result.FormationAngle = this.FormationAngle;
         result.FormationDistance = this.FormationDistance;
         result.FormationRerollTimer = this.FormationRerollTimer;
-        PrototypeValidator.FindMapEntity(this.SoloTarget, in context, out result.SoloTarget);
-        result.SoloRepickTimer = this.SoloRepickTimer;
-        for (int i = 0, count = PrototypeValidator.CheckLength(RoutePath, 16, in context); i < count; ++i) {
-          *result.RoutePath.GetPointer(i) = this.RoutePath[i];
+        result.Regrouping = this.Regrouping;
+        result.ProgressAnchor = this.ProgressAnchor;
+        result.StuckTimer = this.StuckTimer;
+        result.LeashTimer = this.LeashTimer;
+        result.HeroSkillGuardTimer = this.HeroSkillGuardTimer;
+        result.DashGuardTimer = this.DashGuardTimer;
+        result.StrafeSign = this.StrafeSign;
+        result.StrafeTimer = this.StrafeTimer;
+        for (int i = 0, count = PrototypeValidator.CheckLength(Path, 32, in context); i < count; ++i) {
+          *result.Path.GetPointer(i) = this.Path[i];
         }
-        result.RoutePathCount = this.RoutePathCount;
-        result.RoutePathCursor = this.RoutePathCursor;
-        for (int i = 0, count = PrototypeValidator.CheckLength(DetourPath, 32, in context); i < count; ++i) {
-          *result.DetourPath.GetPointer(i) = this.DetourPath[i];
-        }
-        result.DetourPathCount = this.DetourPathCount;
-        result.DetourPathCursor = this.DetourPathCursor;
+        result.PathCount = this.PathCount;
+        result.PathCursor = this.PathCursor;
+        result.PathGoal = this.PathGoal;
+        result.RepathTimer = this.RepathTimer;
         result.StoreAttemptedAtBreathingIndex = this.StoreAttemptedAtBreathingIndex;
+        result.BlacksmithAttemptedAtBreathingIndex = this.BlacksmithAttemptedAtBreathingIndex;
+        result.CursedRiftAttemptedAtBreathingIndex = this.CursedRiftAttemptedAtBreathingIndex;
+        result.ShrineAttemptedAtBreathingIndex = this.ShrineAttemptedAtBreathingIndex;
     }
   }
   [System.SerializableAttribute()]
@@ -2021,6 +2050,7 @@ namespace Quantum.Prototypes {
     public Button SwitchTarget;
     public Button DashSkill;
     public Button HeroSkill;
+    public Button Ping;
     partial void MaterializeUser(Frame frame, ref Quantum.Input result, in PrototypeMaterializationContext context);
     public void Materialize(Frame frame, ref Quantum.Input result, in PrototypeMaterializationContext context = default) {
         result.Direction = this.Direction;
@@ -2030,6 +2060,7 @@ namespace Quantum.Prototypes {
         result.SwitchTarget = this.SwitchTarget;
         result.DashSkill = this.DashSkill;
         result.HeroSkill = this.HeroSkill;
+        result.Ping = this.Ping;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -2855,6 +2886,27 @@ namespace Quantum.Prototypes {
         result.AirborneSource = this.AirborneSource;
         result.WasManualJump = this.WasManualJump;
         result.WaterEdgeHesitationTimer = this.WaterEdgeHesitationTimer;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.PlayerPing))]
+  public unsafe partial class PlayerPingPrototype : ComponentPrototype<Quantum.PlayerPing> {
+    public FP Cooldown;
+    public FP StickCooldown;
+    public FP GroundSpamTimer;
+    public Int32 GroundSpamCount;
+    partial void MaterializeUser(Frame frame, ref Quantum.PlayerPing result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.PlayerPing component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.PlayerPing result, in PrototypeMaterializationContext context = default) {
+        result.Cooldown = this.Cooldown;
+        result.StickCooldown = this.StickCooldown;
+        result.GroundSpamTimer = this.GroundSpamTimer;
+        result.GroundSpamCount = this.GroundSpamCount;
         MaterializeUser(frame, ref result, in context);
     }
   }

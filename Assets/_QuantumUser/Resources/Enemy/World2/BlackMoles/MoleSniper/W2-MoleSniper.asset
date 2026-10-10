@@ -278,8 +278,9 @@ MonoBehaviour:
       Value: 0
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 36dd1e61cdac04d189cb55341a23b3b4, type: 2}
+  Description: Takes aim from the edge of the dunes.
   ViewPrefab: {fileID: 4558517492767084542, guid: c795555bf980948cbb76c6f7a4788f24, type: 3}
-  FactionSkins: []
 --- !u!114 &2424313878542868957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -457,7 +458,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -537,7 +539,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -617,7 +620,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -697,7 +701,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4

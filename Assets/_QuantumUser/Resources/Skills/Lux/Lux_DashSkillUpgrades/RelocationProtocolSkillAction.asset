@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_DashSkillUpgrades/RelocationProtocolSkillAction
     Guid:
       Value: 465261250465140776
-  Icon: {fileID: -649492913, guid: 355e00907e214470bac0029f70064510, type: 3}
+  Icon: {fileID: 21300000, guid: 3066df4a9a1d4977bdc714e8b98c1df1, type: 3}
   DisplayName: Relocation Protocol
   RankDescriptions:
   - "Dashing from within <color=#FD3971>4m</color> of your Sentry moves it to where you land."

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/ExplosiveRounds
     Guid:
       Value: 271843238532602476
-  Icon: {fileID: -1426688026, guid: b217254d41b6945b1873986186a25786, type: 3}
+  Icon: {fileID: 21300000, guid: 43cc57568bf04610a9c5e7bef8162319, type: 3}
   DisplayName: Explosive Rounds
   Description: "Weapon hits can trigger a small explosion."
   <MaxRank>k__BackingField: 3

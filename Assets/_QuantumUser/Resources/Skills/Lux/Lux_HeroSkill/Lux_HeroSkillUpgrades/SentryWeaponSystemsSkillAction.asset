@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryWeaponSystemsSkillAction
     Guid:
       Value: 529575028993573537
-  Icon: {fileID: 1503738143, guid: 355e00907e214470bac0029f70064510, type: 3}
+  Icon: {fileID: 21300000, guid: 1c185fdf83ff470984445cc94da14eb9, type: 3}
   DisplayName: Weapon Systems
   RankDescriptions:
   - "Sentry gains a Minigun alongside its Cannon."

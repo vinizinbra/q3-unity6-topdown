@@ -117,6 +117,7 @@ public class TilesetPreviewScene : MonoBehaviour
             return;
         }
 
+        ShoreObstacles.Stamp(land, res, worldUnitsPerTexel, worldCenter);   // icebergs etc. count as land
         var dist = ChamferDistance(land, res);
         if (field == null || field.width != res)
         {

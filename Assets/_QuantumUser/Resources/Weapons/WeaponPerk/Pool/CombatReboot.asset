@@ -16,9 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/CombatReboot
     Guid:
       Value: 428002282059014817
-  Icon: {fileID: 693028312, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: a41a54aab28049d0a9f783f257c5db7d, type: 3}
   DisplayName: Combat Reboot
   Rarity: 2
-  Description: 'Emptying the magazine reduces Hero Skill cooldown by <color=#FD3971>{0:0}s</color>'
+  Description: 'Empty mag: -<color=#FD3971><b>{0:0}s</b></color> skill cooldown'
   CooldownReduction:
     RawValue: 131072

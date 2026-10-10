@@ -16,11 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/ExplosiveSequence
     Guid:
       Value: 412418293922873780
-  Icon: {fileID: -1701059921, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: f395a74076b2459c8853e5d20f2c2f18, type: 3}
   DisplayName: Explosive Sequence
   Rarity: 1
-  Description: Every <color=#FD3971>{0:0}</color>th shot explodes for <color=#FD3971>{1:0}%</color>
-    damage
+  Description: Every <color=#FD3971><b>{0:0}th</b></color> shot explodes (<color=#FD3971><b>{1:0}%</b></color>
+    Damage)
   Interval: 5
   Radius:
     RawValue: 196608

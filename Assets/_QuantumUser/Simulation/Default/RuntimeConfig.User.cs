@@ -217,33 +217,45 @@
             public FP LeashDistance;
             public FP LeashTimeout;
 
-            [Header("Skills")]
-            // The bot presses Hero Skill / Dash on a countdown re-rolled inside these bands after
-            // every press, so two bots never stay in lockstep. Max <= Min collapses to a fixed
-            // interval.
-            public FP HeroSkillIntervalMin;
-            public FP HeroSkillIntervalMax;
-            public FP DashIntervalMin;
-            public FP DashIntervalMax;
+            [Header("Leader")]
+            // Past this distance from its leader (the lowest-PlayerRef human) the bot drops
+            // whatever it is doing and regroups, until it is back within FollowDistance.
+            public FP LeaderMaxDistance;
 
-            // Only press Hero Skill when an enemy is within this range - a skill fired into an
-            // empty room is just a wasted cooldown to watch. <= 0 removes the check (always cast
-            // on the timer).
-            public FP HeroSkillEnemyRange;
+            // Enemies/pickups are only taken on while they are within this distance of the LEADER,
+            // so a bot fights and loots around the human instead of wandering off after a kill.
+            // Ignored when there is no human to follow (the bot then plays the whole map).
+            public FP LeaderTetherRadius;
+
+            [Header("Combat")]
+            // How far from the bot an enemy can be before the bot goes after it.
+            public FP EngageRange;
+
+            // How far the bot looks for XP/Coin/Rift Shard orbs and Chests.
+            public FP LootRange;
+
+            // Below this fraction of Max Health the bot retreats from nearby enemies (and dashes
+            // away from one that's on top of it) instead of fighting.
+            public FP RetreatHealthFraction;
 
             [Header("Formation")]
-            // Each bot parks at its own random slot - an angle (relative to the follow target's
-            // CURRENT facing) plus a distance - instead of walking straight for the target's exact
-            // position, so a party of them fans out instead of stacking. Re-rolled on its own timer
-            // (below), not every tick, so a slot holds still rather than drifting. Max <= Min
-            // collapses the distance to a fixed value.
+            // Distance range of each bot's formation slot behind/beside the leader. Max <= Min
+            // collapses to a fixed value.
             public FP FormationOffsetMin;
             public FP FormationOffsetMax;
 
-            // How often each bot's own formation slot re-rolls to a new angle/distance. Max <= Min
-            // collapses to a fixed interval.
+            // How often each bot's formation slot re-rolls (a small angle jitter around its fixed
+            // side). Max <= Min collapses to a fixed interval.
             public FP FormationRerollIntervalMin;
             public FP FormationRerollIntervalMax;
+
+            [Header("Breathing POIs")]
+            // Opt-outs (a struct can't carry field initializers, see below): by default a bot uses
+            // the Store, Blacksmith, Healing Shrine and Cursed Rift once per Breathing Break.
+            public bool DisableStore;
+            public bool DisableBlacksmith;
+            public bool DisableHealingShrine;
+            public bool DisableCursedRift;
 
             [Header("Flow")]
             // A bot has nobody at the keyboard, so by default it takes itself out of every
@@ -262,16 +274,6 @@
             // the Ready/Cancel Area and press Interact, so it auto-Readies instead of silently
             // blocking a human party from ever reaching unanimity.
             public bool DisableAutoTeamChallengeReady;
-
-            [Header("Solo (no follow target)")]
-            // A bot with nobody left to follow (no human, no other bot - see
-            // BotInputSystem.UpdateSolo) picks its own goal instead of standing still: the nearest
-            // undiscovered Chunk, or the nearest enemy/XP orb, re-evaluated on this interval (or
-            // immediately if the current goal stops being valid).
-            public FP SoloRepickInterval;
-
-            // How far a solo bot looks for an enemy/XP orb to chase when picking a new goal.
-            public FP SoloSearchRange;
         }
 
         // The pickup entity prototypes each currency/pickup utility spawns on an eligible enemy

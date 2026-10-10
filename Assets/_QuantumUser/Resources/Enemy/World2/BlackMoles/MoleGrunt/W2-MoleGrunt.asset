@@ -184,14 +184,9 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 36dd1e61cdac04d189cb55341a23b3b4, type: 2}
+  Description: Cheap digger that swarms in numbers.
   ViewPrefab: {fileID: 6254092517707556305, guid: 33e43671a823b42528143ad5a1bfd990, type: 3}
-  FactionSkins:
-  - Faction: 2
-    ViewPrefab: {fileID: 8476845490732343577, guid: 2e4a8f2b5eaf44c0ba7cade36c968ed0, type: 3}
-    ScaleMultiplier: 1
-  - Faction: 1
-    ViewPrefab: {fileID: 8476845490732343577, guid: 6693b9f5a94d24c6abb671572d63e821, type: 3}
-    ScaleMultiplier: 1
 --- !u!114 &3628957316349707937
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -304,7 +299,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -384,7 +380,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -464,7 +461,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -544,7 +542,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4

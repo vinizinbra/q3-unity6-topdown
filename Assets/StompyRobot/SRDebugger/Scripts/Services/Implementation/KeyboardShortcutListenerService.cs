@@ -27,6 +27,9 @@ namespace SRDebugger.Services.Implementation
 
 #if ENABLE_INPUT_SYSTEM
 
+            // No keyboard attached (phones/tablets): nothing to cache, and UpdateInputSystem bails too.
+            if (Keyboard.current == null) return;
+
             foreach (var s in _shortcuts)
             {
                 // Cache the actual keycode so we don't have to use strings each time we want to use it.
@@ -179,6 +182,7 @@ namespace SRDebugger.Services.Implementation
         private void UpdateInputSystem()
         {
             var keyboard = Keyboard.current;
+            if (keyboard == null) return;
 
             if (Settings.Instance.KeyboardEscapeClose && keyboard.escapeKey.isPressed && Service.Panel.IsVisible)
             {

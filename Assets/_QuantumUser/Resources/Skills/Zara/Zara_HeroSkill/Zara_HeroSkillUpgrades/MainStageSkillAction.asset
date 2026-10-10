@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/MainStageSkillAction
     Guid:
       Value: 536920649201853917
-  Icon: {fileID: -1158149854, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  Icon: {fileID: 21300000, guid: c310d0d774c1405da5777cd659cda236, type: 3}
   DisplayName: Main Stage
   RankDescriptions:
   - "Totem Beat radius <color=#FD3971>+30%</color>."

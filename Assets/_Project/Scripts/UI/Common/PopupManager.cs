@@ -125,6 +125,53 @@ public class PopupManager : MonoBehaviour {
         {
             ShowPopup(popupQueue[0]);
         }
+
+        // Gamepad Cancel (B) dismisses the popup on top - only if that popup allows being dismissed
+        // (CanCloseOnDimClick), same rule as the dim click. Skipped while the menu Canvas is switched off
+        // for a match: this manager lives under it and must not react to the match's Cancel presses.
+        // Gamepad Start toggles the Settings popup, like it does in a match - but only over an otherwise empty
+        // menu: it never closes or stacks on top of some other popup.
+        if (Quantum.GamepadControls.OpenSettingsPressed && IsMenuVisible())
+        {
+            if (currentPopup is MenuSettingsPopup)
+            {
+                CloseCurrentPopup();
+                return;
+            }
+
+            if (HasPendingPopups == false)
+            {
+                foreach (UiPopup popup in popups)
+                {
+                    if (popup is MenuSettingsPopup settings)
+                    {
+                        settings.Open();
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (currentPopup != null && IsMenuVisible())
+        {
+            if (Quantum.GamepadControls.CancelPressed)
+                CloseCurrentPopup();
+            else if (currentPopup != null)
+                UiSelectionUtility.TrapFocusInside(currentPopup);
+        }
+    }
+
+    private Canvas _rootCanvas;
+
+    private bool IsMenuVisible()
+    {
+        if (_rootCanvas == null)
+        {
+            Canvas canvas = GetComponentInParent<Canvas>(true);
+            _rootCanvas = canvas != null ? canvas.rootCanvas : null;
+        }
+
+        return _rootCanvas == null || _rootCanvas.enabled;
     }
 
     void OnPopupClose()

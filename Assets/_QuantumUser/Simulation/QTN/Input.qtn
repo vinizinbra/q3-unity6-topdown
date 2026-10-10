@@ -6,4 +6,5 @@ input {
     button SwitchTarget;
     button DashSkill;
     button HeroSkill;
+    button Ping;
 }

@@ -22,6 +22,39 @@ public class TabGroup : MonoBehaviour
         {
             OnTabSelected(selectedTabButton);
         }
+
+        StartCoroutine(PrewarmClosedTabs());
+    }
+
+    // Tabs build their lists the first time they are shown (Catalog ~50 tiles, Heroes + 3D preview...), a visible
+    // hitch the first time focus passes over them now that moving down the rail previews each tab. Shortly after
+    // the menu opens, each closed tab is switched on invisibly (alpha 0) for two frames - enough for its Start /
+    // first build - and off again, one tab per step so the work is spread out. Show()/Hide() are not called.
+    private IEnumerator PrewarmClosedTabs()
+    {
+        yield return new WaitForSecondsRealtime(1f);
+
+        foreach (TabContent content in tabContent)
+        {
+            if (content == null || content.gameObject.activeSelf)
+                continue;
+
+            CanvasGroup fade = content.GetComponent<CanvasGroup>();
+            if (fade == null)
+                fade = content.gameObject.AddComponent<CanvasGroup>();
+
+            fade.alpha = 0f;
+            content.gameObject.SetActive(true);
+            yield return null;
+            yield return null;
+
+            // The player may have opened this very tab meanwhile - then it must stay on.
+            if (content != null && content != selectedTabContent)
+                content.gameObject.SetActive(false);
+
+            fade.alpha = 1f;
+            yield return null;
+        }
     }
 
     public void Subscribe(TabButton button)
@@ -50,13 +83,40 @@ public class TabGroup : MonoBehaviour
         OnTabSelected(button, false);
     }
 
+    /// <summary>True when this button has a content to show (a rail button past the end of the list has none).</summary>
+    public bool HasContent(TabButton button)
+    {
+        int index = tabButtons.IndexOf(button);
+        return index >= 0 && index < tabContent.Count && tabContent[index] != null;
+    }
+
+    /// <summary>
+    /// Focus moved onto a tab button (gamepad/keyboard): open its content as a preview without taking focus
+    /// off the button. Buttons without content, and the tab that is already open, are left alone.
+    /// </summary>
+    public void PreviewTab(TabButton button)
+    {
+        if (HasContent(button))
+            OnTabSelected(button, false);
+    }
+
     public void OnTabSelected(TabButton button, bool focusContent)
     {
+        // Already open (focus came back to its button, or Submit/Right on it): don't hide and re-show the
+        // content - that restarts its intro animations - just hand over focus if asked.
+        if (selectedTabButton == button && selectedTabContent != null && selectedTabContent.gameObject.activeSelf)
+        {
+            if (focusContent)
+                StartCoroutine(FocusContentNextFrame(selectedTabContent, button));
+            return;
+        }
+
         if (selectedTabButton != null)
         {
             selectedTabButton.Deselect();
         }
         
+        bool hadContent = selectedTabContent != null;
         selectedTabButton = button;
         
         selectedTabButton.Select();
@@ -84,6 +144,10 @@ public class TabGroup : MonoBehaviour
             tabContent[index].gameObject.SetActive(true);
             selectedTabContent = tabContent[index];
             tabContent[index].Show();
+
+            // The tab that comes in rises and fades in; skipped for the tab that is already open (re-select) and the first open.
+            if (hadContent)
+                PageTransitionWidget.Play(tabContent[index].gameObject);
 
             if (focusContent)
                 StartCoroutine(FocusContentNextFrame(tabContent[index], button));

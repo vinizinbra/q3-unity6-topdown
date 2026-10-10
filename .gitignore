@@ -115,3 +115,6 @@ InitTestScene*.unity*
 /Assets/3rd-party/Ultimate SFX Bundle - HD Remaster.meta
 /Assets/3rd-party/Universal Sound FX/
 /Assets/3rd-party/Universal Sound FX.meta
+
+# Unity Profiler captures (hundreds of MB, local only)
+ProfilerCaptures/

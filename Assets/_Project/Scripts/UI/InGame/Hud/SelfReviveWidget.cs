@@ -52,6 +52,7 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
 
     private EntityRef _entityRef;
     private bool _shown;
+    private bool _focusPending;
 
     private void Start()
     {
@@ -104,6 +105,7 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
 
         if (incapacitated == false)
         {
+            _focusPending = false;
             // visualRoot going inactive already hides these, but only if they live under it -
             // they're optional, hand-placed references that don't have to. Cleared explicitly so a
             // completed/interrupted revive never leaves a stale bar behind either way.
@@ -172,7 +174,24 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
         {
             selfReviveButton.gameObject.SetActive(isKo == false);
             selfReviveButton.interactable = isKo == false && charges > 0;
+
+            // Controller/keyboard focus: a downed player has nothing else to navigate to, so the
+            // button takes focus as soon as it's usable (re-armed on every Downed entry, and when a
+            // charge is gained after showing with none) and again whenever the selection was lost.
+            if (selfReviveButton.interactable == false)
+                _focusPending = true;
+            else if (_focusPending || IsSelectionLost())
+            {
+                _focusPending = false;
+                UiSelectionUtility.SelectFirstInteractable(selfReviveButton);
+            }
         }
+    }
+
+    private bool IsSelectionLost()
+    {
+        var eventSystem = UnityEngine.EventSystems.EventSystem.current;
+        return eventSystem != null && eventSystem.currentSelectedGameObject == null;
     }
 
     private void OnSelfReviveClicked()
@@ -229,6 +248,7 @@ public class SelfReviveWidget : QuantumGlobalMonoBehaviour
             return;
 
         _shown = shown;
+        _focusPending = shown;
         visualRoot.SetActive(shown);
     }
 }

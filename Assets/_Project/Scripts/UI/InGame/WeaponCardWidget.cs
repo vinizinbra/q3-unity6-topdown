@@ -61,6 +61,10 @@ public class WeaponCardWidget : MonoBehaviour
         // convention as UpgradeCardWidget.CardData.ButtonLabel. Empty (default) resets to
         // defaultButtonLabel, so a reused card slot never keeps a stale label from last time.
         public string ButtonLabel;
+
+        // Display-only card (e.g. ChooseWindow's CURRENT WEAPON comparison card) - hides the button
+        // and purchase row so it can't be clicked or selected.
+        public bool ReadOnly;
     }
 
     [Serializable]
@@ -103,9 +107,6 @@ public class WeaponCardWidget : MonoBehaviour
     [SerializeField, Tooltip("One label per ElementType value, in enum order: Neutral, Fire, Ice, Lightning. Rock/Void were retired - if this was already authored with 6 entries in the Inspector, re-author it down to 4.")]
     private string[] elementLabels = { "Neutral", "Fire", "Ice", "Lightning" };
     [SerializeField] private TMP_Text elementText;
-
-    [SerializeField, Tooltip("TMP sprite-asset glyph name appended onto weaponName as a trailing `<sprite name=\"...\">` tag, one per ElementType value in enum order: Neutral, Fire, Ice, Lightning. Neutral is left empty on purpose - no icon for a Neutral weapon.")]
-    private string[] elementSpriteNames = { string.Empty, "FIRE", "ICE", "LIGHTNING" };
 
     [SerializeField, Tooltip("Icon swapped per the weapon's weight class - see weightSprites.")]
     private Image weightIcon;
@@ -169,7 +170,7 @@ public class WeaponCardWidget : MonoBehaviour
             weaponIcon.sprite = data.WeaponIcon;
 
         if (weaponName != null)
-            weaponName.text = AppendElementSpriteTag(data.WeaponName, data.ElementIndex);
+            weaponName.text = data.WeaponName;
 
         if (descriptionText != null)
         {
@@ -196,9 +197,17 @@ public class WeaponCardWidget : MonoBehaviour
         if (criticalChanceText != null)
             criticalChanceText.text = $"{Mathf.RoundToInt(data.CriticalChance * 100f)}%";
 
-        bool hasElementSprite = elementSprites != null && data.ElementIndex >= 0 && data.ElementIndex < elementSprites.Length;
-        if (elementIcon != null && hasElementSprite)
-            elementIcon.sprite = elementSprites[data.ElementIndex];
+        // Neutral has no sprite authored (null/empty slot) - hide the icon object instead of leaving
+        // a blank or stale image from the previous weapon this pooled card showed.
+        Sprite elementSprite = elementSprites != null && data.ElementIndex >= 0 && data.ElementIndex < elementSprites.Length
+            ? elementSprites[data.ElementIndex]
+            : null;
+
+        if (elementIcon != null)
+        {
+            elementIcon.sprite = elementSprite;
+            elementIcon.gameObject.SetActive(elementSprite != null);
+        }
 
         if (elementText != null)
         {
@@ -231,21 +240,18 @@ public class WeaponCardWidget : MonoBehaviour
         PurchasableCardUi.Apply(data.Purchase, purchaseRoot, priceText, currencyIcon, soldOutOverlay, ref interactable, buyButtonStyle);
 
         if (button != null)
+        {
+            // The Button sits on the card root itself, so the object can't be hidden - disabling the
+            // component makes the card unclickable/unselectable, and the label row is hidden below.
+            button.enabled = data.ReadOnly == false;
             button.interactable = interactable;
-    }
+        }
 
-    // Trailing `<sprite name="...">` tag onto the weapon's name, e.g. "Pistol <sprite name=\"IceElemental\">"
-    // - resolved via elementSpriteNames (Inspector-authored, so the glyph names can be retuned without
-    // a code change, same as elementLabels/weightLabels above). No-op (returns name unchanged) for
-    // Neutral or an out-of-range index, since elementSpriteNames[0] is deliberately left empty.
-    private string AppendElementSpriteTag(string name, int elementIndex)
-    {
-        if (elementSpriteNames == null || elementIndex < 0 || elementIndex >= elementSpriteNames.Length)
-            return name;
+        if (buttonLabelText != null)
+            buttonLabelText.gameObject.SetActive(data.ReadOnly == false);
 
-        string spriteName = elementSpriteNames[elementIndex];
-
-        return string.IsNullOrEmpty(spriteName) ? name : $"{name} <sprite name=\"{spriteName}\">";
+        if (data.ReadOnly && purchaseRoot != null)
+            purchaseRoot.SetActive(false);
     }
 
     // Grows _perkRows to at least `count`, cloning perkRows[0] into its own parent for anything the

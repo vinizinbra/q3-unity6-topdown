@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_HeroSkillUpgrades/DirectHitSkillAction
     Guid:
       Value: 341122185964529345
-  Icon: {fileID: 0}
+  Icon: {fileID: 21300000, guid: 13ffbe31ad004f5a8d8a5fdf63265524, type: 3}
   DisplayName: Direct Hit
   RankDescriptions:
   - "Enemies in the inner <color=#FD3971>35%</color> of Pixie's explosions take <color=#FD3971>+30%</color> Damage."

@@ -37,7 +37,7 @@ namespace Quantum
     // EventProjectileDestroyed fires (this used to subscribe to that event directly and stop them
     // immediately, which cut the trail dead while the visual was still tweening the last stretch onto
     // the target).
-    public class ProjectileDataVisualsView : CustomQuantumEntityViewComponent
+    public class ProjectileDataVisualsView : CustomQuantumEntityViewComponent, IProjectilePoolPart
     {
         [Header("Sprite (billboard)")]
         [SerializeField, Tooltip("Optional - the projectile's own sprite. Its Sprite image, tint, scale and rotation offset come from WeaponDataAsset.ProjectileVisuals (ProjectileSprite/ProjectileColor/ProjectileScale/ProjectileSpriteRotationOffset). Needs a BillboardVelocityAlignedSprite alongside it to receive the rotation offset (auto-added if this GameObject doesn't already have one). Leave empty for a projectile with no sprite (e.g. a 3D mesh bullet).")]
@@ -56,6 +56,44 @@ namespace Quantum
         // Cached in ApplySprite, fed the real Projectile.Velocity every tick in QUpdate below - see
         // BillboardVelocityAlignedSprite.SetVelocityOverride's own comment for why.
         private BillboardVelocityAlignedSprite _billboard;
+
+        // Resolved once. A projectile view is reused (ProjectileViewUpdater pool), so none of this
+        // may be looked up or allocated per shot: the sibling ProjectileView, the billboard (added the
+        // first time a sprite is applied and kept, just disabled, while the view sits in the pool) and
+        // the small arrays handed to ProjectileView.Register* (read-only on the other side).
+        private ProjectileView _projectileView;
+        private BillboardVelocityAlignedSprite _billboardInstance;
+        private Renderer[] _spriteRenderers;
+        private ParticleSystem[] _noTrails;
+        private ParticleSystem[] _sparkOnly;
+        private ParticleSystem[] _glowOnly;
+        private ParticleSystem[] _sparkAndGlow;
+
+        public override void Awake()
+        {
+            base.Awake();
+
+            _projectileView = GetComponent<ProjectileView>();
+            _spriteRenderers = sprite != null ? new Renderer[] { sprite } : null;
+            _sparkOnly = sparkTrail != null ? new[] { sparkTrail } : null;
+            _glowOnly = glow != null ? new[] { glow } : null;
+            _sparkAndGlow = sparkTrail != null && glow != null ? new[] { sparkTrail, glow } : null;
+        }
+
+        // The billboard is added at runtime (not in ProjectileViewSnapshot) and keeps a velocity
+        // override and roll angle from the last shot. Parked here until ApplySprite brings it back, so
+        // a reused view that never resolves a WeaponData (a skill/enemy shot) doesn't keep rolling a
+        // sprite with the previous weapon's offset.
+        public void ResetForPool()
+        {
+            if (_billboard != null)
+            {
+                _billboard.SetVelocityOverride(null);
+                _billboard.enabled = false;
+            }
+
+            _billboard = null;
+        }
 
         public override void Initialize(QuantumGame game)
         {
@@ -90,15 +128,15 @@ namespace Quantum
 
         private void RegisterWithProjectileView(ProjectileVisualsConfig visuals)
         {
-            ProjectileView projectileView = GetComponent<ProjectileView>();
+            ProjectileView projectileView = _projectileView;
             if (projectileView == null)
             {
                 LogHelper.Warn("ProjFlow", $"[{_entityRef}] DataVisuals: no ProjectileView on this GameObject - extra particles/renderer will NOT get graceful-fade/catch-up treatment, they'll be cut off instantly on impact", this);
                 return;
             }
 
-            if (sprite != null)
-                projectileView.RegisterExtraRenderers(new Renderer[] { sprite });
+            if (_spriteRenderers != null)
+                projectileView.RegisterExtraRenderers(_spriteRenderers);
 
             // Dedicated ProjectileDestroyColor/ProjectileDestroyGlowColor/ProjectileDestroyScale -
             // the impact burst is tuned independently of how the live projectile looks in flight, not
@@ -114,17 +152,17 @@ namespace Quantum
             projectileView.RegisterDestroyEffectChildColor(destroyChildColor);
 
             projectileView.RegisterDestroyEffectScale(visuals.ProjectileDestroyScale);
+            projectileView.RegisterDestroyEffectEnabled(visuals.EnableProjectileDestroyEffect);
 
-            var activeTrails = new List<ParticleSystem>(2);
-            if (visuals.EnableProjectileSparkTrail && sparkTrail != null)
-                activeTrails.Add(sparkTrail);
-            if (visuals.EnableProjectileGlow && glow != null)
-                activeTrails.Add(glow);
+            bool useSpark = visuals.EnableProjectileSparkTrail && sparkTrail != null;
+            bool useGlow = visuals.EnableProjectileGlow && glow != null;
 
-            LogHelper.Log("ProjFlow", $"[{_entityRef}] DataVisuals: registered {activeTrails.Count} extra trail particle(s), extraRenderer={(sprite != null)}", this);
+            ParticleSystem[] activeTrails = useSpark
+                ? (useGlow ? _sparkAndGlow : _sparkOnly)
+                : (useGlow ? _glowOnly : _noTrails);
 
-            if (activeTrails.Count > 0)
-                projectileView.RegisterExtraTrailParticles(activeTrails.ToArray());
+            if (activeTrails != null)
+                projectileView.RegisterExtraTrailParticles(activeTrails);
         }
 
         private void ApplySprite(ProjectileVisualsConfig visuals)
@@ -138,9 +176,15 @@ namespace Quantum
             sprite.color = visuals.ProjectileColor;
             sprite.transform.localScale = visuals.ProjectileScale;
 
-            _billboard = sprite.GetComponent<BillboardVelocityAlignedSprite>();
-            if (_billboard == null)
-                _billboard = sprite.gameObject.AddComponent<BillboardVelocityAlignedSprite>();
+            if (_billboardInstance == null)
+            {
+                _billboardInstance = sprite.GetComponent<BillboardVelocityAlignedSprite>();
+                if (_billboardInstance == null)
+                    _billboardInstance = sprite.gameObject.AddComponent<BillboardVelocityAlignedSprite>();
+            }
+
+            _billboard = _billboardInstance;
+            _billboard.enabled = true;
 
             _billboard.AngleOffset = visuals.ProjectileSpriteRotationOffset;
         }
@@ -178,8 +222,7 @@ namespace Quantum
         // sit on the visual root itself, and the controller already owns `emitting`.
         private void ApplyTrail(ProjectileVisualsConfig visuals)
         {
-            ProjectileView projectileView = GetComponent<ProjectileView>();
-            TrailRenderer trail = projectileView != null ? projectileView.TrailRenderer : null;
+            TrailRenderer trail = _projectileView != null ? _projectileView.TrailRenderer : null;
             if (trail == null)
                 return;
 

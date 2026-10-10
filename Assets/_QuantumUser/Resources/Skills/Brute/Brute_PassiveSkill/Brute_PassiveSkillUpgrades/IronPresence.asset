@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/IronPresence
     Guid:
       Value: 505319841889557397
-  Icon: {fileID: 2129868926, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 21300000, guid: 2b510cc4fe7947ceafb19f049a3397f7, type: 3}
   DisplayName: Iron Presence
   Description: "Enemies intimidated by your Protector Aura are worn down before they reach you."
   <MaxRank>k__BackingField: 3

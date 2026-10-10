@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/NeutralMastery
     Guid:
       Value: 484349075653730466
-  Icon: {fileID: 1426104403, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 21300000, guid: 537941b76e6c4dd1b314a77725d30ceb, type: 3}
   DisplayName: Neutral Mastery
   Description: Neutral weapons hit harder - and at rank 3, Brute turns his Charge
     into raw offense.

@@ -4,7 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class TabButton : MonoBehaviour, IPointerClickHandler,IPointerEnterHandler,IPointerExitHandler,ISubmitHandler
+public class TabButton : MonoBehaviour, IPointerClickHandler,IPointerEnterHandler,IPointerExitHandler,ISubmitHandler,ISelectHandler,IMoveHandler
 {
     public TabGroup group;
     public Image background;
@@ -33,6 +33,25 @@ public class TabButton : MonoBehaviour, IPointerClickHandler,IPointerEnterHandle
     public void OnSubmit(BaseEventData eventData)
     {
         group.OnTabSelected(this, true);
+    }
+
+    // Gamepad/keyboard focus (not a mouse press) opens the tab as a preview: moving down the rail shows what
+    // each tab holds, and Submit or Right then steps into it. The focus stays on this button.
+    public void OnSelect(BaseEventData eventData)
+    {
+        if (eventData is PointerEventData)
+            return;
+
+        group.PreviewTab(this);
+    }
+
+    public void OnMove(AxisEventData eventData)
+    {
+        if (eventData.moveDir != MoveDirection.Right || !group.HasContent(this))
+            return;
+
+        group.OnTabSelected(this, true);
+        eventData.Use();
     }
 
     public void OnPointerEnter(PointerEventData eventData)

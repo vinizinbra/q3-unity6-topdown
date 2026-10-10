@@ -354,7 +354,7 @@ namespace QuantumUser.Editor
             new PerkSpec
             {
                 Type = typeof(ElementInfusionWeaponPerkData), FileName = "IncendiaryRounds",
-                DisplayName = "Incendiary Rounds", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Incendiary Rounds", Rarity = UpgradeRarity.Epic,
                 Description = "{1:0}% chance to Burn enemies on hit",
                 Configure = p =>
                 {
@@ -366,7 +366,7 @@ namespace QuantumUser.Editor
             new PerkSpec
             {
                 Type = typeof(ElementInfusionWeaponPerkData), FileName = "CryoRounds",
-                DisplayName = "Cryo Rounds", Rarity = UpgradeRarity.Rare,
+                DisplayName = "Cryo Rounds", Rarity = UpgradeRarity.Epic,
                 Description = "{1:0}% chance to Slow enemies on hit",
                 Configure = p =>
                 {

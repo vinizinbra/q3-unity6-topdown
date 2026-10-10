@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/W1-DroneGunner
     Guid:
       Value: 487934318549906861
-  EnemyName: Swarm
+  EnemyName: Drone Gunner
   Tier: 1
   Economy:
     Persistent: 0
@@ -184,5 +184,6 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 26afa0b7c1c5442e3956a668aec84cb3, type: 2}
+  Description: Flying drone that shoots from above.
   ViewPrefab: {fileID: 8476845490732343577, guid: 5d39228d371e74177b7e5a03f2d3e31c, type: 3}
-  FactionSkins: []

@@ -16,9 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/LongBarrel
     Guid:
       Value: 345316708933131668
-  Icon: {fileID: -1067484093, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 45248d818e714a7b96f1157fee5d9993, type: 3}
   DisplayName: Long Barrel
   Rarity: 0
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Weapon Range'
+  Description: <color=#FD3971><b>{0:+0;-0}%</b></color> Range
   Multiplier:
     RawValue: 78643

@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Starting Global Upgrade Chest
   kindLabel: EXPLORATION UPGRADE
   description: Start each run with a Global Upgrade Chest at the base.
-  icon: {fileID: -702079272, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
-  accentColor: {r: 1, g: 0.78, b: 0.1, a: 1}
+  icon: {fileID: 8357331837265346054, guid: 7bf46803273b24220ba60766158daf78, type: 3}
+  accentColor: {r: 0.003921569, g: 0.7607843, b: 0.99215686, a: 1}
   category: 1
   group: 0
   maxLevel: 3

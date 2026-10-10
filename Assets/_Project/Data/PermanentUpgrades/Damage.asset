@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Damage
   kindLabel: OFFENSE UPGRADE
   description: Increases all weapon damage.
-  icon: {fileID: 1389070835, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
-  accentColor: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  icon: {fileID: -1620181823153544163, guid: 540e2ba2a8ab94c92bde01a964437bf7, type: 3}
+  accentColor: {r: 0.9843137, g: 0.015686275, b: 0.38039216, a: 1}
   category: 0
   group: 0
   maxLevel: 5

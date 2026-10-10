@@ -19,10 +19,10 @@ MonoBehaviour:
   Icon: {fileID: -436550040, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
   DisplayName: Burger
   TopLabel: HEAL
-  Description: Restore 20% of your Max Health.
+  Description: Restore 50% of your Max Health.
   ButtonLabel: BUY
   Price:
     RawValue: 26214400
   Weight: 100
   HealPercent:
-    RawValue: 13107
+    RawValue: 32768

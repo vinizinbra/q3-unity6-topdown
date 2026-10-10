@@ -60,8 +60,8 @@ Material:
     - _HatchStrength: 0.399
     - _PropLineStrength: 1
     - _PropLineWidth: 1.6
-    - _RaisedFromY: 1.5
-    - _RaisedStrength: 0
+    - _RaisedFromY: 1.2
+    - _RaisedStrength: 0.62
     - _RimOutlineStrength: 0
     - _RimOutlineWidth: 10
     - _ShadowSoftness: 0.04
@@ -69,7 +69,7 @@ Material:
     - _StrataOutlineStrength: 1
     - _StrataOutlineWidth: 8
     - _SurfaceHatchScale: 0.405
-    - _SurfaceScale: 5
+    - _SurfaceScale: 15
     - _SurfaceStrength: 0.7
     - _TriplanarSharpness: 6
     - _WallLineStrength: 1
@@ -84,13 +84,15 @@ Material:
     - _GradientTopColor: {r: 1, g: 1, b: 1, a: 1}
     - _HatchColor: {r: 0.11999995, g: 0.07999996, b: 0.15999997, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RaisedDarkColor: {r: 0.52156866, g: 0.25882354, b: 0.16862746, a: 1}
-    - _RaisedLightColor: {r: 0.19999996, g: 0.54999995, b: 0.5, a: 1}
+    - _RaisedDarkColor: {r: 0.6392157, g: 0.6, b: 0.54901963, a: 1}
+    - _RaisedLightColor: {r: 0.754717, g: 0.7191171, b: 0.6728373, a: 1}
     - _ShadowTint: {r: 0.54999995, g: 0.52, b: 0.72, a: 1}
+    - _SurfaceAccentColor: {r: 0.91, g: 0.71, b: 0.14999998, a: 0}
     - _SurfaceDarkColor: {r: 0.5, g: 0.47, b: 0.43, a: 1}
     - _SurfaceLightColor: {r: 0.64, g: 0.6, b: 0.55, a: 1}
     - _SurfaceTint: {r: 0.7133442, g: 0.754717, b: 0.29547882, a: 1}
     - _WallDarkColor: {r: 0.52, g: 0.26, b: 0.17, a: 1}
+    - _WallGlowColor: {r: 0.04, g: 0.6, b: 0.82, a: 0}
     - _WallLightColor: {r: 0.86, g: 0.52, b: 0.36, a: 1}
     - _WallLineColor: {r: 1, g: 1, b: 1, a: 1}
     - _WallTint: {r: 0.39215687, g: 0.28235295, b: 0.5019608, a: 1}

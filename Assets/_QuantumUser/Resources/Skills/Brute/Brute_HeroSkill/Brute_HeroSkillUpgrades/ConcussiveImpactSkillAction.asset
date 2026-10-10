@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/Brute_HeroSkillUpgrades/ConcussiveImpactSkillAction
     Guid:
       Value: 291462109882006022
-  Icon: {fileID: 2016768158, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 21300000, guid: b59a3d90d7f240c8923d07e34b8d33e0, type: 3}
   DisplayName: Concussive Impact
   RankDescriptions:
   - "Enemies launched by Discharge take <color=#FD3971>30%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>0.75s</color> when they land."

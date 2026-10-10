@@ -94,30 +94,166 @@ public static class UiSelectionUtility
             EventSystem.current.SetSelectedGameObject(closest.gameObject);
     }
 
-    // extraDelay math (e.g. ChooseWindow's per-card stagger) is already baked into whichever Play()
-    // call started target's own ShakeGrowImpactAnimation, if any - Finished fires at the real end of
-    // that, so this doesn't need to know the timing itself, just whether to wait at all.
+    // True while any intro animation under `root` is still running: a ShakeGrowImpactAnimation, or a
+    // one-shot UiTween (ScaleTween...). Looping/ping-pong tweens never "finish", so they don't count.
+    // Used to keep a freshly shown popup/card from being focused or pressed while it still looks mid-pop.
+    public static bool IsAnimating(Transform root)
+    {
+        if (root == null)
+            return false;
+
+        foreach (ShakeGrowImpactAnimation shake in root.GetComponentsInChildren<ShakeGrowImpactAnimation>(false))
+        {
+            if (shake.IsPlaying)
+                return true;
+        }
+
+        foreach (UiTween tween in root.GetComponentsInChildren<UiTween>(false))
+        {
+            if (tween.IsPlaying && tween.playType == UiTween.UiPlayType.ONCE)
+                return true;
+        }
+
+        return false;
+    }
+
+    // Same check for one object: its own and its ancestors' intro animations (a card's pop-in lives on
+    // the card, a button's scale-in on the button or the popup around it).
+    public static bool IsAnimatingAbove(Transform leaf)
+    {
+        if (leaf == null)
+            return false;
+
+        foreach (ShakeGrowImpactAnimation shake in leaf.GetComponentsInParent<ShakeGrowImpactAnimation>(false))
+        {
+            if (shake.IsPlaying)
+                return true;
+        }
+
+        foreach (UiTween tween in leaf.GetComponentsInParent<UiTween>(false))
+        {
+            if (tween.IsPlaying && tween.playType == UiTween.UiPlayType.ONCE)
+                return true;
+        }
+
+        return false;
+    }
+
+    // Longest a popup/card is held back for its animation. Safety net: a tween driven by scaled time
+    // never finishes while Time.timeScale is 0, and a locked popup would be a softlock.
+    public const float MaxSettleSeconds = 2.5f;
+
+    // Focuses `target` once its intro animation has landed (immediately when it isn't animating), so a
+    // controller player never sees focus - or can press Submit - on something that still looks mid-pop.
+    // Runs on the target itself, so it ends with it if it is hidden before landing.
     public static void SelectFirstInteractable(Selectable target)
     {
         if (target == null || EventSystem.current == null)
             return;
 
-        ShakeGrowImpactAnimation anim = target.GetComponentInParent<ShakeGrowImpactAnimation>();
-
-        if (anim == null)
+        if (!IsAnimatingAbove(target.transform))
         {
             EventSystem.current.SetSelectedGameObject(target.gameObject);
             return;
         }
 
-        void OnFinished()
-        {
-            anim.Finished -= OnFinished;
+        target.StartCoroutine(SelectWhenSettled(target));
+    }
 
-            if (EventSystem.current != null)
-                EventSystem.current.SetSelectedGameObject(target.gameObject);
+    private static IEnumerator SelectWhenSettled(Selectable target)
+    {
+        float waited = 0f;
+        while (target != null && IsAnimatingAbove(target.transform) && waited < MaxSettleSeconds)
+        {
+            waited += Time.unscaledDeltaTime;
+            yield return null;
         }
 
-        anim.Finished += OnFinished;
+        if (target != null && target.gameObject.activeInHierarchy && EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(target.gameObject);
+    }
+
+    private static GameObject lastFocusInsidePopup;
+
+    /// <summary>
+    /// Keeps gamepad/keyboard focus inside the popup that is open, like a modal dialog:
+    /// - selection lost (a click that cleared it, an animation, nothing was focused yet): the next stick or
+    ///   Submit input focuses the popup's control nearest to the popup's centre - as if the popup itself took focus;
+    /// - selection leaked to something behind the popup (HUD, menu): pulled straight back (to where it was in the
+    ///   popup, else the nearest control).
+    /// A popup with nothing to select leaves focus empty - input never reaches what is behind it.
+    /// Call every frame while the popup is open; does nothing while it is still popping in (its own first focus
+    /// is pending).
+    /// </summary>
+    public static void TrapFocusInside(UiPopup popup)
+    {
+        EventSystem eventSystem = EventSystem.current;
+        if (eventSystem == null || popup == null || popup.canvasGroup == null || !popup.canvasGroup.interactable)
+            return;
+
+        GameObject selected = eventSystem.currentSelectedGameObject;
+        bool hasSelection = selected != null && selected.activeInHierarchy;
+
+        if (hasSelection && selected.transform.IsChildOf(popup.transform))
+        {
+            lastFocusInsidePopup = selected;
+            return;
+        }
+
+        // Lost (not leaked): only on an actual stick/Submit press, so a mouse user isn't handed a focus ring.
+        if (!hasSelection && !(Quantum.GamepadControls.NavigateActive || Quantum.GamepadControls.SubmitPressed))
+            return;
+
+        Selectable target = lastFocusInsidePopup != null && lastFocusInsidePopup.transform.IsChildOf(popup.transform)
+            ? lastFocusInsidePopup.GetComponent<Selectable>()
+            : null;
+
+        if (target == null || !target.IsInteractable() || !target.gameObject.activeInHierarchy)
+            target = NearestSelectable(popup.transform);
+
+        eventSystem.SetSelectedGameObject(target != null ? target.gameObject : null);
+    }
+
+    /// <summary>The active, interactable Selectable under <paramref name="scope"/> closest to the scope's centre.</summary>
+    public static Selectable NearestSelectable(Transform scope)
+    {
+        var rect = scope as RectTransform;
+        Vector2 centre = rect != null ? (Vector2)rect.TransformPoint(rect.rect.center) : (Vector2)scope.position;
+
+        Selectable best = null;
+        float bestDistance = float.MaxValue;
+        foreach (Selectable candidate in scope.GetComponentsInChildren<Selectable>(false))
+        {
+            if (!candidate.IsInteractable())
+                continue;
+
+            float distance = ((Vector2)candidate.transform.position - centre).sqrMagnitude;
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = candidate;
+            }
+        }
+
+        return best;
+    }
+
+    // Holds `group` non-interactable (no clicks, no Submit, skipped by stick navigation) until everything
+    // animating under `root` has settled, then enables it. Returns when done (or after MaxSettleSeconds).
+    public static IEnumerator EnableWhenSettled(CanvasGroup group, Transform root)
+    {
+        group.interactable = false;
+
+        // One frame so tweens that start on enable have begun, then wait for them.
+        yield return null;
+
+        float waited = 0f;
+        while (IsAnimating(root) && waited < MaxSettleSeconds)
+        {
+            waited += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        group.interactable = true;
     }
 }

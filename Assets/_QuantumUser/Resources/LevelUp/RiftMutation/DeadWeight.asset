@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/DeadWeight
     Guid:
       Value: 349810371214074495
-  Icon: {fileID: 546748961, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: -1113397860924081935, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Dead Weight
   Rarity: 3
   Scope: 0

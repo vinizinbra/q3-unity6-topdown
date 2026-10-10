@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 154c50ec217d4454588993d74be1192b, type: 3}
+  m_Name: MenuTips
+  m_EditorClassIdentifier: Assembly-CSharp::TipsData
+  tips:
+  - A downed teammate can't be hit, but they are bleeding out. <color=#FD3971>Hold
+    interact</color> next to them to revive - the timer pauses while you do.
+  - Downed for too long means <color=#FD3971>KO</color>. A KO'd Raider can't be revived
+    - they return once the team clears the area.
+  - Your <color=#FD3971>accessory</color> blocks one hit, then pops off. Walk over
+    and pick it up to wear it again.
+  - While you have <color=#FD3971>Shield</color>, hits eat the Shield first and your
+    accessory stays on. Shield is earned in battle - it never recharges on its own.
+  - During a Break you can pay <color=#FD3971>Coins</color> to repair a damaged accessory.
+    The more damaged it is, the higher the price.
+  - '<color=#FD3971>Breathing Breaks</color> are your safe moment: heal at the Shrine,
+    shop at the Store, upgrade at the Blacksmith.'
+  - Once the area is secured, the team can <color=#FD3971>vote to skip</color> the
+    rest of the Break.
+  - You can't afford everything at the Store and Blacksmith. The <color=#FD3971>Blacksmith</color>
+    adds a perk to the weapon you are holding - choose wisely.
+  - 'Mix elements for <color=#FD3971>reactions</color>: Fire + Ice is Thermal Shock,
+    Fire + Lightning is Overload, Ice + Lightning is Shatter.'
+  - <color=#FD3971>Burn</color> stacks for damage, <color=#FD3971>Chill</color> slows
+    more with every hit until the enemy freezes, and <color=#FD3971>Shock</color>
+    sets up a stun on the next electric hit.
+  - A <color=#FD3971>Cursed Rift</color> offers a Rift Mutation, but you pay a price
+    for it. Read the card before you take it.
+  - <color=#FD3971>Rift Mutations</color> are rare, can't be stacked, and bend your
+    whole run. Pick the ones that fit your build.
+  - 'Level-ups pause the action: pick one of three cards. Don''t like them? Spend
+    a <color=#FD3971>Reroll</color> if you have one.'
+  - Some <color=#FD3971>Elites</color> carry a chest. Take them down - or chase them
+    - to claim it.
+  - 'Hold <color=#FD3971>Tab</color> (Select on a gamepad) to see everything you
+    are running: skill, passive, perks and upgrades.'
+  - Press <color=#FD3971>M</color> (R2 on a gamepad) to open the full minimap and
+    plan your next move.
+  - '<color=#FD3971>Team Challenges</color> are optional: every Raider must Ready
+    up inside the area. Win and the whole team earns a Rift Mutation.'
+  - A <color=#FD3971>Traversal Challenge</color> needs the whole team to cross the
+    gaps before the timer runs out. Don't leave anyone behind.
+  - More Raiders means tougher enemies and more XP per level. <color=#FD3971>Cover
+    each other</color> - the game scales with your squad.
+  - '<color=#FD3971>Dash</color> is an escape button: use it to slip out of a swarm.
+    It gets its own upgrades as you level.'
+  - 'Every hero grows through <color=#FD3971>Ascensions</color>: one line for a weapon
+    family, one for an element. Rank 3 unlocks a special effect.'
+  - 'Weapons come in six families: Pistol, SMG, Assault Rifle, Shotgun, Sniper and
+    Grenade Launcher. See them all in the <color=#FD3971>Loadout</color> tab.'

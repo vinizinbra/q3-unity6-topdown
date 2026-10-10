@@ -24,8 +24,8 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
 {
     // Everything except toggleButton itself - toggleButton has to live outside this so it stays
     // clickable while the panel is hidden. This class's own GameObject stays active at all times
-    // regardless (see Toggle) so Awake always runs immediately at scene load and _heroPanel/etc. are
-    // never null when DebugUpgradeMenuTrigger.Rebuild runs, even if the panel starts closed.
+    // regardless (see Toggle) so Awake runs at scene load; if it is left inactive anyway,
+    // EnsureInitialized builds the panels on first use instead.
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private Button toggleButton;
 
@@ -47,14 +47,31 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
     private DebugUpgradeCategoryPanelWidget _riftPanel;
     private DebugUpgradeCategoryPanelWidget _riftMarkPanel;
 
-    public Transform HeroContent => _heroPanel.Content;
-    public Transform GlobalContent => _globalPanel.Content;
-    public Transform WeaponPerkContent => _weaponPerkPanel.Content;
-    public Transform RiftContent => _riftPanel.Content;
-    public Transform RiftMarkContent => _riftMarkPanel.Content;
+    private bool _initialized;
+
+    // Each goes through EnsureInitialized: this GameObject can be left inactive in the scene (Awake
+    // never runs then), while DebugUpgradeMenuTrigger still builds rows into it at local-player setup.
+    public Transform HeroContent { get { EnsureInitialized(); return _heroPanel.Content; } }
+    public Transform GlobalContent { get { EnsureInitialized(); return _globalPanel.Content; } }
+    public Transform WeaponPerkContent { get { EnsureInitialized(); return _weaponPerkPanel.Content; } }
+    public Transform RiftContent { get { EnsureInitialized(); return _riftPanel.Content; } }
+    public Transform RiftMarkContent { get { EnsureInitialized(); return _riftMarkPanel.Content; } }
 
     private void Awake()
     {
+        EnsureInitialized();
+    }
+
+    // Idempotent. Awake normally calls it, but a scene-inactive menu never gets Awake, and the
+    // trigger's Rebuild would then hit null panels (and, thrown from inside the local-player-setup
+    // callback chain, abort every other HUD callback registered after it).
+    private void EnsureInitialized()
+    {
+        if (_initialized)
+            return;
+
+        _initialized = true;
+
         _heroPanel = CreatePanel();
         _globalPanel = CreatePanel();
         _weaponPerkPanel = CreatePanel();
@@ -125,6 +142,7 @@ public class DebugUpgradeMenuWindow : MonoBehaviour
 
     public void Clear()
     {
+        EnsureInitialized();
         ClearContent(_heroPanel.Content);
         ClearContent(_globalPanel.Content);
         ClearContent(_weaponPerkPanel.Content);

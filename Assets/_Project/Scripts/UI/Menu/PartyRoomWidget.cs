@@ -20,6 +20,8 @@ public class PartyRoomWidget : MonoBehaviour
 
     [Header("Connecting panel")]
     public TMP_Text connectingText;
+    [Tooltip("Cancels a Create/Join that is still connecting, so a stuck or failed connect isn't a dead end.")]
+    public Button cancelConnectButton;
 
     [Header("Room panel")]
     public TMP_Text roomCodeText;
@@ -77,6 +79,8 @@ public class PartyRoomWidget : MonoBehaviour
         createButton.onClick.AddListener(CreateClicked);
         joinButton.onClick.AddListener(JoinClicked);
         leaveButton.onClick.AddListener(LeaveClicked);
+        if (cancelConnectButton != null)
+            cancelConnectButton.onClick.AddListener(CancelConnectClicked);
         // TMP_InputField's own submit event (Enter/Return while the field is focused) - lets a
         // player type a code and hit Enter instead of having to reach for the Join button.
         roomCodeInput.onSubmit.AddListener(HandleRoomCodeSubmit);
@@ -101,6 +105,8 @@ public class PartyRoomWidget : MonoBehaviour
         createButton.onClick.RemoveListener(CreateClicked);
         joinButton.onClick.RemoveListener(JoinClicked);
         leaveButton.onClick.RemoveListener(LeaveClicked);
+        if (cancelConnectButton != null)
+            cancelConnectButton.onClick.RemoveListener(CancelConnectClicked);
         roomCodeInput.onSubmit.RemoveListener(HandleRoomCodeSubmit);
 
         if (previousCharacterButton != null)
@@ -142,6 +148,7 @@ public class PartyRoomWidget : MonoBehaviour
 
         PartyManager.Instance.JoinParty(PendingRoomCode);
     }
+    private void CancelConnectClicked() => PartyManager.Instance.CancelConnect();
     private void LeaveClicked() => PartyManager.Instance.LeaveParty();
 
     private void HandlePhaseChanged(PartyManager.PartyPhase phase)

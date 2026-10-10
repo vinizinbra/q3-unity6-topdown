@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/DirectHit
     Guid:
       Value: 452474009302283869
-  Icon: {fileID: 23065039, guid: b217254d41b6945b1873986186a25786, type: 3}
+  Icon: {fileID: 21300000, guid: 13ffbe31ad004f5a8d8a5fdf63265524, type: 3}
   DisplayName: Direct Hit
   Rarity: 2
   Description: Rewards accurate Bunny Bomb placement - enemies inside the inner blast

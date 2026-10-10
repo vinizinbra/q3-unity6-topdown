@@ -14,6 +14,9 @@ Photon region dropdown. The in-match counterpart is `docs/in-match-settings.md`.
     None -> `FixedRegion = null` and `BestRegionSummaryFromStorage = null` (fresh ping of all regions);
     otherwise `FixedRegion = <code>`. A reconnect still overrides it with the room's region
     (`MatchmakingExtensions.ConnectToRoomAsync`).
+  - If the client is still connected to a Master server (not in a room) on a different region, `Connect`
+    disconnects first (`NeedsReconnectFor`): `ConnectUsingSettingsAsync` is a no-op for an already-connected
+    client, which used to make a region change silently not apply.
   - `MatchMakingConfig.OnConnectedToMaster` -> `RememberConnectedRegion(Client.CurrentRegion)`: under None,
     the region Photon picked is **saved as the selection**, so later connects go straight there. Choosing
     None again asks for a new search on the next connect. A manual pick is never overwritten.

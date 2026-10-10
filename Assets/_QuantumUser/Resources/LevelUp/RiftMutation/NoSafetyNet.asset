@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/NoSafetyNet
     Guid:
       Value: 465212681664073504
-  Icon: {fileID: -1509579339, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: -7987729630912477599, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: No Safety Net
   Rarity: 3
   Scope: 0

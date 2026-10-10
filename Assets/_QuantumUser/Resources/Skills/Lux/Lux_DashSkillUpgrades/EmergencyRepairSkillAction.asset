@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_DashSkillUpgrades/EmergencyRepairSkillAction
     Guid:
       Value: 420168397532520612
-  Icon: {fileID: -1527857662, guid: 355e00907e214470bac0029f70064510, type: 3}
+  Icon: {fileID: 21300000, guid: a7ebe6d8d6f84a1c8a75b8504f02acf2, type: 3}
   DisplayName: Emergency Repair
   RankDescriptions:
   - "Ending a Dash within <color=#FD3971>6m</color> of your Sentry repairs <color=#FD3971>30%</color> of its Max Health."

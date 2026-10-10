@@ -185,19 +185,5 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
         return true;
     }
 
-    // Human players only - bots don't count against solo (see docs/bots.md: a person testing
-    // co-op paths alone with BotBrain teammates should NOT see these).
-    private static unsafe bool IsSolo(Frame frame)
-    {
-        int humanCount = 0;
-        var players = frame.Filter<PlayerLink>();
-
-        while (players.Next(out EntityRef entity, out PlayerLink _))
-        {
-            if (frame.Has<BotBrain>(entity) == false)
-                humanCount++;
-        }
-
-        return humanCount <= 1;
-    }
+    private static bool IsSolo(Frame frame) => SoloPauseUtility.IsSolo(frame);
 }

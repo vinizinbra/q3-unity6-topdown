@@ -115,9 +115,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponFilterChipWidget
   background: {fileID: 4329922004971315641}
   label: {fileID: 4429299974653080785}
-  idleBackground: {r: 0.118, g: 0.125, b: 0.165, a: 1}
-  selectedBackground: {r: 0.992, g: 0.224, b: 0.443, a: 1}
-  idleLabel: {r: 1, g: 1, b: 1, a: 1}
+  idleBackground: {r: 0.9, g: 0.91, b: 0.94, a: 1}
+  selectedBackground: {r: 0.118, g: 0.125, b: 0.165, a: 1}
+  idleLabel: {r: 0.1, g: 0.11, b: 0.15, a: 1}
   selectedLabel: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &3458914983696945145
 MonoBehaviour:
@@ -176,6 +176,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FocusOutlineWidget
   background: {fileID: 4329922004971315641}
+  shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
   pulse: 1
   pulseDepth: 0.3

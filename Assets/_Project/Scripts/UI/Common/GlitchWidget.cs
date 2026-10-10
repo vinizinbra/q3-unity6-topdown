@@ -60,6 +60,8 @@ public class GlitchWidget : MonoBehaviour
     private SoundData glitchSound;
 
     [Header("Timing / Behaviour")]
+    [SerializeField, Tooltip("Off = never glitches by itself: only PlayGlitch() makes a burst, and it does not schedule the next one (for 'glitch when the shown thing changes').")]
+    private bool idleLoop = true;
     [SerializeField] private bool glitchOnEnable = true;
     [SerializeField, Tooltip("If true, the FIRST glitch fires immediately when this widget becomes enabled instead of waiting out a full cooldown first. Every glitch after that still follows the normal cooldownRange. Only relevant when glitchOnEnable is on.")]
     private bool playFirstGlitchOnEnable = true;
@@ -189,8 +191,13 @@ public class GlitchWidget : MonoBehaviour
     [Button]
     public void PlayGlitch()
     {
+        // A burst in flight leaves targets displaced - put them back before reading what "rest" looks like now.
+        if (_tickTween.isAlive)
+            RestoreAllTargets();
+
         _cooldownTween.Stop();
         _tickTween.Stop();
+        CaptureBases();
 
         if (glitchSound != null)
         {
@@ -219,7 +226,8 @@ public class GlitchWidget : MonoBehaviour
         if (now >= endTime)
         {
             RestoreAllTargets();
-            ScheduleNextBurst();
+            if (idleLoop)
+                ScheduleNextBurst();
             return;
         }
 
@@ -276,6 +284,26 @@ public class GlitchWidget : MonoBehaviour
         float x = baseScale.x * (1f + Random.Range(-maxScaleJitter.x, maxScaleJitter.x));
         float y = baseScale.y * (1f + Random.Range(-maxScaleJitter.y, maxScaleJitter.y));
         return new Vector3(x, y, baseScale.z);
+    }
+
+    // The rest pose is read at the start of every burst, not once at Awake: a target's colour / sprite can change
+    // between bursts (an undiscovered Catalog entry tints its icon dark, a new item swaps the icon), and restoring
+    // a stale pose at the end of the burst would undo that. Ghosts follow the target's current sprite.
+    private void CaptureBases()
+    {
+        foreach (var state in _states)
+        {
+            if (state == null)
+                continue;
+
+            state.BaseColor = state.Target.color;
+            state.BaseAnchoredPosition = state.Target.rectTransform.anchoredPosition;
+            state.BaseScale = state.Target.rectTransform.localScale;
+            state.RedGhost.sprite = state.Target.sprite;
+            state.CyanGhost.sprite = state.Target.sprite;
+            state.RedGhost.preserveAspect = state.Target.preserveAspect;
+            state.CyanGhost.preserveAspect = state.Target.preserveAspect;
+        }
     }
 
     private void RestoreAllTargets()

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/CloseQuarters
     Guid:
       Value: 481232238730376622
-  Icon: {fileID: -253723477, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: 6645148207146636252, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Close Quarters
   Rarity: 1
   Scope: 0

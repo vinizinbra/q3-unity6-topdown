@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/AdrenalineKick
     Guid:
       Value: 524350525567682883
-  Icon: {fileID: -376461961, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: -188109750269623080, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Adrenaline Kick
   Rarity: 2
   Scope: 0

@@ -19,6 +19,6 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Kindling
   Rarity: 1
-  Description: <color=#FD3971>{0:+0}%</color> damage to Burning enemies
+  Description: <color=#FD3971><b>{0:+0}%</b></color> Damage vs Burning
   DamageBonus:
     RawValue: 19660

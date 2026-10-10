@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Challenges
   kindLabel: EXPLORATION UPGRADE
   description: Unlocks optional combat challenges with better rewards.
-  icon: {fileID: 5449388452642997027, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
-  accentColor: {r: 1, g: 0.78, b: 0.1, a: 1}
+  icon: {fileID: -8832560962510875356, guid: 7bf46803273b24220ba60766158daf78, type: 3}
+  accentColor: {r: 0.99215686, g: 0.76862746, b: 0.019607844, a: 1}
   category: 1
   group: 1
   maxLevel: 4

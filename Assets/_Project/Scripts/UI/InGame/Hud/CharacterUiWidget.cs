@@ -211,6 +211,49 @@ public class CharacterUiWidget : MonoBehaviour
         QuantumEvent.Subscribe<EventWeaponReloaded>(this, OnWeaponReloaded);
     }
 
+    // The widget goes back to EnemyUiWidgetManager's pool instead of being destroyed. Everything the
+    // per-frame Update* methods rewrite from the simulation needs no cleanup (the next Setup'd
+    // entity's first LateUpdate overwrites it, before the frame renders), and DelayedSliderWidget
+    // re-snaps itself in OnEnable. What does need clearing is state that outlives a frame:
+    // the event subscription, a running shield-shine coroutine (its non-null handle would block the
+    // expiration warning for the next owner forever), the reload punch, the fall-hide alpha, and the
+    // references to the old entity.
+    public void ResetForPool()
+    {
+        QuantumEvent.UnsubscribeListener(this);
+
+        if (skillStatusLabel != null)
+            skillStatusLabel.ResetForPool();
+
+        if (_shieldShineRoutine != null)
+        {
+            StopCoroutine(_shieldShineRoutine);
+            _shieldShineRoutine = null;
+
+            Image fillImage = ResolveShieldFillImage();
+            if (fillImage != null && _shieldBaseFillColorCaptured)
+                fillImage.color = _shieldBaseFillColor;
+        }
+
+        _shieldWasRecharging = false;
+
+        _reloadPunchTween.Stop();
+        if (_reloadPunchRestScaleCaptured && reloadPunchTarget != null)
+            reloadPunchTarget.localScale = _reloadPunchRestScale;
+
+        if (_selfCanvasGroup != null)
+        {
+            _selfCanvasGroup.alpha = 1f;
+            _selfCanvasGroup.blocksRaycasts = true;
+            _selfCanvasGroup.interactable = true;
+        }
+
+        _game = null;
+        _entityRef = default;
+        _followTarget = null;
+        _characterOffset = default;
+    }
+
     // Drops the trailing "recent damage" bars on every slider of this widget, so its readout tracks
     // the simulation with no lag at all. Opt-in per spawner rather than per prefab, since one prefab
     // serves players, enemies and sentries alike - a sentry's bar is a small, short-lived thing the

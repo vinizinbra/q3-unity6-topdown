@@ -127,6 +127,7 @@ namespace Quantum
             visual.SetDestroyEffectChildColorOverride(child);
 
             visual.SetDestroyEffectScaleOverride(visuals.ProjectileDestroyScale);
+            visual.SetDestroyEffectEnabled(visuals.EnableProjectileDestroyEffect);
         }
 
         private static void PlayImpactOnly(ParticleSystem impact, Vector3 position, WeaponDataAsset weaponData)
@@ -138,6 +139,9 @@ namespace Quantum
             }
 
             ProjectileVisualsConfig visuals = weaponData.ProjectileVisuals;
+            if (visuals.EnableProjectileDestroyEffect == false)
+                return;
+
             Color root = visuals.ProjectileDestroyColor;
             root.a = 1f;
             Color child = visuals.ProjectileDestroyGlowColor;

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/AmplifierSkillAction
     Guid:
       Value: 506336313018381212
-  Icon: {fileID: -1095911109, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  Icon: {fileID: 21300000, guid: ee53c4563c7944da8906005e3720a80c, type: 3}
   DisplayName: Amplifier
   RankDescriptions:
   - "Totem Damage Beats deal <color=#FD3971>+30%</color> Damage."

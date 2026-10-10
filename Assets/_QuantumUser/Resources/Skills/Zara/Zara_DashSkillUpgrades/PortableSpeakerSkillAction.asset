@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_DashSkillUpgrades/PortableSpeakerSkillAction
     Guid:
       Value: 349471251026126198
-  Icon: {fileID: 1251163330, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  Icon: {fileID: 21300000, guid: 0e0c55cb551e4ff6abab67c6f9e343bc, type: 3}
   DisplayName: Portable Speaker
   RankDescriptions:
   - "Dashing drops a Mini Totem for <color=#FD3971>3s</color> that plays half-strength Damage and Support Beats. Max <color=#FD3971>1</color> at a time."

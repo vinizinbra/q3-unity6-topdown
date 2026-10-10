@@ -125,6 +125,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 10
@@ -174,7 +176,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -203,6 +206,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -252,7 +257,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -281,6 +287,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -330,7 +338,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -359,6 +368,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -408,7 +419,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -447,7 +459,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/W1-MortarEnemy
     Guid:
       Value: 296950194662925891
-  EnemyName: 
+  EnemyName: Mortar
   Tier: 2
   Economy:
     Persistent: 0
@@ -615,14 +627,9 @@ MonoBehaviour:
       Value: 0
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 26afa0b7c1c5442e3956a668aec84cb3, type: 2}
+  Description: Lobs shells at wherever you stand.
   ViewPrefab: {fileID: 8476845490732343577, guid: 3144efe8802be4f9896cb5bb6d48f6fe, type: 3}
-  FactionSkins:
-  - Faction: 1
-    ViewPrefab: {fileID: 8476845490732343577, guid: 3144efe8802be4f9896cb5bb6d48f6fe, type: 3}
-    ScaleMultiplier: 0
-  - Faction: 2
-    ViewPrefab: {fileID: 8476845490732343577, guid: 6639da8f3bb724c61a61b875cb158f25, type: 3}
-    ScaleMultiplier: 0
 --- !u!114 &790037820283738255
 MonoBehaviour:
   m_ObjectHideFlags: 0

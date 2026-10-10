@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/FasterTempo
     Guid:
       Value: 423069476414731352
-  Icon: {fileID: -1928859675, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  Icon: {fileID: 21300000, guid: 17d7b91a98f944dfae0bd35bc7b818ba, type: 3}
   DisplayName: Faster Tempo
   Description: "Reach Flow faster, and make every stack of it worth more."
   <MaxRank>k__BackingField: 3

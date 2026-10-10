@@ -21,7 +21,8 @@ public class UpgradesTab : TabContent
     [SerializeField] private List<PermanentUpgradeData> upgrades = new List<PermanentUpgradeData>();
 
     [Header("Lists (index = PermanentUpgradeCategory)")]
-    [SerializeField] private UpgradeRowWidget rowPrefab;
+    [SerializeField, Tooltip("The row placed in the first list in the scene: cloned once per upgrade (into every list), hidden itself.")]
+    private UpgradeRowWidget rowTemplate;
     [SerializeField] private Transform[] listRoots;
     [SerializeField] private ScrollRect[] scrolls;
     [SerializeField] private Sprite dividerSprite;
@@ -32,6 +33,10 @@ public class UpgradesTab : TabContent
         "Permanent stat upgrades that make your Raiders stronger in every run.",
         "Unlock new systems and options during your runs, giving you more ways to explore, adapt and build."
     };
+
+    [Header("Glitch")]
+    [Tooltip("Plays a short glitch burst on the info panel whenever the viewed item changes.")]
+    [SerializeField] private GlitchWidget infoGlitch;
 
     [Header("Navigation")]
     [Tooltip("The detail panel level: Submit on a row steps into it, Cancel steps back out.")]
@@ -113,11 +118,13 @@ public class UpgradesTab : TabContent
 
     private void Build()
     {
-        if (rowPrefab == null || listRoots == null || listRoots.Length < rows.Length)
+        if (rowTemplate == null || listRoots == null || listRoots.Length < rows.Length)
         {
-            LogHelper.Warn(LogTag, "Row prefab / list roots not assigned - Upgrades list stays empty.");
+            LogHelper.Warn(LogTag, "Row template / list roots not assigned - Upgrades list stays empty.");
             return;
         }
+
+        ListTemplateUtility.Hide(rowTemplate);
 
         for (int c = 0; c < rows.Length; c++)
         {
@@ -131,7 +138,7 @@ public class UpgradesTab : TabContent
                     AddDivider(listRoots[c]);
                 previousGroup = data.group;
 
-                UpgradeRowWidget row = Instantiate(rowPrefab, listRoots[c]);
+                UpgradeRowWidget row = ListTemplateUtility.Spawn(rowTemplate, listRoots[c]);
                 row.name = "Upgrade_" + data.name;
                 row.Bind(data, GetLevel(data));
                 row.Clicked += OnRowClicked;
@@ -194,6 +201,7 @@ public class UpgradesTab : TabContent
 
     private void Select(UpgradeRowWidget row)
     {
+        UpgradeRowWidget previous = selected;
         selected = row;
         foreach (List<UpgradeRowWidget> list in rows)
         {
@@ -208,6 +216,10 @@ public class UpgradesTab : TabContent
             ScrollRectUtility.EnsureVisible(scrolls[category], (RectTransform)row.transform, 24f);
 
         RefreshDetail();
+
+        // After the panel shows the new item, so the burst rests on what it now displays.
+        if (previous != null && row != previous && infoGlitch != null && isActiveAndEnabled)
+            infoGlitch.PlayGlitch();
     }
 
     private void RefreshDetail()

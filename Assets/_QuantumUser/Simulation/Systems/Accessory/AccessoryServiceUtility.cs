@@ -44,9 +44,9 @@ namespace Quantum
             return AccessoryServiceKind.Repair;
         }
 
-        // Explicit per-step prices out of StoreConfig - deliberately no dynamic formula (see that
-        // asset's own comment). More missing durability costs more; a Broken replacement costs more
-        // than any repair, enforced by an authoring guardrail on the config itself rather than
+        // Price of the NEXT single durability point - the service is sold one point at a time.
+        // Restoring the first point of a Broken accessory (the replacement) costs more than any
+        // later repair point, enforced by an authoring guardrail on StoreConfig rather than
         // clamped at runtime. Lives on StoreConfig (not AccessoryGuardConfig) since it's Store
         // pricing, same as every other offer/service StoreConfig already prices.
         public static FP ResolvePrice(Frame f, EntityRef player)
@@ -65,7 +65,7 @@ namespace Quantum
                     return config.AccessoryBrokenReplacementCost;
 
                 case AccessoryServiceKind.Repair:
-                    return config.ResolveAccessoryRepairCost(AccessoryGuardUtility.GetMissingDurability(guard));
+                    return config.AccessoryRepairCostPerPoint;
 
                 default:
                     return FP._0;
@@ -83,12 +83,11 @@ namespace Quantum
         // Called from StoreSystem when a BuyAccessoryServiceCommand lands. Re-validates everything
         // simulation-side (never trusts the View), same as every other Store purchase.
         //
-        // There is no once-per-Break purchase tracking here, and deliberately so: a successful
-        // service always restores to FULL, which immediately resolves the player to
-        // AccessoryServiceKind.None - the state itself is the limit, so a second purchase this Break
-        // is impossible without first losing durability again. That also means declining costs
-        // nothing and changes nothing: a player who walks away at 1/3 simply starts the next
-        // Survival at 1/3 (docs/accessory-guard.md's own "strategic consequence").
+        // Each purchase restores exactly ONE durability point, so a player can stop anywhere
+        // between broken and full and keep the rest of their Coins. There is no once-per-Break
+        // tracking: the state itself is the limit - once full, ResolveService returns None and the
+        // card disappears. Declining costs nothing: a player who walks away at 1/3 simply starts
+        // the next Survival at 1/3 (docs/accessory-guard.md's own "strategic consequence").
         public static void TryPurchaseService(Frame f, EntityRef player)
         {
             AccessoryServiceKind kind = ResolveService(f, player);
@@ -113,7 +112,7 @@ namespace Quantum
                 return;
             }
 
-            AccessoryGuardUtility.Restore(f, player);
+            AccessoryGuardUtility.RestorePoints(f, player, 1);
 
             if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false)
                 return;

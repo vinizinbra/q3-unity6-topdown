@@ -86,6 +86,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 10
@@ -135,7 +137,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -164,6 +167,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -213,7 +218,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -242,6 +248,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -291,7 +299,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -320,6 +329,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -369,7 +380,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -576,11 +588,9 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 91839dc39bf60469d9594f381d93b9ee, type: 2}
+  Description: Keeps spawning scarabs until it is destroyed.
   ViewPrefab: {fileID: 4250493844407008202, guid: c74d689b1338e43bfa6c9e2641a351b1, type: 3}
-  FactionSkins:
-  - Faction: 1
-    ViewPrefab: {fileID: 8476845490732343577, guid: 63f13c4b64a5a484593e63b461f35c69, type: 3}
-    ScaleMultiplier: 0
 --- !u!114 &3562097286675511710
 MonoBehaviour:
   m_ObjectHideFlags: 0

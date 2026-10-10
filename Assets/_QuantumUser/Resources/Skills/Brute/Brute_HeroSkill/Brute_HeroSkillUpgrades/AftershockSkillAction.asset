@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_HeroSkill/Brute_HeroSkillUpgrades/AftershockSkillAction
     Guid:
       Value: 533225152632302883
-  Icon: {fileID: -1247703252, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 21300000, guid: 91343192026e4ae0b54a7bd898b14df3, type: 3}
   DisplayName: Aftershock
   RankDescriptions:
   - "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger, up to <color=#FD3971>5</color> enemies."

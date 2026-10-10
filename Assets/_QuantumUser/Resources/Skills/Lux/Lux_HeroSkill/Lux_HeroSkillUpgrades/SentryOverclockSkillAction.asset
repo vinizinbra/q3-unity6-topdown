@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryOverclockSkillAction
     Guid:
       Value: 388233548457362718
-  Icon: {fileID: -937771317, guid: 355e00907e214470bac0029f70064510, type: 3}
+  Icon: {fileID: 21300000, guid: e4a1e6722fa640e89cfe251f92a1bef4, type: 3}
   DisplayName: Overclock
   RankDescriptions:
   - "Sentry gains <color=#FD3971>+25%</color> Fire Rate."

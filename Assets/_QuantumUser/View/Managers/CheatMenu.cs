@@ -104,9 +104,16 @@ namespace QuantumUser.View
         private const float WindowWidth = 560f;
         private const float ColumnGap = 12f;
 
+        // Overall size of the whole cheat overlay (toggle, window, side panel). 1 = matches the HUD
+        // scale; the canvas reference resolution is divided by this, so everything grows together.
+        private const float UiScale = 1.4f;
+
         // Buttons per row in every ButtonGrid section (Flow/Player/Grant). Long labels auto-shrink
         // (see CreateButton) rather than wrapping, so bumping this only needs WindowWidth widened.
         private const int GridColumns = 3;
+
+        // Checkbox columns in the Debug tab - labels are longer than button labels, so 2 per row.
+        private const int ToggleColumns = 2;
 
         private CheatMenuTimeScaleEnforcer _enforcer;
 
@@ -155,7 +162,7 @@ namespace QuantumUser.View
             if (EventSystem.current != null)
                 return;
 
-            GameObject go = new GameObject("CheatMenuEventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            GameObject go = new GameObject("CheatMenuEventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             DontDestroyOnLoad(go);
         }
 
@@ -168,12 +175,12 @@ namespace QuantumUser.View
             _canvas = canvasGo.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             _canvas.sortingOrder = 30000;
-            // Mirrors the project's own in-match HUD Canvas (QuantumGameScene "Canvas" GameObject) so
-            // this overlay scales exactly like the rest of the UI instead of using its own guessed
-            // settings - same reference resolution, match mode, and full match-by-height.
+            // Mirrors the project's own in-match HUD Canvas (QuantumGameScene "Canvas" GameObject):
+            // same match mode / match-by-height, with the reference resolution shrunk by UiScale so
+            // the whole overlay is bigger than the HUD.
             CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.referenceResolution = new Vector2(1920, 1080) / UiScale;
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 1f;
             canvasGo.AddComponent<GraphicRaycaster>();
@@ -378,9 +385,11 @@ namespace QuantumUser.View
             // Sim-only (see CheatActionKind.BecomeBot) - adds BotBrain to the sender's own entity so
             // BotInputSystem drives it from the next tick, but the camera/HUD/audio stay exactly as
             // they were (those only resolve RuntimePlayer.IsBot once, at spawn) - so you keep
-            // watching through your own camera while the bot AI (follow/solo wander/Store/combat)
-            // pilots your hero. Doesn't survive a death/respawn - press it again after respawning.
+            // watching through your own camera while the bot autopilot (see docs/bots.md) pilots
+            // your hero. Doesn't survive a death/respawn - press it again after respawning.
             GridButton(player, "Become Bot", CheatActionKind.BecomeBot);
+            // Undo of the above - removes BotBrain so the sender's real input drives the hero again.
+            GridButton(player, "Recover From Bot", CheatActionKind.RecoverFromBot);
             player.Close();
         }
 
@@ -390,7 +399,11 @@ namespace QuantumUser.View
             CreateSectionLabel(rt, "Progression");
             ButtonGrid loot = new ButtonGrid(rt, GridColumns);
             GridButton(loot, "Level Up", CheatActionKind.LevelUp);
-            GridButton(loot, "Open Chest", CheatActionKind.OpenChest);
+            CreateButton(loot.Next(), "Hero Skill Chest", () => Send(CheatActionKind.OpenChest, amount: (int)LevelUpCategory.HeroSkill));
+            CreateButton(loot.Next(), "Global Upg Chest", () => Send(CheatActionKind.OpenChest, amount: (int)LevelUpCategory.GlobalUpgrade));
+            CreateButton(loot.Next(), "Rift Mutation Chest", () => Send(CheatActionKind.OpenChest, amount: (int)LevelUpCategory.RiftMutation));
+            CreateButton(loot.Next(), "Weapon Perk Chest", () => Send(CheatActionKind.OpenChest, amount: (int)LevelUpCategory.WeaponPerk));
+            CreateButton(loot.Next(), "Weapon Chest", () => Send(CheatActionKind.OpenChest, amount: (int)LevelUpCategory.ChooseWeapon));
             CreateButton(loot.Next(), "+1000 Coins", () => Send(CheatActionKind.GrantCoins, amount: 1000));
             CreateButton(loot.Next(), "Spend 500 Coins", () => Send(CheatActionKind.SpendCoins, amount: 500));
             loot.Close();
@@ -470,7 +483,8 @@ namespace QuantumUser.View
             // backend, so axis/button numbers aren't guaranteed to match what QuantumDebugInput's
             // own GamepadDash/Jump/Skill/SwitchTarget/Fire constants were tuned against in the
             // Editor) - open this in the actual WebGL build to read off the real numbers.
-            CreateToggle(rt, "Gamepad Hardware Tester (raw axis/button overlay)", false, v =>
+            ToggleGrid inputToggles = new ToggleGrid(rt, ToggleColumns);
+            CreateGridToggle(inputToggles, "Gamepad Tester (raw axis/button)", false, v =>
             {
                 if (_gamepadTester == null)
                 {
@@ -480,21 +494,26 @@ namespace QuantumUser.View
                 }
 
                 _gamepadTester.gameObject.SetActive(v);
-            }, out _);
+            });
+            inputToggles.Close();
 
             CreateSectionLabel(rt, "Rendering");
             // Swaps every ToonTerrain material (tiles AND V2 props) for a per-vertex-lit debug shader whose
             // fragment is a single colour - the ceiling of what optimizing ToonTerrain could win.
-            CreateToggle(rt, "Simple Terrain Shader", false, v => SwapToonTerrain(v ? GetSimpleTerrainReplacement : null), out _);
+            ToggleGrid renderToggles = new ToggleGrid(rt, ToggleColumns);
+            CreateGridToggle(renderToggles, "Simple Terrain Shader", false, v => SwapToonTerrain(v ? GetSimpleTerrainReplacement : null));
+            renderToggles.Close();
 
             // Per-feature cost of the terrain shader (ToonTerrainMobile): each toggle skips one feature
             // through a global uniform, to see on device which one is worth cheapening.
             CreateSectionLabel(rt, "Terrain Cost");
-            CreateToggle(rt, "No Albedo Texture", false, v => Shader.SetGlobalFloat("_TTDebugNoAlbedo", v ? 1f : 0f), out _);
-            CreateToggle(rt, "No Hatching", false, v => Shader.SetGlobalFloat("_TTDebugNoHatch", v ? 1f : 0f), out _);
-            CreateToggle(rt, "No Terrain Outlines", false, v => Shader.SetGlobalFloat("_TTDebugNoOutlines", v ? 1f : 0f), out _);
-            CreateToggle(rt, "No Prop Edge Lines", false, v => Shader.SetGlobalFloat("_TTDebugNoPropLines", v ? 1f : 0f), out _);
-            CreateToggle(rt, "No Water Ramp/Line", false, v => Shader.SetGlobalFloat("_TTDebugNoWater", v ? 1f : 0f), out _);
+            ToggleGrid costToggles = new ToggleGrid(rt, ToggleColumns);
+            CreateGridToggle(costToggles, "No Albedo Texture", false, v => Shader.SetGlobalFloat("_TTDebugNoAlbedo", v ? 1f : 0f));
+            CreateGridToggle(costToggles, "No Hatching", false, v => Shader.SetGlobalFloat("_TTDebugNoHatch", v ? 1f : 0f));
+            CreateGridToggle(costToggles, "No Terrain Outlines", false, v => Shader.SetGlobalFloat("_TTDebugNoOutlines", v ? 1f : 0f));
+            CreateGridToggle(costToggles, "No Prop Edge Lines", false, v => Shader.SetGlobalFloat("_TTDebugNoPropLines", v ? 1f : 0f));
+            CreateGridToggle(costToggles, "No Water Ramp/Line", false, v => Shader.SetGlobalFloat("_TTDebugNoWater", v ? 1f : 0f));
+            costToggles.Close();
 
             // Fewer pixels overall - the other lever for a pixel-bound GPU.
             ButtonGrid renderScale = new ButtonGrid(rt, GridColumns);
@@ -601,6 +620,12 @@ namespace QuantumUser.View
                 for (; _count < _columns; _count++)
                     CreateRect(_row, "Spacer").gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
             }
+        }
+
+        // Same row-flowing as ButtonGrid (each cell shares the row's width equally) for checkboxes.
+        private class ToggleGrid : ButtonGrid
+        {
+            public ToggleGrid(Transform parent, int columns) : base(parent, columns) { }
         }
 
         private void GridButton(ButtonGrid grid, string label, CheatActionKind action)
@@ -1263,9 +1288,25 @@ namespace QuantumUser.View
 
         private static Toggle CreateToggle(Transform parent, string label, bool initial, System.Action<bool> onChanged, out TMP_Text labelText)
         {
-            Transform row = CreateRow(parent);
+            return BuildToggle(CreateRow(parent), label, initial, onChanged, out labelText);
+        }
+
+        // Grid cell variant: the Toggle lives on its own child of the grid's row (not on the row
+        // itself), so several checkboxes can share one row and each click target stays its own cell.
+        private static Toggle CreateGridToggle(ToggleGrid grid, string label, bool initial, System.Action<bool> onChanged)
+        {
+            RectTransform cell = CreateRect(grid.Next(), "ToggleCell");
+            cell.gameObject.AddComponent<HorizontalLayoutGroup>();
+            return BuildToggle(cell, label, initial, onChanged, out _);
+        }
+
+        private static Toggle BuildToggle(Transform row, string label, bool initial, System.Action<bool> onChanged, out TMP_Text labelText)
+        {
             HorizontalLayoutGroup hlg = row.GetComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 6;
             hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
             hlg.childForceExpandWidth = false;
             hlg.childForceExpandHeight = false;
 

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades/ZaraElectricMastery
     Guid:
       Value: 280063126688807644
-  Icon: {fileID: 597477748, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  Icon: {fileID: 21300000, guid: 211dcb67d8ce47d99a1f24aa1a62a36c, type: 3}
   DisplayName: Electric Mastery
   Description: Electric weapons hit harder, and at rank 3, applying Jolt charges
     Zara up too.

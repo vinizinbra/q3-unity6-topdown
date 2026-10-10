@@ -4948,10 +4948,10 @@ MonoBehaviour:
     rightOffset: {x: -0.15, y: -0.1}
     upOffset: {x: 0.2, y: 0}
     downOffset: {x: 0.1, y: 0.4}
-    rightHandGrip: {x: 0.41, y: -0.27, z: -0.02}
+    rightHandGrip: {x: 0.41, y: -0.27, z: -0.1}
     rightHandGripRotation: {x: 0, y: 0, z: -22.19}
     rightHandGripScale: {x: 1, y: 1, z: 1}
-    leftHandGrip: {x: 1.37, y: -0.36, z: 0.02}
+    leftHandGrip: {x: 1.37, y: -0.36, z: 0.1}
     leftHandGripRotation: {x: 0, y: 0, z: 93.59}
     leftHandGripScale: {x: 0.75, y: 1, z: 1}
     recoilKickDistance: 0.15

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/Guardian
     Guid:
       Value: 299772149483885795
-  Icon: {fileID: 1060707514, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 21300000, guid: a15b664cde5d4992a8f91fcda2067c9a, type: 3}
   DisplayName: Guardian
   Description: "Your Protector Aura becomes a safe zone - allies inside take less damage and get covered when hit."
   <MaxRank>k__BackingField: 3

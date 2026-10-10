@@ -48,6 +48,7 @@ namespace Quantum
         public FP MaxSpawnOffset;
 
         // Seconds each dropped pickup lingers before DestroyAfterTimeSystem removes it if uncollected.
+        // Not applied to HealthOrbs, which never expire.
         // The shared CurrencyOrb prototypes don't author their own DestroyAfterTime (their normal
         // spawn utilities add it per drop - see CoinUtility), so BreakableUtility sets it here from
         // the barrel's own table, mirroring that pattern.

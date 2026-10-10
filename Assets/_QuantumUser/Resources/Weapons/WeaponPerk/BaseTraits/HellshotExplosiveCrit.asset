@@ -19,7 +19,8 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Hellfire
   Rarity: 1
-  Description: 'Crits detonate an explosion at <color=#FD3971>{0:0}%</color> damage within <color=#FD3971>{1:0}m</color>'
+  Description: Crits detonate an explosion at <color=#FD3971><b>{0:0}%</b></color>
+    damage within <color=#FD3971><b>{1:0}m</b></color>
   Radius:
     RawValue: 163840
   DamageMultiplier:

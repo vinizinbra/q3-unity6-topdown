@@ -10,6 +10,10 @@ public abstract class TabContent : MonoBehaviour
 
     // Where gamepad focus lands when this tab is opened by Submit. Null = the first interactable Selectable.
     public virtual Selectable DefaultFocus => null;
+
+    // The strip of sub-tabs this content shows (Power/Exploration, Enemies/Bosses...), if it has one -
+    // what L1/R1 switch between. Null for a tab without sub-tabs (Home).
+    public TabStripWidget SubTabs => GetComponentInChildren<TabStripWidget>(false);
     public static TabContent Instance;
 
     protected virtual void Awake()

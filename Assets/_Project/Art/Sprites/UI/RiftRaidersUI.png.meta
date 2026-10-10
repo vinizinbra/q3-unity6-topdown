@@ -1195,9 +1195,9 @@ TextureImporter:
       name: RR_MenuButtonBottom
       rect:
         serializedVersion: 2
-        x: 359
+        x: 360
         y: 153
-        width: 55
+        width: 54
         height: 57
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -1543,6 +1543,94 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RR_Tab
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 6
+        width: 90
+        height: 60
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 44, y: 16, z: 44, w: 44}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1ac46374a8563426bb1fc60a7743e5ad
+      internalID: 366597815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hex32
+      rect:
+        serializedVersion: 2
+        x: 538
+        y: 54
+        width: 47
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 23, y: 23, z: 23, w: 23}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4a36670bbf70045dbb06bf578352737a
+      internalID: 1923688128
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hex64
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 44
+        width: 61
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 30, y: 30, z: 30, w: 30}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: deb2fdfa1dd444a34a4168f43bff9712
+      internalID: 1016331167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RR_Hex96
+      rect:
+        serializedVersion: 2
+        x: 682
+        y: 22
+        width: 90
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 45, y: 45, z: 45, w: 45}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eca777437f19948bc89bea348614014d
+      internalID: 826008677
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -1579,6 +1667,7 @@ TextureImporter:
       RR_Hex16_OutlineShadowIn: -80275614
       RR_Hex16_OutlineShadowInOut: -645992890
       RR_Hex16_Top: -1871847198
+      RR_Hex32: 1923688128
       RR_Hex32Green: 548666484
       RR_Hex32GreenDark: -343386884
       RR_Hex32_Border: -1394234966
@@ -1588,6 +1677,7 @@ TextureImporter:
       RR_Hex32_OutlineShadowInOut: -1013606453
       RR_Hex32_Top: 854013766
       RR_Hex3_OutlineShadowIn: -773096470
+      RR_Hex64: 1016331167
       RR_Hex64Green: 1649256451
       RR_Hex64Outline: 214049660
       RR_Hex64_Border: -942499650
@@ -1595,6 +1685,7 @@ TextureImporter:
       RR_Hex64_OutlineShadowIn: -2119640919
       RR_Hex64_OutlineShadowInOut: -1763799934
       RR_Hex64_Top: -1066619883
+      RR_Hex96: 826008677
       RR_Hex96WhiteBorderBlack: -109343418
       RR_Hex96_Border: -432480249
       RR_Hex96_BorderThick: 430454459
@@ -1618,6 +1709,7 @@ TextureImporter:
       RR_PopupTitle: -2008216545
       RR_Square: -1829256367
       RR_Subtitle: -1147070994
+      RR_Tab: 366597815
       RR_UpgradeTitle1: -548207295
       RR_UpgradeTitle2: 1372283331
       RR_UpgradeTitle3: -1495585377

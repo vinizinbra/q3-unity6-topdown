@@ -78,6 +78,8 @@ public class TilesetDefinition : ScriptableObject
     private List<ScatterEntry> rooftopScatter = new();
     [SerializeField, Range(0f, 1f), Tooltip("Chance per interior cell of a raised block to get one rooftop prop.")]
     private float rooftopDensity = 0.3f;
+    [SerializeField, Tooltip("Rooftop scatter may also use EDGE cells of a raised block (not only interior ones) - lets narrow 2-wide roofs get props too. Each rooftop prop then also keeps its 8 neighbour cells free (no heaps).")]
+    private bool rooftopEdgeCells;
     [SerializeField, Tooltip("Props placed along a raised block's edges (e.g. fence segments), 1 unit long along local X, facing like the edge tile.")]
     private List<ScatterEntry> rooftopEdgeProps = new();
     [SerializeField, Range(0f, 1f), Tooltip("Chance per edge tile of a raised block to get an edge prop.")]
@@ -217,6 +219,34 @@ public class TilesetDefinition : ScriptableObject
     [SerializeField, Tooltip("Random offset per facade piece: x = along the wall (fraction of a cell), y = up / down (world units). (0,0) = neat rows and columns.")]
     private Vector2 facadeJitter = Vector2.zero;
 
+    [SerializeField, Tooltip("Props floating in OPEN WATER around the base platforms (icebergs...): empty cells (no cube over them) within Water Ring cells of a platform, one chance per cell. Pivot = the water line. Visual only, real size.")]
+    private List<ScatterEntry> waterScatter = new();
+    [SerializeField, Range(0f, 1f), Tooltip("Chance per empty water cell inside the ring.")]
+    private float waterDensity = 0.05f;
+    [SerializeField, Tooltip("Ring of water cells used, in cells from the nearest platform cell (x = min, y = max; 1 = right next to the wall).")]
+    private Vector2Int waterRing = new(2, 5);
+
+    // A whole small raised platform drawn as one model (a stone block...) instead of autotiled tiles.
+    [Serializable]
+    public class SmallBlock
+    {
+        [Tooltip("Footprint in cells (x along the model's X, y along Z). A platform of Size or its 90-degree rotation matches.")]
+        public Vector2Int Size = new(2, 2);
+        [Tooltip("Variants (one picked per platform). Real footprint, pivot at the bottom centre, height 1 = Y-scaled to the cube height.")]
+        public List<GameObject> Models = new();
+        [Range(0f, 1f), Tooltip("Chance a matching platform becomes this block (the rest keep the normal tiled look).")]
+        public float Chance = 1f;
+    }
+
+    [SerializeField, Tooltip("Small RAISED platforms (bottom above the ground, a full rectangle of cells) matching one of these sizes are drawn as that one block model - no tiles, wall props or runs. Other platforms tile as usual.")]
+    private List<SmallBlock> smallBlocks = new();
+
+    public IReadOnlyList<SmallBlock> SmallBlocks => smallBlocks;
+
+    public IReadOnlyList<ScatterEntry> WaterScatter => waterScatter;
+    public float WaterDensity => waterDensity;
+    public Vector2Int WaterRing => waterRing;
+
     public IReadOnlyList<ScatterEntry> FacadeScatter => facadeScatter;
     public float FacadeDensity => facadeDensity;
     public float FacadeTopY => facadeTopY;
@@ -234,6 +264,7 @@ public class TilesetDefinition : ScriptableObject
     public float GroundDensity => groundDensity;
     public IReadOnlyList<ScatterEntry> RooftopScatter => rooftopScatter;
     public float RooftopDensity => rooftopDensity;
+    public bool RooftopEdgeCells => rooftopEdgeCells;
     public IReadOnlyList<ScatterEntry> RooftopEdgeProps => rooftopEdgeProps;
     public float RooftopEdgeChance => rooftopEdgeChance;
 

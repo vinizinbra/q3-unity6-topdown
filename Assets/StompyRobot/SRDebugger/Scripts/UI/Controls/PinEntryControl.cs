@@ -7,6 +7,9 @@ namespace SRDebugger.UI.Controls
     using SRF;
     using UnityEngine;
     using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+    using UnityEngine.InputSystem;
+#endif
 
     public delegate void PinEntryControlCallback(IList<int> result, bool didCancel);
 
@@ -55,14 +58,14 @@ namespace SRDebugger.UI.Controls
         protected override void OnEnable()
         {
 #if ENABLE_INPUT_SYSTEM
-            Keyboard.current.onTextInput += HandleCharacter;
+            if (Keyboard.current != null) Keyboard.current.onTextInput += HandleCharacter;
 #endif
         }
 
         protected override void OnDisable()
         {
 #if ENABLE_INPUT_SYSTEM 
-            Keyboard.current.onTextInput -= HandleCharacter;
+            if (Keyboard.current != null) Keyboard.current.onTextInput -= HandleCharacter;
 #endif
         }
 
@@ -76,7 +79,7 @@ namespace SRDebugger.UI.Controls
             }
 
 #if ENABLE_INPUT_SYSTEM
-            bool delete = Keyboard.current.deleteKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame;
+            bool delete = Keyboard.current != null && (Keyboard.current.deleteKey.wasPressedThisFrame || Keyboard.current.backspaceKey.wasPressedThisFrame);
 #else
             bool delete = (Input.GetKeyDown(KeyCode.Backspace) || Input.GetKeyDown(KeyCode.Delete));
 #endif

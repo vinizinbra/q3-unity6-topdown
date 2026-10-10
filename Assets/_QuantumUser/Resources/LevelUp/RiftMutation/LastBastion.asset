@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/LastBastion
     Guid:
       Value: 281905491815589831
-  Icon: {fileID: -1377374326, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: 7202719091222473954, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Last Bastion
   Rarity: 3
   Scope: 0

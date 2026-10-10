@@ -16,14 +16,17 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/Vendetta/BloodDebt
     Guid:
       Value: 514137246864066863
-  Icon: {fileID: 1230983659, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
+  Icon: {fileID: 21300000, guid: 1a50ccbcf0d94fe28345300267e43e01, type: 3}
   DisplayName: Blood Debt
-  Description: "Vendetta marks last longer, feed your Rage, and heal you."
+  Description: Vendetta marks last longer, feed your Rage, and heal you.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Vendetta marks last <color=#FD3971>12s</color>."
-  - "Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward them. Vendetta kills grant <color=#FD3971>+2</color> Rage."
-  - "Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward them. Vendetta kills grant <color=#FD3971>+2</color> Rage and heal <color=#FD3971>60%</color> of the mark's damage (max <color=#FD3971>15%</color> Max HP)."
+  - Vendetta marks last <color=#FD3971>12s</color>.
+  - Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward
+    them. Vendetta kills grant <color=#FD3971>+2</color> Rage.
+  - Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward
+    them. Vendetta kills grant <color=#FD3971>+2</color> Rage and heal <color=#FD3971>60%</color>
+    of the mark's damage (max <color=#FD3971>15%</color> Max HP).
   MarkDuration:
   - RawValue: 786432
   - RawValue: 786432

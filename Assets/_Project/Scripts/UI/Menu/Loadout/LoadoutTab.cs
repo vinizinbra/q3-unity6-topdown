@@ -21,28 +21,47 @@ public class LoadoutTab : TabContent
     [SerializeField] private WeaponChoicePoolData weaponPool;
 
     [Header("Grid")]
-    [SerializeField] private LoadoutWeaponCardWidget cardPrefab;
+    [SerializeField, Tooltip("The card placed in the grid in the scene: cloned once per item, hidden itself.")]
+    private LoadoutWeaponCardWidget cardTemplate;
     [SerializeField] private Transform gridRoot;
     [SerializeField] private ScrollRect gridScroll;
-    [SerializeField] private WeaponFilterChipWidget chipPrefab;
+    [SerializeField, Tooltip("The chip placed in the chip row in the scene: cloned once per filter, hidden itself.")]
+    private FilterChipWidget chipTemplate;
     [SerializeField] private Transform chipRoot;
+
+    [Header("Glitch")]
+    [Tooltip("Plays a short glitch burst on the info panel whenever the viewed item changes.")]
+    [SerializeField] private GlitchWidget infoGlitch;
+
+    [Header("Perks page")]
+    [SerializeField] private LoadoutPerksView perksView;
 
     [Header("Navigation")]
     [Tooltip("The weapon info level: Submit on a weapon tile steps into it, Cancel steps back out.")]
     [SerializeField] private FocusScopeWidget infoScope;
+
+    [Header("Trait icons (same art as the in-game weapon card)")]
+    [SerializeField, Tooltip("Index = ElementType: Neutral (none), Fire, Ice, Lightning.")]
+    private Sprite[] elementSprites;
+    [SerializeField, Tooltip("Index = WeaponWeight enum order: Medium, Light, Heavy.")]
+    private Sprite[] weightSprites;
 
     [Header("Detail panel")]
     [SerializeField] private TMP_Text weaponNameText;
     [SerializeField] private TMP_Text weaponSubtitleText;
     [SerializeField] private Image weaponIcon;
     [SerializeField] private TMP_Text weaponDescriptionText;
+    [SerializeField] private Image detailElementIcon;
+    [SerializeField] private Image detailWeightIcon;
+    [SerializeField] private TMP_Text detailWeightText;
     [SerializeField] private TMP_Text damageValueText;
     [SerializeField] private TMP_Text fireRateValueText;
     [SerializeField] private TMP_Text critValueText;
+    [SerializeField] private TMP_Text critMultiplierValueText;
     [SerializeField] private TMP_Text statusLabel;
 
     private readonly List<LoadoutWeaponCardWidget> cards = new List<LoadoutWeaponCardWidget>();
-    private readonly List<WeaponFilterChipWidget> chips = new List<WeaponFilterChipWidget>();
+    private readonly List<FilterChipWidget> chips = new List<FilterChipWidget>();
     private LoadoutWeaponCardWidget selected;
     private int familyFilter = -1;
     private bool built;
@@ -54,7 +73,15 @@ public class LoadoutTab : TabContent
     }
 
     // The selected weapon's tile (first one on open).
-    public override Selectable DefaultFocus => selected != null ? selected.GetComponent<Selectable>() : null;
+    public override Selectable DefaultFocus
+    {
+        get
+        {
+            if (perksView != null && perksView.isActiveAndEnabled)
+                return perksView.DefaultFocus;
+            return selected != null ? selected.GetComponent<Selectable>() : null;
+        }
+    }
 
     protected override void OnShow()
     {
@@ -80,7 +107,7 @@ public class LoadoutTab : TabContent
         }
     }
 
-    private static string FamilyLabel(WeaponFamily family)
+    public static string FamilyLabel(WeaponFamily family)
     {
         switch (family)
         {
@@ -104,13 +131,38 @@ public class LoadoutTab : TabContent
         }
     }
 
+    private Sprite ElementSprite(ElementType element)
+    {
+        int i = (int)element;
+        return element != ElementType.Neutral && elementSprites != null && i < elementSprites.Length ? elementSprites[i] : null;
+    }
+
+    private Sprite WeightSprite(WeaponWeight weight)
+    {
+        int i = (int)weight;
+        return weightSprites != null && i < weightSprites.Length ? weightSprites[i] : null;
+    }
+
     private static string WeaponName(WeaponDataAsset weapon)
     {
         return string.IsNullOrEmpty(weapon.DisplayName) ? weapon.name : weapon.DisplayName;
     }
 
+    // The scene keeps one template card and chip in each root (editable in the scene); clones of earlier builds go.
+    private void ResetList()
+    {
+        ListTemplateUtility.Hide(cardTemplate, chipTemplate);
+        ListTemplateUtility.Clear(gridRoot, cardTemplate);
+        ListTemplateUtility.Clear(chipRoot, chipTemplate);
+        cards.Clear();
+        chips.Clear();
+        selected = null;
+        built = false;
+    }
+
     private void Build()
     {
+        ResetList();
         if (weaponPool == null || weaponPool.Weapons == null)
         {
             LogHelper.Warn(LogTag, "No weapon pool assigned - weapon list stays empty.");
@@ -124,9 +176,9 @@ public class LoadoutTab : TabContent
             if (!QuantumUnityDB.TryGetGlobalAsset(weaponRef, out WeaponDataAsset weapon) || weapon == null || !seen.Add(weapon))
                 continue;
 
-            LoadoutWeaponCardWidget card = Instantiate(cardPrefab, gridRoot);
+            LoadoutWeaponCardWidget card = ListTemplateUtility.Spawn(cardTemplate, gridRoot);
             card.name = "Weapon_" + weapon.name;
-            card.Bind(weapon, WeaponName(weapon), IsOwned(weapon));
+            card.Bind(weapon, WeaponName(weapon), IsOwned(weapon), ElementSprite(weapon.Element), WeightSprite(weapon.Weight));
             card.Clicked += OnCardClicked;
             card.Submitted += OnCardSubmitted;
             cards.Add(card);
@@ -141,25 +193,25 @@ public class LoadoutTab : TabContent
         ApplyFilter(-1);
     }
 
-    private void AddChip(string text, int familyId)
+    private void AddChip(string text, int id)
     {
-        WeaponFilterChipWidget chip = Instantiate(chipPrefab, chipRoot);
+        FilterChipWidget chip = ListTemplateUtility.Spawn(chipTemplate, chipRoot);
         chip.name = "Chip_" + text;
-        chip.Bind(text, familyId);
+        chip.Bind(text, id);
         chip.Clicked += OnChipClicked;
         chips.Add(chip);
     }
 
-    private void OnChipClicked(WeaponFilterChipWidget chip)
+    private void OnChipClicked(FilterChipWidget chip)
     {
-        ApplyFilter(chip.FamilyId);
+        ApplyFilter(chip.Id);
     }
 
-    private void ApplyFilter(int familyId)
+    private void ApplyFilter(int id)
     {
-        familyFilter = familyId;
-        foreach (WeaponFilterChipWidget chip in chips)
-            chip.SetSelected(chip.FamilyId == familyId);
+        familyFilter = id;
+        foreach (FilterChipWidget chip in chips)
+            chip.SetSelected(chip.Id == id);
 
         if (gridScroll != null)
             gridScroll.verticalNormalizedPosition = 1f;
@@ -167,7 +219,7 @@ public class LoadoutTab : TabContent
         LoadoutWeaponCardWidget firstVisible = null;
         foreach (LoadoutWeaponCardWidget card in cards)
         {
-            bool visible = familyId < 0 || (int)card.Weapon.Family == familyId;
+            bool visible = id < 0 || (int)card.Weapon.Family == id;
             card.gameObject.SetActive(visible);
             if (visible && firstVisible == null)
                 firstVisible = card;
@@ -191,6 +243,7 @@ public class LoadoutTab : TabContent
 
     private void Select(LoadoutWeaponCardWidget card)
     {
+        LoadoutWeaponCardWidget previous = selected;
         selected = card;
         foreach (LoadoutWeaponCardWidget c in cards)
             c.SetSelected(c == card);
@@ -217,6 +270,19 @@ public class LoadoutTab : TabContent
         damageValueText.text = weapon.Damage.AsFloat.ToString("0.#");
         fireRateValueText.text = weapon.FireRate.AsFloat.ToString("0.#") + "/s";
         critValueText.text = Mathf.RoundToInt(weapon.CriticalChance.AsFloat * 100f) + "%";
+        critMultiplierValueText.text = "x" + weapon.CriticalDamageBonus.AsFloat.ToString("0.#");
+
+        Sprite element = ElementSprite(weapon.Element);
+        detailElementIcon.gameObject.SetActive(element != null);
+        detailElementIcon.sprite = element;
+        Sprite weightSprite = WeightSprite(weapon.Weight);
+        detailWeightIcon.gameObject.SetActive(weightSprite != null);
+        detailWeightIcon.sprite = weightSprite;
+        detailWeightText.text = weapon.Weight.ToString().ToUpperInvariant();
         statusLabel.text = IsOwned(weapon) ? "OWNED" : "LOCKED";
+
+        // After the panel shows the new item, so the burst rests on what it now displays.
+        if (previous != null && card != previous && infoGlitch != null && isActiveAndEnabled)
+            infoGlitch.PlayGlitch();
     }
 }

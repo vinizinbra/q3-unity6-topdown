@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/Executioner
     Guid:
       Value: 514021944172634289
-  Icon: {fileID: 0}
+  Icon: {fileID: -5692481871139463026, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Executioner
   Rarity: 2
   Scope: 0

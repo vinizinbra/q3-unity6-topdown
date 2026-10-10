@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/Longshot
     Guid:
       Value: 534224374613054322
-  Icon: {fileID: -658787004, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: -1731888474977187615, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Longshot
   Rarity: 1
   Scope: 0

@@ -181,6 +181,8 @@
                 // SkillSystem, which reads it the same tick to decide whether a Hero Skill press
                 // casts the real skill or opens a Cursed Rift interaction instead.
                 new ContextInteractionSystem(),
+                // Smart ping (see docs/ping.md) - reads the Ping button, emits PingPlaced.
+                new PingSystem(),
                 // Must run after KCCSystem (KCC.SetActive/Teleport need this tick's movement already
                 // resolved) and after AimSystem (DashSkillData reads Aim.Angle as a facing fallback).
                 new SkillSystem(),

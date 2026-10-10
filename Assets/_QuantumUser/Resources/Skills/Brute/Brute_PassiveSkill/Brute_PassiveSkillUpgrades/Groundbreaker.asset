@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/Groundbreaker
     Guid:
       Value: 492402531825067847
-  Icon: {fileID: -1355689374, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 21300000, guid: 59c7c7c765934c8186086a3eaeb9efe3, type: 3}
   DisplayName: Groundbreaker
   Description: "Landing from a height turns Brute's weight into a weapon - throwing, slamming, and cracking enemies open."
   <MaxRank>k__BackingField: 3

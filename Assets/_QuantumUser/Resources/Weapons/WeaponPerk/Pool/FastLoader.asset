@@ -16,9 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/FastLoader
     Guid:
       Value: 427983149550015854
-  Icon: {fileID: -803493184, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 899f61eecef54ba0be99316e8fd41c03, type: 3}
   DisplayName: Fast Loader
   Rarity: 0
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Reload Speed'
+  Description: <color=#FD3971><b>{0:+0;-0}%</b></color> Reload Speed
   Multiplier:
     RawValue: 78643

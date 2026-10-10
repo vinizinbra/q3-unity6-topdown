@@ -52,7 +52,7 @@ namespace Quantum {
   public unsafe partial class Frame {
     public unsafe partial struct FrameEvents {
       static partial void GetEventTypeCountCodeGen(ref Int32 eventCount) {
-        eventCount = 92;
+        eventCount = 93;
       }
       static partial void GetParentEventIDCodeGen(Int32 eventID, ref Int32 parentEventID) {
         switch (eventID) {
@@ -152,6 +152,7 @@ namespace Quantum {
           case EventDamageEchoTriggered.ID: result = typeof(EventDamageEchoTriggered); return;
           case EventPriorityTargetSet.ID: result = typeof(EventPriorityTargetSet); return;
           case EventPriorityTargetCleared.ID: result = typeof(EventPriorityTargetCleared); return;
+          case EventPingPlaced.ID: result = typeof(EventPingPlaced); return;
           default: break;
         }
       }
@@ -863,6 +864,18 @@ namespace Quantum {
         var ev = _f.Context.AcquireEvent<EventPriorityTargetCleared>(EventPriorityTargetCleared.ID);
         ev.Owner = Owner;
         ev.Target = Target;
+        _f.AddEvent(ev);
+        return ev;
+      }
+      public EventPingPlaced PingPlaced(PlayerRef Player, EntityRef Owner, PingKind Kind, FPVector3 Position, EntityRef Target, ContextInteractionState State) {
+        if (_f.IsPredicted) return null;
+        var ev = _f.Context.AcquireEvent<EventPingPlaced>(EventPingPlaced.ID);
+        ev.Player = Player;
+        ev.Owner = Owner;
+        ev.Kind = Kind;
+        ev.Position = Position;
+        ev.Target = Target;
+        ev.State = State;
         _f.AddEvent(ev);
         return ev;
       }
@@ -3461,6 +3474,41 @@ namespace Quantum {
         var hash = 563;
         hash = hash * 31 + Owner.GetHashCode();
         hash = hash * 31 + Target.GetHashCode();
+        return hash;
+      }
+    }
+  }
+  public unsafe partial class EventPingPlaced : EventBase {
+    public new const Int32 ID = 92;
+    public PlayerRef Player;
+    public EntityRef Owner;
+    public PingKind Kind;
+    public FPVector3 Position;
+    public EntityRef Target;
+    public ContextInteractionState State;
+    protected EventPingPlaced(Int32 id, EventFlags flags) : 
+        base(id, flags) {
+    }
+    public EventPingPlaced() : 
+        base(92, EventFlags.Server|EventFlags.Client|EventFlags.Synced) {
+    }
+    public new QuantumGame Game {
+      get {
+        return (QuantumGame)base.Game;
+      }
+      set {
+        base.Game = value;
+      }
+    }
+    public override Int32 GetHashCode() {
+      unchecked {
+        var hash = 569;
+        hash = hash * 31 + Player.GetHashCode();
+        hash = hash * 31 + Owner.GetHashCode();
+        hash = hash * 31 + Kind.GetHashCode();
+        hash = hash * 31 + Position.GetHashCode();
+        hash = hash * 31 + Target.GetHashCode();
+        hash = hash * 31 + State.GetHashCode();
         return hash;
       }
     }

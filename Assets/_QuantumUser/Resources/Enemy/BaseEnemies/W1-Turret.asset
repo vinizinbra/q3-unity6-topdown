@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/W1-Turret
     Guid:
       Value: 323092086446075886
-  EnemyName: Swarm
+  EnemyName: Turret
   Tier: 1
   Economy:
     Persistent: 0
@@ -184,8 +184,6 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 26afa0b7c1c5442e3956a668aec84cb3, type: 2}
+  Description: Fixed gun that covers an area.
   ViewPrefab: {fileID: 8476845490732343577, guid: 63f13c4b64a5a484593e63b461f35c69, type: 3}
-  FactionSkins:
-  - Faction: 1
-    ViewPrefab: {fileID: 8476845490732343577, guid: 63f13c4b64a5a484593e63b461f35c69, type: 3}
-    ScaleMultiplier: 0

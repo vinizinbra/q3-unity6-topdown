@@ -11,7 +11,6 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Button))]
 public class UpgradeRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler
 {
-    [SerializeField] private Image background;
     [SerializeField] private Image iconFrame;
     [SerializeField] private Image icon;
     [SerializeField] private TMP_Text nameText;
@@ -21,8 +20,8 @@ public class UpgradeRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler
     [SerializeField] private TMP_Text costText;
 
     [Header("Colors")]
-    [SerializeField] private Color idleColor = new Color(0.93f, 0.94f, 0.96f);
-    [SerializeField] private Color selectedColor = new Color(1f, 0.86f, 0.91f);
+    [SerializeField, Tooltip("What changes while this is the selected item: graphic colours (rest / selected) and objects shown only while selected.")]
+    private SelectionStyle selectionStyle = new SelectionStyle();
 
     public event Action<UpgradeRowWidget> Clicked;
 
@@ -60,7 +59,7 @@ public class UpgradeRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler
 
     public void SetSelected(bool selected)
     {
-        background.color = selected ? selectedColor : idleColor;
+        selectionStyle.Apply(selected);
     }
 
     public void OnSelect(BaseEventData eventData)

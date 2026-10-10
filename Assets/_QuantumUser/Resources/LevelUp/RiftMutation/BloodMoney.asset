@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/BloodMoney
     Guid:
       Value: 454290102408607413
-  Icon: {fileID: 1120914231, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: 3494879973672573774, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Blood Money
   Rarity: 3
   Scope: 0

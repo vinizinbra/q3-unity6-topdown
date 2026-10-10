@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="512" viewBox="0 0 768 512">
+  <!-- Flat geometric Power upgrade atlas. Grid: 6 columns x 4 rows, 128px cells. -->
+  <rect width="768" height="512" fill="#f7f8fa"/>
+  <defs>
+    <g id="cell"><rect x="8" y="8" width="112" height="112" rx="8" fill="var(--c)"/><path d="M8 96L48 8h72v24L56 120H8z" fill="#fff" opacity=".16"/><path d="M8 110L30 88M98 120l22-22" stroke="#fff" stroke-width="4" opacity=".8"/></g>
+    <g id="bolt"><path d="M72 16L42 68h22l-8 44 30-54H64z" fill="#fff" stroke="#17202d" stroke-width="6" stroke-linejoin="round"/></g>
+    <g id="heart"><path d="M64 100L25 58c-20-24 14-54 39-28 25-26 59 4 39 28z" fill="#fff" stroke="#17202d" stroke-width="6"/></g>
+    <g id="cross"><circle cx="64" cy="64" r="34" fill="none" stroke="#17202d" stroke-width="7"/><path d="M64 20v88M20 64h88" stroke="#fff" stroke-width="12"/><path d="M64 20v88M20 64h88" stroke="#17202d" stroke-width="5"/></g>
+    <g id="arrow"><path d="M24 78h55V50l33 30-33 30V88H24z" fill="#fff" stroke="#17202d" stroke-width="6" stroke-linejoin="round"/></g>
+    <g id="circle"><circle cx="64" cy="64" r="34" fill="#fff" stroke="#17202d" stroke-width="7"/><circle cx="64" cy="64" r="13" fill="var(--c)" stroke="#17202d" stroke-width="5"/></g>
+    <g id="plus"><path d="M49 20h30v29h29v30H79v29H49V79H20V49h29z" fill="#fff" stroke="#17202d" stroke-width="6"/></g>
+    <g id="star"><path d="M64 17l12 32 34 2-26 22 9 34-29-18-29 18 9-34-26-22 34-2z" fill="#fff" stroke="#17202d" stroke-width="6" stroke-linejoin="round"/></g>
+  </defs>
+  <!-- Weapon -->
+  <g transform="translate(0 0)" style="--c:#f42b69"><use href="#cell"/><use href="#bolt"/></g>
+  <g transform="translate(128 0)" style="--c:#f5bd24"><use href="#cell"/><use href="#arrow"/></g>
+  <g transform="translate(256 0)" style="--c:#f47a28"><use href="#cell"/><use href="#circle"/></g>
+  <g transform="translate(384 0)" style="--c:#ff3b7f"><use href="#cell"/><use href="#plus"/></g>
+  <g transform="translate(512 0)" style="--c:#873de0"><use href="#cell"/><use href="#cross"/></g>
+  <g transform="translate(640 0)" style="--c:#ff3b7f"><use href="#cell"/><use href="#star"/></g>
+  <!-- Hero -->
+  <g transform="translate(0 128)" style="--c:#168ee8"><use href="#cell"/><use href="#heart"/></g>
+  <g transform="translate(128 128)" style="--c:#18a66a"><use href="#cell"/><use href="#arrow"/></g>
+  <g transform="translate(256 128)" style="--c:#10a9bd"><use href="#cell"/><use href="#circle"/></g>
+  <g transform="translate(384 128)" style="--c:#e74d35"><use href="#cell"/><use href="#heart"/></g>
+  <g transform="translate(512 128)" style="--c:#20a878"><use href="#cell"/><use href="#plus"/></g>
+  <g transform="translate(640 128)" style="--c:#efb821"><use href="#cell"/><use href="#cross"/></g>
+  <!-- Dash and skill -->
+  <g transform="translate(0 256)" style="--c:#7b45dc"><use href="#cell"/><use href="#circle"/></g>
+  <g transform="translate(128 256)" style="--c:#7b45dc"><use href="#cell"/><use href="#plus"/></g>
+  <g transform="translate(256 256)" style="--c:#f42b69"><use href="#cell"/><use href="#star"/></g>
+  <g transform="translate(384 256)" style="--c:#7b45dc"><use href="#cell"/><use href="#cross"/></g>
+  <g transform="translate(512 256)" style="--c:#7b45dc"><use href="#cell"/><use href="#arrow"/></g>
+  <g transform="translate(640 256)" style="--c:#7b45dc"><use href="#cell"/><use href="#plus"/></g>
+  <!-- Economy -->
+  <g transform="translate(0 384)" style="--c:#f5bd24"><use href="#cell"/><use href="#star"/></g>
+  <g transform="translate(128 384)" style="--c:#16a66a"><use href="#cell"/><use href="#circle"/></g>
+  <g transform="translate(256 384)" style="--c:#a33bea"><use href="#cell"/><use href="#bolt"/></g>
+  <g transform="translate(384 384)" style="--c:#f5bd24"><use href="#cell"/><use href="#plus"/></g>
+  <g transform="translate(512 384)" style="--c:#168ee8"><use href="#cell"/><use href="#heart"/></g>
+  <g transform="translate(640 384)" style="--c:#f42b69"><use href="#cell"/><use href="#star"/></g>
+</svg>

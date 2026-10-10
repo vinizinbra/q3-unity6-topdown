@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 330595328459879646
   Description: Keep moving to fill Flow. At full Flow, gain Move Speed and Fire Rate.
-  Icon: {fileID: 2065160306, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  Icon: {fileID: 21300000, guid: e63b7262dd694924b6c51067840399c0, type: 3}
   DisplayName: Flow State
   BuildDuration:
     RawValue: 163840

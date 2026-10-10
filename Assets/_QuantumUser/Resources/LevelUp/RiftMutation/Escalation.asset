@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/Escalation
     Guid:
       Value: 468788215678846842
-  Icon: {fileID: 0}
+  Icon: {fileID: -6388283455610064460, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Escalation
   Rarity: 2
   Scope: 1

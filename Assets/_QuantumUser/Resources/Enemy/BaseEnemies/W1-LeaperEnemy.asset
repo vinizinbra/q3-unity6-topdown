@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/W1-LeaperEnemy
     Guid:
       Value: 285873967767323801
-  EnemyName: Jumper
+  EnemyName: Leaper
   Tier: 2
   Economy:
     Persistent: 0
@@ -184,5 +184,6 @@ MonoBehaviour:
       Value: 0
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 0}
+  Description: Leaps over obstacles to land right on you.
   ViewPrefab: {fileID: 8476845490732343577, guid: cf4f219745c7343369ddc828d76570bc, type: 3}
-  FactionSkins: []

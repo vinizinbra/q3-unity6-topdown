@@ -1,4 +1,5 @@
 using PrimeTween;
+using Unity.Profiling;
 using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
 using UnityEngine;
@@ -61,6 +62,19 @@ namespace Quantum
             // that never had a view, whose whole flight IS this tween: rate-over-distance trails
             // need a few rendered frames of movement or they emit nothing at all.
             public float MinFlightDuration;
+
+            // The POOLED ProjectileView this visual belongs to (ProjectileViewUpdater). When set the
+            // visual is never destroyed: Finish hands the root (and any trail pieces left fading) back
+            // to that view so its next shot can reuse the same hierarchy, and the view only returns to
+            // its pool once everything is home (ProjectileView.BeginPiece/EndPiece). Null for
+            // ProjectileGhostTrailManager's copies and for a non-pooled view: the original
+            // destroy-on-finish path, unchanged.
+            public ProjectileView Owner;
+
+            // Component lists resolved once per pooled view (see ProjectileComponentCache). Null =
+            // scan the hierarchy, which is what a shot carrying runtime extras and every non-pooled
+            // visual (ProjectileGhostTrailManager's copies) needs.
+            public ProjectileComponentCache Cache;
         }
 
         // Floor on the catch-up rate, in world units per second. A projectile whose own speed has
@@ -137,9 +151,19 @@ namespace Quantum
             _destroyEffectScaleOverride = scale;
         }
 
+        // WeaponDataAsset.ProjectileVisuals.EnableProjectileDestroyEffect. On unless a weapon opts out
+        // (a skill, an enemy attack, anything with no WeaponData never registers it, so keeps its effect).
+        private bool _destroyEffectEnabled = true;
+
+        public void SetDestroyEffectEnabled(bool enabled)
+        {
+            _destroyEffectEnabled = enabled;
+        }
+
         private Renderer[] _renderers;
         private ParticleSystem[] _particles;
         private TrailRenderer[] _trails;
+        private ProjectileComponentCache _cache;
 
         private Vector3 _targetPosition;
         private float _speed;
@@ -150,15 +174,20 @@ namespace Quantum
         private bool _entityGone;
         private int _entityGoneFrame;
 
+        // Where the root lived before Detach unparented it - only meaningful with Settings.Owner set.
+        private Transform _home;
+
         // visualRoot is unparented here rather than by the caller so that everything about the
         // hand-off happens in one place: detach, land on the muzzle, wipe whatever the teleport
         // would otherwise have streaked across the screen, start listening for the death event.
         public static ProjectileVisualController Detach(Transform visualRoot, EntityRef entity,
             Vector3 spawnPosition, Quaternion spawnRotation, in Settings settings)
         {
+            Transform home = visualRoot.parent;
             visualRoot.SetParent(null, worldPositionStays: true);
 
             var controller = visualRoot.gameObject.AddComponent<ProjectileVisualController>();
+            controller._home = home;
             controller.Initialize(entity, spawnPosition, spawnRotation, settings);
             return controller;
         }
@@ -169,9 +198,19 @@ namespace Quantum
             _entity = entity;
             _settings = settings;
 
-            _renderers = GetComponentsInChildren<Renderer>(includeInactive: true);
-            _particles = GetComponentsInChildren<ParticleSystem>(includeInactive: true);
-            _trails = GetComponentsInChildren<TrailRenderer>(includeInactive: true);
+            _cache = settings.Cache;
+            if (_cache != null)
+            {
+                _renderers = _cache.Renderers;
+                _particles = _cache.Particles;
+                _trails = _cache.Trails;
+            }
+            else
+            {
+                _renderers = GetComponentsInChildren<Renderer>(includeInactive: true);
+                _particles = GetComponentsInChildren<ParticleSystem>(includeInactive: true);
+                _trails = GetComponentsInChildren<TrailRenderer>(includeInactive: true);
+            }
 
             transform.SetPositionAndRotation(spawnPosition, spawnRotation);
             _targetPosition = spawnPosition;
@@ -249,7 +288,7 @@ namespace Quantum
 
         private void OnProjectileDestroyed(EventProjectileDestroyed e)
         {
-            if (e.Entity != _entity)
+            if (_finished || e.Entity != _entity)
                 return;
 
             BeginImpact(e.Position.ToUnityVector3(), _speed);
@@ -260,7 +299,7 @@ namespace Quantum
         // for a shot that never had one (its visual starts at the muzzle, the event already fired).
         public void BeginImpact(Vector3 hitPoint, float speed)
         {
-            if (_impacting == true)
+            if (_impacting == true || _finished)
                 return;
 
             _impacting = true;
@@ -294,15 +333,37 @@ namespace Quantum
                 .OnComplete(() => Finish(playEffect: true));
         }
 
+        private bool _finished;
+
+        private static readonly ProfilerMarker FinishMarker = new ProfilerMarker("Projectile.VisualFinish");
+
         private void Finish(bool playEffect)
         {
-            if (this == null)
+            using (FinishMarker.Auto())
+                FinishInner(playEffect);
+        }
+
+        private void FinishInner(bool playEffect)
+        {
+            // Unity only destroys this component at the end of the frame, so a second trigger in the
+            // same frame (orphan timeout + the impact tween completing) would otherwise run this twice
+            // - harmless when it just destroyed a GameObject, but a recycled visual reports back to
+            // its view once per Finish.
+            if (this == null || _finished)
                 return;
+
+            _finished = true;
 
             LogHelper.Log("ProjFlow", $"[{_entity}] VISUAL Finish playEffect={playEffect} -> trail {(playEffect && _settings.TrailParticle != null ? "handed to ParticleGracefulStop" : "destroyed with root")} t={Time.unscaledTime:F3}", this);
 
             if (playEffect == true)
                 PlayImpactEffect(transform.position);
+
+            if (_settings.Owner != null)
+            {
+                FinishRecycled(playEffect);
+                return;
+            }
 
             // Only on a real impact: unparents itself and finishes emitting where the shot landed.
             // A teardown/orphan cleanup deliberately leaves nothing behind - there was no impact to
@@ -347,6 +408,235 @@ namespace Quantum
             }
 
             Destroy(gameObject);
+        }
+
+        // Pooled counterpart of the destroy path in Finish. The root is part of a pooled
+        // ProjectileView's hierarchy, so it goes back under that view instead of dying; what Finish
+        // would have destroyed is hidden and cleared in place, and what it would have handed to a
+        // ParticleGracefulStop (trail, extra trails) still fades out where the shot landed but then
+        // returns home instead of being destroyed. Anything instantiated at spawn (echo ghost, the
+        // weapon's extra particle) is not part of the pristine hierarchy and still dies.
+        private void FinishRecycled(bool playEffect)
+        {
+            ProjectileView owner = _settings.Owner;
+
+            // Switched off NOW rather than at the end-of-frame Destroy: the view may be reused this
+            // very frame, and this controller's Update/event handlers would otherwise keep driving
+            // the root toward the old shot's target.
+            enabled = false;
+            QuantumEvent.UnsubscribeListener(this);
+
+            // The root outlives this controller now, so a tween still driving it (an orphan cleanup
+            // can land mid impact tween) must not carry on moving a visual its view is about to reuse.
+            Tween.StopAll(transform);
+
+            DisposeRuntimeExtra(_settings.EchoGhostParticle, playEffect);
+            DisposeRuntimeExtra(_settings.WeaponExtraParticle, playEffect);
+
+            if (playEffect == true)
+            {
+                // The trail IS this root (SniperProjectile): the root itself lingers to fade, minus
+                // everything that isn't a trail, and counts as the one piece still away from home.
+                if (IsRoot(_settings.TrailParticle) || IsRoot(_settings.TrailRenderer))
+                {
+                    FadeOutRootAsTrailRecycled(owner);
+                    return;
+                }
+
+                ReturnWhenFaded(_settings.TrailParticle, owner);
+
+                if (_settings.TrailRenderer != null &&
+                    (_settings.TrailParticle == null || _settings.TrailRenderer.transform.IsChildOf(_settings.TrailParticle.transform) == false))
+                    ReturnWhenFaded(_settings.TrailRenderer, owner);
+
+                if (_extraTrailParticles != null)
+                {
+                    foreach (ParticleSystem particle in _extraTrailParticles)
+                        ReturnWhenFaded(particle, owner);
+                }
+            }
+
+            // Whatever is still attached is the bullet body: it vanishes at the impact (the trail
+            // pieces above already left this hierarchy). Cleared rather than destroyed - the same
+            // objects are about to be reused.
+            HideAttachedVisuals();
+
+            // The home was destroyed under us (the pooled view went away): nothing to come back to.
+            if (_home == null)
+            {
+                Destroy(gameObject);
+                owner.EndPiece();
+                return;
+            }
+
+            transform.SetParent(_home, worldPositionStays: false);
+
+            // OnDestroy unsubscribes the events; the GameObject lives on with its view.
+            Destroy(this);
+            owner.EndPiece();
+        }
+
+        private void FadeOutRootAsTrailRecycled(ProjectileView owner)
+        {
+            foreach (Renderer r in _renderers)
+            {
+                if (r is not ParticleSystemRenderer && r is not TrailRenderer)
+                    r.enabled = false;
+            }
+
+            foreach (Light light in GetComponentsInChildren<Light>(includeInactive: true))
+                light.enabled = false;
+
+            DisableGroundBlobs();
+
+            if (IsRoot(_settings.TrailParticle))
+                ClearBodyParticles(_settings.TrailParticle);
+
+            // The root is the one piece Detach counted as away from home: its fade finishing is what
+            // reports it back (ParticleGracefulStop re-parents it under _home first).
+            gameObject.AddComponent<ParticleGracefulStop>().StopAndReturnWhenFinished(_home, owner.EndPiece);
+
+            Destroy(this);
+        }
+
+        private static void DisposeRuntimeExtra(ParticleSystem particle, bool playEffect)
+        {
+            if (particle == null)
+                return;
+
+            if (playEffect == true)
+                particle.gameObject.AddComponent<ParticleGracefulStop>().StopAndDestroyWhenFinished();
+            else
+                Destroy(particle.gameObject);
+        }
+
+        private static void ReturnWhenFaded(Component piece, ProjectileView owner)
+        {
+            if (piece == null)
+                return;
+
+            GameObject go = piece.gameObject;
+
+            // The detached root itself (a registered extra trail living on the root) has no home to
+            // fade back to here - it is returned by FinishRecycled. An inactive piece never runs the
+            // fade's Update, so it would just burn the view's release timeout; it is hidden anyway.
+            if (go == owner.gameObject || go.transform.parent == null || go.activeInHierarchy == false)
+                return;
+
+            // The same object can be listed twice (the trail particle that is also a registered
+            // extra trail) - one fade, one return.
+            if (go.TryGetComponent(out ParticleGracefulStop _))
+                return;
+
+            Transform home = go.transform.parent;
+            owner.BeginPiece();
+            go.AddComponent<ParticleGracefulStop>().StopAndReturnWhenFinished(home, owner.EndPiece);
+        }
+
+        // Scratch lists for the end-of-life sweeps below - one shot ends many times a second, and a
+        // GetComponentsInChildren array per component type per shot is exactly the GC churn pooling
+        // these views is meant to remove. Main thread only, never held across a call.
+        private static readonly System.Collections.Generic.List<Renderer> s_Renderers = new();
+        private static readonly System.Collections.Generic.List<ParticleSystem> s_Particles = new();
+        private static readonly System.Collections.Generic.List<TrailRenderer> s_Trails = new();
+        private static readonly System.Collections.Generic.List<Light> s_Lights = new();
+        private static readonly System.Collections.Generic.List<HasLight> s_GroundLights = new();
+        private static readonly System.Collections.Generic.List<HasShadow> s_GroundShadows = new();
+
+        private void HideAttachedVisuals()
+        {
+            if (_cache != null)
+            {
+                HideAttachedVisualsFromCache();
+                return;
+            }
+
+            GetComponentsInChildren(true, s_Renderers);
+            foreach (Renderer r in s_Renderers)
+                r.enabled = false;
+
+            GetComponentsInChildren(true, s_Particles);
+            foreach (ParticleSystem ps in s_Particles)
+                ps.Stop(withChildren: false, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            GetComponentsInChildren(true, s_Trails);
+            foreach (TrailRenderer tr in s_Trails)
+            {
+                tr.emitting = false;
+                tr.Clear();
+            }
+
+            GetComponentsInChildren(true, s_Lights);
+            foreach (Light light in s_Lights)
+                light.enabled = false;
+
+            DisableGroundBlobs();
+        }
+
+        // HasLight/HasShadow release their pooled ground blob in OnDisable; with the visual no longer
+        // destroyed that only happens if they are switched off explicitly.
+        private void HideAttachedVisualsFromCache()
+        {
+            Transform root = transform;
+
+            foreach (Renderer r in _cache.Renderers)
+            {
+                if (ProjectileComponentCache.IsAttached(r, root))
+                    r.enabled = false;
+            }
+
+            foreach (ParticleSystem ps in _cache.Particles)
+            {
+                if (ProjectileComponentCache.IsAttached(ps, root))
+                    ps.Stop(withChildren: false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            foreach (TrailRenderer tr in _cache.Trails)
+            {
+                if (ProjectileComponentCache.IsAttached(tr, root))
+                {
+                    tr.emitting = false;
+                    tr.Clear();
+                }
+            }
+
+            foreach (Light light in _cache.Lights)
+            {
+                if (ProjectileComponentCache.IsAttached(light, root))
+                    light.enabled = false;
+            }
+
+            DisableGroundBlobs();
+        }
+
+        private void DisableGroundBlobs()
+        {
+            if (_cache != null)
+            {
+                Transform root = transform;
+
+                foreach (HasLight light in _cache.GroundLights)
+                {
+                    if (ProjectileComponentCache.IsAttached(light, root))
+                        light.enabled = false;
+                }
+
+                foreach (HasShadow shadow in _cache.GroundShadows)
+                {
+                    if (ProjectileComponentCache.IsAttached(shadow, root))
+                        shadow.enabled = false;
+                }
+
+                return;
+            }
+
+            GetComponentsInChildren(true, s_GroundLights);
+            foreach (HasLight light in s_GroundLights)
+                light.enabled = false;
+
+            GetComponentsInChildren(true, s_GroundShadows);
+            foreach (HasShadow shadow in s_GroundShadows)
+                shadow.enabled = false;
         }
 
         private bool IsRoot(Component component)
@@ -413,7 +703,7 @@ namespace Quantum
         // heading (see Projectile.Velocity, already updated by the time this event lands).
         private void OnProjectileImpacted(EventProjectileImpacted e)
         {
-            if (e.Entity != _entity)
+            if (_finished || e.Entity != _entity)
                 return;
 
             Vector3 position = e.Position.ToUnityVector3();
@@ -426,6 +716,9 @@ namespace Quantum
 
         private void PlayImpactEffect(Vector3 position)
         {
+            if (_destroyEffectEnabled == false)
+                return;
+
             PlayDestroyEffect(_settings.DestroyEffectPrefab, position,
                 _destroyEffectColorOverride, _destroyEffectChildColorOverride, _destroyEffectScaleOverride);
         }

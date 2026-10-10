@@ -255,3 +255,10 @@ guard that keeps `OnDisconnected` from raising a 2s screen for disconnects that 
   Screen Size 1920x1080 (match width) like the other canvases - identical at 1080p.
 - `progressFill` / `progressLabel` are optional and unassigned; the prefab only has the pulsing logo and
   "LOADING..." text.
+
+## Shared Rift logo
+The animated Rift core (`CorePulseAnimation`: pulse, parts drifting apart and back, constant idle) is one prefab,
+`Prefabs/UI/RiftLoadingLogo.prefab`. Both loading screens use an instance of it: the generic `LoadingScreen`
+(`Resources/LoadingScreen`, under the "LOADING..." text) and the match-start `LoadingWindow` (above the title, scale 0.3).
+Change the logo's look or timing in that prefab and both follow. `LoadingWindow` also shows the shared tips
+(`docs/menu-tips.md`).

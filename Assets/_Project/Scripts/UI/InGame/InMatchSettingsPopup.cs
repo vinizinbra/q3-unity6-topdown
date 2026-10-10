@@ -39,11 +39,15 @@ public class InMatchSettingsPopup : UiPopup
 
         if (restartButton != null)
             restartButton.onClick.AddListener(OnRestartClicked);
+
+        // Playing alone, the settings screen pauses the game; closing it (fade or instant) resumes.
+        onClose += () => SoloPauseUtility.Release(this);
     }
 
     public override void Show()
     {
         base.Show();
+        SoloPauseUtility.Request(this);
 
         // Without notify: syncing the handles to the saved values must not write them straight back.
         if (sfxSlider != null)
@@ -67,13 +71,16 @@ public class InMatchSettingsPopup : UiPopup
 
     private void OnDisconnectClicked()
     {
-        // Instant, not the fade: the scene (and this popup with it) is about to be torn down.
+        // Instant, not the fade: the scene (and this popup with it) is about to be torn down - no point
+        // resuming a simulation that is being shut down.
+        SoloPauseUtility.Forget(this);
         CloseInstant();
         MatchMakingConfig.Instance.LeaveMatch();
     }
 
     private void OnRestartClicked()
     {
+        SoloPauseUtility.Forget(this);
         CloseInstant();
         MatchMakingConfig.Instance.RestartOfflineMatch();
     }

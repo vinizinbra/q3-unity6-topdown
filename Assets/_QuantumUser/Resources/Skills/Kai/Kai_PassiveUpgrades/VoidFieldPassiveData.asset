@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 411221715940256372
   Description: A void field slows enemy projectiles, making them far easier to dodge.
-  Icon: {fileID: 0}
+  Icon: {fileID: 21300000, guid: 11d0a73ce29f4849b0feb9fa7e3a7248, type: 3}
   DisplayName: Void Field
   Radius:
     RawValue: 163840

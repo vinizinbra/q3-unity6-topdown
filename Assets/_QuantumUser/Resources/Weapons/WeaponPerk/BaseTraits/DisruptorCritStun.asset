@@ -19,6 +19,6 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Overload
   Rarity: 1
-  Description: Crits briefly stun their target for <color=#FD3971>{0:0.#}s</color>
+  Description: Crits briefly stun their target for <color=#FD3971><b>{0:0.#}s</b></color>
   StunDuration:
     RawValue: 131072

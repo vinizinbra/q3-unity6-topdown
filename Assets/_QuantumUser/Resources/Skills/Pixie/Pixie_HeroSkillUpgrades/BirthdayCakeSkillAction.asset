@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_HeroSkillUpgrades/BirthdayCakeSkillAction
     Guid:
       Value: 413478364742523529
-  Icon: {fileID: 1776201555, guid: b217254d41b6945b1873986186a25786, type: 3}
+  Icon: {fileID: 21300000, guid: 1c31f145c4084357a647cc16735baa54, type: 3}
   DisplayName: Birthday Cake
   RankDescriptions:
   - "A landed Bunny Bomb becomes a Decoy for <color=#FD3971>1s</color> before exploding."

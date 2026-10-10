@@ -19,7 +19,7 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Cluster Charge
   Rarity: 1
-  Description: Grenade splits into <color=#FD3971>{0:0}</color> bombs at <color=#FD3971>{1:0}%</color>
+  Description: Grenade splits into <color=#FD3971><b>{0:0}</b></color> bombs at <color=#FD3971><b>{1:0}%</b></color>
     damage after impact
   Count: 3
   DamageMultiplier:

@@ -61,6 +61,8 @@ MonoBehaviour:
     BodySprite: {fileID: -147604254, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1.3, y: 1.3, z: 1.3}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -110,7 +112,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -139,6 +142,8 @@ MonoBehaviour:
     BodySprite: {fileID: 1909996209, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: -1}
     BodySpriteScale: {x: 1.1, y: 1.1, z: 1.1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 1
     Shake:
       Frequency: 0
@@ -188,7 +193,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -217,6 +223,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -266,7 +274,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -295,6 +304,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -344,7 +355,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -430,6 +442,8 @@ MonoBehaviour:
     BodySprite: {fileID: -1896583010, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -479,7 +493,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -508,6 +523,8 @@ MonoBehaviour:
     BodySprite: {fileID: -865403094, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -557,7 +574,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -596,6 +614,8 @@ MonoBehaviour:
     BodySprite: {fileID: -865403094, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -645,7 +665,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -674,6 +695,8 @@ MonoBehaviour:
     BodySprite: {fileID: 1909996209, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: -0.2}
     BodySpriteScale: {x: 1.1, y: 1.1, z: 1.1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 5
     Shake:
       Frequency: 18
@@ -723,7 +746,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -879,6 +903,8 @@ MonoBehaviour:
     BodySprite: {fileID: 203894394, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -928,7 +954,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -957,6 +984,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -1006,7 +1035,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -1035,6 +1065,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -1084,7 +1116,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -1113,6 +1146,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -1162,7 +1197,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -1201,7 +1237,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/World1Boss/W1-World1Boss
     Guid:
       Value: 464407345595852480
-  EnemyName: ScrapyardJaw
+  EnemyName: Scrapyard Jaw
   Tier: 5
   Economy:
     Persistent: 0
@@ -1379,8 +1415,9 @@ MonoBehaviour:
       Value: 0
   SkillActions: []
   ExplosionColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  Faction: {fileID: 0}
+  Description: The Outpost's guardian. Chews through anything that stays still.
   ViewPrefab: {fileID: 0}
-  FactionSkins: []
   Phases:
   - EntryTrigger: 0
     HealthPercentThreshold:

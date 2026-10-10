@@ -58,6 +58,8 @@ public class LoadingWindow : UiWindow
     private TMP_Text tipText;
     [SerializeField, Tooltip("Hints cycled while the screen is up, one every tipInterval seconds. Empty hides the tip line.")]
     private string[] tips;
+    [SerializeField, Tooltip("Optional shared tip list (the same asset the menu's TipsWidget uses). When assigned it replaces the tips array above.")]
+    private TipsData tipsData;
     [SerializeField] private float tipInterval = 4f;
 
     [Header("Labels")]
@@ -364,6 +366,7 @@ public class LoadingWindow : UiWindow
         if (tipText == null)
             return;
 
+        string[] tips = tipsData != null ? tipsData.tips : this.tips;
         if (tips == null || tips.Length == 0)
         {
             if (tipText.gameObject.activeSelf == true)

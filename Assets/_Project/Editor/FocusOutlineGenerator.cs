@@ -155,12 +155,14 @@ public static class FocusOutlineGenerator
                 }
 
                 // Hollow inside the source shape (so the glow can be drawn over neighbours without covering the
-                // element itself); outside, a crisp core plus a soft halo.
+                // element itself); outside, a crisp core plus a soft halo. The shape's outermost pixel ring stays
+                // opaque: bilinear filtering fades the hollow's edge over ~1px, and that fade must fall on the
+                // element's own border - not outside it, where it showed the background as a thin light line.
                 float distance = best == float.MaxValue ? n + 1f : Mathf.Sqrt(best);
                 float core = Mathf.Clamp01(CoreThickness + 0.5f - distance);
                 float glow = Mathf.Pow(Mathf.Clamp01(1f - distance / n), GlowPower) * GlowStrength;
                 bool solid = sx >= 0 && sx < w && sy >= 0 && sy < h && shape[sy * w + sx];
-                float alpha = solid ? 0f : Mathf.Max(core, glow);
+                float alpha = solid ? (IsShapeEdge(shape, w, h, sx, sy) ? 1f : 0f) : Mathf.Max(core, glow);
                 output[y * outW + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
             }
         }
@@ -193,6 +195,22 @@ public static class FocusOutlineGenerator
 
         AddToAtlas(path);
         return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+    }
+
+    // A shape pixel with a non-shape (or out-of-rect) 8-neighbour.
+    private static bool IsShapeEdge(bool[] shape, int w, int h, int x, int y)
+    {
+        for (int dy = -1; dy <= 1; dy++)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                int nx = x + dx, ny = y + dy;
+                if (nx < 0 || ny < 0 || nx >= w || ny >= h || !shape[ny * w + nx])
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool[] FillShape(byte[] alpha, int w, int h)

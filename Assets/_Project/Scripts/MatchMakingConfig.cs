@@ -188,6 +188,10 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // session at all, so it's never subject to any of this.
    public string PartyRoomCode { get; set; }
 
+   // True while the "party" room only exists because Play was pressed with no party (PartyManager.QuickStartSolo):
+   // it is plumbing for the match, not a party the player made, so after the run nothing is rejoined or recreated.
+   public bool PartyRoomIsSoloQuickStart { get; set; }
+
    // The UserId of whoever was party leader when the CURRENT/last match started - captured from
    // the one client allowed to call StartMatchInNewRoom (only the leader can) and broadcast to
    // everyone via the SyncMatchRoom event payload, so every client remembers it locally through the
@@ -343,14 +347,55 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       return matchmakingArguments;
    }
 
+   // Set by CancelConnect so the connect it aborts doesn't surface its resulting
+   // DisconnectException as a "Connection Failed" popup. Cleared at the start of every Connect.
+   private bool _connectCancelledByUser;
+
+   // The player backed out of a connect that is still in flight (Connecting panel's Cancel button).
+   // Drops the client so the pending ConnectToRoomAsync fails fast and a later Create/Join starts
+   // from a clean Disconnected state.
+   public void CancelConnect()
+   {
+      _connectCancelledByUser = true;
+
+      if (Client != null && Client.State != ClientState.Disconnected && Client.State != ClientState.PeerCreated)
+      {
+         LogHelper.Log("MatchMaking", $"Connect cancelled by the player (state {Client.State}) - disconnecting.");
+         Client.Disconnect();
+      }
+   }
+
    async void Connect(MatchmakingArguments connectionArguments)
    {
+      _connectCancelledByUser = false;
+
       // Starting a normal match supersedes any reconnect still grinding through its retry loop -
       // both drive the SAME Client, so leaving the old one running is what produced stray
       // "Operation timed out RejoinRoom" failures minutes into an unrelated match.
       CancelPendingReconnect("a normal connect was started");
 
       _suppressReconnectRefresh = false;
+
+      // A client that is still connected to a Master server (e.g. after leaving a party) would make
+      // ConnectToRoomAsync skip the connect entirely, so a region changed in the settings popup
+      // never applied. Drop it first - before any window is shown, as OnDisconnected navigates.
+      if (Client.IsConnected && !Client.InRoom &&
+          PhotonRegionSettings.NeedsReconnectFor(Client.CurrentRegion))
+      {
+         LogHelper.Log("MatchMaking", $"Region changed (connected to '{Client.CurrentRegion}') - disconnecting to reconnect.");
+         try
+         {
+            await Client.DisconnectAsync();
+         }
+         catch (Exception e)
+         {
+            HandleConnectFailure(e);
+            return;
+         }
+
+         if (_connectCancelledByUser)
+            return;
+      }
 
       // The party (CUSTOM) flow shows its own "connecting" feedback inline via PartyRoomWidget,
       // staying on MainMenuWindow throughout - only quickplay/reconnect navigate away to the
@@ -368,6 +413,12 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       }
       catch (Exception e)
       {
+         if (_connectCancelledByUser)
+         {
+            LogHelper.Log("MatchMaking", $"Connect aborted after the player cancelled: {e.GetType().Name}");
+            return;
+         }
+
          HandleConnectFailure(e);
       }
    }
@@ -1227,7 +1278,15 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       {
          await Client.LeaveRoomAsync(becomeInactive: false);
 
-         if (!string.IsNullOrEmpty(partyRoomCode))
+         if (PartyRoomIsSoloQuickStart)
+         {
+            // Played without a party: go back to a clean join/create panel instead of recreating one.
+            PartyRoomCode = null;
+            PartyRoomIsSoloQuickStart = false;
+            CleanReconnectConfig();
+            PartyManager.Instance.ResetToJoinCreate();
+         }
+         else if (!string.IsNullOrEmpty(partyRoomCode))
             await Client.JoinOrCreateRoomAsync(BuildRoomArgs(partyRoomCode));
       }
       catch (Exception e)

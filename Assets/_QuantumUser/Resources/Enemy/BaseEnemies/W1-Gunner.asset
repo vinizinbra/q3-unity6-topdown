@@ -467,7 +467,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/W1-Gunner
     Guid:
       Value: 411749050168152871
-  EnemyName: Swarm
+  EnemyName: Security Bot
   Tier: 1
   Economy:
     Persistent: 0
@@ -635,6 +635,8 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 26afa0b7c1c5442e3956a668aec84cb3, type: 2}
+  Description: Basic ranged bot. Fires predictable volleys from medium range.
   ViewPrefab: {fileID: 8476845490732343577, guid: 0f9bf80130ec34ffcbfcf4925f927fee, type: 3}
 --- !u!114 &5510490751386579581
 MonoBehaviour:

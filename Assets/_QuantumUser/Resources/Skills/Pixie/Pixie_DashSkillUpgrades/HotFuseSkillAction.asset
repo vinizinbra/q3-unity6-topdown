@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_DashSkillUpgrades/HotFuseSkillAction
     Guid:
       Value: 481991757651309151
-  Icon: {fileID: -659355639, guid: b217254d41b6945b1873986186a25786, type: 3}
+  Icon: {fileID: 21300000, guid: 421659276ad8454b8aa0f4d7a509d04f, type: 3}
   DisplayName: Hot Fuse
   RankDescriptions:
   - "After Dashing, your next Bunny Bomb thrown within <color=#FD3971>3s</color> deals <color=#FD3971>+30%</color> Damage."

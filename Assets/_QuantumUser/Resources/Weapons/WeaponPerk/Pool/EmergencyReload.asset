@@ -16,11 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/EmergencyReload
     Guid:
       Value: 435382047734290004
-  Icon: {fileID: -1231575849, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 95ecdd2f21d448de918f9db32c28ccae, type: 3}
   DisplayName: Emergency Reload
   Rarity: 1
-  Description: Gain <color=#FD3971>{0:+0;-0}%</color> Move Speed and <color=#FD3971>{1:0}%</color> Damage Reduction while reloading
-    on reload
+  Description: 'Reloading: <color=#FD3971><b>{0:+0;-0}%</b></color> Speed, <color=#FD3971><b>{1:+0;-0}%</b></color>
+    Damage Reduction'
   MoveSpeedBonus:
     RawValue: 9830
   DamageReduction:

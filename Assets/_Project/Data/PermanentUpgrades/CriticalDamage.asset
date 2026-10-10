@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Critical Damage
   kindLabel: OFFENSE UPGRADE
   description: Increases critical hit damage.
-  icon: {fileID: -1429601077, guid: 43aee60b797714139845974a85d14560, type: 3}
-  accentColor: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  icon: {fileID: 8333349355422775959, guid: 540e2ba2a8ab94c92bde01a964437bf7, type: 3}
+  accentColor: {r: 0.99215686, g: 0.41960785, b: 0.003921569, a: 1}
   category: 0
   group: 0
   maxLevel: 5

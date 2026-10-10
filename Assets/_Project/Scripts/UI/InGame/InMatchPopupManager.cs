@@ -25,13 +25,6 @@ public class InMatchPopupManager : MonoBehaviour {
 
     private readonly Stack<UiPopup> popupStack = new();
 
-    // Named Input Manager button (ProjectSettings/InputManager.asset, default "joystick button 7")
-    // instead of a raw JoystickButton KeyCode - re-point it at a different physical button from
-    // Project Settings > Input Manager if it doesn't match Start on a given pad, no code change
-    // needed. See QuantumDebugInput's own GamepadDash/Jump/Skill/SwitchTarget/Fire for the same
-    // pattern.
-    private static readonly string OpenInMatchSettings = Quantum.GamepadInputNames.Get("OpenInMatchSettings");
-
     public int popupOnTopCount => popupStack.Count;
     public bool HasPendingPopups => currentPopup != null || popupQueue.Count > 0;
 
@@ -148,7 +141,14 @@ public class InMatchPopupManager : MonoBehaviour {
         // Bluetooth pad's Select sends (MOGA Pro 2) - and that toggles HeroInfoPopupWidget instead.
         bool escapeOpensSettings = Application.isMobilePlatform == false;
 
-        if ((escapeOpensSettings && UnityEngine.Input.GetKeyDown(KeyCode.Escape)) || UnityEngine.Input.GetButtonDown(OpenInMatchSettings))
+        // Gamepad Cancel (B) dismisses the popup on top, if it allows it (CanCloseOnDimClick) - a tutorial
+        // popup doesn't, since closing it also unpauses the sim.
+        if (currentPopup != null && Quantum.GamepadControls.CancelPressed)
+            CloseCurrentPopup();
+        else if (currentPopup != null)
+            UiSelectionUtility.TrapFocusInside(currentPopup);
+
+        if ((escapeOpensSettings && UnityEngine.Input.GetKeyDown(KeyCode.Escape)) || Quantum.GamepadControls.OpenSettingsPressed)
         {
             if (currentPopup is InMatchSettingsPopup)
                 CloseCurrentPopup();

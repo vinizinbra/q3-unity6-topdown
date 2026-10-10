@@ -19,7 +19,8 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Double Barrel
   Rarity: 1
-  Description: 'Fires <color=#FD3971>{0:0}</color> shots in sequence per trigger pull'
+  Description: Fires <color=#FD3971><b>{0:0}</b></color> shots in sequence per trigger
+    pull
   BurstCount: 2
   BurstDelay:
     RawValue: 9830

@@ -1,7 +1,9 @@
 namespace QuantumUser.View.Util
 {
    using System;
+using System.Collections.Generic;
 using Quantum;
+using Unity.Profiling;
 using UnityEngine;
 
 public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
@@ -17,6 +19,59 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
     // local player, so couch co-op's second local player also gets its own local-only effects.
     public bool isLocal;
     protected bool _isQuittingApplication = false;
+
+#if ENABLE_PROFILER
+    // One marker per CONCRETE view component type (EnemyAttackVisualsView, ProjectileView, ...):
+    // "View.Update/<Type>" is the per-frame QUpdate cost of every instance of it, and
+    // "View.Initialize/<Type>" / "View.DeInitialize/<Type>" the spawn/despawn cost - the profiler
+    // otherwise folds all of it into one QuantumEntityView.OnObservedGameUpdated /
+    // CustomQuantumEntityViewComponent.Update line. Compiled out of release builds.
+    private static readonly Dictionary<Type, ProfilerMarker[]> s_Markers = new Dictionary<Type, ProfilerMarker[]>();
+    private ProfilerMarker[] _markers;
+
+    private ProfilerMarker[] Markers
+    {
+        get
+        {
+            if (_markers != null)
+                return _markers;
+
+            Type type = GetType();
+            if (s_Markers.TryGetValue(type, out _markers) == false)
+            {
+                _markers = new[]
+                {
+                    new ProfilerMarker("View.Initialize/" + type.Name),
+                    new ProfilerMarker("View.DeInitialize/" + type.Name),
+                    new ProfilerMarker("View.Update/" + type.Name),
+                };
+                s_Markers[type] = _markers;
+            }
+
+            return _markers;
+        }
+    }
+#endif
+
+    private void InitializeProfiled(QuantumGame game)
+    {
+#if ENABLE_PROFILER
+        using (Markers[0].Auto())
+#endif
+        {
+            Initialize(game);
+        }
+    }
+
+    private void DeInitializeProfiled(QuantumGame game)
+    {
+#if ENABLE_PROFILER
+        using (Markers[1].Auto())
+#endif
+        {
+            DeInitialize(game);
+        }
+    }
     public virtual void Awake()
     {
         entityView = GetComponent<QuantumEntityView>();
@@ -26,8 +81,8 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
             entityView = transform.root.GetComponentInChildren<QuantumEntityView>();
         if (entityView)
         {
-            entityView.OnEntityInstantiated.AddListener(Initialize);
-            entityView.OnEntityDestroyed.AddListener(DeInitialize);
+            entityView.OnEntityInstantiated.AddListener(InitializeProfiled);
+            entityView.OnEntityDestroyed.AddListener(DeInitializeProfiled);
 
             // OnEntityInstantiated only fires once, right when the view is created. A component
             // added as a child afterwards (e.g. a weapon parented onto the character post-spawn)
@@ -78,8 +133,8 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
 
         if (entityView)
         {
-            entityView.OnEntityInstantiated.RemoveListener(Initialize);
-            entityView.OnEntityDestroyed.RemoveListener(DeInitialize);
+            entityView.OnEntityInstantiated.RemoveListener(InitializeProfiled);
+            entityView.OnEntityDestroyed.RemoveListener(DeInitializeProfiled);
         }
     }
     
@@ -122,7 +177,12 @@ public abstract class CustomQuantumEntityViewComponent : MonoBehaviour
         if (ShouldExecute() == false)
             return;
         
-        QUpdate(_game);
+#if ENABLE_PROFILER
+        using (Markers[2].Auto())
+#endif
+        {
+            QUpdate(_game);
+        }
     }
 
     protected abstract void QUpdate(QuantumGame game);

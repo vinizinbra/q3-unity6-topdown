@@ -8,9 +8,11 @@ using UnityEngine.UI;
 ///  - only the active <see cref="FocusScopeWidget"/> is directionally navigable (every other scoped
 ///    Selectable temporarily gets Navigation.None, so the stick can't leak between levels);
 ///  - Cancel goes back one level (detail -> list -> main menu);
-///  - L1/R1 switch tabs.
+///  - L1/R1 (or [ and ]) switch the sub-tabs of the open tab (Power/Exploration, Enemies/Bosses...);
+///  - while a menu popup is open the menu behind it is not navigable and Cancel is left to the popup;
+///  - does nothing while the menu Canvas is switched off (a match is running).
 /// Selectables that belong to no scope (popups, top bar) are left alone.
-/// Uses the legacy Input Manager, like the rest of the menu's StandaloneInputModule.
+/// Reads Quantum.GamepadControls (Input System), like the menu's InputSystemUIInputModule.
 /// </summary>
 public class MenuNavigationController : MonoBehaviour
 {
@@ -23,11 +25,21 @@ public class MenuNavigationController : MonoBehaviour
     private FocusScopeWidget active;
     private GameObject lastSelected;
     private int lastSelectableCount = -1;
+    private Canvas menuCanvas;
+    private bool modal;
+    private bool popupWasOpen;
+    private bool typingWasActive;
+    private GameObject focusBeforePopup;
 
     private void Awake()
     {
         Instance = this;
+        menuCanvas = GetComponentInParent<Canvas>(true);
+        if (menuCanvas != null)
+            menuCanvas = menuCanvas.rootCanvas;
     }
+
+    private static bool PopupOpen => PopupManager.instance != null && PopupManager.instance.currentPopup != null;
 
     private void OnDestroy()
     {
@@ -52,6 +64,12 @@ public class MenuNavigationController : MonoBehaviour
         if (EventSystem.current == null)
             return;
 
+        // The menu Canvas is only switched off (not unloaded) while a match runs - then none of this applies.
+        if (menuCanvas != null && !menuCanvas.enabled)
+            return;
+
+        UpdateModal();
+
         if (active == null || !active.gameObject.activeInHierarchy)
         {
             active = rootScope;
@@ -69,17 +87,63 @@ public class MenuNavigationController : MonoBehaviour
             FollowSelection(selected);
         }
 
+        // A text field being edited owns input: Cancel ends the edit (not "go back"), and L1/R1 - which are
+        // also [ and ] - are just characters.
+        // It also counts for one frame after the edit ended: the field can end it itself earlier in the same frame,
+        // and that Cancel must not then also go back a level.
+        bool editing = SubmitToEditInputField.IsEditing(selected);
+        bool swallowEdit = editing || typingWasActive;
+        typingWasActive = editing;
+        if (swallowEdit)
+        {
+            if (editing && Quantum.GamepadControls.CancelPressed)
+                selected.GetComponent<TMPro.TMP_InputField>().DeactivateInputField();
+            return;
+        }
+
+        // A popup owns input: the menu behind it must not react to the same Cancel / stick press. It also
+        // stays "open" for one frame after closing, so the Cancel that closed it isn't handled twice.
+        bool swallow = PopupOpen || popupWasOpen;
+        popupWasOpen = PopupOpen;
+        if (swallow)
+            return;
+
         if (selected == null || !selected.activeInHierarchy)
             WakeUpOnInput();
 
-        if (Input.GetButtonDown("Cancel"))
+        if (Quantum.GamepadControls.CancelPressed)
             Back();
 
         // L1/R1 on a gamepad, [ and ] on a keyboard.
-        if (Input.GetKeyDown(KeyCode.JoystickButton4) || Input.GetKeyDown(KeyCode.LeftBracket))
-            SwitchTab(-1);
-        else if (Input.GetKeyDown(KeyCode.JoystickButton5) || Input.GetKeyDown(KeyCode.RightBracket))
-            SwitchTab(1);
+        if (Quantum.GamepadControls.TabPrevPressed)
+            SwitchSubTab(-1);
+        else if (Quantum.GamepadControls.TabNextPressed)
+            SwitchSubTab(1);
+    }
+
+    // A menu popup makes every scoped Selectable non-navigable (so the stick can't reach the menu behind
+    // the dim) and hands focus back to whatever had it once the popup is gone.
+    private void UpdateModal()
+    {
+        bool open = PopupOpen;
+        if (open == modal)
+            return;
+
+        modal = open;
+        if (open)
+        {
+            GameObject selected = EventSystem.current.currentSelectedGameObject;
+            focusBeforePopup = selected != null && FocusScopeWidget.Find(selected) != null ? selected : null;
+        }
+        else if (focusBeforePopup != null)
+        {
+            Selectable restore = focusBeforePopup.GetComponent<Selectable>();
+            focusBeforePopup = null;
+            if (restore != null && restore.IsInteractable() && restore.gameObject.activeInHierarchy)
+                Select(restore);
+        }
+
+        Apply();
     }
 
     // A mouse click can land focus in another scope - make that the active one so nav and Cancel follow it.
@@ -101,7 +165,7 @@ public class MenuNavigationController : MonoBehaviour
     // nothing usable left to focus, it walks up the parents so input can never end up stranded.
     private void WakeUpOnInput()
     {
-        bool input = Input.GetAxisRaw("Vertical") != 0f || Input.GetAxisRaw("Horizontal") != 0f || Input.GetButtonDown("Submit");
+        bool input = Quantum.GamepadControls.NavigateActive || Quantum.GamepadControls.SubmitPressed;
         if (!input)
             return;
 
@@ -145,28 +209,32 @@ public class MenuNavigationController : MonoBehaviour
             active.Focus();
     }
 
-    private void SwitchTab(int direction)
+    // L1/R1: switches the sub-tab strip of the tab that is open (Power/Exploration, Enemies/Bosses/..,
+    // Skill/Mastery, Weapons/Perks). Tabs without one (Home) ignore it. If the switch hides the page that
+    // held focus, focus moves to the new page's default item, or to the strip's own button when the new
+    // page has nothing focusable.
+    private void SwitchSubTab(int direction)
     {
-        if (tabGroup == null || tabGroup.tabButtons == null || tabGroup.tabButtons.Count == 0)
+        TabContent content = tabGroup != null ? tabGroup.selectedTabContent : null;
+        TabStripWidget strip = content != null ? content.SubTabs : null;
+        if (strip == null || !strip.Step(direction))
             return;
 
-        int count = tabGroup.tabButtons.Count;
-        int current = Mathf.Max(0, tabGroup.tabButtons.IndexOf(tabGroup.selectedTabButton));
-
-        for (int step = 1; step <= count; step++)
-        {
-            int index = ((current + direction * step) % count + count) % count;
-            if (index >= tabGroup.tabContent.Count || tabGroup.tabContent[index] == null)
-                continue;
-
-            TabButton button = tabGroup.tabButtons[index];
-            bool insideContent = active != rootScope;
-            tabGroup.OnTabSelected(button, insideContent);
-
-            if (!insideContent)
-                Select(button.GetComponent<Selectable>());
+        GameObject selected = EventSystem.current.currentSelectedGameObject;
+        if (selected != null && selected.activeInHierarchy)
             return;
-        }
+
+        Selectable target = content.DefaultFocus;
+        if (target == null || !target.IsInteractable() || !target.gameObject.activeInHierarchy)
+            target = strip.SelectedButton;
+        if (target == null)
+            return;
+
+        FocusScopeWidget scope = FocusScopeWidget.Find(target.gameObject);
+        if (scope != null && scope != active)
+            Activate(scope);
+
+        Select(target);
     }
 
     private static void Select(Selectable target)
@@ -189,7 +257,7 @@ public class MenuNavigationController : MonoBehaviour
             if (owner == null)
                 continue;
 
-            if (owner == active)
+            if (owner == active && !modal)
             {
                 if (savedNavigation.TryGetValue(selectable, out Navigation original))
                 {

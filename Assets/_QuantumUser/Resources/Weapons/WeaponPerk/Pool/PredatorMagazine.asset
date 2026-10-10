@@ -16,9 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/PredatorMagazine
     Guid:
       Value: 304155948433359418
-  Icon: {fileID: 238700175, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 2904ebdd60b94ec88484ec2212c59e94, type: 3}
   DisplayName: Predator Magazine
   Rarity: 1
-  Description: 'Restore <color=#FD3971>{0:0}%</color> magazine on kill'
+  Description: 'Kill: restore <color=#FD3971><b>{0:0}%</b></color> mag'
   RestoreFraction:
     RawValue: 6554

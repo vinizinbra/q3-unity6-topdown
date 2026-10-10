@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/SoundBoostSkillAction
     Guid:
       Value: 490069236516948011
-  Icon: {fileID: 1506874409, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  Icon: {fileID: 21300000, guid: dce8156d1558448f9d261d2672cb5f52, type: 3}
   DisplayName: Sound Boost
   RankDescriptions:
   - "Totem Support Beats heal <color=#FD3971>2%</color> Max HP and give <color=#FD3971>+15%</color> Move Speed and Fire Rate for <color=#FD3971>2s</color>."

@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Traversal
   kindLabel: EXPLORATION UPGRADE
   description: Unlocks traversal shrines and advanced platform challenges.
-  icon: {fileID: -4393933993369393434, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
-  accentColor: {r: 0.65, g: 0.3, b: 1, a: 1}
+  icon: {fileID: 2463930096800827436, guid: 7bf46803273b24220ba60766158daf78, type: 3}
+  accentColor: {r: 0, g: 0.9019608, b: 0.98039216, a: 1}
   category: 1
   group: 1
   maxLevel: 3

@@ -409,17 +409,30 @@ namespace Quantum
                 : $"[Accessory] {recoverer} returned {owner}'s accessory at {guard->CurrentDurability}/{guard->MaxDurability}");
         }
 
-        // The single "back to full and worn" funnel, shared by a Merchant repair AND a replacement
-        // (see AccessoryServiceUtility.TryPurchaseService) - there is deliberately no partial
-        // restore anywhere in this file.
+        // The single "back to full and worn" funnel (cheats, anything that wants a full restore) -
+        // just RestorePoints with the whole missing amount.
+        public static void Restore(Frame f, EntityRef player)
+        {
+            if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false)
+                return;
+
+            RestorePoints(f, player, guard->MaxDurability);
+        }
+
+        // Adds `points` durability (clamped to MaxDurability) and puts the accessory back on. The
+        // Merchant sells this one point at a time (see AccessoryServiceUtility.TryPurchaseService),
+        // so a Broken accessory bought once comes back at 1/Max, equipped.
         //
         // Destroying any still-outstanding world collectible is what upholds the "never both worn
         // and lying on the floor" invariant (docs/accessory-guard.md): a player can walk into the
         // Merchant at 2/3 with their accessory still lying somewhere out in the level, and paying
         // for a repair has to reconcile that, not leave a ghost copy behind.
-        public static void Restore(Frame f, EntityRef player)
+        public static void RestorePoints(Frame f, EntityRef player, int points)
         {
             if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false)
+                return;
+
+            if (points <= 0)
                 return;
 
             // A disabled guard has no accessory to restore - and MaxDurability is 0, so restoring
@@ -429,7 +442,8 @@ namespace Quantum
 
             DestroyOutstandingCollectible(f, guard);
 
-            guard->CurrentDurability = guard->MaxDurability;
+            int restored = guard->CurrentDurability + points;
+            guard->CurrentDurability = (byte)(restored > guard->MaxDurability ? guard->MaxDurability : restored);
             guard->State = AccessoryGuardState.Equipped;
             guard->Accessory = EntityRef.None;
         }

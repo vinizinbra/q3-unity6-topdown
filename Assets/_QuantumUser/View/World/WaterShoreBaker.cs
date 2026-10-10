@@ -64,6 +64,8 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
     // In-progress bake, carried across frames. _probeRow < 0 = not started yet.
     private bool[] _candidate;
     private bool[] _land;
+    private bool[] _landBase;          // land from the chunks / colliders, kept so ShoreObstacles changes re-finish cheaply
+    private int _obstacleVersion = -1;
     private int _probeRow = -1;
 
     // Cached IDs - Shader.SetGlobal* every re-bake, but resolve the property IDs once.
@@ -106,7 +108,15 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
     public override void QUpdate(QuantumGame game)
     {
         if (_baked)
+        {
+            // icebergs / other visual water obstacles built after the bake: re-run only the distance + upload
+            if (_landBase != null && _obstacleVersion != ShoreObstacles.Version)
+            {
+                _land = (bool[])_landBase.Clone();
+                FinishBake();
+            }
             return;
+        }
 
         // Same gate as MinimapWidget's outline: baking off a partially-populated chunk set would
         // lock in a wrong coastline forever, since it only ever runs once. See docs/minimap.md.
@@ -138,6 +148,7 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
             return;
 
         _probeRow = -1;
+        _landBase = null;
         if (StepBake(frame, float.PositiveInfinity))
             _baked = true;
     }
@@ -214,10 +225,18 @@ public class WaterShoreBaker : QuantumGlobalMonoBehaviour
 
     private void FinishBake()
     {
+        // 2b. Visual water obstacles (icebergs) count as land too.
+        if (_landBase == null || _landBase.Length != _land.Length)
+            _landBase = (bool[])_land.Clone();
+        ShoreObstacles.Stamp(_land, _res, worldUnitsPerTexel, worldCenter);
+        _obstacleVersion = ShoreObstacles.Version;
+
         // 3. Chamfer distance transform: distance (in texels) from each water cell to nearest land.
         float[] dist = ChamferDistanceToLand(_land);
 
         // 4. Encode saturate(worldDist / maxShoreDistanceWorld) into R8.
+        if (_field != null)
+            Destroy(_field);                 // re-finish (ShoreObstacles changed): don't leak the old field
         _field = new Texture2D(_res, _res, TextureFormat.R8, false)
         {
             filterMode = FilterMode.Bilinear,

@@ -19,9 +19,11 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Spin-Up
   Rarity: 1
-  Description: 'Rate of fire increases by <color=#FD3971>{0:0}%</color> per stack (max <color=#FD3971>{1:0}</color> stacks)'
+  Description: Rate of fire increases by <color=#FD3971><b>{0:0}%</b></color> per
+    stack (max <color=#FD3971><b>{1:0}</b></color> stacks)
   MaxStacks: 15
   FireRateBonusPerStack:
     RawValue: 7864
   DecayGrace:
     RawValue: 32768
+  AdvancePerShot: 0

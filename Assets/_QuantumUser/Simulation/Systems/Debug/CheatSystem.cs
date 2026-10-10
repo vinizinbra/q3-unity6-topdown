@@ -118,7 +118,7 @@ namespace Quantum
                     break;
 
                 case CheatActionKind.OpenChest:
-                    LevelUpUtility.BeginChestScreen(f, player, LevelUpCategory.GlobalUpgrade);
+                    LevelUpUtility.BeginChestScreen(f, player, (LevelUpCategory)cmd.Amount);
                     break;
 
                 case CheatActionKind.Revive:
@@ -158,6 +158,11 @@ namespace Quantum
                 case CheatActionKind.BecomeBot:
                     PlayerSpawnUtility.ConvertToBot(f, player);
                     Log.Debug($"[Bot] player {player} became a bot via cheat");
+                    break;
+
+                case CheatActionKind.RecoverFromBot:
+                    f.Remove<BotBrain>(player);
+                    Log.Debug($"[Bot] player {player} recovered from bot via cheat");
                     break;
 
                 case CheatActionKind.RevealMap:

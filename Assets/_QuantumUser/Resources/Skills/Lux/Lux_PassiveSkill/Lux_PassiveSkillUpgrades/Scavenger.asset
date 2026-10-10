@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/Scavenger
     Guid:
       Value: 269759498164841875
-  Icon: {fileID: 1059982369, guid: 355e00907e214470bac0029f70064510, type: 3}
+  Icon: {fileID: 21300000, guid: 9f803839e5c64429ae6bec39626bacce, type: 3}
   DisplayName: Scavenger
   Description: "More enemies drop Scrap, and more often."
   <MaxRank>k__BackingField: 3

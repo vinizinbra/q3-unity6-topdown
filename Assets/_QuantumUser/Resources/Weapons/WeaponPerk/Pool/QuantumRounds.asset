@@ -16,10 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/QuantumRounds
     Guid:
       Value: 308062823772408145
-  Icon: {fileID: 1649873915, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: fa89d1d0167e4805860b8c849346bf94, type: 3}
   DisplayName: Quantum Rounds
   Rarity: 3
-  Description: 'Hits damage an additional nearby enemy for <color=#FD3971>{0:0}%</color> damage within <color=#FD3971>{1:0}m</color>'
+  Description: Hits also damage a nearby enemy (<color=#FD3971><b>{0:0}%</b></color>)
   Radius:
     RawValue: 393216
   DamageMultiplier:

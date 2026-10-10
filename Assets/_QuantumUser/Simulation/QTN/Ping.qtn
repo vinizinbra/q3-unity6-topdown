@@ -1,0 +1,41 @@
+// Smart ping (see docs/ping.md) - one Ping button, PingSystem resolves WHAT was pinged from context
+// (Elite in view, own Downed state, nearby POI, else the ground ahead). No ping menu.
+enum PingKind : Byte
+{
+    None,
+    Ground,             // "Look here"
+    StickTogether,      // spammed Ground ping
+    Elite,              // "Focus Elite"
+    ReviveMe,           // Downed player pings themselves
+    Store,
+    Blacksmith,
+    Shrine,
+    Rift,
+    TeamChallengeFound, // not yet accepted
+    TeamChallengeStart, // accepted - "let's start"
+    Traversal,
+    TeamChallengeReward, // succeeded, reward unclaimed
+    TeamChallengeDone,   // succeeded and claimed
+    TeamChallengeFailed
+}
+
+// Per-player ping bookkeeping, added lazily by PingSystem (f.AddOrGet) - no prototype authoring.
+component PlayerPing
+{
+    FP Cooldown;          // general cooldown between any two pings
+    FP StickCooldown;     // extra cooldown on StickTogether itself
+    FP GroundSpamTimer;   // time left in the current empty-ground spam window
+    Int32 GroundSpamCount;
+}
+
+// synced: the HUD feed/minimap/sound must fire once per real ping, not once per predicted re-sim.
+synced event PingPlaced
+{
+    PlayerRef Player;
+    EntityRef Owner;
+    PingKind Kind;
+    FPVector3 Position;
+    EntityRef Target;
+    // The pinged POI's state for the pinger (Available/PhaseUnavailable/AlreadyUsed...); None for non-POI pings.
+    ContextInteractionState State;
+}

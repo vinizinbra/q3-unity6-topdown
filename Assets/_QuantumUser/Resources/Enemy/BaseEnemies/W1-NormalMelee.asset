@@ -36,7 +36,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/W1-NormalMelee
     Guid:
       Value: 368882078469044815
-  EnemyName: Melee
+  EnemyName: Rukk Melee
   Tier: 1
   Economy:
     Persistent: 0
@@ -204,6 +204,8 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
+  Description: Rushes in and bites at close range.
   ViewPrefab: {fileID: 8476845490732343577, guid: d1f1b213c420c42da86cfaeaa5e12cf2, type: 3}
 --- !u!114 &13293821001175021
 MonoBehaviour:

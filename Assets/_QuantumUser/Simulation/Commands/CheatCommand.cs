@@ -32,7 +32,7 @@ namespace Quantum
         ToggleGodMode,          // add/remove the sender's GodMode tag (hits resolve normally, Health never drops)
         KillAllEnemies,         // credit the sender (drops XP/coins as a normal kill would)
         HealFull,               // sender to full health
-        OpenChest,              // open a Chest upgrade screen for the sender
+        OpenChest,              // Amount = LevelUpCategory value; open a Chest upgrade screen of that forced category
         Revive,                 // revive every Downed/KO player
         SetDamageToOne,         // set the sender's equipped Weapon.DamageMultiplier so live damage rounds to 1
         ResetDamage,            // reset the sender's equipped Weapon.DamageMultiplier back to 1 (baseline)
@@ -70,8 +70,11 @@ namespace Quantum
         ToggleDirectorSpawns,   // flips Global.DebugDirectorSpawnsDisabled - stops the Director's
                                  // normal purchases AND phase-guaranteed spawns (the run clock keeps
                                  // running), so cheat-spawned enemies can be tested in isolation
-        JumpToBoss              // starts the run if still in the lobby, jumps to the first Boss-kind phase and
+        JumpToBoss,             // starts the run if still in the lobby, jumps to the first Boss-kind phase and
                                 // auto-resolves level-ups up to a late-run level - see CheatSystem.JumpToBoss
+        RecoverFromBot          // removes BotBrain from the sender's own entity (undo of BecomeBot) -
+                                // PlayerInputUtility.Resolve falls back to the real device input the
+                                // very next tick. No-op if the entity isn't a bot.
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

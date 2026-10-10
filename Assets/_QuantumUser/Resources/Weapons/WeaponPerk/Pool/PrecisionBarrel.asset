@@ -16,9 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/PrecisionBarrel
     Guid:
       Value: 353269447177605751
-  Icon: {fileID: -1135048708, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: cc0b0def3b8b47a2b27096d815f201f7, type: 3}
   DisplayName: Precision Barrel
   Rarity: 0
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Crit Chance'
+  Description: <color=#FD3971><b>{0:+0;-0}%</b></color> Crit Chance
   Chance:
     RawValue: 5243

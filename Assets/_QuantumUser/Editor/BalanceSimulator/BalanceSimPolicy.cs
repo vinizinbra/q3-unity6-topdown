@@ -486,7 +486,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                 cost += D(store.WeaponOfferBasePrice) + D(store.WeaponOfferPricePerPerk) * expectedPerks;
 
                 if (store.OfferAccessoryService)
-                    cost += D(store.ResolveAccessoryRepairCost(2));
+                    cost += D(store.AccessoryRepairCostPerPoint) * 2;
             }
 
             BlacksmithConfig forge = assets.Blacksmith;
@@ -560,8 +560,9 @@ namespace QuantumUser.Editor.BalanceSimulator
             if (store == null || store.OfferAccessoryService == false)
                 return;
 
-            // Durability lost per combat round isn't simulated - assume a mid repair (2 missing).
-            double price = D(store.ResolveAccessoryRepairCost(2));
+            // Durability lost per combat round isn't simulated - assume a mid repair (2 points,
+            // bought one at a time at AccessoryRepairCostPerPoint).
+            double price = D(store.AccessoryRepairCostPerPoint) * 2;
 
             for (int i = 0; i < scenario.AccessoryRepairsPerBreak; i++)
             {

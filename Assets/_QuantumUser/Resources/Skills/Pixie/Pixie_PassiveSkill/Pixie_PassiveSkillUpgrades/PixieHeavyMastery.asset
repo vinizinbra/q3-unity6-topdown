@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/PixieHeavyMastery
     Guid:
       Value: 385832167540444458
-  Icon: {fileID: 0}
+  Icon: {fileID: 21300000, guid: 9e374418a33648d2b8c44603e6d92886, type: 3}
   DisplayName: Heavy Weapon Mastery
   Description: Pixie's Heavy weapons hit harder, and at rank 3, hit a wider area
     - ballistic Heavy weapons also convert to direct-flying rockets.

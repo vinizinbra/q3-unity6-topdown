@@ -122,6 +122,8 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 continue;
 
             var candidates = FindCandidates(scene);
+            if (i == 0)
+                ShoreObstacles.Clear();                      // rebuilding everything: stale water discs must not survive a world switch
             var hosts = new List<TilesetPlatformBuilder>();
             foreach (var b in candidates)
             {
@@ -182,6 +184,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
         groundBoxes.Clear();
         foreach (var c in candidates)
             groundBoxes.Add(WorldBox(c));
+        ShoreObstacles.Remove(this);                         // re-registered by ScatterWater (or not, e.g. a world without icebergs)
         foreach (var member in cluster)
         {
             if (member.host != null)
@@ -220,6 +223,12 @@ public class TilesetPlatformBuilder : MonoBehaviour
             var platformRoot = new GameObject($"Platform_{platformCount++} ({platform.Count} cells)").transform;
             platformRoot.SetParent(generatedRoot, false);
             var template = cells[platform[0]].Template;
+
+            if (TrySpawnSmallBlock(set, platform, cells, origin, top, platformRoot, template))
+            {
+                pieceCount++;
+                continue;
+            }
 
             // Solve the whole platform as ONE shape (no internal walls between merged cubes), but give
             // every tile its own bottom: the HIGHEST bottom of the cells it covers, so a tile never hangs
@@ -262,6 +271,8 @@ public class TilesetPlatformBuilder : MonoBehaviour
             platformCorners.Clear();
         }
 
+        ScatterWater(set, cells, cluster, origin, generatedRoot);
+
         members.Clear();
         members.AddRange(cluster);
         foreach (var member in cluster)
@@ -282,9 +293,13 @@ public class TilesetPlatformBuilder : MonoBehaviour
             ClearResult();
     }
 
+    // A pooled / unloaded chunk cube must not leave its icebergs in the shore field.
+    private void OnDestroy() => ShoreObstacles.Remove(this);
+
     // Tears down the result this cube hosts (tiles + hidden renderers) and unlinks its members.
     private void ClearResult()
     {
+        ShoreObstacles.Remove(this);
         foreach (var r in hiddenRenderers)
         {
             if (r == null)
@@ -503,7 +518,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
             var perPlatform = new Dictionary<GameObject, int>();   // MaxPerPlatform / PlatformChance bookkeeping
             foreach (var c in sorted)
             {
-                if (used.Contains(c) || !Interior(c) || U(Hash(c, 1)) >= density)
+                if (used.Contains(c) || (!Interior(c) && !(mode == SurfaceDecor.Rooftop && set.RooftopEdgeCells)) || U(Hash(c, 1)) >= density)
                     continue;
                 if (!TilesetDefinition.PickScatter(list, Hash(c, 2), out var entry))
                     continue;
@@ -515,6 +530,15 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 perPlatform[entry.Model] = count + 1;
 
                 var pos = new Vector2(c.x + 0.5f, c.y + 0.5f);
+                if (mode == SurfaceDecor.Rooftop && set.RooftopEdgeCells)
+                {
+                    // edge cell: half a cell inward from each open side (a 2-wide roof -> its centre line), so props
+                    // never hang over the lip
+                    if (!solid.Contains(c + Vector2Int.left)) pos.x += 0.5f;
+                    if (!solid.Contains(c + Vector2Int.right)) pos.x -= 0.5f;
+                    if (!solid.Contains(c + Vector2Int.down)) pos.y += 0.5f;
+                    if (!solid.Contains(c + Vector2Int.up)) pos.y -= 0.5f;
+                }
                 var yaw = 90f * (Hash(c, 3) & 3);
                 if (entry.Cells >= 2)
                 {
@@ -533,6 +557,12 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 }
 
                 used.Add(c);
+                if (mode == SurfaceDecor.Rooftop && set.RooftopEdgeCells)
+                {
+                    for (var dx = -1; dx <= 1; dx++)                 // roofs: keep a free cell around each prop (no heaps)
+                    for (var dz = -1; dz <= 1; dz++)
+                        used.Add(new Vector2Int(c.x + dx, c.y + dz));
+                }
                 var scale = entry.ScaleRange == Vector2.zero ? 1f : Mathf.Lerp(entry.ScaleRange.x, entry.ScaleRange.y, U(Hash(c, 9)));
                 SpawnProp(entry.Model, new Vector3(origin.x + pos.x * cellSize, top + verticalOffset, origin.z + pos.y * cellSize), yaw, scale, parent, template);
             }
@@ -710,6 +740,188 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 SpawnProp(entry.Model, pos, 90f * e.Rotation + (U(26) - 0.5f) * 20f, scale, parent, template);
             }
         }
+    }
+
+    // Water scatter (icebergs...): empty cells around this cluster within WaterRing (Chebyshev, in cells), one chance per
+    // cell. A water cell near several clusters belongs to the cluster owning the nearest cube box (ties: the box with the
+    // smallest min x, then z), so it is decided once. Placed at the water line, random yaw / small jitter.
+    private void ScatterWater(TilesetDefinition set, Dictionary<Vector2Int, Cell> cells, List<TilesetPlatformBuilder> cluster,
+        Vector3 origin, Transform parent)
+    {
+        if (set.WaterScatter.Count == 0 || set.WaterDensity <= 0f || cells.Count == 0)
+            return;
+
+        var own = new List<Bounds>();
+        foreach (var m in cluster)
+            own.Add(WorldBox(m));
+        var ring = set.WaterRing;
+        var r = Mathf.Max(ring.y, 1);
+        var ox = Mathf.RoundToInt(origin.x / cellSize);
+        var oz = Mathf.RoundToInt(origin.z / cellSize);
+        var seen = new HashSet<Vector2Int>();
+        var discs = new List<Vector3>();
+        GameObject template = null;
+        foreach (var cell in cells.Values)
+        {
+            template = cell.Template;
+            break;
+        }
+        var waterRoot = new GameObject("Water").transform;
+        waterRoot.SetParent(parent, false);
+
+        float BoxDist(Bounds b, Vector3 p) => Mathf.Max(Mathf.Max(b.min.x - p.x, p.x - b.max.x), Mathf.Max(b.min.z - p.z, p.z - b.max.z), 0f);
+
+        foreach (var c in cells.Keys)
+        for (var dx = -r; dx <= r; dx++)
+        for (var dz = -r; dz <= r; dz++)
+        unchecked
+        {
+            var w = new Vector2Int(c.x + dx, c.y + dz);
+            if (cells.ContainsKey(w) || !seen.Add(w))
+                continue;
+            var p = new Vector3(origin.x + (w.x + 0.5f) * cellSize, 0f, origin.z + (w.y + 0.5f) * cellSize);
+
+            // under some cube (another platform / the floor)? not open water
+            var covered = false;
+            foreach (var b in groundBoxes)
+            {
+                if (p.x > b.min.x && p.x < b.max.x && p.z > b.min.z && p.z < b.max.z)
+                {
+                    covered = true;
+                    break;
+                }
+            }
+            if (covered)
+                continue;
+
+            // ring distance from this cluster (in cells) + ownership
+            var ownDist = float.MaxValue;
+            foreach (var b in own)
+                ownDist = Mathf.Min(ownDist, BoxDist(b, p));
+            var d = Mathf.CeilToInt(ownDist / cellSize - 0.01f);
+            if (d < ring.x || d > ring.y)
+                continue;
+            Bounds best = default;
+            var bestDist = float.MaxValue;
+            foreach (var b in groundBoxes)
+            {
+                var bd = BoxDist(b, p);
+                if (bd < bestDist - 1e-4f || (Mathf.Abs(bd - bestDist) <= 1e-4f && (b.min.x < best.min.x - 1e-4f || (Mathf.Abs(b.min.x - best.min.x) <= 1e-4f && b.min.z < best.min.z))))
+                {
+                    bestDist = bd;
+                    best = b;
+                }
+            }
+            var mine = false;
+            foreach (var b in own)
+            {
+                if ((b.center - best.center).sqrMagnitude < 1e-6f && (b.size - best.size).sqrMagnitude < 1e-6f)
+                {
+                    mine = true;
+                    break;
+                }
+            }
+            if (!mine)
+                continue;
+
+            var h0 = (w.x + ox) * 73856093 ^ (w.y + oz) * 19349663 ^ variationSeed * 2654435 ^ 0x5f3759df;
+            float U(int salt) { var h = h0 ^ salt * 83492791; h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15; return (h & 0xffffff) / (float)0x1000000; }
+            if (U(41) >= set.WaterDensity)
+                continue;
+            if (!TilesetDefinition.PickScatter(set.WaterScatter, (int)(U(42) * int.MaxValue), out var entry))
+                continue;
+            var scale = entry.ScaleRange == Vector2.zero ? 1f : Mathf.Lerp(entry.ScaleRange.x, entry.ScaleRange.y, U(43));
+            var pos = new Vector3(p.x + (U(44) - 0.5f) * 0.4f * cellSize, waterLevelY, p.z + (U(45) - 0.5f) * 0.4f * cellSize);
+            SpawnProp(entry.Model, pos, U(46) * 360f, scale, waterRoot, template);
+            discs.Add(new Vector3(pos.x, PropFootprintRadius(entry.Model) * scale, pos.z));
+        }
+
+        ShoreObstacles.Set(this, discs);                         // the shore field treats them as land (foam / edge fade)
+    }
+
+    // Plan radius of a prop model around its pivot (mesh bounds, model scale), cached per model.
+    private static readonly Dictionary<GameObject, float> propRadii = new();
+
+    private static float PropFootprintRadius(GameObject model)
+    {
+        if (propRadii.TryGetValue(model, out var r))
+            return r;
+        r = 0f;
+        foreach (var mf in model.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (mf.sharedMesh == null)
+                continue;
+            var b = mf.sharedMesh.bounds;
+            var m = mf.transform.localToWorldMatrix;
+            for (var i = 0; i < 8; i++)
+            {
+                var c = m.MultiplyPoint3x4(new Vector3((i & 1) != 0 ? b.max.x : b.min.x, (i & 2) != 0 ? b.max.y : b.min.y, (i & 4) != 0 ? b.max.z : b.min.z));
+                r = Mathf.Max(r, new Vector2(c.x, c.z).magnitude);
+            }
+        }
+        return propRadii[model] = r * 0.8f;                      // ~ the visible body, not the corners of its box
+    }
+
+    // Small raised platform -> one block model (TilesetDefinition.smallBlocks): the platform must be a full rectangle
+    // of cells, stand above the ground (bottom >= groundBelowY) and match a block Size (or its rotation).
+    private bool TrySpawnSmallBlock(TilesetDefinition set, List<Vector2Int> platform, Dictionary<Vector2Int, Cell> cells,
+        Vector3 origin, float top, Transform parent, GameObject template)
+    {
+        if (set.SmallBlocks.Count == 0)
+            return false;
+        int minX = int.MaxValue, minZ = int.MaxValue, maxX = int.MinValue, maxZ = int.MinValue;
+        var bottom = float.MaxValue;
+        foreach (var c in platform)
+        {
+            minX = Mathf.Min(minX, c.x); maxX = Mathf.Max(maxX, c.x);
+            minZ = Mathf.Min(minZ, c.y); maxZ = Mathf.Max(maxZ, c.y);
+            bottom = Mathf.Min(bottom, cells[c].Bottom);
+        }
+        int w = maxX - minX + 1, d = maxZ - minZ + 1;
+        if (platform.Count != w * d || bottom < groundBelowY)
+            return false;
+
+        // must stand ALONE: no other cube may touch / intersect its footprint within its height span (a block glued to a
+        // taller wall or another block reads wrong as a lone stone block). The floor under it (top == bottom) and the
+        // block's own cubes (inside the footprint) don't count.
+        const float eps = 0.02f;
+        float rx0 = origin.x + minX * cellSize, rx1 = origin.x + (maxX + 1) * cellSize;
+        float rz0 = origin.z + minZ * cellSize, rz1 = origin.z + (maxZ + 1) * cellSize;
+        foreach (var b in groundBoxes)
+        {
+            var inside = b.min.x >= rx0 - eps && b.max.x <= rx1 + eps && b.min.z >= rz0 - eps && b.max.z <= rz1 + eps;
+            if (inside)
+                continue;
+            var touches = b.min.x <= rx1 + eps && b.max.x >= rx0 - eps && b.min.z <= rz1 + eps && b.max.z >= rz0 - eps;
+            var spans = b.max.y > bottom + 0.05f && b.min.y < top - 0.05f;
+            if (touches && spans)
+                return false;
+        }
+
+        foreach (var block in set.SmallBlocks)
+        {
+            var straight = block.Size.x == w && block.Size.y == d;
+            var rotated = block.Size.x == d && block.Size.y == w;
+            if ((!straight && !rotated) || block.Models.Count == 0)
+                continue;
+            unchecked
+            {
+                var h = (minX + Mathf.RoundToInt(origin.x / cellSize)) * 73856093 ^ (minZ + Mathf.RoundToInt(origin.z / cellSize)) * 19349663 ^ variationSeed * 2654435;
+                h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15;
+                if (((h >> 12) & 0xffff) / 65536f >= block.Chance)
+                    return false;                                // this one keeps the normal tiled look
+                var model = block.Models[(h & 0x7fffffff) % block.Models.Count];
+                if (model == null)
+                    return false;
+                var yaw = (straight ? 0f : 90f) + ((h >> 8 & 1) == 0 ? 0f : 180f);
+                var pos = new Vector3(origin.x + (minX + w * 0.5f) * cellSize, bottom + verticalOffset, origin.z + (minZ + d * 0.5f) * cellSize);
+                var go = SpawnProp(model, pos, yaw, 1f, parent, template);
+                go.transform.localScale = Vector3.Scale(model.transform.localScale, new Vector3(cellSize, top - bottom, cellSize));
+            }
+            return true;
+        }
+
+        return false;
     }
 
     // Deterministic per-name salt (instance IDs change between sessions).

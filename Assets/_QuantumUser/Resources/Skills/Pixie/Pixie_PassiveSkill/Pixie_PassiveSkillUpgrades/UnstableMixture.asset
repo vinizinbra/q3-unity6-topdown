@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/UnstableMixture
     Guid:
       Value: 361478584056376078
-  Icon: {fileID: -361352915, guid: b217254d41b6945b1873986186a25786, type: 3}
+  Icon: {fileID: 21300000, guid: 92a5ef48429449e5816b96662d0f8af4, type: 3}
   DisplayName: Unstable Mixture
   Description: "Pixie's explosion kills empower her next explosion."
   <MaxRank>k__BackingField: 3

@@ -58,7 +58,7 @@ namespace Quantum
         // to a timer would silently turn a recoverable resource into a broken one.
 
         // Merchant repair/replacement PRICING is no longer authored here - it moved to
-        // StoreConfig.AccessoryRepairCostByMissingDurability/AccessoryBrokenReplacementCost (see
+        // StoreConfig.AccessoryRepairCostPerPoint/AccessoryBrokenReplacementCost (see
         // AccessoryServiceUtility.ResolvePrice), since it's Store pricing, same as every other
         // offer/service StoreConfig already prices. This asset stays Store-agnostic: durability,
         // pop/pickup - the mechanic itself, referenced by both Survival and Break.

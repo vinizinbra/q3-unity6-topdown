@@ -1,3 +1,4 @@
+using UnityEngine;
 using Quantum;
 using TMPro;
 
@@ -18,6 +19,16 @@ public class MainMenuTab : TabContent
     public void OpenChangeName()
     {
         PopupManager.instance.AddPopupToQueue(ChangeNamePopup.instance);        
+    }
+
+    // Entering the Home tab (Submit / Right on its rail button) lands on the Play button.
+    public override UnityEngine.UI.Selectable DefaultFocus
+    {
+        get
+        {
+            var window = FindFirstObjectByType<MainMenuWindow>(FindObjectsInactive.Exclude);
+            return window != null && window.playButton != null && window.playButton.IsActive() && window.playButton.IsInteractable() ? window.playButton : null;
+        }
     }
 
     protected override void OnShow()

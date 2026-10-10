@@ -68,6 +68,32 @@ public class SkillStatusLabelWidget : MonoBehaviour
         _shakeTween.Stop();
     }
 
+    // The owning CharacterUiWidget goes back to EnemyUiWidgetManager's pool: stop listening for the
+    // old entity's events and put the label back where Awake left it (hidden, at rest) so the next
+    // owner doesn't inherit a half-played pop-in/fade.
+    public void ResetForPool()
+    {
+        QuantumEvent.UnsubscribeListener(this);
+
+        _sequence.Stop();
+        _shakeTween.Stop();
+
+        _game = null;
+        _entityRef = default;
+
+        if (canvasGroup != null)
+            canvasGroup.alpha = 0f;
+
+        if (selfRect != null)
+        {
+            selfRect.anchoredPosition = _restPosition;
+            selfRect.localScale = Vector3.one;
+        }
+
+        if (label != null)
+            label.rectTransform.anchoredPosition = Vector2.zero;
+    }
+
     // Called from CharacterUiWidget.Setup - same once-per-instance timing the rest of that widget
     // relies on (it runs before this object's own Awake on a freshly spawned clone).
     public void Setup(QuantumGame game, EntityRef entityRef)

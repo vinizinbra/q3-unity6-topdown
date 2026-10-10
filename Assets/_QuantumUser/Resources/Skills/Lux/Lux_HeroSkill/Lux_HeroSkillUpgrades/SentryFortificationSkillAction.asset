@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/Lux_HeroSkillUpgrades/SentryFortificationSkillAction
     Guid:
       Value: 479614577650482228
-  Icon: {fileID: 535018670, guid: 355e00907e214470bac0029f70064510, type: 3}
+  Icon: {fileID: 21300000, guid: 9b51692d76754d71bbfd0f0a2cf3452b, type: 3}
   DisplayName: Fortification
   RankDescriptions:
   - "Sentry attack range <color=#FD3971>+2m</color>."

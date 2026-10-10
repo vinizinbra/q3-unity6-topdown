@@ -73,24 +73,24 @@ namespace Quantum
             // never runs through Spawn() at all - see that method's own comment).
         }
 
-        // Adds BotBrain and seeds its countdowns - shared by Spawn's own IsBot check above and
-        // CheatSystem's BecomeBot cheat (see CheatCommand.cs), so both start a bot on the exact
-        // same footing instead of one drifting if a future field gets seeded in only one place.
+        // Adds BotBrain and seeds it - shared by Spawn's own IsBot check above and CheatSystem's
+        // BecomeBot cheat (see CheatCommand.cs), so both start a bot on the exact same footing.
         internal static void ConvertToBot(Frame f, EntityRef entity)
         {
             f.AddOrGet<BotBrain>(entity, out var brain);
 
-            // Seeded rather than left at 0, which would make every bot cast on its very first
-            // tick, all together, the instant the match starts (or, for the cheat, the instant it
-            // fires).
-            RuntimeConfig.BotSettings bots = f.RuntimeConfig.Bots;
-            brain->HeroSkillTimer = BotInputSystem.RollHeroSkillInterval(f, bots);
-            brain->DashSkillTimer = BotInputSystem.RollDashInterval(f, bots);
-
             // -1 rather than left at 0, which would false-match Global.BreathingIndex's own 0
-            // default and skip this bot's very first Store visit - same gotcha
+            // default and skip this bot's very first POI visits - same gotcha
             // StoreUtility.EnsureInventoryRolled's own RolledAtBreathingIndex seed avoids.
             brain->StoreAttemptedAtBreathingIndex = -1;
+            brain->BlacksmithAttemptedAtBreathingIndex = -1;
+            brain->CursedRiftAttemptedAtBreathingIndex = -1;
+            brain->ShrineAttemptedAtBreathingIndex = -1;
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == true)
+            {
+                brain->ProgressAnchor = transform->Position;
+            }
         }
 
         // Spreads players evenly around a circle centered on PlayerSpawnPosition, SpawnOffsetDistance

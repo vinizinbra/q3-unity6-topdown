@@ -627,32 +627,57 @@ namespace Quantum
         // mid-air still kicks - and applied in LateUpdate, not written directly here, since
         // ApplyPose (running inside QUpdate/Update) is the sole writer of these transforms every
         // frame and would just stomp a direct write next frame.
+        // Every Punch* below is a no-op for a zero-strength (or zero-duration) kick. A weapon that leaves
+        // one of its Character Shoot Punch channels at zero is a perfectly valid tuning, but PrimeTween
+        // logs an error with a full stack trace for a zero shake ("Shake's strength is (0, 0, 0)") on
+        // EVERY shot - on a device build that is ~100+ ms of console work per log, which showed up as
+        // 1 s+ hitches in a many-projectile fight. Nothing to animate means no tween to start.
+        private static bool IsNoPunch(Vector3 strength, float duration)
+        {
+            return duration <= 0f || strength.sqrMagnitude <= 0f;
+        }
+
         public void PunchHeadOffset(Vector3 strength, float duration, float frequency)
         {
+            if (IsNoPunch(strength, duration))
+                return;
+
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(strength, duration, frequency),
                 (view, val) => view._headPunchOffset = val);
         }
 
         public void PunchBodyRotation(float degrees, float duration, float frequency)
         {
+            if (Mathf.Approximately(degrees, 0f) || duration <= 0f)
+                return;
+
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(degrees, 0f, 0f), duration, frequency),
                 (view, val) => view._bodyPunchRotation = val.x);
         }
 
         public void PunchHeadRotation(float degrees, float duration, float frequency)
         {
+            if (Mathf.Approximately(degrees, 0f) || duration <= 0f)
+                return;
+
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(new Vector3(degrees, 0f, 0f), duration, frequency),
                 (view, val) => view._headPunchRotation = val.x);
         }
 
         public void PunchBodyScale(Vector3 strength, float duration, float frequency)
         {
+            if (IsNoPunch(strength, duration))
+                return;
+
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(strength, duration, frequency),
                 (view, val) => view._bodyPunchScale = val);
         }
 
         public void PunchHeadScale(Vector3 strength, float duration, float frequency)
         {
+            if (IsNoPunch(strength, duration))
+                return;
+
             Tween.PunchCustom(this, Vector3.zero, new ShakeSettings(strength, duration, frequency),
                 (view, val) => view._headPunchScale = val);
         }

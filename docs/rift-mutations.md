@@ -494,7 +494,12 @@ new/changed C# compiles. Outstanding:
    before Greed's currency half does anything at runtime - `Tools/RiftRaiders/Generate Rift Shard
    Assets` authors the config; the prototype and its `RuntimeConfig` wiring are manual, same
    documented gap `ScrapOrbPrototype` has today.
-4. **Every asset's `Icon` is unset** - needs manual per-mutation sprite assignment.
+4. **Icons are assigned** (2026-10-07) from the painted 7x4 atlas `Assets/_Project/Art/Icons/RiftMutation/
+   RiftMutationUpgradeAtlas.png` (sliced into `RiftMutation_<AssetName>` sprites, 237x237 each) by
+   `Tools/RiftRaiders/Rift Mutations/Update Icons From Atlas` (`Assets/_Project/Editor/
+   RiftMutationIconAtlasUpdater.cs`) - the order is alphabetical, matching the roster's 28 entries. Re-running
+   is safe. **Note:** the generator leaves `Icon` untouched on existing assets, so it won't wipe these, but
+   a new mutation needs its cell added to the updater's `Names` array (and the atlas repainted).
 5. **The distance thresholds behind Close Quarters/Longshot (5/10 units) are a placeholder**, not a
    tuned design number - same category as several proc magnitudes across the Weapon Perk roster. They
    are now `internal` on `DamageUtility` and shared by Longshot's pierce and Close Quarters' kill

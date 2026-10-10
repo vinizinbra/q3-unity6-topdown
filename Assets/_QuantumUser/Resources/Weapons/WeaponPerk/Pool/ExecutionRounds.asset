@@ -16,10 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/ExecutionRounds
     Guid:
       Value: 410077869205496657
-  Icon: {fileID: 94785584, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 516c29b3b86c4643a782bc610b614ecd, type: 3}
   DisplayName: Execution Rounds
   Rarity: 1
-  Description: 'Last <color=#FD3971>{0:0}%</color> of magazine: <color=#FD3971>{1:+0;-0}%</color> Damage'
+  Description: 'Last <color=#FD3971><b>{0:0}%</b></color> of mag: <color=#FD3971><b>{1:+0;-0}%</b></color>
+    Damage'
   DamageBonus:
     RawValue: 19661
   Threshold:

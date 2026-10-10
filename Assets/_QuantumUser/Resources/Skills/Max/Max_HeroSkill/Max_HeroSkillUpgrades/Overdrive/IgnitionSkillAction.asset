@@ -16,19 +16,22 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/IgnitionSkillAction
     Guid:
       Value: 287946968249638524
-  Icon: {fileID: 570146469, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
+  Icon: {fileID: 21300000, guid: 620fd67d3d3642dfb83f3c0c945345c3, type: 3}
   DisplayName: Ignition
   RankDescriptions:
-  - "At maximum Rage, weapon hits always apply Burn."
-  - "At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves Burning Ground."
-  - "At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves Burning Ground. Reaching max Rage in Overdrive releases a <color=#FD3971>4m</color> Burn pulse (once per Overdrive)."
+  - At maximum Rage, weapon hits always apply Burn.
+  - At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves
+    Burning Ground.
+  - At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves
+    Burning Ground. Reaching max Rage in Overdrive releases a <color=#FD3971>4m</color>
+    Burn pulse (once per Overdrive).
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3
   Interval:
     RawValue: 0
   Activated: 0
-  Description: "At max Rage, every weapon hit Burns."
+  Description: At max Rage, every weapon hit Burns.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

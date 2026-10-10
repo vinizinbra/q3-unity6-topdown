@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Store
   kindLabel: EXPLORATION UPGRADE
   description: Unlocks and improves Stores during runs.
-  icon: {fileID: -3305586756573742292, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
-  accentColor: {r: 0.95, g: 0.2, b: 0.3, a: 1}
+  icon: {fileID: 5932103003307302726, guid: 7bf46803273b24220ba60766158daf78, type: 3}
+  accentColor: {r: 0.99215686, g: 0.76862746, b: 0.007843138, a: 1}
   category: 1
   group: 1
   maxLevel: 5

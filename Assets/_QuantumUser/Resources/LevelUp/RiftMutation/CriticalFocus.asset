@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/CriticalFocus
     Guid:
       Value: 504000970958733469
-  Icon: {fileID: 27831358, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: 1875545849312764479, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Critical Focus
   Rarity: 2
   Scope: 0

@@ -1,0 +1,800 @@
+fileFormatVersion: 2
+guid: 0b2ee31a186884c98b52ec43f0ba0d01
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: RiftMutation_AdrenalineKick
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 711
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7bb66c9c32f4c47b084701413986f7f9
+      internalID: -188109750269623080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_BloodMoney
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 711
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 99792dd09938e46158551b351eccf095
+      internalID: 3494879973672573774
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_BloodTithe
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 711
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 51d4d18a5292f4a5fac02de567d9308b
+      internalID: 2225789751896530770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_BossDestroyer
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 711
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 722f387363bdc4a0eb82c3dd058ce70c
+      internalID: 95528795168470630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_BroMutation
+      rect:
+        serializedVersion: 2
+        x: 948
+        y: 711
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e196993ab59c8469c8a5c7b278770cf0
+      internalID: -8759547901775533247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_BulletStorm
+      rect:
+        serializedVersion: 2
+        x: 1185
+        y: 711
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 182988c27d845492b84edb6ebc0d587f
+      internalID: 5783757731151388582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_CloseQuarters
+      rect:
+        serializedVersion: 2
+        x: 1422
+        y: 711
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e259cf8aaf21f4c53ab08297ba76397f
+      internalID: 6645148207146636252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_CriticalFocus
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 474
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35b1ab67c7d1c409485ad6581b0b9f06
+      internalID: 1875545849312764479
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_DangerPay
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 474
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 519aeb03dd1aa4acd9f0877565822f4b
+      internalID: 8299761396836659667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_DeadWeight
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 474
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c332ed0a12a7248ea85e5b8794905981
+      internalID: -1113397860924081935
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_EliteTerritory
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 474
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ad68fda0e29c46b188d69eb3e8e4278
+      internalID: 651244299013595500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_Escalation
+      rect:
+        serializedVersion: 2
+        x: 948
+        y: 474
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c114db0ae593a4e67bb2790f7c0ec36f
+      internalID: -6388283455610064460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_Executioner
+      rect:
+        serializedVersion: 2
+        x: 1185
+        y: 474
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42e984950354444ca86d06d0d3a00ccf
+      internalID: -5692481871139463026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_FocusedPower
+      rect:
+        serializedVersion: 2
+        x: 1422
+        y: 474
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 305b7edc2ec9449ecac3d009a36f8e6b
+      internalID: -7517787211425711658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_GlassCore
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 237
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 093161118f5e84034ba3629a7cf12311
+      internalID: -2955217306915090402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_Greed
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 237
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e31c0c3ec6bb448a9a25fe0e0a58b7b7
+      internalID: 6461316178986444646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_HeavyArsenal
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 237
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a9b47caae991a4b4fb828148b6505763
+      internalID: 4888341337451216716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_InfiniteMomentum
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 237
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3fc701407690a4667999526e7d7e36e9
+      internalID: 7822011428129731987
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_LastBastion
+      rect:
+        serializedVersion: 2
+        x: 948
+        y: 237
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a937f33291a974a0580cf254c6fd1b5a
+      internalID: 7202719091222473954
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_Longshot
+      rect:
+        serializedVersion: 2
+        x: 1185
+        y: 237
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eabdca78750874f2cb9b6a7aebf98f64
+      internalID: -1731888474977187615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_MoneyTalks
+      rect:
+        serializedVersion: 2
+        x: 1422
+        y: 237
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ffe57f96815044c89bb0db5e01132afc
+      internalID: -778506906449040837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_NoSafetyNet
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5666c937e651e4fda8ee5ac0aa192e84
+      internalID: -7987729630912477599
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_OneInTheChamber
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 0
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9db3db9440bd34b8fb89bee1ff07ff5b
+      internalID: 4932625613731712513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_Overkill
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 0
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 65ea813a5d0414969a84d06090b58111
+      internalID: -1829205450442491065
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_Overpopulation
+      rect:
+        serializedVersion: 2
+        x: 711
+        y: 0
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b2544d17b0074612bdf6f10b3193200
+      internalID: -3669953926235625378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_PressureCooker
+      rect:
+        serializedVersion: 2
+        x: 948
+        y: 0
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c9829c99be9341d49f954a296cb44c9
+      internalID: -3285156346186202997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_ScavengerRush
+      rect:
+        serializedVersion: 2
+        x: 1185
+        y: 0
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 04b11d5606d0e478b90ce74fed2bd40c
+      internalID: 6122173147777296290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RiftMutation_SecondWind
+      rect:
+        serializedVersion: 2
+        x: 1422
+        y: 0
+        width: 237
+        height: 237
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0592711511ed14113b7081ddc2c11e66
+      internalID: -6359364944987889231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: c45f0eb41049a48eab7fe2d6c8aea3ca
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      RiftMutation_AdrenalineKick: -188109750269623080
+      RiftMutation_BloodMoney: 3494879973672573774
+      RiftMutation_BloodTithe: 2225789751896530770
+      RiftMutation_BossDestroyer: 95528795168470630
+      RiftMutation_BroMutation: -8759547901775533247
+      RiftMutation_BulletStorm: 5783757731151388582
+      RiftMutation_CloseQuarters: 6645148207146636252
+      RiftMutation_CriticalFocus: 1875545849312764479
+      RiftMutation_DangerPay: 8299761396836659667
+      RiftMutation_DeadWeight: -1113397860924081935
+      RiftMutation_EliteTerritory: 651244299013595500
+      RiftMutation_Escalation: -6388283455610064460
+      RiftMutation_Executioner: -5692481871139463026
+      RiftMutation_FocusedPower: -7517787211425711658
+      RiftMutation_GlassCore: -2955217306915090402
+      RiftMutation_Greed: 6461316178986444646
+      RiftMutation_HeavyArsenal: 4888341337451216716
+      RiftMutation_InfiniteMomentum: 7822011428129731987
+      RiftMutation_LastBastion: 7202719091222473954
+      RiftMutation_Longshot: -1731888474977187615
+      RiftMutation_MoneyTalks: -778506906449040837
+      RiftMutation_NoSafetyNet: -7987729630912477599
+      RiftMutation_OneInTheChamber: 4932625613731712513
+      RiftMutation_Overkill: -1829205450442491065
+      RiftMutation_Overpopulation: -3669953926235625378
+      RiftMutation_PressureCooker: -3285156346186202997
+      RiftMutation_ScavengerRush: 6122173147777296290
+      RiftMutation_SecondWind: -6359364944987889231
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -23,9 +23,16 @@ namespace Quantum {
       // more practically, stops the human's own keys from being mirrored onto a bot slot by the
       // PlayerSlot ternary below (with three local players, slots 0 and 2 both fall through to
       // PollPlayerOneInput).
-      Quantum.Input i = IsBotSlot(callback)
-        ? default
-        : (callback.PlayerSlot == 1 ? PollPlayerTwoInput() : PollPlayerOneInput());
+      // A menu/popup/window being open (UiInputGate) also sends empty input - the stick, Submit and clicks
+      // that drive the UI must not move or fire the character behind it. Still polled every tick, so a held
+      // key/stick is released in the simulation the moment the UI opens.
+      Quantum.Input i;
+      if (IsBotSlot(callback)) {
+        i = default;
+      } else {
+        i = callback.PlayerSlot == 1 ? PollPlayerTwoInput() : PollPlayerOneInput();
+        i = UiInputGate.FilterAfterUi(callback.PlayerSlot, i);
+      }
       callback.SetInput(i, DeterministicInputFlags.Repeatable);
     }
 
@@ -59,38 +66,26 @@ namespace Quantum {
       return false;
     }
 
-    // Named Input Manager buttons (ProjectSettings/InputManager.asset) instead of raw JoystickButton
-    // KeyCodes - each one's actual "joystick button N" mapping is configured there (Project Settings
-    // > Input Manager), not hardcoded here, so it can be re-pointed at a different physical button
-    // without touching code. Current defaults: GamepadDash=0, GamepadSkill=2, GamepadSwitchTarget=3,
-    // GamepadFire=5. GamepadInputNames swaps in the "Editor"-prefixed Xbox 360 set in the macOS Editor.
-    private static readonly string GamepadDash = GamepadInputNames.Get("GamepadDash");
-    private static readonly string GamepadSkill = GamepadInputNames.Get("GamepadSkill");
-    private static readonly string GamepadSwitchTarget = GamepadInputNames.Get("GamepadSwitchTarget");
-    private static readonly string GamepadFire = GamepadInputNames.Get("GamepadFire");
-    private static readonly string GamepadHorizontal = GamepadInputNames.Get("GamepadHorizontal");
-    private static readonly string GamepadVertical = GamepadInputNames.Get("GamepadVertical");
-
     private Quantum.Input PollPlayerOneInput() {
       Quantum.Input i = new Quantum.Input();
-      // Real gamepad hardware reads through plain UnityEngine.Input - GamepadHorizontal/
-      // GamepadVertical pin joyNum:1 in the Input Manager to dodge the "any joystick" multi-device
-      // aggregation quirk this Bluetooth pad hits at joyNum:0 (see ProjectSettings/InputManager.asset
-      // and GamepadDash/Jump/Skill/SwitchTarget/Fire's own named-button mapping below).
+      // Real gamepad hardware reads through GamepadControls (Input System, one binding set for every
+      // pad - see there to re-point a button).
       // CF2Input is reserved for keyboard + on-screen mobile touch controls (Control Freak 2's own
       // Input Rig binds both to the same virtual "Horizontal"/"Vertical"/KeyCode targets), so a
       // touch build gets the same code path as desktop keyboard for free.
       float x = CF2Input.GetAxis("Horizontal")*2 ;
       float y = CF2Input.GetAxis("Vertical")*2;
       if(Mathf.Abs(x) < 0.1f && Mathf.Abs(y) < 0.1f) {
-        x = UnityEngine.Input.GetAxis(GamepadHorizontal);
-        y = UnityEngine.Input.GetAxis(GamepadVertical);
+        Vector2 stick = GamepadControls.Move;
+        x = stick.x;
+        y = stick.y;
       }
-      bool shiftHeld = UnityEngine.Input.GetButton(GamepadDash) || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
+      bool shiftHeld = GamepadControls.DashHeld || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
       bool jump = CF2Input.GetKey(UnityEngine.KeyCode.Space);
-      bool fire = UnityEngine.Input.GetButton(GamepadFire) || UnityEngine.Input.GetMouseButton(0);
-      bool switchTarget = UnityEngine.Input.GetButton(GamepadSwitchTarget) || CF2Input.GetKey(UnityEngine.KeyCode.Tab);
-      bool skill2 = UnityEngine.Input.GetButton(GamepadSkill) || CF2Input.GetKey(UnityEngine.KeyCode.E);
+      bool fire = UnityEngine.Input.GetMouseButton(0);
+      bool switchTarget = GamepadControls.SwitchTargetHeld || CF2Input.GetKey(UnityEngine.KeyCode.Tab);
+      bool ping = GamepadControls.PingHeld || UnityEngine.Input.GetMouseButton(2);
+      bool skill2 = GamepadControls.SkillHeld || CF2Input.GetKey(UnityEngine.KeyCode.E);
 
       Vector2 worldDirection = ApplyCameraYaw(x, y);
       i.Direction = new FPVector2(worldDirection.x.ToFP(), worldDirection.y.ToFP());
@@ -101,6 +96,7 @@ namespace Quantum {
       i.Jump = jump;
       i.Fire = fire;
       i.SwitchTarget = switchTarget;
+      i.Ping = ping;
       i.HeroSkill = skill2;
 
       return i;

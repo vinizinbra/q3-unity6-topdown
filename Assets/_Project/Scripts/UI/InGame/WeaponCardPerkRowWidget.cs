@@ -24,6 +24,8 @@ public class WeaponCardPerkRowWidget : MonoBehaviour
 
         if (titleText != null)
         {
+            // No separate title when the description already carries it ("<b>Title</b> - effect").
+            titleText.gameObject.SetActive(!string.IsNullOrEmpty(data.Title));
             titleText.text = data.Title;
 
             if (hasRarityColor)

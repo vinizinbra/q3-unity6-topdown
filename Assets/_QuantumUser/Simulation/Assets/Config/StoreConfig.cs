@@ -93,29 +93,24 @@ namespace Quantum
         public bool OfferAccessoryService = true;
 
         [Header("Accessory Service - Repair/Replacement Pricing")]
-        [Tooltip("Cost to repair the buyer's AccessoryGuard straight back to full, indexed by how many durability points are MISSING (element 0 = 1 missing, element 1 = 2 missing, ...). Deliberately explicit per-step costs rather than a formula - see ResolveAccessoryRepairCost. Past the authored range the last entry holds, same convention TalentRarityTuning/SurvivalConfig.Phases already use.")]
-        public FP[] AccessoryRepairCostByMissingDurability = { 25, 50 };
+        [Tooltip("Cost of ONE durability point on a damaged (not broken) AccessoryGuard. The service is sold one point at a time - buy again for the next point, until full.")]
+        public FP AccessoryRepairCostPerPoint = 25;
 
-        [Tooltip("Cost to REPLACE a Broken (0 durability) AccessoryGuard. Must be higher than any repair cost - a total loss should never be the cheap option.")]
-        public FP AccessoryBrokenReplacementCost = 100;
+        [Tooltip("Cost to REPLACE a Broken (0 durability) AccessoryGuard - comes back at 1 durability; further points are bought at AccessoryRepairCostPerPoint. Must be higher than a repair point - a total loss should never be the cheap option.")]
+        public FP AccessoryBrokenReplacementCost = 50;
 
-        // Repair always restores directly to AccessoryGuardConfig.BaseDurability - this only picks
-        // WHAT that costs, never how much durability is bought (see docs/accessory-guard.md: no
-        // per-point purchases, one clear Shop decision). `missing` is always >= 1 here; a full
-        // accessory resolves to AccessoryServiceKind.None long before this is reached. Lives here
-        // rather than on AccessoryGuardConfig because it's Store pricing, same as every other
-        // offer/service this config prices - AccessoryGuardConfig stays Store-agnostic (durability,
-        // pop/pickup) and is referenced by both Survival and Break for the mechanic itself.
-        public FP ResolveAccessoryRepairCost(int missing)
+        // Total Coins to go from `current` durability back to `max` buying one point at a time -
+        // the replacement price for the first point when broken, AccessoryRepairCostPerPoint for
+        // every point after. Used by the Balance Simulator / previews, never by the purchase path.
+        public FP ResolveAccessoryFullRestoreCost(int current, int max)
         {
-            if (AccessoryRepairCostByMissingDurability == null || AccessoryRepairCostByMissingDurability.Length == 0)
+            if (current >= max)
                 return FP._0;
 
-            int index = missing - 1;
-            index = index < 0 ? 0 : index;
-            index = index < AccessoryRepairCostByMissingDurability.Length ? index : AccessoryRepairCostByMissingDurability.Length - 1;
+            if (current <= 0)
+                return AccessoryBrokenReplacementCost + AccessoryRepairCostPerPoint * (max - 1);
 
-            return AccessoryRepairCostByMissingDurability[index];
+            return AccessoryRepairCostPerPoint * (max - current);
         }
 
         // "Increase Weapon Level" - a guaranteed offer, always present every Breathing Break
@@ -131,33 +126,16 @@ namespace Quantum
         public FP WeaponLevelUpDamageBonusPerLevel = FP._0_05; // +5% damage per level, compounding
 
 #if UNITY_EDITOR
-        // The one invariant this asset can actually get wrong in authoring: "more damaged -> more
-        // expensive", and "replacement > any repair". Editor-only, same reasoning DirectorConfig's
-        // own authoring guardrail documents - a designer finds out while typing the number, not
-        // three Breaks into a playtest. Moved here with the pricing fields themselves when the
-        // Accessory service's cost moved off AccessoryGuardConfig onto its Store offer.
+        // The one invariant this asset can actually get wrong in authoring: "replacement > a repair
+        // point". Editor-only, same reasoning DirectorConfig's own authoring guardrail documents - a
+        // designer finds out while typing the number, not three Breaks into a playtest.
         private void OnValidate()
         {
-            if (AccessoryRepairCostByMissingDurability == null)
+            if (AccessoryBrokenReplacementCost > AccessoryRepairCostPerPoint)
                 return;
 
-            for (int i = 1; i < AccessoryRepairCostByMissingDurability.Length; i++)
-            {
-                if (AccessoryRepairCostByMissingDurability[i] >= AccessoryRepairCostByMissingDurability[i - 1])
-                    continue;
-
-                Debug.LogWarning($"[Store] {name}: AccessoryRepairCostByMissingDurability[{i}] ({AccessoryRepairCostByMissingDurability[i]}) " +
-                                 $"is cheaper than [{i - 1}] ({AccessoryRepairCostByMissingDurability[i - 1]}) - a MORE damaged accessory should never cost LESS to restore.", this);
-            }
-
-            for (int i = 0; i < AccessoryRepairCostByMissingDurability.Length; i++)
-            {
-                if (AccessoryBrokenReplacementCost > AccessoryRepairCostByMissingDurability[i])
-                    continue;
-
-                Debug.LogWarning($"[Store] {name}: AccessoryBrokenReplacementCost ({AccessoryBrokenReplacementCost}) is not higher than " +
-                                 $"AccessoryRepairCostByMissingDurability[{i}] ({AccessoryRepairCostByMissingDurability[i]}) - replacing a broken accessory should cost more than repairing a damaged one.", this);
-            }
+            Debug.LogWarning($"[Store] {name}: AccessoryBrokenReplacementCost ({AccessoryBrokenReplacementCost}) is not higher than " +
+                             $"AccessoryRepairCostPerPoint ({AccessoryRepairCostPerPoint}) - replacing a broken accessory should cost more than repairing a point.", this);
         }
 #endif
     }

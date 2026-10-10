@@ -19,7 +19,7 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Storm Chain
   Rarity: 1
-  Description: Every <color=#FD3971>{0}th</color> shot chains to <color=#FD3971>{1}</color>
-    more enemies
+  Description: 'Every <color=#FD3971><b>{0}th</b></color> shot: <color=#FD3971><b>+{1}</b></color>
+    Bounce'
   Interval: 4
   Bounces: 2

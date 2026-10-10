@@ -16,10 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/DoubleTap
     Guid:
       Value: 420829169343257683
-  Icon: {fileID: -1859563994, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 83e97f78262e46f999939afb6ee35765, type: 3}
   DisplayName: Double Tap
   Rarity: 1
-  Description: '<color=#FD3971>{0:0}%</color> chance to fire an extra projectile'
+  Description: <color=#FD3971><b>{0:0}%</b></color> chance to shoot twice
   Chance:
     RawValue: 9830
   Delay:

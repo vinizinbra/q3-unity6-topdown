@@ -23,11 +23,6 @@ using UnityEngine;
 // PartyHistoryUpgradeContainer.
 public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
 {
-    // Named Input Manager button (ProjectSettings/InputManager.asset, default "joystick button 6" -
-    // Select/Back) held alongside Tab - re-point it in Project Settings > Input Manager if it doesn't
-    // match Select on a given pad. Same pattern as InMatchPopupManager's OpenInMatchSettings (Start).
-    private static readonly string OpenHeroInfo = Quantum.GamepadInputNames.Get("OpenHeroInfo");
-
     // Android Back (KeyCode.Escape) toggles instead of holds: a pad's Select arrives as Back on
     // Android (MOGA Pro 2) and fires down+up in the same frame, so GetKey never reads it as held.
     private bool _toggledOpen;
@@ -126,7 +121,7 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
         if (Application.isMobilePlatform && UnityEngine.Input.GetKeyDown(KeyCode.Escape))
             _toggledOpen = !_toggledOpen;
 
-        bool held = _toggledOpen || UnityEngine.Input.GetKey(KeyCode.Tab) || UnityEngine.Input.GetButton(OpenHeroInfo);
+        bool held = _toggledOpen || UnityEngine.Input.GetKey(KeyCode.Tab) || Quantum.GamepadControls.OpenHeroInfoHeld;
 
         if (held != _shown)
         {
@@ -144,6 +139,16 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
             }
 
             SetShown(held);
+
+            // Playing alone, the panel pauses the game while it is up - only the instance bound to the local
+            // player (the party HUD's copies for teammates are not "me looking at my build").
+            if (autoBindLocalPlayerOne)
+            {
+                if (held)
+                    SoloPauseUtility.Request(this);
+                else
+                    SoloPauseUtility.Release(this);
+            }
         }
 
         if (_shown == false || root == null || upgradeWidgetPrefab == null)

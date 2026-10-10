@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/MaxFireMastery
     Guid:
       Value: 415725267173426710
-  Icon: {fileID: 1319091042, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
+  Icon: {fileID: 21300000, guid: 072641cbe15c45b392c56377a1c2ff8d, type: 3}
   DisplayName: Fire Mastery
   Description: Fire weapons hit harder, and at rank 3, hit hardest while Max is Overdriven.
   <MaxRank>k__BackingField: 3

@@ -9,8 +9,8 @@ namespace Quantum
     // but heals the collecting player's own Health (HealUtility.ApplyFlatHeal) instead of crediting a
     // run-wide currency total. Whichever player reaches it determines the radius (their own
     // CharacterStats.PickupRangeMultiplier) and receives the heal (capped at their MaxHealth by
-    // ApplyFlatHeal). No magnetism - the orb sits where it dropped until reached or DestroyAfterTime
-    // expires it. Registered inside GameplaySystemGroup alongside CurrencyOrbSystem.
+    // ApplyFlatHeal). Players at full health can't collect it. No magnetism and no lifetime - the orb
+    // sits where it dropped until a hurt player reaches it (BreakableUtility skips DestroyAfterTime). Registered inside GameplaySystemGroup alongside CurrencyOrbSystem.
     [Preserve]
     public unsafe class HealthOrbSystem : SystemMainThreadFilter<HealthOrbSystem.Filter>
     {
@@ -45,6 +45,11 @@ namespace Quantum
                     continue;
 
                 if (f.Unsafe.TryGetPointer<Health>(player, out var health) == false)
+                    continue;
+
+                // A full-health player walks over it without consuming it, so it stays for whoever
+                // actually needs it (and never blocks a hurt teammate via nearest-wins below).
+                if (health->CurrentHealth >= health->MaxHealth)
                     continue;
 
                 FP effectiveRadius = pickupRadius * stats->PickupRangeMultiplier;

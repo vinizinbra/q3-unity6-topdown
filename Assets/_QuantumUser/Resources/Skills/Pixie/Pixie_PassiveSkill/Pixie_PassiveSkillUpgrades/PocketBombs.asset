@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/PocketBombs
     Guid:
       Value: 425116734721973481
-  Icon: {fileID: 1236816446, guid: b217254d41b6945b1873986186a25786, type: 3}
+  Icon: {fileID: 21300000, guid: e73bca5499404f3ba7f543a90461efa5, type: 3}
   DisplayName: Pocket Bombs
   Description: "Your explosions can drop a stationary Mini Bomb."
   <MaxRank>k__BackingField: 3

@@ -16,9 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/RapidMechanism
     Guid:
       Value: 502682413085804085
-  Icon: {fileID: 1776646243, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 3c39a88cd0674e5ebfbcdbaf3986cf20, type: 3}
   DisplayName: Rapid Mechanism
   Rarity: 0
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Fire Rate'
+  Description: <color=#FD3971><b>{0:+0;-0}%</b></color> Fire Rate
   Multiplier:
     RawValue: 75366

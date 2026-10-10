@@ -19,5 +19,5 @@ MonoBehaviour:
   Icon: {fileID: 1735838758, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   DisplayName: Scorching Pellets
   Rarity: 1
-  Description: <color=#FD3971>{0:+0;-0}</color> Pierce
+  Description: <color=#FD3971><b>{0:+0;-0}</b></color> Pierce
   BonusPierce: 1

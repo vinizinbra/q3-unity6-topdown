@@ -17,10 +17,155 @@ MonoBehaviour:
   material: {fileID: 2100000, guid: f290804cfc30d4699aeeac1e017c056e, type: 2}
   modelPrefix: Favela_
   useInnerCorners: 1
-  groundScatter: []
-  groundDensity: 0.07
-  rooftopScatter: []
-  rooftopDensity: 0.35
+  groundScatter:
+  - Model: {fileID: 919132149155446097, guid: 1bde844c3830b434e9de0efbaf01c350, type: 3}
+    Weight: 1
+    ScaleRange: {x: 2.2, y: 2.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 4bdf3da02d9a34b0d97dad55cab292a6, type: 3}
+    Weight: 0.8
+    ScaleRange: {x: 2.2, y: 2.6}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 0
+    PlatformChance: 0
+  groundDensity: 0.006
+  rooftopScatter:
+  - Model: {fileID: 919132149155446097, guid: 3441bd458cb8a4d1c9dc3eca0d7bec41, type: 3}
+    Weight: 1.4
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 2
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 1b8e45a18456b469a8d06c7eb8a589a3, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.2, y: 1.5}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: a5872279bd6e44ece959831ac688791b, type: 3}
+    Weight: 1
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 639882447ceef4f5d8c0e292813e995d, type: 3}
+    Weight: 1.2
+    ScaleRange: {x: 1.3, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: a8cb312592dfa4d35af0d1377ecfb4bc, type: 3}
+    Weight: 0.9
+    ScaleRange: {x: 0.9, y: 1.1}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: d7c5bd25ffd104c3085e9feb61ae813d, type: 3}
+    Weight: 0.6
+    ScaleRange: {x: 1.4, y: 1.7}
+    AnyYaw: 1
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 8a8625f8abe824b6395d15f5b068f204, type: 3}
+    Weight: 0.5
+    ScaleRange: {x: 1.4, y: 1.7}
+    AnyYaw: 0
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0.4
+  - Model: {fileID: 919132149155446097, guid: 60129b188c73149debf62ac36a838e60, type: 3}
+    Weight: 0.7
+    ScaleRange: {x: 1.3, y: 1.6}
+    AnyYaw: 1
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 5bbb3c3b3544044c588112ea09402397, type: 3}
+    Weight: 0.6
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 1
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0
+  - Model: {fileID: 919132149155446097, guid: 31cadc55500ec42e7829315bc2dfa8e8, type: 3}
+    Weight: 0.6
+    ScaleRange: {x: 1.4, y: 1.6}
+    AnyYaw: 1
+    Cells: 1
+    Foot: 0
+    SideModel: {fileID: 0}
+    FreeStanding: 0
+    FrontOnly: 0
+    WaterEdge: 0
+    MaxPerPlatform: 1
+    PlatformChance: 0
+  rooftopDensity: 0.22
+  rooftopEdgeCells: 1
   rooftopEdgeProps: []
   rooftopEdgeChance: 0.45
   wallScatter:
@@ -839,6 +984,10 @@ MonoBehaviour:
   facadeRowStep: 0.6
   facadeRows: 3
   facadeJitter: {x: 0, y: 0}
+  waterScatter: []
+  waterDensity: 0.05
+  waterRing: {x: 2, y: 5}
+  smallBlocks: []
   maxEdgeLength: 3
   maxEdgeStretch: 1.5
   pieces:

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_DashSkillUpgrades/IronShoulderSkillAction
     Guid:
       Value: 360341579882539830
-  Icon: {fileID: 937128853, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 21300000, guid: 1421ba6c33f74cccb2dab000918df5d3, type: 3}
   DisplayName: Iron Shoulder
   RankDescriptions:
   - "Dashing into enemies knocks them back. Enemies slammed into walls are Stunned for <color=#FD3971>1s</color>."

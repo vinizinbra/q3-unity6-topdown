@@ -35,8 +35,17 @@ public class HeroesTab : TabContent
     private const string LogTag = "Heroes";
 
     [Header("List")]
-    [SerializeField] private HeroRowWidget rowPrefab;
+    [SerializeField, Tooltip("The row placed in the list in the scene: cloned once per hero, hidden itself.")]
+    private HeroRowWidget rowTemplate;
     [SerializeField] private Transform listRoot;
+
+    [Header("Glitch")]
+    [Tooltip("Plays a short glitch burst on the info panel whenever the viewed item changes.")]
+    [SerializeField] private GlitchWidget infoGlitch;
+
+    [Header("Stage")]
+    [Tooltip("Coloured backdrop behind the hero; reacts to the viewed hero.")]
+    [SerializeField] private HeroStageWidget stage;
 
     [Header("Preview")]
     [Tooltip("The same lobby rig the main menu shows. Must have Follow Local Selection OFF - this tab drives it with the hero being viewed, which isn't necessarily the equipped one.")]
@@ -76,6 +85,7 @@ public class HeroesTab : TabContent
     private CharacterCatalog catalog;
     private int viewedIndex = -1;
     private bool built;
+    private bool stageShown;
 
     protected override void Awake()
     {
@@ -123,6 +133,21 @@ public class HeroesTab : TabContent
     {
         if (!built)
             BuildList();
+
+        PlayIntro();
+    }
+
+    // Tab opened: the stage fades up and the hero list slides in row by row.
+    private void PlayIntro()
+    {
+        if (!built)
+            return;
+
+        if (stage != null)
+            stage.PlayIn();
+
+        for (int i = 0; i < rows.Count; i++)
+            rows[i].PlayIntro(i * 0.05f);
     }
 
     protected override void OnHide()
@@ -149,6 +174,8 @@ public class HeroesTab : TabContent
             return;
         }
 
+        ListTemplateUtility.Hide(rowTemplate);
+
         foreach (HeroRowWidget row in rows)
         {
             row.Clicked -= OnRowClicked;
@@ -162,7 +189,7 @@ public class HeroesTab : TabContent
         {
             catalog.TryResolveCharacterData(entry.id, out CharacterData data);
 
-            HeroRowWidget row = Instantiate(rowPrefab, listRoot);
+            HeroRowWidget row = ListTemplateUtility.Spawn(rowTemplate, listRoot);
             row.name = "HeroRow_" + entry.id;
             row.Bind(rows.Count,
                 HeroName(entry, data),
@@ -218,6 +245,7 @@ public class HeroesTab : TabContent
         if (index < 0 || index >= ids.Count)
             return;
 
+        bool changed = viewedIndex >= 0 && viewedIndex != index;
         viewedIndex = index;
         string id = ids[index];
         CharacterCatalog.Entry entry = catalog.characters[index];
@@ -226,8 +254,16 @@ public class HeroesTab : TabContent
         for (int i = 0; i < rows.Count; i++)
             rows[i].SetSelected(i == index);
 
+        // The new hero's own rig glitches in as it is created (GlitchWidget); the stage flickers to its colour in step.
         if (preview != null)
             preview.ShowCharacterId(id);
+
+        if (stage != null)
+        {
+            Color ring = data != null ? data.RingColor : Color.white;
+            stage.SetHero(HeroAccent.Vivid(ring), instant: !stageShown);
+            stageShown = isActiveAndEnabled;
+        }
 
         heroNameText.text = HeroName(entry, data);
         string title = data != null ? data.Title : null;
@@ -245,6 +281,10 @@ public class HeroesTab : TabContent
         masteryFill.anchorMax = new Vector2(fill, 1f);
 
         RefreshSelectButton();
+
+        // After the panel shows the new hero, so the burst rests on what it now displays.
+        if (changed && infoGlitch != null && isActiveAndEnabled)
+            infoGlitch.PlayGlitch();
     }
 
     // The hero's base skill (Dash is the shared generic base and deliberately not listed).

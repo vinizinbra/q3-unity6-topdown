@@ -77,6 +77,8 @@ namespace Quantum
         // impact burst is its own moment, independently tunable from how the live projectile looks in
         // flight.
         [Header("Destroy Effect (generic destroyEffectPrefab, e.g. GenericProjectileDestroy)")]
+        [Tooltip("Plays the projectile prefab's impact burst (destroyEffectPrefab) when this weapon's shot hits something or expires, including each pierce/ricochet contact. Untick for high-fire-rate / many-projectile weapons: every impact is a pooled ParticleSystem with its own draw calls, and a 15-projectile burst spawns up to 15 at once. On by default; the tint/scale below only matter while this is on.")]
+        public bool EnableProjectileDestroyEffect = true;
         [Tooltip("Tint applied to destroyEffectPrefab's own ROOT ParticleSystem. White leaves it exactly as authored on the prefab.")]
         public Color ProjectileDestroyColor = Color.white;
         [Tooltip("Tint applied to every CHILD ParticleSystem under destroyEffectPrefab (e.g. GenericProjectileDestroy's Sparks/Glow). White leaves them exactly as authored on the prefab.")]

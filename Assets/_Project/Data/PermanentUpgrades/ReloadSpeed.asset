@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Reload Speed
   kindLabel: OFFENSE UPGRADE
   description: Increases weapon reload speed.
-  icon: {fileID: 1987535197, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
-  accentColor: {r: 1, g: 0.45, b: 0.1, a: 1}
+  icon: {fileID: 4743293046657885061, guid: 540e2ba2a8ab94c92bde01a964437bf7, type: 3}
+  accentColor: {r: 1, g: 0.5411765, b: 0, a: 1}
   category: 0
   group: 0
   maxLevel: 5

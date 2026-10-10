@@ -16,8 +16,8 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/PiercingRounds
     Guid:
       Value: 485799689735595026
-  Icon: {fileID: 1735838758, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: bbbd26e20c584170a88dd0c8bb431923, type: 3}
   DisplayName: Piercing Rounds
   Rarity: 1
-  Description: '<color=#FD3971>{0:+0;-0}</color> Pierce'
+  Description: <color=#FD3971><b>{0:+0;-0}</b></color> Pierce
   BonusPierce: 1

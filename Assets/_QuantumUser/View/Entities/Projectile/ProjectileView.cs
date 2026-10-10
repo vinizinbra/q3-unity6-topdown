@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using QuantumUser.View.Util;
+using Unity.Profiling;
 using UnityEngine;
 
 namespace Quantum
@@ -34,7 +37,17 @@ namespace Quantum
     // ever raising EventProjectileDestroyed, and every bullet in flight hung in the air forever.
     // QuantumEntityViewUpdater now owns this GameObject normally, and ProjectileVisualController
     // owns the visual's own ending.
-    public class ProjectileView : CustomQuantumEntityViewComponent
+    //
+    // POOLING (ProjectileViewUpdater): creating a view per shot was the single biggest cost of a
+    // many-projectile weapon (Instantiate.Copy/Produce/Awake on every shot), so the updater keeps
+    // finished views and hands them back out. That only works because the detached visual no longer
+    // dies with the shot: ProjectileVisualController returns the root (and any trail pieces left
+    // fading) to THIS view's hierarchy when it is done, and the view is only released to the pool once
+    // every piece is home (BeginPiece/EndPiece) and a couple of frames have passed since its entity
+    // went away - the destroy event is dispatched after DeInitialize, and the elemental FX view still
+    // needs its own entity ref for it. ProjectileViewSnapshot puts the hierarchy back to the prefab's
+    // authored state on release. Switch it off with ProjectileViewUpdater.poolProjectileViews.
+    public class ProjectileView : CustomQuantumEntityViewComponent, IProjectilePoolPart
     {
         [SerializeField, Tooltip("The bullet's own visual root - detached from this GameObject on spawn and owned from then on by a ProjectileVisualController. Leave empty to auto-resolve the first child that has any Renderer under it, which is what every projectile prefab here needs anyway.")]
         private Transform visualRoot;
@@ -59,6 +72,37 @@ namespace Quantum
 
         private ProjectileVisualController _visual;
 
+        // ---- Pooling state (inert unless ProjectileViewUpdater called EnablePooling) ----
+        private Action<ProjectileView> _onReleased;
+        private ProjectileViewSnapshot _snapshot;
+        private Transform _pooledVisualRoot;
+
+        // Component lists for the visual root (handed to the visual controller each shot) and for the
+        // whole view (the hide-while-held sweep). Built once in EnablePooling.
+        private ProjectileComponentCache _visualCache;
+        private ProjectileComponentCache _heldCache;
+        private int _piecesAway;
+        private bool _releaseRequested;
+        private int _releaseRequestFrame;
+        private float _heldSeconds;
+
+        // A view that never gets all its pieces back (a visual destroyed behind its back) is dropped
+        // instead of pooled. Comfortably past ProjectileVisualController's own orphan timeout.
+        private const float MaxReleaseHold = 6f;
+        // Frames to hold a view after its entity is gone, regardless of pieces: the destroy event is
+        // dispatched in the same Unity frame as DeInitialize but after it.
+        private const int MinReleaseHoldFrames = 2;
+
+        private static readonly List<IProjectilePoolPart> s_Parts = new();
+
+        public bool IsPooled => _onReleased != null;
+
+        // Inside "View.Initialize/ProjectileView": the two parts of it that could plausibly be the
+        // expensive ones. The per-weapon extra particle and echo ghost are still Instantiated per shot.
+        private static readonly ProfilerMarker AttachExtrasMarker = new ProfilerMarker("Projectile.AttachExtras");
+        private static readonly ProfilerMarker DetachMarker = new ProfilerMarker("Projectile.DetachVisual");
+        private static readonly ProfilerMarker ReleaseMarker = new ProfilerMarker("Projectile.CompleteRelease");
+
         // Buffered until _visual exists - see RegisterExtraTrailParticles/RegisterExtraRenderers/
         // RegisterDestroyEffectColor/RegisterDestroyEffectChildColor/RegisterDestroyEffectScale below.
         // Nothing pending is the common case (no caller registered anything), so this is only
@@ -68,6 +112,7 @@ namespace Quantum
         private Color? _pendingDestroyEffectColor;
         private Color? _pendingDestroyEffectChildColor;
         private Vector3? _pendingDestroyEffectScale;
+        private bool? _pendingDestroyEffectEnabled;
 
         // Where the bullet actually IS on screen, which is not this GameObject during the catch-up.
         // Read by ProjectileElementalFxView so the elemental trail follows the visual rather than the
@@ -123,12 +168,23 @@ namespace Quantum
             if (frame != null && frame.TryGet<Projectile>(_entityRef, out var projectile) == true)
                 spawnPosition = ResolveVisualSpawnPosition(projectile.Owner, projectile.SpawnPosition.ToUnityVector3());
 
-            ParticleSystem echoGhostParticle = AttachEchoGhostParticle(frame, root);
-            ParticleSystem weaponExtraParticle = AttachWeaponExtraParticle(frame, root);
+            ParticleSystem echoGhostParticle;
+            ParticleSystem weaponExtraParticle;
+            using (AttachExtrasMarker.Auto())
+            {
+                echoGhostParticle = AttachEchoGhostParticle(frame, root);
+                weaponExtraParticle = AttachWeaponExtraParticle(frame, root);
+            }
 
             ProjectileVisualController.Settings settings = BuildSettings(echoGhostParticle, weaponExtraParticle);
 
-            _visual = ProjectileVisualController.Detach(root, _entityRef, spawnPosition, transform.rotation, settings);
+            // Counted BEFORE Detach: from here until ProjectileVisualController hands the root back,
+            // this view must not be reused. Only a pooled view has anyone to report back.
+            if (IsPooled)
+                _piecesAway++;
+
+            using (DetachMarker.Auto())
+                _visual = ProjectileVisualController.Detach(root, _entityRef, spawnPosition, transform.rotation, settings);
 
             if (_pendingExtraTrailParticles != null)
                 _visual.SetExtraTrailParticles(_pendingExtraTrailParticles);
@@ -144,6 +200,9 @@ namespace Quantum
 
             if (_pendingDestroyEffectScale.HasValue)
                 _visual.SetDestroyEffectScaleOverride(_pendingDestroyEffectScale);
+
+            if (_pendingDestroyEffectEnabled.HasValue)
+                _visual.SetDestroyEffectEnabled(_pendingDestroyEffectEnabled.Value);
 
             // Straight away, not only from the next QUpdate: this hands over the entity's real
             // position and speed on the very frame the view appears, so a projectile that dies the
@@ -191,6 +250,12 @@ namespace Quantum
                 TrailRenderer = trailRenderer,
                 EchoGhostParticle = echoGhostParticle,
                 WeaponExtraParticle = weaponExtraParticle,
+                Owner = IsPooled ? this : null,
+
+                // Only for a pristine visual: the echo ghost and the weapon's extra particle are
+                // instantiated under the root per shot and are in no cached list, so a shot that has
+                // either scans instead (the rare path).
+                Cache = IsPooled && echoGhostParticle == null && weaponExtraParticle == null ? _visualCache : null,
             };
         }
 
@@ -228,6 +293,162 @@ namespace Quantum
 
             _visual.Push(transform.position, rotation, speed,
                 visible: hasProjectile == false || projectile.RemainingSpawnDelay <= 0);
+        }
+
+        // ---------------------------------------------------------------------------------
+        // Pooling
+        // ---------------------------------------------------------------------------------
+
+        // Called by ProjectileViewUpdater right after it instantiates this view, before it is
+        // activated: nothing has initialized or mutated the hierarchy yet, so this is the pristine
+        // state every later release restores.
+        public void EnablePooling(Action<ProjectileView> onReleased)
+        {
+            _pooledVisualRoot = ResolveVisualRoot();
+            if (_pooledVisualRoot != null)
+                _visualCache = ProjectileComponentCache.Build(_pooledVisualRoot);
+            _heldCache = ProjectileComponentCache.Build(transform);
+            _snapshot = ProjectileViewSnapshot.Capture(transform);
+            _onReleased = onReleased;
+        }
+
+        // ProjectileVisualController: the visual root, or a trail piece left fading where the shot
+        // landed, is away from this view / has come home again.
+        public void BeginPiece()
+        {
+            _piecesAway++;
+        }
+
+        public void EndPiece()
+        {
+            if (this == null)
+                return;
+
+            _piecesAway = Mathf.Max(0, _piecesAway - 1);
+            TryCompleteRelease();
+        }
+
+        // ProjectileViewUpdater: the entity is gone and the view was Deactivated. Not released
+        // straight away - see the class comment.
+        public void RequestRelease()
+        {
+            if (_releaseRequested)
+                return;
+
+            _releaseRequested = true;
+            _releaseRequestFrame = Time.frameCount;
+            _heldSeconds = 0f;
+
+            HideAttachedWhileHeld();
+        }
+
+        private void LateUpdate()
+        {
+            if (_releaseRequested)
+                TryCompleteRelease();
+        }
+
+        // Anything still attached to this view is hidden for the hold - before pooling the whole
+        // GameObject was destroyed the moment its entity died, so nothing of it may linger on screen
+        // (a mesh on the root itself, a ground blob, an emitter). The detached visual and fading
+        // pieces are not children right now, so they are untouched.
+        private void HideAttachedWhileHeld()
+        {
+            Transform root = transform;
+
+            foreach (Renderer r in _heldCache.Renderers)
+            {
+                if (ProjectileComponentCache.IsAttached(r, root))
+                    r.enabled = false;
+            }
+
+            foreach (ParticleSystem ps in _heldCache.Particles)
+            {
+                if (ProjectileComponentCache.IsAttached(ps, root))
+                    ps.Stop(withChildren: false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            foreach (HasLight light in _heldCache.GroundLights)
+            {
+                if (ProjectileComponentCache.IsAttached(light, root))
+                    light.enabled = false;
+            }
+
+            foreach (HasShadow shadow in _heldCache.GroundShadows)
+            {
+                if (ProjectileComponentCache.IsAttached(shadow, root))
+                    shadow.enabled = false;
+            }
+        }
+
+        private void TryCompleteRelease()
+        {
+            if (_releaseRequested == false)
+                return;
+
+            if (_piecesAway > 0)
+            {
+                // Real time, but frozen while the game is paused (timeScale ~0 for a Level-Up/Chest
+                // screen): a trail ribbon fades on scaled time, so counting the pause would drop every
+                // shot that was mid-fade when the screen opened.
+                if (Time.timeScale > 0.01f)
+                    _heldSeconds += Time.unscaledDeltaTime;
+
+                if (_heldSeconds > MaxReleaseHold)
+                {
+                    LogHelper.Warn("ProjectileView", $"{name}: {_piecesAway} visual piece(s) never came home within " +
+                        $"{MaxReleaseHold}s - dropping this view instead of pooling it.", this);
+                    _onReleased = null;
+                    Destroy(gameObject);
+                }
+
+                return;
+            }
+
+            if (Time.frameCount < _releaseRequestFrame + MinReleaseHoldFrames)
+                return;
+
+            CompleteRelease();
+        }
+
+        private void CompleteRelease()
+        {
+            using (ReleaseMarker.Auto())
+                CompleteReleaseInner();
+        }
+
+        private void CompleteReleaseInner()
+        {
+            Action<ProjectileView> onReleased = _onReleased;
+
+            // Inactive FIRST: the snapshot flips children's active/enabled states, and with the root
+            // active that would fire OnEnable/OnDisable (ground blobs, emitters) for nothing.
+            gameObject.SetActive(false);
+
+            GetComponents(s_Parts);
+            foreach (IProjectilePoolPart part in s_Parts)
+                part.ResetForPool();
+            s_Parts.Clear();
+
+            _snapshot.Restore();
+
+            onReleased?.Invoke(this);
+        }
+
+        // Clears this component's own per-shot state (the siblings do theirs through the same
+        // interface). Not the pooling state itself.
+        public void ResetForPool()
+        {
+            _visual = null;
+            _pendingExtraTrailParticles = null;
+            _pendingExtraRenderers = null;
+            _pendingDestroyEffectColor = null;
+            _pendingDestroyEffectChildColor = null;
+            _pendingDestroyEffectScale = null;
+            _pendingDestroyEffectEnabled = null;
+
+            _piecesAway = 0;
+            _releaseRequested = false;
         }
 
         // How far the simulation's own SpawnPosition may sit from the owner's live muzzle and still
@@ -413,6 +634,16 @@ namespace Quantum
                 _pendingDestroyEffectScale = scale;
         }
 
+        // Same buffering, for WeaponDataAsset.ProjectileVisuals.EnableProjectileDestroyEffect - unticked
+        // means the impact burst never plays for this shot (see ProjectileVisualController.PlayImpactEffect).
+        public void RegisterDestroyEffectEnabled(bool enabled)
+        {
+            if (_visual != null)
+                _visual.SetDestroyEffectEnabled(enabled);
+            else
+                _pendingDestroyEffectEnabled = enabled;
+        }
+
         // The bullet mesh is a child in every projectile prefab here, but not always the FIRST one
         // (an enemy shot leads with a Light child), so this picks by what actually renders rather
         // than by index.
@@ -420,6 +651,11 @@ namespace Quantum
         {
             if (visualRoot != null)
                 return visualRoot;
+
+            // Resolved once before the first Detach: after a round trip the root is re-parented last,
+            // so "first child with a Renderer" could otherwise pick a different child.
+            if (_pooledVisualRoot != null)
+                return _pooledVisualRoot;
 
             for (int i = 0; i < transform.childCount; i++)
             {

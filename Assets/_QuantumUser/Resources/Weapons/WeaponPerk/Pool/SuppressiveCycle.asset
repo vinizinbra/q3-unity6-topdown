@@ -16,12 +16,14 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/SuppressiveCycle
     Guid:
       Value: 460045808380559555
-  Icon: {fileID: -620233908, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: a1a1b54b04c54143b18ba74f95f1cd67, type: 3}
   DisplayName: Suppressive Cycle
   Rarity: 1
-  Description: 'Fire Rate increases by <color=#FD3971>{0:0}%</color> per stack while continuously firing (max <color=#FD3971>{1:0}</color> stacks)'
+  Description: Firing stacks <color=#FD3971><b>{0:0}%</b></color> Fire Rate (max
+    <color=#FD3971><b>{1:0}</b></color>)
   MaxStacks: 5
   FireRateBonusPerStack:
     RawValue: 1966
   DecayGrace:
     RawValue: 65536
+  AdvancePerShot: 0

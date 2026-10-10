@@ -16,11 +16,11 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/SplitShot
     Guid:
       Value: 492307963213126171
-  Icon: {fileID: 1242883627, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: df132a8907b940e5a542e3dbed79f876, type: 3}
   DisplayName: Split Shot
   Rarity: 1
-  Description: Splits into <color=#FD3971>{0:0}</color> shots at <color=#FD3971>{1:0}%</color>
-    damage after impact
+  Description: Hits split into <color=#FD3971><b>{0:0}</b></color> shots (<color=#FD3971><b>{1:0}%</b></color>
+    Damage)
   Count: 2
   DamageMultiplier:
     RawValue: 32768

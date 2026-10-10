@@ -13,13 +13,16 @@ using UnityEngine.EventSystems;
 // animating, so a select that lands mid-intro still scales up the moment the intro ends, and a
 // deselect that lands mid-tween isn't dropped.
 //
-// Always scales around the RectTransform's visual center, whatever its pivot: alongside the scale
-// it shifts localPosition by the amount the pivot-relative center would drift. The shift is applied
-// as a delta (not an absolute position), so other position animations on this Transform still work.
+// Scales around a point of the rect (its visual center by default, see scaleOrigin), whatever its pivot:
+// alongside the scale it shifts localPosition by the amount that pivot-relative point would drift. The
+// shift is applied as a delta (not an absolute position), so other position animations on this
+// Transform still work.
 public class SelectableScaleWidget : MonoBehaviour, ISelectHandler, IDeselectHandler
 {
     [SerializeField, Tooltip("Target scale while selected, as a multiplier of this Transform's resting localScale (captured right before scaling up, never mid-animation).")]
     private float selectedScaleMultiplier = 1.05f;
+    [SerializeField, Tooltip("The point that stays put while scaling, normalized in the rect: (0.5, 0.5) = center, (0.5, 0) = bottom edge (tabs grow upwards).")]
+    private Vector2 scaleOrigin = new Vector2(0.5f, 0.5f);
     [SerializeField] private float duration = 0.12f;
     [SerializeField] private Ease ease = Ease.OutQuad;
     [SerializeField, Tooltip("If true, the scale tween ignores Time.timeScale - turn on for menus/pauses that freeze the sim but should still animate selection feedback.")]
@@ -86,9 +89,9 @@ public class SelectableScaleWidget : MonoBehaviour, ISelectHandler, IDeselectHan
         _appliedSelected = _wantSelected;
     }
 
-    // Sets the scale, then shifts localPosition so the rect's center stays where it sits at
-    // _baseScale. rect.center is the center's offset from the pivot in unscaled local space, so at
-    // scale S it lands at pivot + S*center; offsetting by (base - S)*center cancels the drift.
+    // Sets the scale, then shifts localPosition so the rect's scaleOrigin point stays where it sits at
+    // _baseScale. That point's offset from the pivot in unscaled local space is o, so at scale S it
+    // lands at pivot + S*o; offsetting by (base - S)*o cancels the drift.
     private void ApplyScale(Vector3 scale)
     {
         transform.localScale = scale;
@@ -96,8 +99,9 @@ public class SelectableScaleWidget : MonoBehaviour, ISelectHandler, IDeselectHan
         if (transform is not RectTransform rectTransform)
             return;
 
-        Vector3 center = rectTransform.rect.center;
-        Vector3 offset = transform.localRotation * Vector3.Scale(_baseScale - scale, center);
+        Rect rect = rectTransform.rect;
+        Vector3 origin = rect.min + Vector2.Scale(rect.size, scaleOrigin);
+        Vector3 offset = transform.localRotation * Vector3.Scale(_baseScale - scale, origin);
         transform.localPosition += offset - _appliedCenterOffset;
         _appliedCenterOffset = offset;
     }

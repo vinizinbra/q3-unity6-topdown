@@ -9,12 +9,12 @@ The mechanic deliberately does two different jobs in the two halves of the run l
 - **during Survival** it's a *spatial* resource - the guard is gone until you physically go and get
   it back, which means a block relocates you, mid-fight;
 - **during Break** it's an *economic* one - restoring it competes with weapons, perks and food for
-  the same Coins, and the price rises the more damaged it is.
+  the same Coins, bought one durability point at a time (a broken one costs more to bring back).
 
 ```
 Survival at 3/3 -> block -> 2/3, accessory pops away -> recover it -> keep fighting
                                                      -> reach Break at 2/3
-                                                     -> repair for 25, or keep the Coins
+                                                     -> repair +1 for 25, or keep the Coins
 ```
 
 **The gameplay system is completely hero-agnostic.** Nothing in the simulation - and nothing in the
@@ -66,7 +66,7 @@ Content`).
            |                                     owner walks into pickup radius  |
            +---------------------------------------------------------------------+
            |
-           |  Merchant repair / replacement (always straight back to full)
+           |  Merchant repair / replacement (+1 durability per purchase)
            |
         Broken  <--block a hit that takes durability to 0 (flies as DEBRIS, never collectible)
 ```
@@ -410,45 +410,47 @@ directly on Store's existing guaranteed *"Increase Weapon Level"* offer: not par
 `StoreInventory`, price resolved live off the buyer's own state, bought with its own dedicated
 zero-payload command.
 
-| Durability | Service | Prototype cost |
+Sold **one durability point per purchase** (changed 2026-10-08 from "always straight to full" -
+partial buys give more spending options per Break). The card stays up for the next point until full.
+
+| Durability | Service (per click) | Prototype cost (generator defaults; live asset ×10) |
 | --- | --- | --- |
 | 3/3 | *(none - no card is shown at all)* | - |
 | 2/3 | Repair → 3/3 | 25 |
-| 1/3 | Repair → 3/3 | 50 |
-| 0/3 Broken | **Replace** → 3/3 | 100 |
+| 1/3 | Repair → 2/3 | 25 |
+| 0/3 Broken | **Replace** → 1/3 | 50 |
+
+Broken → full is therefore 50 + 25 + 25 = 100, 1/3 → full 50, 2/3 → full 25 - the same totals the old
+full-restore table had.
 
 Costs live on `StoreConfig` (not `AccessoryGuardConfig` - that asset stays Store-agnostic, durability/
 pop/pickup only, since it's referenced by both Survival and Break for the mechanic itself, while
 pricing is Store's own job like every other offer/service it prices):
 
 ```csharp
-public FP[] AccessoryRepairCostByMissingDurability = { 25, 50 };  // index 0 = 1 missing, index 1 = 2 missing
-public FP  AccessoryBrokenReplacementCost = 100;
+public FP AccessoryRepairCostPerPoint = 25;     // one point on a damaged (not broken) accessory
+public FP AccessoryBrokenReplacementCost = 50;  // the first point back from Broken
 ```
 
-An array indexed by **missing durability** rather than three named fields, so raising
-`AccessoryGuardConfig.BaseDurability` past 3 later needs one more array entry instead of a new field
-and a new branch. Past the authored range the last entry holds, the same convention
-`SurvivalConfig.Phases[]` already uses. These are explicit per-step costs, **not** a formula - no
-dynamic pricing this pass. `AccessoryServiceUtility.ResolvePrice` reads them off
-`f.RuntimeConfig.StoreConfig` live, the same way it already resolves the service kind.
+`AccessoryServiceUtility.ResolvePrice` returns the price of the *next* point, read off
+`f.RuntimeConfig.StoreConfig` live. `StoreConfig.ResolveAccessoryFullRestoreCost(current, max)` gives
+the total to full (for the Balance Simulator / previews only).
 
-The one invariant authoring can get wrong ("more damaged → more expensive", "replacement > any
-repair") is checked by an Editor-only `OnValidate` on `StoreConfig`, so a designer finds out while
+The one invariant authoring can get wrong ("replacement > a repair point") is checked by an Editor-only `OnValidate` on `StoreConfig`, so a designer finds out while
 typing the number rather than three Breaks into a playtest.
 
 ### Design rules this upholds
 
-- **Repair always restores directly to `MaxDurability`.** There is no partial restore anywhere in the
-  feature - no "buy +1 point" path exists to accidentally take. One click, one clear decision.
+- **One point per purchase.** `AccessoryGuardUtility.RestorePoints(f, player, 1)`; a player can stop
+  anywhere between broken and full. (`AccessoryGuardUtility.Restore` = full restore, cheats only.)
 - **Declining is free and sticky.** Nothing resets durability between phases. `AccessoryGuard` is
   written by exactly four places (seed, block, recover, restore) and none of them is phase-driven, so
   a player who walks away at 1/3 starts the next Survival at 1/3.
 - **It never consumes the weapon purchase allowance.** `StoreUtility.ResolveWeaponOfferCount` and
   `StorePurchases.Entries` are only ever consulted for *rolled* offers; this touches neither. It also
-  needs no once-per-Break tracking of its own: a successful service restores to full, which
-  immediately resolves the player to `AccessoryServiceKind.None`, so a second purchase this Break is
-  impossible without first losing durability again. **The state is the limit.**
+  needs no once-per-Break tracking of its own: points can be bought repeatedly until full, at which
+  point the player resolves to `AccessoryServiceKind.None` and the card disappears. **The state is
+  the limit.**
 - **Insufficient Coins disables, doesn't hide.** `PurchasableCardState.CanAfford` leaves the card
   visible but its Buy button non-interactable, the same affordance every other Store card uses.
 - **Per-player and deterministic.** Everything is per-player components + a per-player command, so
@@ -588,11 +590,11 @@ check, so a mid-run config swap can't leave a player at 4/3.
 | # | Criterion | Where |
 | --- | --- | --- |
 | 1 | 3/3 shows no repair service | `ResolveService` → `None`; `BuildAccessoryServiceCardData` returns an empty card |
-| 2 | 2/3 offers Repair to full | `ResolveService` → `Repair`, `StoreConfig.ResolveAccessoryRepairCost(1)` = 25 |
-| 3 | 1/3 offers Repair to full at higher cost | `ResolveAccessoryRepairCost(2)` = 50 |
+| 2 | 2/3 offers Repair +1 | `ResolveService` → `Repair`, `StoreConfig.AccessoryRepairCostPerPoint` = 25 |
+| 3 | 1/3 offers Repair +1 (buy twice for full) | same per-point price |
 | 4 | Broken offers Replacement | `CurrentDurability == 0` → `Replacement` |
-| 5 | Replacement > repair | `StoreConfig.AccessoryBrokenReplacementCost` 100, enforced by `OnValidate` |
-| 6 | Repair always restores to `MaxDurability` | `AccessoryGuardUtility.Restore` - no partial path exists |
+| 5 | Replacement > repair | `StoreConfig.AccessoryBrokenReplacementCost` 50 (→ 1/3), enforced by `OnValidate` |
+| 6 | Each purchase restores one point | `AccessoryGuardUtility.RestorePoints(…, 1)` |
 | 7 | May decline and keep current durability | nothing auto-restores; declining is a no-op |
 | 8 | Durability persists across Break/Survival | `AccessoryGuard` is written by 4 non-phase-driven places only |
 | 9 | Doesn't consume weapon purchase allowance | own command; touches neither `StoreInventory` nor `StorePurchases` |

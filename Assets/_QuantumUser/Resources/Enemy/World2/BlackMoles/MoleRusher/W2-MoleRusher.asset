@@ -217,6 +217,8 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 36dd1e61cdac04d189cb55341a23b3b4, type: 2}
+  Description: Bursts out of the sand and rushes you.
   ViewPrefab: {fileID: 664242238683382212, guid: f53497f8ec4994d47883f606cb6e9f07, type: 3}
 --- !u!114 &3660401815721977846
 MonoBehaviour:

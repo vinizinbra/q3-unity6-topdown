@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Unlock Rift
   kindLabel: EXPLORATION UPGRADE
   description: Rifts can now appear during runs.
-  icon: {fileID: -7174493734832725423, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
-  accentColor: {r: 0.65, g: 0.3, b: 1, a: 1}
+  icon: {fileID: -6081263324088989304, guid: 7bf46803273b24220ba60766158daf78, type: 3}
+  accentColor: {r: 0.93333334, g: 0.14509805, b: 0.9882353, a: 1}
   category: 1
   group: 2
   maxLevel: 3

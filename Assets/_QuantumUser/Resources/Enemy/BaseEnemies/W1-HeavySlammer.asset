@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/W1-HeavySlammer
     Guid:
       Value: 469796245454353813
-  EnemyName: 
+  EnemyName: Rukk Slammer
   Tier: 3
   Economy:
     Persistent: 0
@@ -184,8 +184,9 @@ MonoBehaviour:
       Value: 0
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
+  Description: Slow, heavy slam that hits a wide area.
   ViewPrefab: {fileID: 8476845490732343577, guid: e99e424ab0f0747ef8d2bd4fed33e32c, type: 3}
-  FactionSkins: []
 --- !u!114 &390359091281415846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,6 +278,8 @@ MonoBehaviour:
     BodySprite: {fileID: 983202667, guid: d2ee3b1fbe1e94f87943e96a7d2bef99, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -326,7 +329,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -355,6 +359,8 @@ MonoBehaviour:
     BodySprite: {fileID: 1532041238, guid: d2ee3b1fbe1e94f87943e96a7d2bef99, type: 3}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 1
     Shake:
       Frequency: 18
@@ -404,7 +410,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -433,6 +440,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -482,7 +491,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -511,6 +521,8 @@ MonoBehaviour:
     BodySprite: {fileID: 0}
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
     ShakeImpact: 0
     Shake:
       Frequency: 18
@@ -560,7 +572,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4

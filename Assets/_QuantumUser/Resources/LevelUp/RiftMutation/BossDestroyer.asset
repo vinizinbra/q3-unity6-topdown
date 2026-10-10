@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/BossDestroyer
     Guid:
       Value: 392115235866985160
-  Icon: {fileID: 0}
+  Icon: {fileID: 95528795168470630, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Boss Destroyer
   Rarity: 2
   Scope: 0

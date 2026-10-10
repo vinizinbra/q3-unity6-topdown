@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "StompyRobot.SRF",
-        "Unity.InternalAPIEngineBridge.004"
+        "Unity.InternalAPIEngineBridge.004",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

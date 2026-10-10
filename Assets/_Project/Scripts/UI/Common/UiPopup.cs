@@ -46,6 +46,23 @@ public class UiPopup : MonoBehaviour
     {
         if (closeButton != null)
             closeButton.onClick.AddListener(Close);
+
+        // An open popup stops the local player's input from reaching the simulation (UiInputGate). Not for a
+        // popup under the menu Canvas while that Canvas is switched off for a match.
+        Quantum.UiInputGate.Register(this, IsVisibleOnScreen);
+    }
+
+    private Canvas _rootCanvas;
+
+    private bool IsVisibleOnScreen()
+    {
+        if (_rootCanvas == null)
+        {
+            Canvas canvas = GetComponentInParent<Canvas>(true);
+            _rootCanvas = canvas != null ? canvas.rootCanvas : null;
+        }
+
+        return _rootCanvas == null || _rootCanvas.enabled;
     }
 
     [Button]
@@ -79,6 +96,18 @@ public class UiPopup : MonoBehaviour
         gameObject.SetActive(true);
         onShow?.Invoke();
 
+        StartCoroutine(SettleThenEnable());
+    }
+
+    // The popup pops in with scale tweens (the popup itself and its button). Until they land it cannot be
+    // pressed (a stray Submit could dismiss a tutorial that also unpauses the sim) and gamepad focus stays
+    // off it, so the first thing a player sees focused is a button that has stopped moving.
+    private System.Collections.IEnumerator SettleThenEnable()
+    {
+        if (canvasGroup == null)
+            canvasGroup = GetComponent<CanvasGroup>();
+
+        yield return UiSelectionUtility.EnableWhenSettled(canvasGroup, transform);
         AutoSelectFirstInteractable();
     }
 

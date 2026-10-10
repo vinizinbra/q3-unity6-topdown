@@ -103,11 +103,11 @@ namespace QuantumUser.Editor
 
             data.DisplayName = "Burger";
             data.TopLabel = "HEAL";
-            data.Description = "Restore 20% of your Max Health.";
+            data.Description = "Restore 50% of your Max Health.";
             data.ButtonLabel = "BUY";
             data.Weight = 100;
             data.Price = 20;
-            data.HealPercent = FP._0_20;
+            data.HealPercent = FP._0_50;
             data.Icon = LoadNamedSprite(IconSheetPath, "RR_Burger");
 
             FinalizeAsset(data, BurgerPath, isNew);
@@ -206,11 +206,11 @@ namespace QuantumUser.Editor
                 new WeaponTalentRarityTuning { CommonWeight = 35, RareWeight = 45, EpicWeight = 18, LegendaryWeight = 2 },
             };
 
-            // Accessory Repair/Replacement service pricing (docs/accessory-guard.md): one point
-            // missing is cheap, two is noticeably worse, a total loss is worst. Explicit per-step
-            // costs, no formula - see StoreConfig.ResolveAccessoryRepairCost.
-            config.AccessoryRepairCostByMissingDurability = new[] { (FP)25, (FP)50 };
-            config.AccessoryBrokenReplacementCost = 100;
+            // Accessory Repair/Replacement service pricing (docs/accessory-guard.md): sold one
+            // durability point at a time; the first point of a Broken accessory (replacement) costs
+            // double. Broken -> full at 3 max = 50 + 25 + 25 = 100.
+            config.AccessoryRepairCostPerPoint = 25;
+            config.AccessoryBrokenReplacementCost = 50;
 
             FinalizeAsset(config, StoreConfigPath, isNew);
         }

@@ -16,10 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/KillerInstinct
     Guid:
       Value: 309906799217660589
-  Icon: {fileID: 1045571350, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 66555c4349344d0990a86a3c19eead97, type: 3}
   DisplayName: Killer Instinct
   Rarity: 1
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Fire Rate for <color=#FD3971>{1:0}s</color> after kill'
+  Description: 'Kill: <color=#FD3971><b>{0:+0;-0}%</b></color> Fire Rate for <color=#FD3971><b>{1:0}s</b></color>'
   FireRateBonus:
     RawValue: 9830
   Duration:

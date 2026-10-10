@@ -84,6 +84,8 @@ over the wildstyle rework - show both and let them pick. Quads sit 3.5 cm off bu
 ## Verification
 
 - Scripts in `.claude/skills/new-biome/scripts/`:
+  `render_theme_edit.cs` (placeholders `__THEME__ __TX__ __TZ__ __D__ __OUT__`) - 4 test chunks with a WorldTheme's tileset,
+  sky and water / cloud surface, prop counts in the result (the scratchpad can be wiped between sessions - keep scripts here);
   `render.sh <tileset> "<sky C# color>" <tx> <tz> <out.png>` - 4 test chunks at the gameplay camera + prop
   counts; `render_lineup_edit.cs` (placeholders `__SET__ __PREFIX__ __NAMES__ __FOOT__ __D__ __OUT__`) - props
   side by side against a wall for close checks. Zoom: replace `(0, 36, -36)` with `(0, 12, -12)`.

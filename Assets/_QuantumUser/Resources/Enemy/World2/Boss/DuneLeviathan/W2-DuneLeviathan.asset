@@ -2337,8 +2337,9 @@ MonoBehaviour:
       Value: 0
   SkillActions: []
   ExplosionColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
+  Faction: {fileID: 0}
+  Description: Rises from the dunes to swallow the whole arena.
   ViewPrefab: {fileID: 0}
-  FactionSkins: []
   Phases:
   - EntryTrigger: 0
     HealthPercentThreshold:

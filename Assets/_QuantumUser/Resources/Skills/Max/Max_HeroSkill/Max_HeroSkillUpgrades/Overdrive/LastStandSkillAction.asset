@@ -16,19 +16,24 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/LastStandSkillAction
     Guid:
       Value: 329573136349118667
-  Icon: {fileID: -727180227, guid: 74c453ca70bbc434da3426c70802fa34, type: 3}
+  Icon: {fileID: 21300000, guid: b95336e36c4f483aa29d82ca184bd194, type: 3}
   DisplayName: Last Stand
   RankDescriptions:
-  - "When Overdrive ends, unused Rage is saved and restored the next time you activate it."
-  - "Unused Rage is saved between Overdrives. Taking damage during Overdrive costs only <color=#FD3971>50%</color> of your Rage."
-  - "Unused Rage is saved between Overdrives. Taking damage during Overdrive costs only <color=#FD3971>50%</color> of your Rage. Lethal damage ends Overdrive instead, leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>."
+  - When Overdrive ends, unused Rage is saved and restored the next time you activate
+    it.
+  - Unused Rage is saved between Overdrives. Taking damage during Overdrive costs
+    only <color=#FD3971>50%</color> of your Rage.
+  - Unused Rage is saved between Overdrives. Taking damage during Overdrive costs
+    only <color=#FD3971>50%</color> of your Rage. Lethal damage ends Overdrive instead,
+    leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: "Rage stops being fragile - it survives Overdrive ending, damage, and death."
+  Description: Rage stops being fragile - it survives Overdrive ending, damage, and
+    death.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

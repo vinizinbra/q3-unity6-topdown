@@ -20,7 +20,13 @@ public class FocusOutlineWidget : MonoBehaviour, ISelectHandler, IDeselectHandle
     [SerializeField, Tooltip("The graphic whose shape gets the glow. Defaults to the Image on this object, else the Selectable's target graphic.")]
     private Image background;
 
+    [SerializeField, Tooltip("Optional: glow THIS rect instead of the object's own - for a Slider, which has no single shape, point it at its row. Then set the Background above to that row's Image.")]
+    private RectTransform shape;
+
     [SerializeField] private Color color = new Color(0.992f, 0.224f, 0.443f);
+
+    [SerializeField, Tooltip("Per-side nudge of the glow, in canvas px: x = left, y = bottom, z = right, w = top. Negative pulls that side in (e.g. w = -2 for a sprite whose top sits lower than its rect).")]
+    private Vector4 edgeAdjust;
 
     [Header("Pulse")]
     [SerializeField] private bool pulse = true;
@@ -35,6 +41,8 @@ public class FocusOutlineWidget : MonoBehaviour, ISelectHandler, IDeselectHandle
     private int spritePadding;
     private bool focused;
     private bool missingLogged;
+
+    private RectTransform Shape => shape != null ? shape : (RectTransform)transform;
 
     private void Awake()
     {
@@ -131,7 +139,7 @@ public class FocusOutlineWidget : MonoBehaviour, ISelectHandler, IDeselectHandle
 
         var go = new GameObject(name + "_FocusOutline", typeof(RectTransform), typeof(CanvasRenderer), typeof(LayoutElement));
         outline = (RectTransform)go.transform;
-        outline.SetParent(transform.parent, false);
+        outline.SetParent(Shape.parent, false);
         go.GetComponent<LayoutElement>().ignoreLayout = true;
 
         outlineImage = go.AddComponent<Image>();
@@ -143,18 +151,23 @@ public class FocusOutlineWidget : MonoBehaviour, ISelectHandler, IDeselectHandle
         return true;
     }
 
-    // Mirrors this object's rect, grown by the sprite's padding (works for stretched and fixed anchors alike).
+    // Mirrors the shape's rect (this object's own unless a shape is set), grown by the sprite's padding (works for
+    // stretched and fixed anchors alike).
     private void Sync()
     {
-        var self = (RectTransform)transform;
+        RectTransform self = Shape;
+
+        // The background's pixel scale can change while focused (the sub-tabs animate it): the glow must follow it,
+        // or its border and padding no longer match the shape it surrounds.
+        outlineImage.pixelsPerUnitMultiplier = background.pixelsPerUnitMultiplier;
         outline.anchorMin = self.anchorMin;
         outline.anchorMax = self.anchorMax;
         outline.pivot = self.pivot;
         outline.localScale = self.localScale;
         outline.localRotation = self.localRotation;
         float pad = CanvasPadding(self);
-        outline.offsetMin = self.offsetMin - new Vector2(pad, pad);
-        outline.offsetMax = self.offsetMax + new Vector2(pad, pad);
+        outline.offsetMin = self.offsetMin - new Vector2(pad + edgeAdjust.x, pad + edgeAdjust.y);
+        outline.offsetMax = self.offsetMax + new Vector2(pad + edgeAdjust.z, pad + edgeAdjust.w);
     }
 
     // The glow sprite is the source sprite plus spritePadding px per side, drawn at the same scale as the

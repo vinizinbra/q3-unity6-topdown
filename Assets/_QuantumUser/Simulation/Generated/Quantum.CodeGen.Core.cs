@@ -55,6 +55,17 @@ namespace Quantum {
     Dropped,
     Broken,
   }
+  public enum BotGoal : byte {
+    None,
+    Follow,
+    Revive,
+    Retreat,
+    Fight,
+    Loot,
+    Interact,
+    Explore,
+    Recover,
+  }
   public enum ChallengeType : byte {
     KillRush,
     FlawlessHunt,
@@ -184,6 +195,23 @@ namespace Quantum {
     RiftMutation = 5,
     ChooseWeapon = 6,
   }
+  public enum PingKind : byte {
+    None,
+    Ground,
+    StickTogether,
+    Elite,
+    ReviveMe,
+    Store,
+    Blacksmith,
+    Shrine,
+    Rift,
+    TeamChallengeFound,
+    TeamChallengeStart,
+    Traversal,
+    TeamChallengeReward,
+    TeamChallengeDone,
+    TeamChallengeFailed,
+  }
   public enum PlayerLifeStateKind : byte {
     Alive,
     Downed,
@@ -280,6 +308,7 @@ namespace Quantum {
     SwitchTarget = 1 << 3,
     DashSkill = 1 << 4,
     HeroSkill = 1 << 5,
+    Ping = 1 << 6,
   }
   public static unsafe partial class FlagsExtensions {
     public static Boolean IsFlagSet(this ChunkConnectionSide self, ChunkConnectionSide flag) {
@@ -868,22 +897,24 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct Input {
-    public const Int32 SIZE = 88;
+    public const Int32 SIZE = 104;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(72)]
+    [FieldOffset(88)]
     public FPVector2 Direction;
-    [FieldOffset(48)]
+    [FieldOffset(60)]
     public Button Run;
     [FieldOffset(36)]
     public Button Jump;
     [FieldOffset(12)]
     public Button Fire;
-    [FieldOffset(60)]
+    [FieldOffset(72)]
     public Button SwitchTarget;
     [FieldOffset(0)]
     public Button DashSkill;
     [FieldOffset(24)]
     public Button HeroSkill;
+    [FieldOffset(48)]
+    public Button Ping;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 19249;
@@ -894,6 +925,7 @@ namespace Quantum {
         hash = hash * 31 + SwitchTarget.GetHashCode();
         hash = hash * 31 + DashSkill.GetHashCode();
         hash = hash * 31 + HeroSkill.GetHashCode();
+        hash = hash * 31 + Ping.GetHashCode();
         return hash;
       }
     }
@@ -908,6 +940,7 @@ namespace Quantum {
         case InputButtons.SwitchTarget: return SwitchTarget.IsDown;
         case InputButtons.DashSkill: return DashSkill.IsDown;
         case InputButtons.HeroSkill: return HeroSkill.IsDown;
+        case InputButtons.Ping: return Ping.IsDown;
         default: return false;
       }
     }
@@ -919,6 +952,7 @@ namespace Quantum {
         case InputButtons.SwitchTarget: return SwitchTarget.WasPressed;
         case InputButtons.DashSkill: return DashSkill.WasPressed;
         case InputButtons.HeroSkill: return HeroSkill.WasPressed;
+        case InputButtons.Ping: return Ping.WasPressed;
         default: return false;
       }
     }
@@ -928,6 +962,7 @@ namespace Quantum {
         Button.Serialize(&p->Fire, serializer);
         Button.Serialize(&p->HeroSkill, serializer);
         Button.Serialize(&p->Jump, serializer);
+        Button.Serialize(&p->Ping, serializer);
         Button.Serialize(&p->Run, serializer);
         Button.Serialize(&p->SwitchTarget, serializer);
         FPVector2.Serialize(&p->Direction, serializer);
@@ -1577,7 +1612,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct _globals_ {
-    public const Int32 SIZE = 1696;
+    public const Int32 SIZE = 1792;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(0)]
     public AssetRef<Map> Map;
@@ -1601,133 +1636,133 @@ namespace Quantum {
     public Int32 PlayerConnectedCount;
     [FieldOffset(608)]
     [FramePrinter.FixedArrayAttribute(typeof(Input), 6)]
-    private fixed Byte _input_[528];
-    [FieldOffset(1136)]
+    private fixed Byte _input_[624];
+    [FieldOffset(1232)]
     public BitSet6 PlayerLastConnectionState;
-    [FieldOffset(1216)]
+    [FieldOffset(1312)]
     public QBoolean LevelGenerated;
-    [FieldOffset(1584)]
+    [FieldOffset(1680)]
     public FPVector3 PlayerSpawnPosition;
-    [FieldOffset(1212)]
+    [FieldOffset(1308)]
     public QBoolean LevelGenStarted;
-    [FieldOffset(1180)]
+    [FieldOffset(1276)]
     public Int32 LevelGenSeed;
-    [FieldOffset(1176)]
+    [FieldOffset(1272)]
     public Int32 LevelGenCursor;
-    [FieldOffset(1184)]
+    [FieldOffset(1280)]
     public Int32 LevelGenTotal;
-    [FieldOffset(1560)]
+    [FieldOffset(1656)]
     public FP TimeSinceLevelGenerated;
-    [FieldOffset(1196)]
+    [FieldOffset(1292)]
     public QBoolean DebugCheatsApplied;
-    [FieldOffset(1164)]
+    [FieldOffset(1260)]
     public Int32 DebugPendingLevelUps;
-    [FieldOffset(1204)]
+    [FieldOffset(1300)]
     public QBoolean DebugLevelUpScreenOpenLastTick;
-    [FieldOffset(1168)]
-    public Int32 DebugPendingRiftMutationChoices;
-    [FieldOffset(1200)]
-    public QBoolean DebugDirectorSpawnsDisabled;
-    [FieldOffset(1608)]
-    public DifficultySnapshot Difficulty;
-    [FieldOffset(1568)]
-    public FP TotalExperience;
-    [FieldOffset(1172)]
-    public Int32 Level;
-    [FieldOffset(1220)]
-    public QBoolean LevelUpScreenOpen;
-    [FieldOffset(1480)]
-    public FP LevelUpTimeRemaining;
-    [FieldOffset(1224)]
-    public QBoolean LevelUpScreenOpenLastTick;
-    [FieldOffset(1228)]
-    public QBoolean PendingLevelUpScreen;
-    [FieldOffset(1145)]
-    public GameState CurrentState;
-    [FieldOffset(1144)]
-    public GameState CombatPhaseState;
-    [FieldOffset(1146)]
-    public GameState PreUpgradeState;
-    [FieldOffset(1408)]
-    public FP BreathingTimeRemaining;
-    [FieldOffset(1156)]
-    public Int32 BreathingIndex;
-    [FieldOffset(1188)]
-    public QBoolean BreathingAreaSecured;
-    [FieldOffset(1488)]
-    public FP OrbVacuumTimeRemaining;
-    [FieldOffset(1392)]
-    public FP BossPauseTimer;
-    [FieldOffset(1192)]
-    public QBoolean BreathingGraceActive;
-    [FieldOffset(1400)]
-    public FP BreathingGraceTimeRemaining;
     [FieldOffset(1264)]
+    public Int32 DebugPendingRiftMutationChoices;
+    [FieldOffset(1296)]
+    public QBoolean DebugDirectorSpawnsDisabled;
+    [FieldOffset(1704)]
+    public DifficultySnapshot Difficulty;
+    [FieldOffset(1664)]
+    public FP TotalExperience;
+    [FieldOffset(1268)]
+    public Int32 Level;
+    [FieldOffset(1316)]
+    public QBoolean LevelUpScreenOpen;
+    [FieldOffset(1576)]
+    public FP LevelUpTimeRemaining;
+    [FieldOffset(1320)]
+    public QBoolean LevelUpScreenOpenLastTick;
+    [FieldOffset(1324)]
+    public QBoolean PendingLevelUpScreen;
+    [FieldOffset(1241)]
+    public GameState CurrentState;
+    [FieldOffset(1240)]
+    public GameState CombatPhaseState;
+    [FieldOffset(1242)]
+    public GameState PreUpgradeState;
+    [FieldOffset(1504)]
+    public FP BreathingTimeRemaining;
+    [FieldOffset(1252)]
+    public Int32 BreathingIndex;
+    [FieldOffset(1284)]
+    public QBoolean BreathingAreaSecured;
+    [FieldOffset(1584)]
+    public FP OrbVacuumTimeRemaining;
+    [FieldOffset(1488)]
+    public FP BossPauseTimer;
+    [FieldOffset(1288)]
+    public QBoolean BreathingGraceActive;
+    [FieldOffset(1496)]
+    public FP BreathingGraceTimeRemaining;
+    [FieldOffset(1360)]
     [FramePrinter.FixedArrayAttribute(typeof(AssetRef<RiftMutationData>), 16)]
     private fixed Byte _RunMutationPicks_[128];
-    [FieldOffset(1456)]
-    public FP EnemyMaxHealthBonus;
-    [FieldOffset(1448)]
-    public FP EnemyDamageBonus;
-    [FieldOffset(1464)]
-    public FP EnemySpawnDensityBonus;
-    [FieldOffset(1440)]
-    public FP EliteGroupWeightMultiplier;
-    [FieldOffset(1520)]
-    public FP RiftShardGainBonus;
-    [FieldOffset(1472)]
-    public FP EscalationEndBonus;
-    [FieldOffset(1544)]
-    public FP SurvivalTime;
-    [FieldOffset(1528)]
-    public FP RunTime;
-    [FieldOffset(1160)]
-    public Int32 CurrentPhaseIndex;
-    [FieldOffset(1512)]
-    public FP PhaseTimer;
-    [FieldOffset(1147)]
-    public SurvivalPhaseKind CurrentPhaseKind;
-    [FieldOffset(1232)]
-    public QBoolean PhaseGuaranteedSpawnDone;
-    [FieldOffset(1416)]
-    public FP DirectorBudget;
-    [FieldOffset(1424)]
-    public FP DirectorPulseTimer;
-    [FieldOffset(1208)]
-    public QBoolean DirectorSplitActive;
-    [FieldOffset(1432)]
-    public FP DirectorSplitTimer;
-    [FieldOffset(1536)]
-    public FP SplitThreatMultiplier;
-    [FieldOffset(1504)]
-    public FP PerEnemyXpScale;
-    [FieldOffset(1496)]
-    public FP PerEnemyCoinScale;
-    [FieldOffset(1260)]
-    public QBoolean TalentsResolved;
-    [FieldOffset(1256)]
-    public QBoolean SharedHasWeaponChest;
-    [FieldOffset(1248)]
-    public QBoolean SharedHasHeroChest;
-    [FieldOffset(1244)]
-    public QBoolean SharedHasGlobalUpgradeChest;
-    [FieldOffset(1252)]
-    public QBoolean SharedHasUnlockedRift;
-    [FieldOffset(1236)]
-    public QBoolean SharedCanFindStones;
-    [FieldOffset(1240)]
-    public QBoolean SharedHasEvent;
-    [FieldOffset(1148)]
-    public Int32 ActiveTeamChallengeCount;
     [FieldOffset(1552)]
+    public FP EnemyMaxHealthBonus;
+    [FieldOffset(1544)]
+    public FP EnemyDamageBonus;
+    [FieldOffset(1560)]
+    public FP EnemySpawnDensityBonus;
+    [FieldOffset(1536)]
+    public FP EliteGroupWeightMultiplier;
+    [FieldOffset(1616)]
+    public FP RiftShardGainBonus;
+    [FieldOffset(1568)]
+    public FP EscalationEndBonus;
+    [FieldOffset(1640)]
+    public FP SurvivalTime;
+    [FieldOffset(1624)]
+    public FP RunTime;
+    [FieldOffset(1256)]
+    public Int32 CurrentPhaseIndex;
+    [FieldOffset(1608)]
+    public FP PhaseTimer;
+    [FieldOffset(1243)]
+    public SurvivalPhaseKind CurrentPhaseKind;
+    [FieldOffset(1328)]
+    public QBoolean PhaseGuaranteedSpawnDone;
+    [FieldOffset(1512)]
+    public FP DirectorBudget;
+    [FieldOffset(1520)]
+    public FP DirectorPulseTimer;
+    [FieldOffset(1304)]
+    public QBoolean DirectorSplitActive;
+    [FieldOffset(1528)]
+    public FP DirectorSplitTimer;
+    [FieldOffset(1632)]
+    public FP SplitThreatMultiplier;
+    [FieldOffset(1600)]
+    public FP PerEnemyXpScale;
+    [FieldOffset(1592)]
+    public FP PerEnemyCoinScale;
+    [FieldOffset(1356)]
+    public QBoolean TalentsResolved;
+    [FieldOffset(1352)]
+    public QBoolean SharedHasWeaponChest;
+    [FieldOffset(1344)]
+    public QBoolean SharedHasHeroChest;
+    [FieldOffset(1340)]
+    public QBoolean SharedHasGlobalUpgradeChest;
+    [FieldOffset(1348)]
+    public QBoolean SharedHasUnlockedRift;
+    [FieldOffset(1332)]
+    public QBoolean SharedCanFindStones;
+    [FieldOffset(1336)]
+    public QBoolean SharedHasEvent;
+    [FieldOffset(1244)]
+    public Int32 ActiveTeamChallengeCount;
+    [FieldOffset(1648)]
     public FP TeamChallengeTimeRemaining;
-    [FieldOffset(1152)]
+    [FieldOffset(1248)]
     public Int32 ActiveTraversalChallengeCount;
-    [FieldOffset(1576)]
+    [FieldOffset(1672)]
     public FP TraversalChallengeTimeRemaining;
     public readonly FixedArray<Input> input {
       get {
-        fixed (byte* p = _input_) { return new FixedArray<Input>(p, 88, 6); }
+        fixed (byte* p = _input_) { return new FixedArray<Input>(p, 104, 6); }
       }
     }
     public readonly FixedArray<AssetRef<RiftMutationData>> RunMutationPicks {
@@ -2567,91 +2602,149 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct BotBrain : Quantum.IComponent {
-    public const Int32 SIZE = 1312;
+    public const Int32 SIZE = 1136;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(1224)]
+    [FieldOffset(1032)]
     public Input Data;
-    [FieldOffset(48)]
-    public FP HeroSkillTimer;
-    [FieldOffset(16)]
-    public FP DashSkillTimer;
-    [FieldOffset(56)]
-    public FP LeashTimer;
-    [FieldOffset(24)]
-    public FP FormationAngle;
-    [FieldOffset(32)]
-    public FP FormationDistance;
-    [FieldOffset(40)]
-    public FP FormationRerollTimer;
-    [FieldOffset(8)]
-    public EntityRef SoloTarget;
-    [FieldOffset(64)]
-    public FP SoloRepickTimer;
-    [FieldOffset(840)]
-    [FramePrinter.FixedArrayAttribute(typeof(FPVector3), 16)]
-    private fixed Byte _RoutePath_[384];
-    [FieldOffset(2)]
-    public Byte RoutePathCount;
-    [FieldOffset(3)]
-    public Byte RoutePathCursor;
-    [FieldOffset(72)]
-    [FramePrinter.FixedArrayAttribute(typeof(FPVector3), 32)]
-    private fixed Byte _DetourPath_[768];
     [FieldOffset(0)]
-    public Byte DetourPathCount;
+    public BotGoal Goal;
+    [FieldOffset(32)]
+    public EntityRef GoalTarget;
+    [FieldOffset(88)]
+    public FP GoalTimer;
+    [FieldOffset(40)]
+    public EntityRef IgnoredTarget;
+    [FieldOffset(104)]
+    public FP IgnoreTimer;
+    [FieldOffset(160)]
+    public FPVector2 Heading;
+    [FieldOffset(48)]
+    public FP ClimbCommitTimer;
+    [FieldOffset(144)]
+    public FPVector2 ClimbDirection;
+    [FieldOffset(12)]
+    public Int32 DeflectSide;
+    [FieldOffset(176)]
+    public FPVector2 LeaderHeading;
+    [FieldOffset(192)]
+    public FPVector3 LastLeaderPosition;
+    [FieldOffset(64)]
+    public FP FormationAngle;
+    [FieldOffset(72)]
+    public FP FormationDistance;
+    [FieldOffset(80)]
+    public FP FormationRerollTimer;
+    [FieldOffset(28)]
+    public QBoolean Regrouping;
+    [FieldOffset(1008)]
+    public FPVector3 ProgressAnchor;
+    [FieldOffset(136)]
+    public FP StuckTimer;
+    [FieldOffset(112)]
+    public FP LeashTimer;
+    [FieldOffset(96)]
+    public FP HeroSkillGuardTimer;
+    [FieldOffset(56)]
+    public FP DashGuardTimer;
+    [FieldOffset(24)]
+    public Int32 StrafeSign;
+    [FieldOffset(128)]
+    public FP StrafeTimer;
+    [FieldOffset(216)]
+    [FramePrinter.FixedArrayAttribute(typeof(FPVector3), 32)]
+    private fixed Byte _Path_[768];
     [FieldOffset(1)]
-    public Byte DetourPathCursor;
-    [FieldOffset(4)]
+    public Byte PathCount;
+    [FieldOffset(2)]
+    public Byte PathCursor;
+    [FieldOffset(984)]
+    public FPVector3 PathGoal;
+    [FieldOffset(120)]
+    public FP RepathTimer;
+    [FieldOffset(20)]
     public Int32 StoreAttemptedAtBreathingIndex;
-    public readonly FixedArray<FPVector3> RoutePath {
+    [FieldOffset(4)]
+    public Int32 BlacksmithAttemptedAtBreathingIndex;
+    [FieldOffset(8)]
+    public Int32 CursedRiftAttemptedAtBreathingIndex;
+    [FieldOffset(16)]
+    public Int32 ShrineAttemptedAtBreathingIndex;
+    public readonly FixedArray<FPVector3> Path {
       get {
-        fixed (byte* p = _RoutePath_) { return new FixedArray<FPVector3>(p, 24, 16); }
-      }
-    }
-    public readonly FixedArray<FPVector3> DetourPath {
-      get {
-        fixed (byte* p = _DetourPath_) { return new FixedArray<FPVector3>(p, 24, 32); }
+        fixed (byte* p = _Path_) { return new FixedArray<FPVector3>(p, 24, 32); }
       }
     }
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 19961;
         hash = hash * 31 + Data.GetHashCode();
-        hash = hash * 31 + HeroSkillTimer.GetHashCode();
-        hash = hash * 31 + DashSkillTimer.GetHashCode();
-        hash = hash * 31 + LeashTimer.GetHashCode();
+        hash = hash * 31 + (Byte)Goal;
+        hash = hash * 31 + GoalTarget.GetHashCode();
+        hash = hash * 31 + GoalTimer.GetHashCode();
+        hash = hash * 31 + IgnoredTarget.GetHashCode();
+        hash = hash * 31 + IgnoreTimer.GetHashCode();
+        hash = hash * 31 + Heading.GetHashCode();
+        hash = hash * 31 + ClimbCommitTimer.GetHashCode();
+        hash = hash * 31 + ClimbDirection.GetHashCode();
+        hash = hash * 31 + DeflectSide.GetHashCode();
+        hash = hash * 31 + LeaderHeading.GetHashCode();
+        hash = hash * 31 + LastLeaderPosition.GetHashCode();
         hash = hash * 31 + FormationAngle.GetHashCode();
         hash = hash * 31 + FormationDistance.GetHashCode();
         hash = hash * 31 + FormationRerollTimer.GetHashCode();
-        hash = hash * 31 + SoloTarget.GetHashCode();
-        hash = hash * 31 + SoloRepickTimer.GetHashCode();
-        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(RoutePath);
-        hash = hash * 31 + RoutePathCount.GetHashCode();
-        hash = hash * 31 + RoutePathCursor.GetHashCode();
-        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(DetourPath);
-        hash = hash * 31 + DetourPathCount.GetHashCode();
-        hash = hash * 31 + DetourPathCursor.GetHashCode();
+        hash = hash * 31 + Regrouping.GetHashCode();
+        hash = hash * 31 + ProgressAnchor.GetHashCode();
+        hash = hash * 31 + StuckTimer.GetHashCode();
+        hash = hash * 31 + LeashTimer.GetHashCode();
+        hash = hash * 31 + HeroSkillGuardTimer.GetHashCode();
+        hash = hash * 31 + DashGuardTimer.GetHashCode();
+        hash = hash * 31 + StrafeSign.GetHashCode();
+        hash = hash * 31 + StrafeTimer.GetHashCode();
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Path);
+        hash = hash * 31 + PathCount.GetHashCode();
+        hash = hash * 31 + PathCursor.GetHashCode();
+        hash = hash * 31 + PathGoal.GetHashCode();
+        hash = hash * 31 + RepathTimer.GetHashCode();
         hash = hash * 31 + StoreAttemptedAtBreathingIndex.GetHashCode();
+        hash = hash * 31 + BlacksmithAttemptedAtBreathingIndex.GetHashCode();
+        hash = hash * 31 + CursedRiftAttemptedAtBreathingIndex.GetHashCode();
+        hash = hash * 31 + ShrineAttemptedAtBreathingIndex.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (BotBrain*)ptr;
-        serializer.Stream.Serialize(&p->DetourPathCount);
-        serializer.Stream.Serialize(&p->DetourPathCursor);
-        serializer.Stream.Serialize(&p->RoutePathCount);
-        serializer.Stream.Serialize(&p->RoutePathCursor);
+        serializer.Stream.Serialize((Byte*)&p->Goal);
+        serializer.Stream.Serialize(&p->PathCount);
+        serializer.Stream.Serialize(&p->PathCursor);
+        serializer.Stream.Serialize(&p->BlacksmithAttemptedAtBreathingIndex);
+        serializer.Stream.Serialize(&p->CursedRiftAttemptedAtBreathingIndex);
+        serializer.Stream.Serialize(&p->DeflectSide);
+        serializer.Stream.Serialize(&p->ShrineAttemptedAtBreathingIndex);
         serializer.Stream.Serialize(&p->StoreAttemptedAtBreathingIndex);
-        EntityRef.Serialize(&p->SoloTarget, serializer);
-        FP.Serialize(&p->DashSkillTimer, serializer);
+        serializer.Stream.Serialize(&p->StrafeSign);
+        QBoolean.Serialize(&p->Regrouping, serializer);
+        EntityRef.Serialize(&p->GoalTarget, serializer);
+        EntityRef.Serialize(&p->IgnoredTarget, serializer);
+        FP.Serialize(&p->ClimbCommitTimer, serializer);
+        FP.Serialize(&p->DashGuardTimer, serializer);
         FP.Serialize(&p->FormationAngle, serializer);
         FP.Serialize(&p->FormationDistance, serializer);
         FP.Serialize(&p->FormationRerollTimer, serializer);
-        FP.Serialize(&p->HeroSkillTimer, serializer);
+        FP.Serialize(&p->GoalTimer, serializer);
+        FP.Serialize(&p->HeroSkillGuardTimer, serializer);
+        FP.Serialize(&p->IgnoreTimer, serializer);
         FP.Serialize(&p->LeashTimer, serializer);
-        FP.Serialize(&p->SoloRepickTimer, serializer);
-        FixedArray.Serialize(p->DetourPath, serializer, Statics.SerializeFPVector3);
-        FixedArray.Serialize(p->RoutePath, serializer, Statics.SerializeFPVector3);
+        FP.Serialize(&p->RepathTimer, serializer);
+        FP.Serialize(&p->StrafeTimer, serializer);
+        FP.Serialize(&p->StuckTimer, serializer);
+        FPVector2.Serialize(&p->ClimbDirection, serializer);
+        FPVector2.Serialize(&p->Heading, serializer);
+        FPVector2.Serialize(&p->LeaderHeading, serializer);
+        FPVector3.Serialize(&p->LastLeaderPosition, serializer);
+        FixedArray.Serialize(p->Path, serializer, Statics.SerializeFPVector3);
+        FPVector3.Serialize(&p->PathGoal, serializer);
+        FPVector3.Serialize(&p->ProgressAnchor, serializer);
         Quantum.Input.Serialize(&p->Data, serializer);
     }
   }
@@ -4781,7 +4874,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct InputSource : Quantum.IComponent {
-    public const Int32 SIZE = 88;
+    public const Int32 SIZE = 104;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(0)]
     public Input Data;
@@ -5760,6 +5853,36 @@ namespace Quantum {
         FP.Serialize(&p->JumpCooldownTimer, serializer);
         FP.Serialize(&p->WaterEdgeHesitationTimer, serializer);
         FPVector3.Serialize(&p->LastGroundedPosition, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct PlayerPing : Quantum.IComponent {
+    public const Int32 SIZE = 32;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(8)]
+    public FP Cooldown;
+    [FieldOffset(24)]
+    public FP StickCooldown;
+    [FieldOffset(16)]
+    public FP GroundSpamTimer;
+    [FieldOffset(0)]
+    public Int32 GroundSpamCount;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 13633;
+        hash = hash * 31 + Cooldown.GetHashCode();
+        hash = hash * 31 + StickCooldown.GetHashCode();
+        hash = hash * 31 + GroundSpamTimer.GetHashCode();
+        hash = hash * 31 + GroundSpamCount.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (PlayerPing*)ptr;
+        serializer.Stream.Serialize(&p->GroundSpamCount);
+        FP.Serialize(&p->Cooldown, serializer);
+        FP.Serialize(&p->GroundSpamTimer, serializer);
+        FP.Serialize(&p->StickCooldown, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -9123,6 +9246,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.PlayerLink>();
       BuildSignalsArrayOnComponentAdded<Quantum.PlayerMovement>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PlayerMovement>();
+      BuildSignalsArrayOnComponentAdded<Quantum.PlayerPing>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.PlayerPing>();
       BuildSignalsArrayOnComponentAdded<Quantum.PocketBombsUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PocketBombsUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.PoiActivation>();
@@ -9298,6 +9423,7 @@ namespace Quantum {
       i->SwitchTarget = i->SwitchTarget.Update(this.Number, input.SwitchTarget);
       i->DashSkill = i->DashSkill.Update(this.Number, input.DashSkill);
       i->HeroSkill = i->HeroSkill.Update(this.Number, input.HeroSkill);
+      i->Ping = i->Ping.Update(this.Number, input.Ping);
     }
     public Input* GetPlayerInput(PlayerRef player) {
       if ((int)player >= (int)_globals->input.Length) { throw new System.ArgumentOutOfRangeException("player"); }
@@ -9555,6 +9681,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.BossArenaGate), Quantum.BossArenaGate.SIZE);
       typeRegistry.Register(typeof(Quantum.BossRuntimeState), Quantum.BossRuntimeState.SIZE);
       typeRegistry.Register(typeof(Quantum.BotBrain), Quantum.BotBrain.SIZE);
+      typeRegistry.Register(typeof(Quantum.BotGoal), 1);
       typeRegistry.Register(typeof(Quantum.Breakable), Quantum.Breakable.SIZE);
       typeRegistry.Register(typeof(Quantum.BreathingSkipVote), Quantum.BreathingSkipVote.SIZE);
       typeRegistry.Register(typeof(Quantum.Burrowed), Quantum.Burrowed.SIZE);
@@ -9729,12 +9856,14 @@ namespace Quantum {
       typeRegistry.Register(typeof(PhysicsJoints3D), PhysicsJoints3D.SIZE);
       typeRegistry.Register(typeof(PhysicsQueryRef), PhysicsQueryRef.SIZE);
       typeRegistry.Register(typeof(PhysicsSceneSettings), PhysicsSceneSettings.SIZE);
+      typeRegistry.Register(typeof(Quantum.PingKind), 1);
       typeRegistry.Register(typeof(Quantum.PixieBombCharge), Quantum.PixieBombCharge.SIZE);
       typeRegistry.Register(typeof(Quantum.PixieExplosiveWeapon), Quantum.PixieExplosiveWeapon.SIZE);
       typeRegistry.Register(typeof(Quantum.PlayerLifeState), Quantum.PlayerLifeState.SIZE);
       typeRegistry.Register(typeof(Quantum.PlayerLifeStateKind), 1);
       typeRegistry.Register(typeof(Quantum.PlayerLink), Quantum.PlayerLink.SIZE);
       typeRegistry.Register(typeof(Quantum.PlayerMovement), Quantum.PlayerMovement.SIZE);
+      typeRegistry.Register(typeof(Quantum.PlayerPing), Quantum.PlayerPing.SIZE);
       typeRegistry.Register(typeof(PlayerRef), PlayerRef.SIZE);
       typeRegistry.Register(typeof(Quantum.PocketBombsUpgrade), Quantum.PocketBombsUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.PoiActivation), Quantum.PoiActivation.SIZE);
@@ -9848,7 +9977,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 189)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 190)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
@@ -9961,6 +10090,7 @@ namespace Quantum {
         .Add<Quantum.PlayerLifeState>(Quantum.PlayerLifeState.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PlayerLink>(Quantum.PlayerLink.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PlayerMovement>(Quantum.PlayerMovement.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.PlayerPing>(Quantum.PlayerPing.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PocketBombsUpgrade>(Quantum.PocketBombsUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PoiActivation>(Quantum.PoiActivation.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PoiUsage>(Quantum.PoiUsage.Serialize, null, null, ComponentFlags.None)
@@ -10045,6 +10175,7 @@ namespace Quantum {
     public static void EnsureNotStrippedGen() {
       FramePrinter.EnsureNotStripped();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.AccessoryGuardState>();
+      FramePrinter.EnsurePrimitiveNotStripped<Quantum.BotGoal>();
       FramePrinter.EnsurePrimitiveNotStripped<CallbackFlags>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.ChallengeType>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.ChunkConnectionSide>();
@@ -10068,6 +10199,7 @@ namespace Quantum {
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.LandingSource>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.LevelUpCategory>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.LevelUpPoolKind>();
+      FramePrinter.EnsurePrimitiveNotStripped<Quantum.PingKind>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.PlayerLifeStateKind>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.PoiUsagePolicy>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.PoiViewState>();

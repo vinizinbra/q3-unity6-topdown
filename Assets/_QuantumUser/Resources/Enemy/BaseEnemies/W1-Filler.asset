@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Enemy/BaseEnemies/W1-Filler
     Guid:
       Value: 380491306257295384
-  EnemyName: Swarm
+  EnemyName: Rukk Grunt
   Tier: 0
   Economy:
     Persistent: 0
@@ -184,4 +184,6 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
+  Description: Cheap Rukk that floods the front line.
   ViewPrefab: {fileID: 8476845490732343577, guid: f8e0e322414154c5a941e35c6dd113da, type: 3}

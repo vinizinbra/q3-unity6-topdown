@@ -16,10 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/EmptyChamber
     Guid:
       Value: 336917286344424812
-  Icon: {fileID: 901284195, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: 6a27a424b9744383b623ed8e55651c77, type: 3}
   DisplayName: Empty Chamber
   Rarity: 1
-  Description: Empty magazine releases a shockwave
+  Description: 'Empty mag knocks enemies back'
   Radius:
     RawValue: 262144
   Knockback:

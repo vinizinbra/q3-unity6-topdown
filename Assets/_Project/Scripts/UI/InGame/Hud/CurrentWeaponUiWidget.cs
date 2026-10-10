@@ -99,7 +99,7 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
             perkRows[shownCount].Setup(new WeaponCardWidget.PerkRowData
             {
                 Icon = perkData.Icon,
-                Title = perkData.DisplayName,
+                Title = string.Empty,
                 Description = perkData.GetDescription(),
                 RarityIndex = (int)perkData.Rarity
             });

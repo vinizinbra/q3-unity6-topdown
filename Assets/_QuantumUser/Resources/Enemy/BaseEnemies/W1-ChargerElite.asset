@@ -184,5 +184,6 @@ MonoBehaviour:
       Value: 578470124590582232
   SkillActions: []
   ExplosionColor: {r: 1, g: 1, b: 1, a: 1}
+  Faction: {fileID: 11400000, guid: 91839dc39bf60469d9594f381d93b9ee, type: 2}
+  Description: A bigger, faster Charger that keeps coming.
   ViewPrefab: {fileID: 8476845490732343577, guid: 677a5a84906534a528c7eae9dfd5477e, type: 3}
-  FactionSkins: []

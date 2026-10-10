@@ -192,9 +192,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
   m_MinWidth: -1
-  m_MinHeight: 120
+  m_MinHeight: 100
   m_PreferredWidth: -1
-  m_PreferredHeight: 120
+  m_PreferredHeight: 100
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -255,6 +255,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FocusOutlineWidget
   background: {fileID: 7689415707401595065}
+  shape: {fileID: 0}
   color: {r: 1, g: 1, b: 1, a: 1}
   pulse: 1
   pulseDepth: 0.3
@@ -310,8 +311,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 18, y: 0}
-  m_SizeDelta: {x: 88, y: 88}
+  m_AnchoredPosition: {x: 14, y: 0}
+  m_SizeDelta: {x: 72, y: 72}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &1797651587353761647
 CanvasRenderer:
@@ -385,8 +386,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 57.5, y: -25}
-  m_SizeDelta: {x: -135, y: -78}
+  m_AnchoredPosition: {x: 44, y: -25}
+  m_SizeDelta: {x: -108, y: -78}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8446059950364556407
 CanvasRenderer:
@@ -443,8 +444,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 26
-  m_fontSizeBase: 26
+  m_fontSize: 22.88
+  m_fontSizeBase: 22.88
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -522,8 +523,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 57.5, y: 22}
-  m_SizeDelta: {x: -135, y: -72}
+  m_AnchoredPosition: {x: 44, y: 22}
+  m_SizeDelta: {x: -108, y: -72}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2738732304982035753
 CanvasRenderer:
@@ -580,8 +581,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 34
-  m_fontSizeBase: 34
+  m_fontSize: 29.92
+  m_fontSizeBase: 29.92
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

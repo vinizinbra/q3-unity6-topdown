@@ -115,8 +115,8 @@ MonoBehaviour:
     rightOffset: {x: -0.1, y: 0}
     upOffset: {x: 0.2, y: 0.3}
     downOffset: {x: 0.1, y: 0.4}
-    rightHandGrip: {x: 0.25, y: -0.5, z: -0.05}
-    leftHandGrip: {x: 1.38, y: -0.21, z: -0.05}
+    rightHandGrip: {x: 0.25, y: -0.5, z: -0.1}
+    leftHandGrip: {x: 1.38, y: -0.21, z: -0.1}
     recoilKickDistance: 0
     recoilRotationKick: 5
     recoilDuration: 0.2

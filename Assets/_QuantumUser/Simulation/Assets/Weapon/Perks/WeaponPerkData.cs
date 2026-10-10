@@ -32,6 +32,8 @@ namespace Quantum
         // needs to override it.
         public virtual bool ConflictsWith(WeaponPerkData owned) => false;
 
-        public override string GetDescription() => GetFormattedDescription();
+        // "<b>Title</b> - effect": one self-contained line (weapon card perk rows, perk lists). A card that already has its
+        // own title field should show GetFormattedDescription() (the effect alone) instead, or the title is repeated.
+        public override string GetDescription() => $"<b>{(string.IsNullOrEmpty(DisplayName) ? name : DisplayName)}</b> - {GetFormattedDescription()}";
     }
 }

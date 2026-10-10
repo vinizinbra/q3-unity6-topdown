@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 307784346442998099
   Description: Your explosions mark weak enemies - a marked enemy blows up on death.
-  Icon: {fileID: 0}
+  Icon: {fileID: 21300000, guid: 12997e03c06e4942922b9d8bb58affd1, type: 3}
   DisplayName: Chain Reaction
   MarkChance:
     RawValue: 32768

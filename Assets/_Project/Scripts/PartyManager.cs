@@ -74,22 +74,33 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     public void CreateParty()
     {
         var roomCode = UnityEngine.Random.Range(0, 99999).ToString("00000");
-        BeginConnect(roomCode);
+        BeginConnect(roomCode, soloQuickStart: false);
     }
 
     public void JoinParty(string roomCode)
     {
-        BeginConnect(roomCode);
+        BeginConnect(roomCode, soloQuickStart: false);
+    }
+
+    /// <summary>Back to the join/create panel with no party (after a run that was started without one).</summary>
+    public void ResetToJoinCreate()
+    {
+        _autoStartWhenRoomReady = false;
+        _lastAllOthersReady = false;
+        SetPhase(PartyPhase.JoinCreateChoice);
+        OnRosterChanged?.Invoke();
     }
 
     public void QuickStartSolo()
     {
         _autoStartWhenRoomReady = true;
-        CreateParty();
+        var roomCode = UnityEngine.Random.Range(0, 99999).ToString("00000");
+        BeginConnect(roomCode, soloQuickStart: true);
     }
 
-    private void BeginConnect(string roomCode)
+    private void BeginConnect(string roomCode, bool soloQuickStart)
     {
+        MatchMakingConfig.Instance.PartyRoomIsSoloQuickStart = soloQuickStart;
         MatchMakingConfig.Instance.matchMakingType = MatchMakingConfig.MatchMakingType.CUSTOM;
         // Remembered so ReturnToPartyLobby/MoveToMatchRoomAsync can tell the party's own room
         // apart from whatever single-use match room a run is currently played in - see
@@ -126,6 +137,17 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
         {
             LogHelper.Error("MatchMaking", $"LeaveParty: LeaveRoomAsync failed: {e}");
         }
+    }
+
+    // Backs out of a Create/Join that is still on the Connecting panel (slow connect, stuck on a
+    // region, error). Aborts the in-flight connect, and if the room was already entered by the time
+    // the player pressed Cancel, leaves it so they land back on a clean join/create panel.
+    public void CancelConnect()
+    {
+        _autoStartWhenRoomReady = false;
+        MatchMakingConfig.Instance.CleanReconnectConfig();
+        MatchMakingConfig.Instance.CancelConnect();
+        SetPhase(PartyPhase.JoinCreateChoice);
     }
 
     public void SetLocalCharacter(string characterId)

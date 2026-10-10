@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/DoubleTimeSkillAction
     Guid:
       Value: 456045470573843368
-  Icon: {fileID: 27512113, guid: a7b93b5ce93dc4c56b780ebbbf8f5345, type: 3}
+  Icon: {fileID: 21300000, guid: 17252d635340458da90e60aaa2493176, type: 3}
   DisplayName: Double Time
   RankDescriptions:
   - "Totem Beats play every <color=#FD3971>0.85s</color> instead of every <color=#FD3971>1s</color>."

@@ -16,9 +16,9 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/HollowPoint
     Guid:
       Value: 278805214816823798
-  Icon: {fileID: -2100185935, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 21300000, guid: e90f9d41ee574d6ba65a27b26e032d94, type: 3}
   DisplayName: Hollow Point
   Rarity: 0
-  Description: '<color=#FD3971>{0:+0;-0}%</color> Crit Damage'
+  Description: <color=#FD3971><b>{0:+0;-0}%</b></color> Crit Damage
   Bonus:
     RawValue: 16384

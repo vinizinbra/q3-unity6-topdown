@@ -87,6 +87,10 @@ namespace Quantum
                         loot.PopHorizontalBurstSpeed, loot.PopVerticalBurstSpeed);
                     StampValue(f, pickup, drop.Value);
 
+                    // HealthOrbs never expire - they wait for a hurt player (see HealthOrbSystem).
+                    if (f.Has<HealthOrb>(pickup) == true)
+                        continue;
+
                     f.AddOrGet<DestroyAfterTime>(pickup, out var destroy);
                     destroy->RemainingTime = loot.OrbLifetime;
                 }

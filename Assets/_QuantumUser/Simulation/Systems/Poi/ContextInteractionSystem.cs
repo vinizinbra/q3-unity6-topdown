@@ -97,7 +97,7 @@ namespace Quantum
         }
 
         // The one per-kind switch this whole mechanism needs - everything else above is generic.
-        private static ContextInteractionState ResolveState(Frame f, EntityRef player, EntityRef poi, InteractableKind kind)
+        public static ContextInteractionState ResolveState(Frame f, EntityRef player, EntityRef poi, InteractableKind kind)
         {
             switch (kind)
             {

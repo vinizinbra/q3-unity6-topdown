@@ -94,6 +94,15 @@ public static class PhotonRegionSettings
         SelectedRegion = connectedRegion;
     }
 
+    // True when a client already connected to the Master server is on a different region than the
+    // selection (or the player asked for a fresh best-region search). RealtimeClient.ConnectUsingSettingsAsync
+    // returns immediately for an already-connected client, so without a disconnect first the new
+    // region would silently never apply.
+    public static bool NeedsReconnectFor(string connectedRegion)
+    {
+        return IsAuto || !string.Equals(Normalize(connectedRegion), SelectedRegion, StringComparison.Ordinal);
+    }
+
     public static string GetDisplayName(string code)
     {
         foreach (var region in Regions)

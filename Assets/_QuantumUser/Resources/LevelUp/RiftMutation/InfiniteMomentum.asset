@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/InfiniteMomentum
     Guid:
       Value: 455787944400972856
-  Icon: {fileID: -1552338469, guid: d3dadfce29976491ea7b37d8976a0a79, type: 3}
+  Icon: {fileID: 7822011428129731987, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
   DisplayName: Infinite Momentum
   Rarity: 2
   Scope: 0

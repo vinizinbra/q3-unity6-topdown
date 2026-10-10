@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_HeroSkillUpgrades/ClusterBombSkillAction
     Guid:
       Value: 268813963301101186
-  Icon: {fileID: -1580156667, guid: b217254d41b6945b1873986186a25786, type: 3}
+  Icon: {fileID: 21300000, guid: 6fee3c3bccc040389fe55dc191415eec, type: 3}
   DisplayName: Cluster Bomb
   RankDescriptions:
   - "Bunny Bomb releases <color=#FD3971>2</color> bomblets when it explodes, each dealing <color=#FD3971>40%</color> Damage."
