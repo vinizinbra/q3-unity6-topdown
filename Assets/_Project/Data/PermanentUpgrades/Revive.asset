@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56aeceed7fbac46f8ba83ad92cdd34ad, type: 3}
+  m_Name: Revive
+  m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
+  displayName: Revive
+  kindLabel: SURVIVAL UPGRADE
+  description: Second chances after a death. Recovery bonuses apply to Self-Revive
+    only.
+  icon: {fileID: 7467840278730661349, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
+  accentColor: {r: 0.9882353, g: 0.039215688, b: 0.30588236, a: 1}
+  category: 1
+  group: 3
+  maxLevel: 4
+  baseCost: 150
+  costStep: 50
+  valuePerLevel: 5
+  valueFormat: +{0}%
+  valueFormatPlural: 
+  levelInfos:
+  - title: Revive
+    description: Grants 1 Revive through permanent progression.
+  - title: Revive Recovery
+    description: More HP recovered when you use a Self-Revive.
+  - title: Revive Guard
+    description: Recovers 1 Accessory Guard block after a Self-Revive.
+  - title: Extra Revive
+    description: Grants +1 additional Revive per run.
+  talentKey: 
+  mockLevel: 0

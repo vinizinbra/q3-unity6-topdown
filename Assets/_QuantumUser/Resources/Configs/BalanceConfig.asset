@@ -126,81 +126,81 @@ MonoBehaviour:
     P1:
       RawValue: 65536
     P2:
-      RawValue: 98304
+      RawValue: 91750
     P3:
-      RawValue: 131072
+      RawValue: 117965
     P4:
-      RawValue: 163840
+      RawValue: 147456
   - Key: 4
     P1:
       RawValue: 65536
     P2:
-      RawValue: 111411
+      RawValue: 85197
     P3:
-      RawValue: 157286
+      RawValue: 104858
     P4:
-      RawValue: 196608
+      RawValue: 117965
   - Key: 5
     P1:
       RawValue: 65536
     P2:
-      RawValue: 42598
+      RawValue: 52429
     P3:
-      RawValue: 32768
+      RawValue: 40632
     P4:
-      RawValue: 27525
+      RawValue: 34079
   CoopHp:
   - Tier: 0
     P1:
       RawValue: 65536
     P2:
-      RawValue: 75366
-    P3:
       RawValue: 81920
+    P3:
+      RawValue: 91750
     P4:
-      RawValue: 88474
+      RawValue: 98304
   - Tier: 1
     P1:
       RawValue: 65536
     P2:
-      RawValue: 75366
+      RawValue: 85197
     P3:
-      RawValue: 81920
+      RawValue: 95027
     P4:
-      RawValue: 88474
+      RawValue: 101581
   - Tier: 2
     P1:
       RawValue: 65536
     P2:
-      RawValue: 75366
+      RawValue: 91750
     P3:
-      RawValue: 81920
+      RawValue: 104858
     P4:
-      RawValue: 88474
+      RawValue: 114688
   - Tier: 3
     P1:
       RawValue: 65536
     P2:
-      RawValue: 88474
+      RawValue: 101581
     P3:
-      RawValue: 104858
+      RawValue: 117965
     P4:
-      RawValue: 121242
+      RawValue: 134349
   - Tier: 4
-    P1:
-      RawValue: 65536
-    P2:
-      RawValue: 98304
-    P3:
-      RawValue: 124518
-    P4:
-      RawValue: 150733
-  - Tier: 5
     P1:
       RawValue: 65536
     P2:
       RawValue: 111411
     P3:
-      RawValue: 144179
+      RawValue: 134349
     P4:
-      RawValue: 170394
+      RawValue: 154010
+  - Tier: 5
+    P1:
+      RawValue: 65536
+    P2:
+      RawValue: 117965
+    P3:
+      RawValue: 157286
+    P4:
+      RawValue: 183501

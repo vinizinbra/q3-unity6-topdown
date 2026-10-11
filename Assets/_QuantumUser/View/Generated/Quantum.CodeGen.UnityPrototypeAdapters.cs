@@ -179,7 +179,6 @@ namespace Quantum.Prototypes.Unity {
     public Int32 StoreAttemptedAtBreathingIndex;
     public Int32 BlacksmithAttemptedAtBreathingIndex;
     public Int32 CursedRiftAttemptedAtBreathingIndex;
-    public Int32 ShrineAttemptedAtBreathingIndex;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.BotBrainPrototype prototype);
     public override Quantum.Prototypes.BotBrainPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.BotBrainPrototype();
@@ -214,7 +213,6 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.StoreAttemptedAtBreathingIndex, out result.StoreAttemptedAtBreathingIndex);
       converter.Convert(this.BlacksmithAttemptedAtBreathingIndex, out result.BlacksmithAttemptedAtBreathingIndex);
       converter.Convert(this.CursedRiftAttemptedAtBreathingIndex, out result.CursedRiftAttemptedAtBreathingIndex);
-      converter.Convert(this.ShrineAttemptedAtBreathingIndex, out result.ShrineAttemptedAtBreathingIndex);
       ConvertUser(converter, ref result);
       return result;
     }

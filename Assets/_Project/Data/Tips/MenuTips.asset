@@ -55,6 +55,10 @@ MonoBehaviour:
   - '<color=#FD3971>Dash</color> is an escape button: use it to slip out of a swarm.
     It gets its own upgrades as you level.'
   - 'Every hero grows through <color=#FD3971>Ascensions</color>: one line for a weapon
-    family, one for an element. Rank 3 unlocks a special effect.'
+    weight, one for an element. Rank 3 unlocks a special effect.'
   - 'Weapons come in six families: Pistol, SMG, Assault Rifle, Shotgun, Sniper and
     Grenade Launcher. See them all in the <color=#FD3971>Loadout</color> tab.'
+  - 'Every weapon has a <color=#FD3971>Weight</color>: Light, Medium or Heavy. Light
+    weapons make you move faster, Heavy ones slow you down.'
+  - Heavy weapons hit hard but slow you down. <color=#FD3971>Brute</color> and <color=#FD3971>Kai</color>
+    lose the slowdown at Heavy Mastery rank 3.

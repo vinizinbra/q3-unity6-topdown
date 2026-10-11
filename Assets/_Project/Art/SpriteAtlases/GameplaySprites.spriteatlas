@@ -114,6 +114,7 @@ SpriteAtlas:
     - 0834c70075a594256baf631058a4cd4f: 251389045
     - 0834c70075a594256baf631058a4cd4f: -596520283
     - 0834c70075a594256baf631058a4cd4f: -1783365348
+    - 0834c70075a594256baf631058a4cd4f: 1825679868
     - 0834c70075a594256baf631058a4cd4f: 1112030810
     - 0834c70075a594256baf631058a4cd4f: 291590725
     - 0834c70075a594256baf631058a4cd4f: -952962950
@@ -382,6 +383,7 @@ SpriteAtlas:
   - {fileID: 251389045, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: -596520283, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: -1783365348, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
+  - {fileID: 1825679868, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: 1112030810, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: 291590725, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   - {fileID: -952962950, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
@@ -649,6 +651,7 @@ SpriteAtlas:
   - RR_GunSmithInactive
   - RR_Traversal
   - RiftRaiders_POI_4
+  - RiftRaiders_POI_5
   - RiftRaiders_POI_2
   - RiftRaiders_POI_3
   - RR_HealingActive

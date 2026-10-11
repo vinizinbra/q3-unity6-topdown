@@ -14,16 +14,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
   displayName: Challenges
   kindLabel: EXPLORATION UPGRADE
-  description: Unlocks optional combat challenges with better rewards.
-  icon: {fileID: -8832560962510875356, guid: 7bf46803273b24220ba60766158daf78, type: 3}
-  accentColor: {r: 0.99215686, g: 0.76862746, b: 0.019607844, a: 1}
+  description: Unlocks optional activities on the map that reward exploration, execution
+    and combat.
+  icon: {fileID: -8832560962510875356, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
+  accentColor: {r: 1, g: 0.41568628, b: 0, a: 1}
   category: 1
   group: 1
-  maxLevel: 4
+  maxLevel: 2
   baseCost: 150
-  costStep: 0
+  costStep: 50
   valuePerLevel: 1
   valueFormat: Level {0}
   valueFormatPlural: 
+  levelInfos:
+  - title: Traversal Challenge
+    description: Unlocks movement and platform challenges that reward you on completion.
+  - title: Team Challenge
+    description: Unlocks combat challenges where the team fights enemies to earn
+      a reward.
   talentKey: 
-  mockLevel: 1
+  mockLevel: 0

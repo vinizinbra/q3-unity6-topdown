@@ -59,16 +59,19 @@ ways to run it:
 - **Weapon Weight** (`WeaponWeight.qtn`) - a new, independent axis alongside the existing `WeaponFamily`
   (`WeaponFamily.qtn`, identity/perk-pool/UI/balance - untouched) and `ElementType` (`ElementType.qtn`).
   A weapon is `(Family, Element, Weight)`, never coupled - `WeaponDataAsset.Weight` is hand-tagged on
-  the 6 real player weapons per the default migration (`PistolWeapon`/`SMG` -> Light, `AssaultRifle`/
-  `ShotgunWeapon` -> Medium, `SniperWeapon`/`GrenadeLauncher` -> Heavy); everything else (Lux's sentry
-  guns, test/basic weapons) stays the default `WeaponWeight.Medium` and simply never matches a Light or
-  Heavy Mastery. `Medium` is the enum's ordinal-0 default deliberately, so an un-tagged weapon reads as
+  every player weapon asset in `Resources/Weapons/` (the asset is authoritative - e.g. `ShotgunWeapon`/
+  `AutoShotgun`/`Minigun`/`SniperWeapon`/`GrenadeLauncher` are Heavy, `PistolWeapon`/`SMG` Light, the
+  rifles Medium); anything untagged (Lux's sentry guns, test/basic weapons) stays the default
+  `WeaponWeight.Medium` and simply never matches a Light or Heavy Mastery. `Medium` is the enum's ordinal-0 default deliberately, so an un-tagged weapon reads as
   neutral rather than silently getting the Light speed bonus or Heavy penalty (see below).
   **Move speed**: `WeaponWeightUtility.GetMoveSpeedMultiplier` (`Systems/Weapon/`) resolves the
-  equipped weapon's Weight into +10%/0%/-10% (Light/Medium/Heavy), read by `PlayerMovementProcessor.
+  equipped weapon's Weight into +5%/0%/-5% (Light/Medium/Heavy), read by `PlayerMovementProcessor.
   BeforeMove` in the same `targetSpeed *= X.ResolveY(...)` chain every other move-speed contributor
   (CharacterStats/StatusEffect/MutationModifier) already uses - a general weapon property, not part of
   Hero Mastery, so it lives in its own utility rather than duplicating resolution logic inside Mastery.
+  One Mastery hook: `WeaponWeightMasteryData.IgnoreMoveSpeedPenaltyAtMaxRank` (on for Brute's and Kai's
+  Heavy lines) sets `WeaponWeightMastery.IgnoreMoveSpeedPenalty` at R3, and the utility then returns 1x
+  instead of a penalty for a weapon matching the line's Weight (bonuses are never cancelled).
 - **Element** reuses the existing `ElementType` enum (`Neutral/Fire/Ice/Lightning` - Rock/Void were
   retired, see docs/elemental-reactions.md) - the brief's "Electric" is `ElementType.Lightning`.
 - **Mastery data** - two abstract base classes, `WeaponWeightMasteryData`/`ElementMasteryData`

@@ -311,7 +311,7 @@ MonoBehaviour:
   KnockbackUpwardForce:
     RawValue: 262144
   Damage:
-    RawValue: 1966080
+    RawValue: 7864320
   AftershockRadius:
     RawValue: 262144
   AftershockPushDuration:

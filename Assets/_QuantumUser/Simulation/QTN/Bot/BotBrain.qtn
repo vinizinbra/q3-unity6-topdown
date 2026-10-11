@@ -95,7 +95,6 @@ component BotBrain
     Int32 StoreAttemptedAtBreathingIndex;
     Int32 BlacksmithAttemptedAtBreathingIndex;
     Int32 CursedRiftAttemptedAtBreathingIndex;
-    Int32 ShrineAttemptedAtBreathingIndex;
 }
 
 // See BotInputSystem.SelectGoal for the priority order.

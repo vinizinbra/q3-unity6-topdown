@@ -72,13 +72,21 @@ namespace Quantum
 
         // Flat (XZ-only) proximity test against real players - EnemyLifecycleSystem's own relevance
         // check, which is where this whole utility's approach came from.
+        //
+        // Skips Downed/KO players. Both callers (EnemyLifecycleSystem relevance, EliteRelocationSystem
+        // "lost") ask "is anyone still fighting near this enemy?" - a KO'd body counting as nearby
+        // kept every enemy around it Relevant and every Elite un-lost forever, idling next to a
+        // target they had already dropped and holding a Breathing Break's encounter-clear open.
         public static bool IsAnyPlayerWithinFlatRange(Frame f, FPVector3 position, FP range)
         {
             FP rangeSqr = range * range;
             var filtered = f.Filter<PlayerLink, Transform3D>();
 
-            while (filtered.Next(out EntityRef _, out PlayerLink _, out Transform3D transform) == true)
+            while (filtered.Next(out EntityRef entity, out PlayerLink _, out Transform3D transform) == true)
             {
+                if (PlayerLifeStateUtility.IsIncapacitated(f, entity) == true)
+                    continue;
+
                 if (EnemyMovementUtility.FlatSqrDistance(position, transform.Position) <= rangeSqr)
                     return true;
             }

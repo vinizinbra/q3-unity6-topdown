@@ -13,6 +13,7 @@ namespace Quantum
     // BotNavigation), then decide skills (BotSkillUtility). Goals, highest priority first:
     //   Revive   - a Downed teammate nobody else is reviving.
     //   Interact - Breathing Break, area secured, nothing close: Store/Blacksmith/Shrine/Cursed Rift.
+    //              Mid-Survival: a usable Healing Shrine near the leader when hurt, nothing close.
     //   Retreat  - low Health with enemies close: back away (toward the leader if there is one).
     //   Follow   - regrouping: the leader got further than LeaderMaxDistance.
     //   Loot     - a pickup right next to the bot and no enemy on top of it.
@@ -155,7 +156,7 @@ namespace Quantum
                     break;
 
                 case BotGoal.Interact:
-                    ExecuteInteract(f, ref filter, settings);
+                    ExecuteInteract(f, ref filter, settings, in perception);
                     break;
 
                 case BotGoal.Retreat:
@@ -226,7 +227,7 @@ namespace Quantum
                 return;
             }
 
-            if (TrySelectInteract(f, ref filter, settings, in perception, out EntityRef poi) == true)
+            if (TrySelectInteract(f, ref filter, settings, in perception, hasLeader, leaderPosition, out EntityRef poi) == true)
             {
                 SetGoal(brain, position, BotGoal.Interact, poi);
                 return;
@@ -397,11 +398,17 @@ namespace Quantum
             return downed != EntityRef.None;
         }
 
-        private static bool TrySelectInteract(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings, in BotPerception perception, out EntityRef poi)
+        private static bool TrySelectInteract(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings, in BotPerception perception,
+            bool hasLeader, FPVector3 leaderPosition, out EntityRef poi)
         {
             poi = EntityRef.None;
 
-            if (f.Global->CurrentPhaseKind != SurvivalPhaseKind.Breathing || f.Global->BreathingAreaSecured == false)
+            // Mid-Survival only a Healing Shrine authored AvailableInCombat qualifies (BotPoiUtility
+            // filters the kind), and only one within LeaderMaxDistance of the leader.
+            bool inCombat = f.Global->CurrentState == GameState.Survival;
+            bool breathing = f.Global->CurrentPhaseKind == SurvivalPhaseKind.Breathing && f.Global->BreathingAreaSecured == true;
+
+            if (inCombat == false && breathing == false)
                 return false;
 
             if (perception.NearestEnemyDistance < InteractEnemyClearance)
@@ -419,7 +426,18 @@ namespace Quantum
 
             HashSet<EntityRef> reachable = BotNavigation.CollectReachableFrom(f, perception.Position);
 
-            return BotPoiUtility.TryPick(f, filter.Entity, brain, settings, perception.HealthFraction, reachable, perception.Position, out poi);
+            if (BotPoiUtility.TryPick(f, filter.Entity, brain, settings, perception.HealthFraction, reachable, perception.Position, out poi) == false)
+                return false;
+
+            if (inCombat == true && hasLeader == true
+                && f.Unsafe.TryGetPointer<Transform3D>(poi, out var poiTransform) == true
+                && BotNavigation.FlatDistance(poiTransform->Position, leaderPosition) > Or(settings.LeaderMaxDistance, DefaultLeaderMaxDistance))
+            {
+                poi = EntityRef.None;
+                return false;
+            }
+
+            return true;
         }
 
         private static bool TrySelectFightTarget(Frame f, BotBrain* brain, RuntimeConfig.BotSettings settings, in BotPerception perception,
@@ -748,7 +766,7 @@ namespace Quantum
             ExecuteMoveTo(f, ref filter, settings, ReviveArrivalDistance);
         }
 
-        private static void ExecuteInteract(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings)
+        private static void ExecuteInteract(Frame f, ref Filter filter, RuntimeConfig.BotSettings settings, in BotPerception perception)
         {
             BotBrain* brain = filter.Brain;
             EntityRef poi = brain->GoalTarget;
@@ -764,7 +782,7 @@ namespace Quantum
                 return;
             }
 
-            BotPoiUtility.Use(f, filter.Entity, brain, poi);
+            BotPoiUtility.Use(f, filter.Entity, brain, poi, perception.HealthFraction);
             SetGoal(brain, filter.Transform->Position, BotGoal.None, EntityRef.None);
         }
 

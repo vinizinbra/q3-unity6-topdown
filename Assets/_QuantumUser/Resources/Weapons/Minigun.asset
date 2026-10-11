@@ -22,7 +22,7 @@ MonoBehaviour:
     RawValue: 458752
   Element: 0
   Family: 2
-  Weight: 1
+  Weight: 2
   CriticalChance:
     RawValue: 3277
   CriticalDamageBonus:

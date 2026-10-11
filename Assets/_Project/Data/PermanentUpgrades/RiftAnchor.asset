@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56aeceed7fbac46f8ba83ad92cdd34ad, type: 3}
+  m_Name: RiftAnchor
+  m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
+  displayName: Rift Anchor / Base
+  kindLabel: EXPLORATION UPGRADE
+  description: 'The team''s preparation point: gear at the start of the run and upkeep
+    services during breaks.'
+  icon: {fileID: 6697352333098020210, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
+  accentColor: {r: 0.011764706, g: 0.90588236, b: 0.9882353, a: 1}
+  category: 1
+  group: 1
+  maxLevel: 3
+  baseCost: 150
+  costStep: 50
+  valuePerLevel: 5
+  valueFormat: +{0}%
+  valueFormatPlural: 
+  levelInfos:
+  - title: Starting Weapon Chest
+    description: Adds a Weapon Chest at the Base at the start of every run.
+  - title: Repair Station
+    description: Unlocks a Base station that repairs 1 Accessory Guard block per
+      break on interaction.
+  - title: Expanded Weapon Chest
+    description: The starting chest offers 2 weapons to choose from.
+  talentKey: 
+  mockLevel: 0

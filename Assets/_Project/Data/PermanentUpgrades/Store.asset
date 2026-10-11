@@ -13,17 +13,26 @@ MonoBehaviour:
   m_Name: Store
   m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
   displayName: Store
-  kindLabel: EXPLORATION UPGRADE
-  description: Unlocks and improves Stores during runs.
-  icon: {fileID: 5932103003307302726, guid: 7bf46803273b24220ba60766158daf78, type: 3}
-  accentColor: {r: 0.99215686, g: 0.76862746, b: 0.007843138, a: 1}
+  kindLabel: EQUIPMENT UPGRADE
+  description: A fixed Store per run selling weapons, healing consumables and defensive
+    accessories, bought with Gold.
+  icon: {fileID: 5932103003307302726, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
+  accentColor: {r: 0.99215686, g: 0.7647059, b: 0.019607844, a: 1}
   category: 1
-  group: 1
-  maxLevel: 5
+  group: 0
+  maxLevel: 3
   baseCost: 150
-  costStep: 0
+  costStep: 50
   valuePerLevel: 1
   valueFormat: Level {0}
   valueFormatPlural: 
+  levelInfos:
+  - title: Unlock Store
+    description: Unlocks the Store on the map, letting you buy weapons, healing and
+      accessories.
+  - title: Store Restock
+    description: The Store restocks every break, offering new things to buy.
+  - title: Expanded Arsenal
+    description: Adds one extra weapon to the options available in the Store.
   talentKey: 
-  mockLevel: 2
+  mockLevel: 1

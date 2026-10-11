@@ -348,6 +348,7 @@ MonoBehaviour:
   groundBelowY: -0.5
   cameraViewDirection: {x: 0, y: 0, z: 1}
   wallPropMinY: 0.05
+  waterLevelY: 0
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}
@@ -438,7 +439,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 939350422, guid: ee2077291b7c2496cb37368d6baad8e1, type: 3}
+  m_Sprite: {fileID: 1825679868, guid: 0834c70075a594256baf631058a4cd4f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

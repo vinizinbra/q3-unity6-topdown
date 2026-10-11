@@ -130,6 +130,12 @@ window above), and the latter two must stay targetable. Every patch below uses
   independent of `TryFindNearestPlayer`) and `EnemyDecisionUtility.TargetCountScore` (an AoE action's
   "worth it" heuristic) both also exclude incapacitated players, for consistency - neither is a hard
   targeting decision, but both could otherwise be swayed by a player who can't actually be hit.
+- **Enemy relevance / Elite "lost" (2026-10-11 fix):** `PlayerQueryUtility.IsAnyPlayerWithinFlatRange`
+  (used by `EnemyLifecycleSystem.IsRelevant` and `EliteRelocationSystem`) now skips incapacitated
+  players too. Before, a KO'd body counted as "a player nearby", so the enemies that had dropped it
+  idled there forever - never retiring, Elites never teleporting - and held a Breathing Break's
+  encounter-clear open. Now they retire (~`RecentCombatWindow` + `RetireDelay`) or, for Elites,
+  relocate to the nearest Alive player after `EliteLostTeleportDelay`.
 
 ## Revive channel (`Poi/Revive.qtn`) - TEAMMATE revive of a DOWNED player only
 

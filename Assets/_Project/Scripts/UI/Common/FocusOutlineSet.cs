@@ -45,6 +45,17 @@ public class FocusOutlineSet : ScriptableObject
                     return true;
                 }
             }
+
+            // A player build can hold a different instance of the same sprite than the one this set references
+            // (e.g. once packed into an atlas), so fall back to the sprite's name.
+            foreach (Entry candidate in entries)
+            {
+                if (candidate.source != null && candidate.source.name == source.name)
+                {
+                    entry = candidate;
+                    return true;
+                }
+            }
         }
 
         entry = default;

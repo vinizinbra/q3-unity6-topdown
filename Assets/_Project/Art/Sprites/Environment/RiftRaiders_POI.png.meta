@@ -487,6 +487,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RiftRaiders_POI_5
+      rect:
+        serializedVersion: 2
+        x: 1138
+        y: 882
+        width: 327
+        height: 325
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d0419fbb4371244918859ea54eca3a5f
+      internalID: 1825679868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -517,6 +539,7 @@ TextureImporter:
       RiftRaiders_POI_2: 1112030810
       RiftRaiders_POI_3: 291590725
       RiftRaiders_POI_4: -1783365348
+      RiftRaiders_POI_5: 1825679868
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -227,7 +227,7 @@ MonoBehaviour:
     Id:
       Value: 2439280984057709848
   Damage:
-    RawValue: 1310720
+    RawValue: 6553600
   SpawnAnchor: 0
   SpawnOffset:
     X:

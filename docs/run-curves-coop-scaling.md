@@ -61,9 +61,9 @@ unchanged until the Heavy row is tuned apart.
 | `EnemyDamage` | 1.00 / 1.00 / 1.05 / 1.10 | `EnemyBalanceUtility.ResolveEnemyStats` |
 | `DirectorBudget` | 1.00 / 1.70 / 2.40 / 3.00 | `CombatDirectorUtility.ResolveBudgetMultiplier` |
 | `EliteFrequency` | 1.00 / 1.60 / 2.20 / 2.80 | **none** - reserved, no consumer yet |
-| `XpRequirement` | 1.00 / 1.60 / 2.20 / 2.80 | `ExperienceUtility.ResolveXpRequirementMultiplier` |
-| `DirectorPressure` | 1.00 / 1.70 / 2.40 / 3.00 | `PlayerClusterDirectorUtility.BuildAnchors` (TargetPressure), `CombatDirectorUtility.TryPulse` (MaxAliveEnemies, MaxPurchasesPerPulse) |
-| `CoinGain` | 1.00 / 0.65 / 0.50 / 0.42 | `CoinUtility.TrySpawnDrop` (enemy kill coin orb value; barrel loot is not discounted) |
+| `XpRequirement` | 1.00 / 1.40 / 1.80 / 2.25 | `ExperienceUtility.ResolveXpRequirementMultiplier` |
+| `DirectorPressure` | 1.00 / 1.30 / 1.60 / 1.80 | `PlayerClusterDirectorUtility.BuildAnchors` (TargetPressure), `CombatDirectorUtility.TryPulse` (MaxAliveEnemies, MaxPurchasesPerPulse) |
+| `CoinGain` | 1.00 / 0.80 / 0.62 / 0.52 | `CoinUtility.TrySpawnDrop` (enemy kill coin orb value; barrel loot is not discounted) |
 
 `docs/survival-director.md` documents "Milestone 7 (Co-op Scaling)" as "living player count →
 budget/target-pressure/cap multipliers." Both halves are implemented: the `DirectorBudget` curve and
@@ -92,6 +92,37 @@ Balance Simulator, `docs/balance-simulator.md`). With kills now scaling roughly 
 x1.9) - re-check with the simulator before touching it. The row defaults to the budget values so the
 two can be tuned apart (denser fights vs. more total spawns).
 
+**Co-op crowding pass (2026-10-11).** 2-player playtest: the map felt packed. `DirectorPressure`
+dropped x1.7/x2.4/x3.0 -> x1.4/x1.8/x2.2 (now deliberately below `DirectorBudget`); since the
+per-pulse purchase cap rides the same row, 2P also drops from 5 to 4 groups/pulse. With fewer kills, `XpRequirement` (x1.25/x1.6/x2.0) and `CoinGain` (x0.80/x0.62/x0.52) were
+re-sized for kills scaling ~x1.25/x1.6/x1.9 - placeholder, verify with the Balance Simulator. Filler/Normal
+`CoopHp` raised x1.15/x1.25/x1.35 -> x1.25/x1.35/x1.45 so the thinner crowd still has some weight.
+
+**Co-op XP nerf (2026-10-11).** 2-player playtest still levelled faster than solo: `XpRequirement`
+x1.25/x1.6/x2.0 -> x1.40/x1.80/x2.25. Placeholder - verify with the Balance Simulator.
+
+**Pressure pass 2 (2026-10-11).** 2P still felt crowded: `DirectorPressure` x1.4/x1.8/x2.2 ->
+x1.3/x1.6/x1.8. Purchase cap (`RoundToInt(3 x pressure)`) stays 4 at 2P, 5 at 3P/4P - the cut lands on
+TargetPressure/MaxAliveEnemies. Fewer kills also means less coin; `CoinGain` was not re-sized.
+
+**Co-op HP table rebuild (2026-10-11).** Same playtest, after the crowding pass: fewer enemies
+on the map made each one die too fast, so `CoopHp` was rebuilt as one coherent table. Rules it
+must always satisfy: per row P1 <= P2 <= P3 <= P4 (more players never makes an enemy weaker), per
+column Filler <= Normal <= Specialist <= Heavy <= Elite <= Boss. Density-governed tiers
+(Normal/Specialist/Heavy) take a per-column factor over the original table (x1.30/x1.40/x1.45 at
+2P/3P/4P) that roughly restores on-screen total HP after the `DirectorPressure` cut
+(x0.82/x0.75/x0.73). Filler is kept deliberately light (swarm fodder: ~83% of Normal's
+multiplier). Elite/Boss count barely depends on density and already eat the whole party's focus
+fire, so they only rise as far as needed to stay above Heavy. 2P is the only column with
+playtest backing - re-derive 3P/4P from it if 2P moves.
+Follow-up (same day): Specialist felt too tanky in 2P, pulled back to x1.30/x1.50/x1.65 - a
+deliberate exception to the column ordering (now below Normal), since Specialists' threat comes
+from their mechanics rather than their HP pool.
+Second pass (same day): whole table pulled down from a new 2P column (Normal 1.30 / Specialist 1.40 /
+Heavy 1.55 / Elite 1.70 / Boss 1.80, Filler unchanged at 1.25); 3P/4P re-derived as 1 + 1.5x / 1.9x
+the 2P bonus, rounded to 0.05 - except Boss, hand-set to 2.40 / 2.80 at 3P/4P. Column ordering holds
+again (Specialist back above Normal).
+
 `XpRequirement` has no paired run curve (unlike `EnemyHpLight`/`EnemyHpHeavy`/`EnemyDmg`/`DirectorBudget`) - the
 per-level XP curve already lives on `ExperienceConfig.RequiredExperience`
 (`FPAnimationCurve`, X = display level), so this only needs the player-count multiplier, applied on
@@ -118,10 +149,12 @@ not a duplicate of anything:
 
 | Tier | P1 / P2 / P3 / P4 |
 |---|---|
-| Filler / Normal / Specialist | 1.00 / 1.15 / 1.25 / 1.35 |
-| Heavy | 1.00 / 1.35 / 1.60 / 1.85 |
-| Elite | 1.00 / 1.50 / 1.90 / 2.30 |
-| Boss | 1.00 / 1.70 / 2.20 / 2.60 |
+| Filler | 1.00 / 1.25 / 1.40 / 1.50 |
+| Normal | 1.00 / 1.30 / 1.45 / 1.55 |
+| Specialist | 1.00 / 1.40 / 1.60 / 1.75 |
+| Heavy | 1.00 / 1.55 / 1.80 / 2.05 |
+| Elite | 1.00 / 1.70 / 2.05 / 2.35 |
+| Boss | 1.00 / 1.80 / 2.40 / 2.80 |
 
 ### Consolidation
 
@@ -171,7 +204,7 @@ healthbar or damage number changing retroactively on a living enemy would look b
 
 Filler (`EnemyTierStatsConfig.Filler.MaxHealth = 20`) at `SurvivalTime = 360` (6 min, lands exactly
 on the `EnemyHpLight` curve's own 360s anchor - no interpolation drift), `PlayerCount = 4`:
-`MaxHp = RoundToInt(20 × 3.6 × 1.35) = RoundToInt(97.2) = 97`.
+`MaxHp = RoundToInt(20 × 3.6 × 1.60) = RoundToInt(115.2) = 115`.
 
 Same Filler at `SurvivalTime = 0`, `PlayerCount = 1`: `MaxHp = RoundToInt(20 × 1.0 × 1.0) = 20` -
 unscaled baseline, exactly.

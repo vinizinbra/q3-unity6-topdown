@@ -85,7 +85,6 @@ namespace Quantum
             brain->StoreAttemptedAtBreathingIndex = -1;
             brain->BlacksmithAttemptedAtBreathingIndex = -1;
             brain->CursedRiftAttemptedAtBreathingIndex = -1;
-            brain->ShrineAttemptedAtBreathingIndex = -1;
 
             if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == true)
             {

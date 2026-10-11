@@ -56,7 +56,7 @@ MonoBehaviour:
   MaxHealFractionPerAlly:
     RawValue: 13107
   DamageAmount:
-    RawValue: 655360
+    RawValue: 3932160
   DamageMask: 2
   DamageEffects:
   - Id:
@@ -152,7 +152,7 @@ MonoBehaviour:
     Id:
       Value: 2134381064987442437
   Damage:
-    RawValue: 655360
+    RawValue: 3932160
   SpawnAnchor: 0
   SpawnOffset:
     X:

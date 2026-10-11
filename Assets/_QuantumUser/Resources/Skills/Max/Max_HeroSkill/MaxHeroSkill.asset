@@ -42,7 +42,7 @@ MonoBehaviour:
   Name: Overdrive
   InitStacks: 1
   Cooldown:
-    RawValue: 1179648
+    RawValue: 983040
   CheckActions: 0
   Actions:
   - Id:
@@ -58,7 +58,7 @@ MonoBehaviour:
   Duration:
     RawValue: 655360
   FireRateBonus:
-    RawValue: 32768
+    RawValue: 49152
   MoveSpeedBonus:
     RawValue: 13107
   ReloadSpeedBonus:

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56aeceed7fbac46f8ba83ad92cdd34ad, type: 3}
+  m_Name: HealingShrine
+  m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
+  displayName: Healing Shrine
+  kindLabel: EXPLORATION UPGRADE
+  description: A healing point found while exploring. Usable again after a cooldown.
+  icon: {fileID: 1793719643770292802, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
+  accentColor: {r: 0.27058825, g: 0.9254902, b: 0.21568628, a: 1}
+  category: 1
+  group: 1
+  maxLevel: 3
+  baseCost: 150
+  costStep: 50
+  valuePerLevel: 5
+  valueFormat: +{0}%
+  valueFormatPlural: 
+  levelInfos:
+  - title: Unlock Healing Shrine
+    description: Unlocks the Healing Shrine, restoring 20% of max HP per use.
+  - title: Improved Healing
+    description: Shrine healing rises from 20% to 30% of max HP.
+  - title: Faster Recovery
+    description: Shrine cooldown is 25% shorter, so it can be used more often.
+  talentKey: 
+  mockLevel: 0

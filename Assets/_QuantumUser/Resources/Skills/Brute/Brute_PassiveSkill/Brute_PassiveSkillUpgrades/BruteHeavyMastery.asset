@@ -18,18 +18,21 @@ MonoBehaviour:
       Value: 426348791454513788
   Icon: {fileID: 21300000, guid: ab379178b5cb4d1b8fd027cefc1a6126, type: 3}
   DisplayName: Heavy Weapon Mastery
-  Description: Brute's Heavy weapons hit harder - and at close range, harder still.
+  Description: Heavy weapons hit harder, even more up close - and stop slowing Brute
+    down.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
   - +<color=#FD3971>15%</color> Heavy Weapon Damage.
   - +<color=#FD3971>30%</color> Heavy Weapon Damage.
   - +<color=#FD3971>50%</color> Heavy Weapon Damage. Deal +<color=#FD3971>25%</color>
-    additional Heavy Weapon Damage to nearby enemies.
+    additional Heavy Weapon Damage to nearby enemies. Heavy weapons no longer slow
+    you.
   Weight: 2
   DamageMultiplierPerRank:
   - RawValue: 9830
   - RawValue: 19661
   - RawValue: 32768
+  IgnoreMoveSpeedPenaltyAtMaxRank: 1
   PointBlankDamageBonus:
     RawValue: 16384
   PointBlankRange:

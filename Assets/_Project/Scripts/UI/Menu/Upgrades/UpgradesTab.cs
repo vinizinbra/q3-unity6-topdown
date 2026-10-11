@@ -51,6 +51,23 @@ public class UpgradesTab : TabContent
     [SerializeField] private TMP_Text detailLevel;
     [SerializeField] private TMP_Text currentValue;
     [SerializeField] private TMP_Text nextValue;
+
+    [Header("Detail panel - per-level lines (upgrades with Level Infos, e.g. Exploration)")]
+    [SerializeField, Tooltip("The side-by-side CURRENT / NEXT value cards; hidden for upgrades with per-level info.")]
+    private GameObject currentNextBlock;
+    [SerializeField, Tooltip("The stacked CURRENT / NEXT level cards (title + description); shown instead for upgrades with per-level info.")]
+    private GameObject levelInfoBlock;
+    [SerializeField] private TMP_Text currentLevelHeader;
+    [SerializeField] private TMP_Text currentLevelText;
+    [SerializeField, Tooltip("Small accent-coloured caption over the next level's title (NEXT · LV 3).")]
+    private TMP_Text nextLevelLabel;
+    [SerializeField] private TMP_Text nextLevelHeader;
+    [SerializeField] private TMP_Text nextLevelText;
+    [SerializeField, Tooltip("The NEXT card's background, tinted with the upgrade's accent colour.")]
+    private Image nextLevelBackground;
+    [SerializeField, Tooltip("The NEXT card's accent bar.")]
+    private Image nextLevelAccent;
+    [SerializeField, Range(0f, 1f)] private float nextLevelTint = 0.14f;
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TMP_Text upgradeCost;
     [SerializeField] private TMP_Text upgradeLabel;
@@ -239,11 +256,60 @@ public class UpgradesTab : TabContent
         currentValue.text = data.ValueLabel(level);
         nextValue.text = maxed ? "MAX" : data.ValueLabel(level + 1);
         nextValue.color = maxed ? currentValue.color : nextColor;
+        RefreshLevelInfo(data, level, maxed);
         upgradeCost.text = maxed ? string.Empty : data.CostFor(level).ToString();
         upgradeLabel.text = maxed ? "MAXED" : "UPGRADE";
         // Never interactable = false: UGUI clears the selection of a selectable that goes non-interactable,
         // which would strand gamepad focus on an empty scope. Maxed just greys it out; pressing does nothing.
         upgradeButton.targetGraphic.color = maxed ? maxedButtonColor : upgradeButtonColor;
+    }
+
+    // Upgrades with one title + text per level (Exploration lines) show what the owned level does and what the next
+    // one adds, in place of the numeric CURRENT / NEXT values.
+    private void RefreshLevelInfo(PermanentUpgradeData data, int level, bool maxed)
+    {
+        bool perLevel = data.HasLevelInfo && levelInfoBlock != null;
+        if (currentNextBlock != null)
+            currentNextBlock.SetActive(!perLevel);
+        if (levelInfoBlock != null)
+            levelInfoBlock.SetActive(perLevel);
+        if (!perLevel)
+            return;
+
+        string muted = ColorUtility.ToHtmlStringRGB(new Color(0.45f, 0.47f, 0.53f));
+
+        if (level <= 0)
+        {
+            currentLevelHeader.text = $"<size=70%><color=#{muted}>CURRENT</color></size>  LOCKED";
+            currentLevelText.text = "Not unlocked yet.";
+        }
+        else
+        {
+            PermanentUpgradeLevelInfo owned = data.LevelInfo(level);
+            currentLevelHeader.text = $"<size=70%><color=#{muted}>CURRENT · LV {level}</color></size>  {owned.title.ToUpperInvariant()}";
+            currentLevelText.text = owned.description;
+        }
+
+        if (maxed)
+        {
+            nextLevelLabel.text = "NEXT";
+            nextLevelHeader.text = "MAX";
+            nextLevelText.text = "Every level unlocked.";
+        }
+        else
+        {
+            PermanentUpgradeLevelInfo next = data.LevelInfo(level + 1);
+            nextLevelLabel.text = $"NEXT · LV {level + 1}";
+            nextLevelHeader.text = next.title.ToUpperInvariant();
+            nextLevelText.text = next.description;
+        }
+
+        Color accentColor = maxed ? new Color(0.45f, 0.47f, 0.53f) : data.accentColor;
+        nextLevelLabel.color = accentColor;
+        if (nextLevelAccent != null)
+            nextLevelAccent.color = accentColor;
+        if (nextLevelBackground != null)
+            nextLevelBackground.color = Color.Lerp(new Color(0.93f, 0.94f, 0.96f), accentColor, maxed ? 0f : nextLevelTint);
     }
 
     private void OnUpgradePressed()

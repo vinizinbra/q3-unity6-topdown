@@ -251,7 +251,8 @@
 
             [Header("Breathing POIs")]
             // Opt-outs (a struct can't carry field initializers, see below): by default a bot uses
-            // the Store, Blacksmith, Healing Shrine and Cursed Rift once per Breathing Break.
+            // the Store, Blacksmith and Cursed Rift once per Breathing Break, and a Healing Shrine
+            // whenever it's usable (mid-Survival too, if the shrine is AvailableInCombat).
             public bool DisableStore;
             public bool DisableBlacksmith;
             public bool DisableHealingShrine;

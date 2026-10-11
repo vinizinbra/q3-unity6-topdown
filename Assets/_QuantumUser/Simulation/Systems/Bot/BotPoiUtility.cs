@@ -3,8 +3,10 @@ namespace Quantum
     using System.Collections.Generic;
     using Photon.Deterministic;
 
-    // Breathing-Break POI use for bots: Store, Blacksmith, Healing Shrine and Cursed Rift, each at
-    // most once per Break (BotBrain.*AttemptedAtBreathingIndex).
+    // POI use for bots. Breathing Break: Store, Blacksmith and Cursed Rift at most once per Break
+    // (BotBrain.*AttemptedAtBreathingIndex). Healing Shrine: whenever its own availability/usage
+    // policy says it's usable - including mid-Survival for a shrine authored AvailableInCombat, so a
+    // Cooldown shrine is re-used every time it comes back off cooldown.
     //
     // A bot has no screen to open a ChooseWindow on, so - like LevelUpSystem.AutoPickForBots - it
     // skips the ContextInteraction/Command dance and calls each POI's own utility directly: open,
@@ -12,8 +14,16 @@ namespace Quantum
     // Every utility still re-validates availability, usage and Coins itself.
     public static unsafe class BotPoiUtility
     {
-        // Only worth a Shrine visit below this Health fraction.
+        // Only worth a Shrine visit below this Health fraction - lower mid-Survival, where walking
+        // off to it costs fight time and a Cooldown shrine shouldn't be burnt on a scratch.
         private static readonly FP ShrineHealthFraction = FP.FromString("0.8");
+        private static readonly FP CombatShrineHealthFraction = FP._0_50;
+
+        // Below this Health fraction the Store's heal food is worth buying.
+        private static readonly FP StoreHealHealthFraction = FP.FromString("0.7");
+
+        // Safety cap on accessory points bought in one visit (one durability point per purchase).
+        private const int MaxAccessoryPurchasesPerVisit = 8;
 
         // How far inside the POI's own Interactable.Radius the bot walks before using it.
         private static readonly FP ArrivalRadiusFraction = FP.FromString("0.6");
@@ -68,13 +78,17 @@ namespace Quantum
         {
             int breathingIndex = f.Global->BreathingIndex;
 
+            // Mid-Survival only the Shrine is worth leaving the fight for.
+            if (f.Global->CurrentState == GameState.Survival && kind != InteractableKind.HealingShrine)
+                return false;
+
             switch (kind)
             {
                 case InteractableKind.Store:
                     return settings.DisableStore == false
                         && brain->StoreAttemptedAtBreathingIndex != breathingIndex
                         && StoreUtility.ResolveInteractionState(f, self, poi) == ContextInteractionState.Available
-                        && CanAffordWeaponLevelUp(f, self) == true;
+                        && WantsAnythingFromStore(f, self, poi, healthFraction) == true;
 
                 case InteractableKind.Blacksmith:
                     return settings.DisableBlacksmith == false
@@ -82,10 +96,11 @@ namespace Quantum
                         && BlacksmithUtility.ResolveInteractionState(f, self, poi) == ContextInteractionState.Available
                         && CanAffordCheapestPerk(f, self) == true;
 
+                // No per-Break guard: PoiUsageUtility (OncePerPlayerPerBreak/Cooldown/...) already says
+                // when it's usable again, and TryInteract can't refuse an Available shrine.
                 case InteractableKind.HealingShrine:
                     return settings.DisableHealingShrine == false
-                        && brain->ShrineAttemptedAtBreathingIndex != breathingIndex
-                        && healthFraction < ShrineHealthFraction
+                        && healthFraction < (f.Global->CurrentState == GameState.Survival ? CombatShrineHealthFraction : ShrineHealthFraction)
                         && HealingShrineUtility.ResolveInteractionState(f, self, poi) == ContextInteractionState.Available;
 
                 case InteractableKind.CursedRift:
@@ -100,7 +115,7 @@ namespace Quantum
 
         // Called once the bot stands inside the POI's radius. Marks the kind attempted for this
         // Break whatever happens, so a refused interaction can't pin the bot to the POI.
-        public static void Use(Frame f, EntityRef self, BotBrain* brain, EntityRef poi)
+        public static void Use(Frame f, EntityRef self, BotBrain* brain, EntityRef poi, FP healthFraction)
         {
             if (f.Unsafe.TryGetPointer<Interactable>(poi, out var interactable) == false)
                 return;
@@ -111,7 +126,7 @@ namespace Quantum
             {
                 case InteractableKind.Store:
                     brain->StoreAttemptedAtBreathingIndex = breathingIndex;
-                    UseStore(f, self, poi);
+                    UseStore(f, self, poi, healthFraction);
                     break;
 
                 case InteractableKind.Blacksmith:
@@ -120,7 +135,6 @@ namespace Quantum
                     break;
 
                 case InteractableKind.HealingShrine:
-                    brain->ShrineAttemptedAtBreathingIndex = breathingIndex;
                     HealingShrineUtility.TryInteract(f, self, poi);
                     break;
 
@@ -131,14 +145,31 @@ namespace Quantum
             }
         }
 
-        // Levels up the weapon the bot already has. It deliberately doesn't buy a new weapon - a
-        // random swap would throw away the hero's level-up weapon picks and perks mid-test.
-        private static void UseStore(Frame f, EntityRef self, EntityRef store)
+        // Spends in survival order: heal food when hurt, then the accessory (replacement/repair,
+        // one point per purchase until full or broke), then a level for the weapon the bot already
+        // has. It deliberately doesn't buy a new weapon - a random swap would throw away the hero's
+        // level-up weapon picks and perks mid-test.
+        private static void UseStore(Frame f, EntityRef self, EntityRef store, FP healthFraction)
         {
             StoreUtility.TryBeginInteraction(f, self, store);
 
-            if (f.Has<StoreInteraction>(self) == false)
+            if (f.Unsafe.TryGetPointer<StoreInteraction>(self, out var interaction) == false)
                 return;
+
+            if (healthFraction < StoreHealHealthFraction)
+            {
+                int healOffer = FindAffordableHealOffer(f, self, store);
+
+                if (healOffer >= 0)
+                {
+                    StoreUtility.BuyFood(f, self, interaction, healOffer);
+                }
+            }
+
+            for (int i = 0; i < MaxAccessoryPurchasesPerVisit && WantsAccessoryService(f, self) == true; i++)
+            {
+                AccessoryServiceUtility.TryPurchaseService(f, self);
+            }
 
             if (CanAffordWeaponLevelUp(f, self) == true)
             {
@@ -146,6 +177,57 @@ namespace Quantum
             }
 
             StoreUtility.Close(f, self);
+        }
+
+        // Worth the walk if any of UseStore's purchases could happen. The food inventory is only
+        // rolled when the first player opens the Store this Break, so before that a hurt bot with
+        // any Coins goes and looks - at worst one wasted visit per Break.
+        private static bool WantsAnythingFromStore(Frame f, EntityRef self, EntityRef store, FP healthFraction)
+        {
+            if (CanAffordWeaponLevelUp(f, self) == true || WantsAccessoryService(f, self) == true)
+                return true;
+
+            if (healthFraction >= StoreHealHealthFraction)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<StoreInventory>(store, out var inventory) == false
+                || inventory->RolledAtBreathingIndex != f.Global->BreathingIndex)
+                return GetCoins(f, self) > FP._0;
+
+            return FindAffordableHealOffer(f, self, store) >= 0;
+        }
+
+        private static bool WantsAccessoryService(Frame f, EntityRef self)
+        {
+            return AccessoryServiceUtility.ResolveService(f, self) != AccessoryServiceKind.None
+                && AccessoryServiceUtility.CanAfford(f, self) == true;
+        }
+
+        // First unpurchased, affordable HealFoodOfferData in this Break's rolled food offers, or -1.
+        private static int FindAffordableHealOffer(Frame f, EntityRef self, EntityRef store)
+        {
+            if (f.Unsafe.TryGetPointer<StoreInventory>(store, out var inventory) == false)
+                return -1;
+
+            FP coins = GetCoins(f, self);
+
+            for (int i = 0; i < inventory->FoodOfferCount; i++)
+            {
+                StoreFoodOffer offer = inventory->FoodOffers[i];
+
+                if (offer.Food.IsValid == false || offer.Price > coins)
+                    continue;
+
+                if (f.FindAsset(offer.Food) is HealFoodOfferData == false)
+                    continue;
+
+                if (StoreUtility.IsPurchased(f, self, store, i, isWeaponOffer: false) == true)
+                    continue;
+
+                return i;
+            }
+
+            return -1;
         }
 
         // Buys the cheapest perk on offer it can afford (rarest first among equal prices isn't worth

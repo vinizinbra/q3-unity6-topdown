@@ -2634,7 +2634,7 @@ namespace Quantum {
     public FP FormationDistance;
     [FieldOffset(80)]
     public FP FormationRerollTimer;
-    [FieldOffset(28)]
+    [FieldOffset(24)]
     public QBoolean Regrouping;
     [FieldOffset(1008)]
     public FPVector3 ProgressAnchor;
@@ -2646,7 +2646,7 @@ namespace Quantum {
     public FP HeroSkillGuardTimer;
     [FieldOffset(56)]
     public FP DashGuardTimer;
-    [FieldOffset(24)]
+    [FieldOffset(20)]
     public Int32 StrafeSign;
     [FieldOffset(128)]
     public FP StrafeTimer;
@@ -2661,14 +2661,12 @@ namespace Quantum {
     public FPVector3 PathGoal;
     [FieldOffset(120)]
     public FP RepathTimer;
-    [FieldOffset(20)]
+    [FieldOffset(16)]
     public Int32 StoreAttemptedAtBreathingIndex;
     [FieldOffset(4)]
     public Int32 BlacksmithAttemptedAtBreathingIndex;
     [FieldOffset(8)]
     public Int32 CursedRiftAttemptedAtBreathingIndex;
-    [FieldOffset(16)]
-    public Int32 ShrineAttemptedAtBreathingIndex;
     public readonly FixedArray<FPVector3> Path {
       get {
         fixed (byte* p = _Path_) { return new FixedArray<FPVector3>(p, 24, 32); }
@@ -2708,7 +2706,6 @@ namespace Quantum {
         hash = hash * 31 + StoreAttemptedAtBreathingIndex.GetHashCode();
         hash = hash * 31 + BlacksmithAttemptedAtBreathingIndex.GetHashCode();
         hash = hash * 31 + CursedRiftAttemptedAtBreathingIndex.GetHashCode();
-        hash = hash * 31 + ShrineAttemptedAtBreathingIndex.GetHashCode();
         return hash;
       }
     }
@@ -2720,7 +2717,6 @@ namespace Quantum {
         serializer.Stream.Serialize(&p->BlacksmithAttemptedAtBreathingIndex);
         serializer.Stream.Serialize(&p->CursedRiftAttemptedAtBreathingIndex);
         serializer.Stream.Serialize(&p->DeflectSide);
-        serializer.Stream.Serialize(&p->ShrineAttemptedAtBreathingIndex);
         serializer.Stream.Serialize(&p->StoreAttemptedAtBreathingIndex);
         serializer.Stream.Serialize(&p->StrafeSign);
         QBoolean.Serialize(&p->Regrouping, serializer);
@@ -8655,17 +8651,21 @@ namespace Quantum {
     public WeaponWeight Weight;
     [FieldOffset(8)]
     public FP DamageMultiplier;
+    [FieldOffset(4)]
+    public QBoolean IgnoreMoveSpeedPenalty;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 3463;
         hash = hash * 31 + (Byte)Weight;
         hash = hash * 31 + DamageMultiplier.GetHashCode();
+        hash = hash * 31 + IgnoreMoveSpeedPenalty.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (WeaponWeightMastery*)ptr;
         serializer.Stream.Serialize((Byte*)&p->Weight);
+        QBoolean.Serialize(&p->IgnoreMoveSpeedPenalty, serializer);
         FP.Serialize(&p->DamageMultiplier, serializer);
     }
   }

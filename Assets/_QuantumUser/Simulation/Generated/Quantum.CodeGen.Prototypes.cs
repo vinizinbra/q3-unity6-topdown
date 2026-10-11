@@ -535,7 +535,6 @@ namespace Quantum.Prototypes {
     public Int32 StoreAttemptedAtBreathingIndex;
     public Int32 BlacksmithAttemptedAtBreathingIndex;
     public Int32 CursedRiftAttemptedAtBreathingIndex;
-    public Int32 ShrineAttemptedAtBreathingIndex;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.BotBrain component = default;
         Materialize((Frame)f, ref component, in context);
@@ -575,7 +574,6 @@ namespace Quantum.Prototypes {
         result.StoreAttemptedAtBreathingIndex = this.StoreAttemptedAtBreathingIndex;
         result.BlacksmithAttemptedAtBreathingIndex = this.BlacksmithAttemptedAtBreathingIndex;
         result.CursedRiftAttemptedAtBreathingIndex = this.CursedRiftAttemptedAtBreathingIndex;
-        result.ShrineAttemptedAtBreathingIndex = this.ShrineAttemptedAtBreathingIndex;
     }
   }
   [System.SerializableAttribute()]
@@ -4854,6 +4852,7 @@ namespace Quantum.Prototypes {
   public unsafe partial class WeaponWeightMasteryPrototype : ComponentPrototype<Quantum.WeaponWeightMastery> {
     public Quantum.QEnum8<WeaponWeight> Weight;
     public FP DamageMultiplier;
+    public QBoolean IgnoreMoveSpeedPenalty;
     partial void MaterializeUser(Frame frame, ref Quantum.WeaponWeightMastery result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponWeightMastery component = default;
@@ -4863,6 +4862,7 @@ namespace Quantum.Prototypes {
     public void Materialize(Frame frame, ref Quantum.WeaponWeightMastery result, in PrototypeMaterializationContext context = default) {
         result.Weight = this.Weight;
         result.DamageMultiplier = this.DamageMultiplier;
+        result.IgnoreMoveSpeedPenalty = this.IgnoreMoveSpeedPenalty;
         MaterializeUser(frame, ref result, in context);
     }
   }

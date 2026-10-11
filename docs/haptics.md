@@ -21,7 +21,8 @@ folders. Nothing outside `Scripts/Haptics/` references Lofelt.
 | --- | --- |
 | `Scripts/Haptics/Haptics.cs` | `HapticPreset` enum (None = 0), `HapticCue`, the static `Haptics` entry point: on/off pref (`haptics_enabled`, default on), per-cue cooldown, strength arbitration (a weaker preset never cuts a stronger one still playing). |
 | `Scripts/Haptics/HapticsConfig.cs` | Per-event cues; `Resources/HapticsConfig.asset` (falls back to code defaults if missing). |
-| `Scripts/Haptics/HapticsDirector.cs` | Self-installed (`RuntimeInitializeOnLoadMethod`, DontDestroyOnLoad, hidden): UI presses + gameplay events. Nothing to place in a scene. |
+| `Scripts/Haptics/HapticsDirector.cs` | Self-installed (`RuntimeInitializeOnLoadMethod`, DontDestroyOnLoad, hidden): UI presses (via `UiPressDetector.Pressed`) + gameplay events. Nothing to place in a scene. |
+| `Scripts/UI/Common/UiPressDetector.cs` | Self-installed: the UI press detection below, raised as a static `Pressed(GameObject)` event. Also drives `ButtonPressDirector` (squash-and-spring scale on every pressed button, layered multiplicatively over other scale animations). |
 | `Scripts/UI/Common/HapticsSettingRowWidget.cs` | Settings row: Toggle ↔ `Haptics.Enabled`, ON/OFF readout. Plays Success when switched on. |
 
 ## Events (HapticsConfig defaults)
@@ -43,7 +44,7 @@ folders. Nothing outside `Scripts/Haptics/` references Lofelt.
 
 "Local" = `MyLocalPlayer.IsLocalEntity` (every couch slot; never bots).
 
-**UI detection:** on a touch/mouse press, raycast the EventSystem and take the topmost hit's
+**UI detection (`UiPressDetector`):** on a touch/mouse press, raycast the EventSystem and take the topmost hit's
 `IPointerClickHandler`; on the UI module's submit action, the selected object's `ISubmitHandler` **as cached in the previous frame's LateUpdate** - Submit clicks on the press frame inside `EventSystem.Update`, which can run first and has already disabled the target (an upgrade card deactivates the moment it is picked), so reading the selection live missed gamepad A on upgrade cards. Must be an
 interactable `Selectable`, or a handler with none (custom cards). CF2's touch panel only implements pointer
 down/up, so the gameplay joystick/buttons never trigger it. Every touch is checked, not just the primary one.

@@ -8,6 +8,9 @@ component WeaponWeightMastery
 {
     WeaponWeight Weight;
     FP DamageMultiplier;
+    // Set at max rank when the line's IgnoreMoveSpeedPenaltyAtMaxRank is on - WeaponWeightUtility then
+    // skips the move-speed penalty of a weapon matching Weight (e.g. Heavy's -5%).
+    Boolean IgnoreMoveSpeedPenalty;
 }
 
 component ElementMastery

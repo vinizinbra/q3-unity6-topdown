@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56aeceed7fbac46f8ba83ad92cdd34ad, type: 3}
+  m_Name: Coop
+  m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
+  displayName: Co-op
+  kindLabel: SURVIVAL UPGRADE
+  description: Rescue downed teammates and keep fighting together. Ally revives stay
+    unlimited, but Downed time shrinks with each one.
+  icon: {fileID: 8102566695856649518, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
+  accentColor: {r: 0.003921569, g: 0.84313726, b: 0.6156863, a: 1}
+  category: 1
+  group: 3
+  maxLevel: 3
+  baseCost: 150
+  costStep: 50
+  valuePerLevel: 5
+  valueFormat: +{0}%
+  valueFormatPlural: 
+  levelInfos:
+  - title: Fast Rescue
+    description: Revive downed allies 20% faster.
+  - title: Last Stand
+    description: Stay Downed 20% longer before being eliminated.
+  - title: Rescue Recovery
+    description: Allies you revive recover 20% additional max HP.
+  talentKey: 
+  mockLevel: 0

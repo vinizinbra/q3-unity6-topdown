@@ -78,30 +78,30 @@ namespace Quantum
             new() { Key = CoopGlobalKey.EnemyDamage, P1 = FP._1, P2 = FP._1, P3 = FP.FromString("1.05"), P4 = FP.FromString("1.10") },
             new() { Key = CoopGlobalKey.DirectorBudget, P1 = FP._1, P2 = FP.FromString("1.70"), P3 = FP.FromString("2.40"), P4 = 3 },
             new() { Key = CoopGlobalKey.EliteFrequency, P1 = FP._1, P2 = FP.FromString("1.60"), P3 = FP.FromString("2.20"), P4 = FP.FromString("2.80") }, // reserved, no consumer yet
-            new() { Key = CoopGlobalKey.XpRequirement, P1 = FP._1, P2 = FP.FromString("1.60"), P3 = FP.FromString("2.20"), P4 = FP.FromString("2.80") },
+            new() { Key = CoopGlobalKey.XpRequirement, P1 = FP._1, P2 = FP.FromString("1.40"), P3 = FP.FromString("1.80"), P4 = FP.FromString("2.25") },
             // Scales the Director's hard caps (SurvivalPhase.TargetPressure / MaxAliveEnemies and
             // DirectorConfig.MaxPurchasesPerPulse) with player count. Without it a cohesive party
             // keeps solo caps: the extra DirectorBudget income can't be spent, spawn (and therefore
             // XP) throughput stays flat while XpRequirement climbs - co-op levelled slower than solo.
             // Consumed by PlayerClusterDirectorUtility.BuildAnchors / CombatDirectorUtility.TryPulse.
-            new() { Key = CoopGlobalKey.DirectorPressure, P1 = FP._1, P2 = FP.FromString("1.70"), P3 = FP.FromString("2.40"), P4 = 3 },
+            new() { Key = CoopGlobalKey.DirectorPressure, P1 = FP._1, P2 = FP.FromString("1.30"), P3 = FP.FromString("1.60"), P4 = FP.FromString("1.80") },
             // Every collected coin orb credits EVERY wallet (CurrencyOrbSystem.Grant ->
             // CoinUtility.GrantAll) while kills scale with the party, so per-wallet kill income would
             // rise with player count and co-op could afford the whole Break loop solo can't. Applied to
             // enemy kill drops only (CoinUtility.TrySpawnDrop) - barrel loot doesn't grow with the party
-            // - so each party size lands near the solo wallet. Sized for kills scaling ~x1.5/x2.0/x2.4.
-            new() { Key = CoopGlobalKey.CoinGain, P1 = FP._1, P2 = FP.FromString("0.65"), P3 = FP.FromString("0.50"), P4 = FP.FromString("0.42") },
+            // - so each party size lands near the solo wallet. Sized for kills scaling ~x1.25/x1.6/x1.9.
+            new() { Key = CoopGlobalKey.CoinGain, P1 = FP._1, P2 = FP.FromString("0.80"), P3 = FP.FromString("0.62"), P4 = FP.FromString("0.52") },
         };
 
         [Header("Co-op Scaling - Enemy HP (per Tier)")]
         public CoopHpRow[] CoopHp =
         {
-            new() { Tier = EnemyTier.Filler, P1 = FP._1, P2 = FP.FromString("1.15"), P3 = FP.FromString("1.25"), P4 = FP.FromString("1.35") },
-            new() { Tier = EnemyTier.Normal, P1 = FP._1, P2 = FP.FromString("1.15"), P3 = FP.FromString("1.25"), P4 = FP.FromString("1.35") },
-            new() { Tier = EnemyTier.Specialist, P1 = FP._1, P2 = FP.FromString("1.15"), P3 = FP.FromString("1.25"), P4 = FP.FromString("1.35") },
-            new() { Tier = EnemyTier.Heavy, P1 = FP._1, P2 = FP.FromString("1.35"), P3 = FP.FromString("1.60"), P4 = FP.FromString("1.85") },
-            new() { Tier = EnemyTier.Elite, P1 = FP._1, P2 = FP.FromString("1.50"), P3 = FP.FromString("1.90"), P4 = FP.FromString("2.30") },
-            new() { Tier = EnemyTier.Boss, P1 = FP._1, P2 = FP.FromString("1.70"), P3 = FP.FromString("2.20"), P4 = FP.FromString("2.60") },
+            new() { Tier = EnemyTier.Filler, P1 = FP._1, P2 = FP.FromString("1.25"), P3 = FP.FromString("1.40"), P4 = FP.FromString("1.50") },
+            new() { Tier = EnemyTier.Normal, P1 = FP._1, P2 = FP.FromString("1.30"), P3 = FP.FromString("1.45"), P4 = FP.FromString("1.55") },
+            new() { Tier = EnemyTier.Specialist, P1 = FP._1, P2 = FP.FromString("1.40"), P3 = FP.FromString("1.60"), P4 = FP.FromString("1.75") },
+            new() { Tier = EnemyTier.Heavy, P1 = FP._1, P2 = FP.FromString("1.55"), P3 = FP.FromString("1.80"), P4 = FP.FromString("2.05") },
+            new() { Tier = EnemyTier.Elite, P1 = FP._1, P2 = FP.FromString("1.70"), P3 = FP.FromString("2.05"), P4 = FP.FromString("2.35") },
+            new() { Tier = EnemyTier.Boss, P1 = FP._1, P2 = FP.FromString("1.80"), P3 = FP.FromString("2.40"), P4 = FP.FromString("2.80") },
         };
 
         private static FP GetChannelValue(RunCurveAnchor anchor, CurveChannel channel) => channel switch

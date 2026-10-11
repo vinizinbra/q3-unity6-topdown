@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56aeceed7fbac46f8ba83ad92cdd34ad, type: 3}
+  m_Name: StartingGold
+  m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
+  displayName: Starting Gold
+  kindLabel: ECONOMY UPGRADE
+  description: Start every run with Gold to buy gear earlier, without relying only
+    on combat income.
+  icon: {fileID: -1990552122927095940, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
+  accentColor: {r: 0.99215686, g: 0.7647059, b: 0.007843138, a: 1}
+  category: 1
+  group: 2
+  maxLevel: 3
+  baseCost: 150
+  costStep: 50
+  valuePerLevel: 5
+  valueFormat: +{0}%
+  valueFormatPlural: 
+  levelInfos:
+  - title: Starting Gold I
+    description: Start every run with 25 extra Gold.
+  - title: Starting Gold II
+    description: Extra starting Gold rises to 50.
+  - title: Starting Gold III
+    description: Extra starting Gold rises to 100.
+  talentKey: 
+  mockLevel: 0

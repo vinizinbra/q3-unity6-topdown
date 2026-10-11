@@ -8,8 +8,9 @@ using UnityEngine.UI;
 /// <summary>
 /// Catalog tab content: everything the player can run into - Enemies, Bosses, Rift Mutations - as
 /// grids of tiles grouped into sections (faction / rarity), with the selected entry's details on the right.
-/// The Enemies page has a world filter and a world banner. Tiles come from <see cref="CatalogEntryData"/>
-/// assets; one tile / section / chip prefab is instantiated per entry / group / world.
+/// The Enemies page has a world filter and a world banner. Enemies come from what each world actually spawns
+/// (WorldCatalog -> SurvivalConfig phases, see <see cref="BuildEnemyEntries"/>); bosses and mutations from the
+/// <see cref="CatalogEntryData"/> assets in <c>entries</c>. One tile / section / chip is cloned per entry / group / world.
 ///
 /// UI only: discovery and the encountered/defeated counters are mocked from each entry asset.
 /// </summary>
@@ -28,7 +29,8 @@ public class CatalogTab : TabContent
     }
 
     [Header("Data")]
-    [SerializeField] private List<CatalogEntryData> entries = new List<CatalogEntryData>();
+    [SerializeField, Tooltip("Bosses and Rift Mutations. Enemies are listed from the worlds' spawn data instead; an Enemy entry here only overrides that enemy's subtitle / icon / mock progress.")]
+    private List<CatalogEntryData> entries = new List<CatalogEntryData>();
 
     [Header("Templates (placed in the scene, cloned per item, hidden themselves)")]
     [SerializeField, Tooltip("A section placed in the first page's list.")] private CatalogSectionWidget sectionTemplate;
@@ -65,6 +67,9 @@ public class CatalogTab : TabContent
     [SerializeField] private TMP_Text[] statValues;
 
     private readonly List<Section> sections = new List<Section>();
+    // What the tab lists: the authored bosses/mutations plus one runtime entry per enemy (see BuildEnemyEntries).
+    private readonly List<CatalogEntryData> listed = new List<CatalogEntryData>();
+    private readonly List<CatalogEntryData> generated = new List<CatalogEntryData>();
     private readonly List<FilterChipWidget> chips = new List<FilterChipWidget>();
     private CatalogTileWidget selected;
     private int kind;
@@ -113,6 +118,14 @@ public class CatalogTab : TabContent
 
         ListTemplateUtility.Hide(sectionTemplate, tileTemplate, bossTileTemplate, chipTemplate);
 
+        listed.Clear();
+        foreach (CatalogEntryData entry in entries)
+        {
+            if (entry != null && entry.kind != CatalogKind.Enemy)
+                listed.Add(entry);
+        }
+        listed.AddRange(BuildEnemyEntries());
+
         for (int k = 0; k < KindCount; k++)
         {
             int number = 0;
@@ -143,12 +156,91 @@ public class CatalogTab : TabContent
         OnKindChanged(kindTabs.SelectedIndex >= 0 ? kindTabs.SelectedIndex : 0);
     }
 
+    // Enemies come from each world's own spawn data - every enemy a WorldCatalog world's SurvivalConfig can spawn
+    // (AllowedEnemies, AllowedGroups / GuaranteedGroup members, GuaranteedEnemyData) - so the list always matches
+    // what the game spawns. An enemy is listed under the first world that spawns it. Bosses are not (they come from
+    // a phase's BossPrototype, listed by their own entries). A CatalogEntryData in `entries` with the same source
+    // is copied for its subtitle / icon / mock progress; the copy, never the asset, gets the world.
+    private List<CatalogEntryData> BuildEnemyEntries()
+    {
+        var overrides = new Dictionary<Object, CatalogEntryData>();
+        foreach (CatalogEntryData entry in entries)
+        {
+            if (entry != null && entry.kind == CatalogKind.Enemy && entry.source != null)
+                overrides[entry.source] = entry;
+        }
+
+        var result = new List<CatalogEntryData>();
+        var seen = new HashSet<EnemyDataAsset>();
+        WorldCatalog catalog = WorldCatalog.Instance;
+        for (int w = 0; catalog != null && w < catalog.Worlds.Count; w++)
+        {
+            WorldDefinition world = catalog.Get(w);
+            if (world == null || !QuantumUnityDB.TryGetGlobalAsset(world.SurvivalConfig, out SurvivalConfig survival) || survival.Phases == null)
+                continue;
+
+            foreach (SurvivalPhase phase in survival.Phases)
+            {
+                if (phase.AllowedEnemies != null)
+                {
+                    foreach (EnemySpawnEntry spawn in phase.AllowedEnemies)
+                        AddEnemy(spawn.EnemyData, w);
+                }
+
+                if (phase.AllowedGroups != null)
+                {
+                    foreach (AssetRef<EnemyGroupConfig> group in phase.AllowedGroups)
+                        AddGroup(group, w);
+                }
+
+                AddGroup(phase.GuaranteedGroup, w);
+                AddEnemy(phase.GuaranteedEnemyData, w);
+            }
+        }
+
+        return result;
+
+        void AddGroup(AssetRef<EnemyGroupConfig> groupRef, int worldIndex)
+        {
+            if (!QuantumUnityDB.TryGetGlobalAsset(groupRef, out EnemyGroupConfig group) || group.Members == null)
+                return;
+            foreach (GroupMemberEntry member in group.Members)
+                AddEnemy(member.EnemyData, worldIndex);
+        }
+
+        void AddEnemy(AssetRef<EnemyDataAsset> enemyRef, int worldIndex)
+        {
+            if (!QuantumUnityDB.TryGetGlobalAsset(enemyRef, out EnemyDataAsset enemy) || enemy is BossDataAsset || !seen.Add(enemy))
+                return;
+
+            CatalogEntryData entry = overrides.TryGetValue(enemy, out CatalogEntryData authored)
+                ? Instantiate(authored)
+                : ScriptableObject.CreateInstance<CatalogEntryData>();
+            entry.name = authored != null ? authored.name : enemy.name;
+            entry.kind = CatalogKind.Enemy;
+            entry.source = enemy;
+            entry.worldIndex = worldIndex;
+            generated.Add(entry);
+            result.Add(entry);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        foreach (CatalogEntryData entry in generated)
+        {
+            if (entry != null)
+                Destroy(entry);
+        }
+        generated.Clear();
+    }
+
     // List order for bosses and mutations. Enemies are ordered from their own data instead: world, then the
     // faction's SortOrder, then tier (Filler first, Elite last), then name.
     private IEnumerable<CatalogEntryData> EntriesOf(CatalogKind of)
     {
         var result = new List<CatalogEntryData>();
-        foreach (CatalogEntryData entry in entries)
+        foreach (CatalogEntryData entry in listed)
         {
             if (entry != null && entry.kind == of)
                 result.Add(entry);
@@ -326,7 +418,7 @@ public class CatalogTab : TabContent
     private void RefreshDiscoveredTotal()
     {
         int found = 0, total = 0;
-        foreach (CatalogEntryData entry in entries)
+        foreach (CatalogEntryData entry in listed)
         {
             if (entry == null)
                 continue;

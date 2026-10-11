@@ -75,7 +75,7 @@ it through `BotNavigation`, then lets `BotSkillUtility` decide Dash/Hero Skill. 
 | Goal | When | What it does |
 | --- | --- | --- |
 | Revive | A Downed teammate within 40 that nobody else is holding | Walks onto them, holds Hero Skill once `ContextInteraction` reports the Revive Available |
-| Interact | Breathing, `BreathingAreaSecured`, no enemy within 6, a POI still wanted this Break | Walks into the POI's radius, then `BotPoiUtility.Use` |
+| Interact | No enemy within 6, and either Breathing + `BreathingAreaSecured` with a POI still wanted this Break, or **Survival** with a usable Healing Shrine (`AvailableInCombat`, off cooldown) within LeaderMaxDistance of the leader and Health < 50 % | Walks into the POI's radius, then `BotPoiUtility.Use` |
 | Retreat | Health < `RetreatHealthFraction` with an enemy within 6 | Moves along the threat direction, pulled toward the leader |
 | Follow (regroup) | Leader further than `LeaderMaxDistance` | Back to the formation slot until within FollowDistance+Slack |
 | Loot (close) | A pickup within 4 and no enemy within 3 | Walks onto it |
@@ -120,15 +120,21 @@ away from the threat, trying ±30/60/90°; or to **catch up** to a leader >12 aw
 it's already safely walking with no enemy within 6. Both require `IsDashLandingSafe` (end point,
 both sides of it, and the midpoint all standable).
 
-### Breathing POIs (BotPoiUtility)
+### POIs (BotPoiUtility)
 
 Opened, decided and closed **in the same tick** through each POI's own utility (no ChooseWindow
-flashes on the bot's client), each kind once per Break (`*AttemptedAtBreathingIndex`):
+flashes on the bot's client). Store/Blacksmith/Cursed Rift once per Break (`*AttemptedAtBreathingIndex`):
 
-- **Store** - only the weapon level-up, only if affordable. Never buys a new weapon (a random swap
-  would throw away the hero's picks/perks mid-test).
+- **Store** - in order: a `HealFoodOfferData` offer if below 70 % Health; the accessory service
+  (`AccessoryServiceUtility` replacement/repair, one point per purchase until full or out of Coins);
+  the weapon level-up. Visited when any of those is affordable (a hurt bot with Coins also goes
+  before the Break's food inventory is rolled). Never buys a new weapon (a random swap would throw
+  away the hero's picks/perks mid-test).
 - **Blacksmith** - cheapest affordable perk on offer, else walks away free.
-- **Healing Shrine** - below 80 % Health.
+- **Healing Shrine** - no per-Break guard: used whenever `HealingShrineUtility.ResolveInteractionState`
+  is Available (its own `PoiUsagePolicy`/cooldown decides reuse). Breathing: below 80 % Health.
+  Mid-Survival (shrine authored `AvailableInCombat`): below 50 % Health, no enemy within 6, shrine
+  within LeaderMaxDistance of the leader. The only POI a bot leaves a fight for.
 - **Cursed Rift** - always confirms the rolled sacrifice.
 
 Each can be turned off in `RuntimeConfig.Bots` (`DisableStore`, ...). Level-ups, the Breathing skip

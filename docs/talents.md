@@ -350,3 +350,20 @@ raises this over time"). Building that screen is out of scope for this pass.
    (`PlayerMaxHealthLevel`/`PlayerMaxShieldLevel` specifically need their `RefreshMaxHealth`/
    `RefreshMaxShield` calls to actually show up on `Health`/`Shield`, not just on `CharacterStats`
    itself).
+
+## Exploration upgrade lines ("Rift Jumpers" v1.0) - UI placeholder
+
+The menu's Upgrades tab > Exploration list shows 11 lines / 34 levels (Equipment: Store 3, Gunsmith 4,
+Weapons 5; World: Challenges 2, Healing Shrine 3, Sacrifice Rift 2, Rift Anchor/Base 3; Economy:
+Starting Gold 3, Rerolls 2; Survival: Revive 4, Co-op 3). **UI only - no line drives the simulation yet**,
+and none maps to a `RuntimePlayer.Talents` field (`talentKey` empty). The old `HasWeaponChest`/`HasHeroChest`/
+`HasGlobalUpgradeChest`/`HasUnlockedRift`/`CanFindStones`/`HasEvent` talents stay scaffolded but no longer
+have a UI line.
+
+- Each line is a `PermanentUpgradeData` with `levelInfos[]` (title + description per level). With it set,
+  CURRENT/NEXT show level titles ("Locked" at 0) and the detail text describes the next level.
+- Source of truth for the texts/costs is the table in `Scripts/UI/Menu/Upgrades/Editor/ExplorationUpgradesGenerator.cs`
+  (Tools > RiftRaiders > Upgrades > Rebuild Exploration Upgrades): regenerates the assets and rewires
+  `UpgradesTab.upgrades` in the open scene (save the scene afterwards). Costs are placeholders (150 + 50/level).
+- Open design questions carried from the spec: Revive L1 vs the solo mode's built-in revive (adds to it or
+  replaces it?), and the final Revive Recovery HP value. Gunsmith Reroll is independent from the general Rerolls line.

@@ -6,6 +6,14 @@ public enum PermanentUpgradeCategory
     Exploration
 }
 
+/// <summary>Name + text of one level of a multi-step upgrade (Exploration lines: "Unlock Store", "Store Restock"...).</summary>
+[System.Serializable]
+public struct PermanentUpgradeLevelInfo
+{
+    public string title;
+    [TextArea(2, 4)] public string description;
+}
+
 /// <summary>
 /// One permanent (meta-progression) upgrade as the Upgrades tab presents it: name, icon, levels, cost,
 /// and how its value reads. UI-facing only for now - it carries no gameplay. It is meant to be translated
@@ -50,6 +58,11 @@ public class PermanentUpgradeData : ScriptableObject
     [Tooltip("Optional format for any level other than 1 (e.g. {0} chests).")]
     public string valueFormatPlural;
 
+    [Header("Per-level info (optional)")]
+    [Tooltip("Index 0 = level 1. When filled, the detail panel shows the owned and the next level (title + description) "
+             + "instead of numeric CURRENT/NEXT values. Keep its length equal to Max Level.")]
+    public PermanentUpgradeLevelInfo[] levelInfos;
+
     [Header("Talent mapping (future)")]
     [Tooltip("Name of the talent field this drives, e.g. PlayerDamageLevel or HasWeaponChest. Informational until save data exists.")]
     public string talentKey;
@@ -61,8 +74,16 @@ public class PermanentUpgradeData : ScriptableObject
 
     public int CostFor(int level) => baseCost + costStep * Mathf.Max(0, level);
 
+    public bool HasLevelInfo => levelInfos != null && levelInfos.Length > 0;
+
+    /// <summary>The info of level <paramref name="level"/> (1-based), clamped to the authored levels.</summary>
+    public PermanentUpgradeLevelInfo LevelInfo(int level) => levelInfos[Mathf.Clamp(level, 1, levelInfos.Length) - 1];
+
     public string ValueLabel(int level)
     {
+        if (HasLevelInfo)
+            return level <= 0 ? "Locked" : levelInfos[Mathf.Min(level, levelInfos.Length) - 1].title;
+
         string format = level != 1 && !string.IsNullOrEmpty(valueFormatPlural) ? valueFormatPlural : valueFormat;
         return string.Format(format, (valuePerLevel * level).ToString("0.##"));
     }

@@ -204,3 +204,30 @@ passes through) was considered and rejected: `SpawnEntitySkillAction.ApplyScale`
 `SpawnVortexEffectData` both already multiply the collider themselves and would have double-applied,
 and the spawner has no `SkillSlot` to fold `slot->AreaMultiplier` in with. Per-site remains the
 codebase's existing idiom.
+
+## 2026-10-11 — Base Hero Skill damage raised to ~30% of weapon DPS
+
+Once cooldown is counted, base Hero Skills dealt 1–9% of the starting weapon's DPS against one target.
+Weapons sit near 100 burst DPS. The skill numbers had been sized against the old 50 DPS weapon baseline.
+The new target is about **30% of weapon DPS against one target**: ~30 skill DPS, or ~450 per cast on a 15 s
+cooldown. Area skills hitting ~3 targets land close to weapon DPS.
+
+This was done by retuning each skill's authored values. `CharacterData.SkillDamageMultiplier` stays at
+1.0, because card descriptions print the raw asset numbers (`DescriptionUtility.Format` applies no stats).
+
+| Hero | Asset / field | Old → New |
+|---|---|---|
+| Pixie | `PixieBaseSkill` `Damage` (and its description text) | 100 → 450 |
+| Brute | `BruteBaseSkill-Juggernaut` `Damage` (per discharge) | 30 → 120 |
+| Zara | `ZaraBaseSkill` `Damage` basis + `SpawnAlternatingAreaEffectData.DamageAmount` (per beat) | 10 → 60 |
+| Kai | `KaiVortexSkill` `Damage` (cast hit + Ascension basis) | 20 → 100 |
+| Lux | `LuxSkill` `SpawnSentrySkillAction.SkillDamage` (Ascension basis) | 50 → 150 |
+| Lux | `LuxSentryBase` / `Laser` / `Minigun` / `Rocket` weapon `Damage` | 6/3/2/12 → 20/10/7/40 |
+| Max | `MaxHeroSkill` `FireRateBonus` / `Cooldown` | 0.5 / 18 → 0.75 / 15 |
+
+- Every Ascension that scales as a percentage of its skill's damage basis grows by the same factor. That is
+  intended, because those Ascensions were also sized against the old tiny bases.
+- **Kai stays below target on purpose** (~7% against one target). His base vortex is crowd control with no
+  damage of its own (see `VortexSystem.cs`), and his Ascensions are ×5.
+- The Zara speaker prefabs' `DamageAmount` is overwritten at spawn (`SpawnAlternatingAreaEffectData`), so
+  the prefabs were left alone.

@@ -19,7 +19,7 @@ MonoBehaviour:
   DisplayName: 
   FireType: 1
   Damage:
-    RawValue: 786432
+    RawValue: 2621440
   Element: 0
   Family: 0
   Weight: 0

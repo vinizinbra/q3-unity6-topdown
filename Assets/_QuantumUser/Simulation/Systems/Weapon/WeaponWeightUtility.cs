@@ -8,23 +8,35 @@ namespace Quantum
     // lives here instead, alongside it, so the two never duplicate each other's resolution logic.
     public static unsafe class WeaponWeightUtility
     {
-        private static readonly FP LightMoveSpeedMultiplier = FP.FromString("1.10");
-        private static readonly FP HeavyMoveSpeedMultiplier = FP.FromString("0.90");
+        private static readonly FP LightMoveSpeedMultiplier = FP.FromString("1.05");
+        private static readonly FP HeavyMoveSpeedMultiplier = FP.FromString("0.95");
 
         // Read by PlayerMovementProcessor.BeforeMove, the same "targetSpeed *= X.ResolveY(...)" idiom
         // every other move-speed contributor there already uses (CharacterStats/StatusEffect/
         // MutationModifier) - 1x (no effect) for Medium or for an owner with no equipped weapon.
+        // A max-rank Weight Mastery with IgnoreMoveSpeedPenalty (Brute/Kai Heavy R3) cancels the
+        // penalty of a matching weapon; bonuses are never cancelled.
         public static FP GetMoveSpeedMultiplier(Frame f, EntityRef owner)
         {
             if (f.Unsafe.TryGetPointer<Weapon>(owner, out var weapon) == false || weapon->WeaponData.IsValid == false)
                 return FP._1;
 
-            switch (f.FindAsset(weapon->WeaponData).Weight)
+            var weight = f.FindAsset(weapon->WeaponData).Weight;
+            FP multiplier;
+            switch (weight)
             {
-                case WeaponWeight.Light: return LightMoveSpeedMultiplier;
-                case WeaponWeight.Heavy: return HeavyMoveSpeedMultiplier;
+                case WeaponWeight.Light: multiplier = LightMoveSpeedMultiplier; break;
+                case WeaponWeight.Heavy: multiplier = HeavyMoveSpeedMultiplier; break;
                 default: return FP._1;
             }
+
+            if (multiplier < FP._1
+                && f.Unsafe.TryGetPointer<WeaponWeightMastery>(owner, out var mastery)
+                && mastery->IgnoreMoveSpeedPenalty
+                && mastery->Weight == weight)
+                return FP._1;
+
+            return multiplier;
         }
     }
 }

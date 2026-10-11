@@ -20,6 +20,9 @@ namespace Quantum
         [Tooltip("R1/R2/R3 total damage multiplier (0.15 = +15%). Cumulative totals, not stacked deltas - see PassiveUpgradeData.Apply(rank)'s own comment.")]
         public FP[] DamageMultiplierPerRank = { FP.FromString("0.15"), FP.FromString("0.30"), FP._0_50 };
 
+        [Tooltip("At max rank, a weapon of this Weight no longer slows the hero (WeaponWeightUtility's move-speed penalty is skipped).")]
+        public bool IgnoreMoveSpeedPenaltyAtMaxRank;
+
         public sealed override void Apply(Frame f, EntityRef entity, int rank)
         {
             int index = System.Math.Clamp(rank, 1, MaxRank) - 1;
@@ -27,6 +30,7 @@ namespace Quantum
             f.AddOrGet<WeaponWeightMastery>(entity, out var mastery);
             mastery->Weight = Weight;
             mastery->DamageMultiplier = DamageMultiplierPerRank[index];
+            mastery->IgnoreMoveSpeedPenalty = IgnoreMoveSpeedPenaltyAtMaxRank && rank >= MaxRank;
 
             ApplyRank(f, entity, rank);
         }

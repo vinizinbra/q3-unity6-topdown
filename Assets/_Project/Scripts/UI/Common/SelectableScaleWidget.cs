@@ -19,8 +19,8 @@ using UnityEngine.EventSystems;
 // Transform still work.
 public class SelectableScaleWidget : MonoBehaviour, ISelectHandler, IDeselectHandler
 {
-    [SerializeField, Tooltip("Target scale while selected, as a multiplier of this Transform's resting localScale (captured right before scaling up, never mid-animation).")]
-    private float selectedScaleMultiplier = 1.05f;
+    [SerializeField, Tooltip("Target scale while selected, per axis, as a multiplier of this Transform's resting localScale (captured right before scaling up, never mid-animation). (1, 1.05, 1) grows taller only.")]
+    private Vector3 selectedScale = new Vector3(1.05f, 1.05f, 1.05f);
     [SerializeField, Tooltip("The point that stays put while scaling, normalized in the rect: (0.5, 0.5) = center, (0.5, 0) = bottom edge (tabs grow upwards).")]
     private Vector2 scaleOrigin = new Vector2(0.5f, 0.5f);
     [SerializeField] private float duration = 0.12f;
@@ -82,7 +82,7 @@ public class SelectableScaleWidget : MonoBehaviour, ISelectHandler, IDeselectHan
         if (_wantSelected)
             _baseScale = transform.localScale;
 
-        Vector3 targetScale = _wantSelected ? _baseScale * selectedScaleMultiplier : _baseScale;
+        Vector3 targetScale = _wantSelected ? Vector3.Scale(_baseScale, selectedScale) : _baseScale;
         _scaleTween = Tween.Custom(this, transform.localScale, targetScale, duration,
             (widget, scale) => widget.ApplyScale(scale), ease, useUnscaledTime: useUnscaledTime);
 
