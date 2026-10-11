@@ -27,7 +27,7 @@ MonoBehaviour:
       RawValue: 65536
   Stats:
     MoveSpeed:
-      RawValue: 196608
+      RawValue: 294912
     Height:
       InitialState: 0
       FlightHeight:
@@ -205,7 +205,7 @@ MonoBehaviour:
       Value: 3375276496043664738
   Name: 
   EngageRange:
-    RawValue: 131072
+    RawValue: 163840
   DamageRange:
     RawValue: 196608
   Damage:
@@ -216,9 +216,9 @@ MonoBehaviour:
   IgnoreY: 1
   Origin: 1
   DownTime:
-    RawValue: 65536
+    RawValue: 32768
   CooldownTime:
-    RawValue: 65536
+    RawValue: 39322
   TelegraphStartPercent:
     RawValue: 32768
   Trigger:

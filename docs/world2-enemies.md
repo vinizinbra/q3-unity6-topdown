@@ -85,6 +85,11 @@ even when it catches nobody. Before, per-target `ApplyToTarget` ran them once pe
 player's feet (and DetonateAtCorpse skipped them entirely). No existing action used a spawn effect on this
 delivery, so nothing else changed.
 
+**2026-10-11:** `DetonateWhenKilled` is now off (code default + W1-Suicider, W2-FuelRunner,
+`SelfDestructDelivery`) - killing a self-destructer before its windup cancels the blast entirely (it
+was near-certain death when killed point-blank). `DetonateAtCorpse` only runs again if an asset
+re-enables the flag.
+
 ## Kinematic movement (`EnemyMovementData.IsKinematic`)
 Generic, reusable by any enemy (turrets, totems, an "immovable" elite later). A movement asset whose
 `IsKinematic` is true (base default false; `StationaryMovementData` overrides it) makes

@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 2343091545615948530
   MinRandomOffset:
-    RawValue: -458752
+    RawValue: 131072
   MaxRandomOffset:
     RawValue: 458752
   SpawnAnchor: 0
@@ -40,7 +40,7 @@ MonoBehaviour:
   MaxLeadDistance:
     RawValue: 262144
   ShellCount: 5
-  AimedShellCount: 3
+  AimedShellCount: 1
   Stagger:
     RawValue: 32768
 --- !u!114 &-1536457840295626355
@@ -98,7 +98,7 @@ MonoBehaviour:
   DamageRange:
     RawValue: 196608
   Damage:
-    RawValue: 1638400
+    RawValue: 1310720
   AnticipationTime:
     RawValue: 32768
   DirectionTracking: 2
@@ -107,7 +107,7 @@ MonoBehaviour:
   DownTime:
     RawValue: 32768
   CooldownTime:
-    RawValue: 85197
+    RawValue: 163840
   TelegraphStartPercent:
     RawValue: 32768
   Trigger:

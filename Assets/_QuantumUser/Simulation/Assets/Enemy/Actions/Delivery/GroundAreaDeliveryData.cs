@@ -43,8 +43,10 @@ namespace Quantum
         // of just dying quietly. Same Damage/DamageRange/Effects as its own attack, but that blast
         // catches whoever's in range on EITHER side (KilledDetonationTargets) - shooting a
         // Suicider next to its pack is the point. Kept separate from the self-triggered blast in
-        // Begin() below, which still only ever hits players.
-        public bool DetonateWhenKilled = true;
+        // Begin() below, which still only ever hits players. Off by default and on every shipped
+        // asset (Suicider/Fuel Runner/SelfDestructDelivery): killing one in your face was a
+        // near-guaranteed down, so a kill before its own windup now cancels the blast.
+        public bool DetonateWhenKilled = false;
         public DamageTargetMask KilledDetonationTargets = DamageTargetMask.Both;
 
         // 0 (the default) keeps every existing asset's exact prior behavior - FindPlayersInRadius

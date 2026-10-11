@@ -13,52 +13,54 @@ MonoBehaviour:
   m_Name: MenuTips
   m_EditorClassIdentifier: Assembly-CSharp::TipsData
   tips:
-  - A downed teammate can't be hit, but they are bleeding out. <color=#FD3971>Hold
-    interact</color> next to them to revive - the timer pauses while you do.
-  - Downed for too long means <color=#FD3971>KO</color>. A KO'd Raider can't be revived
+  - A downed teammate can't be hit, but they are bleeding out. <b><color=#FD3971>Hold
+    interact</color></b> next to them to revive - the timer pauses while you do.
+  - Downed for too long means <b><color=#FD3971>KO</color></b>. A KO'd Raider can't be revived
     - they return once the team clears the area.
-  - Your <color=#FD3971>accessory</color> blocks one hit, then pops off. Walk over
+  - Your <b><color=#FD3971>accessory</color></b> blocks one hit, then pops off. Walk over
     and pick it up to wear it again.
-  - While you have <color=#FD3971>Shield</color>, hits eat the Shield first and your
+  - While you have <b><color=#FD3971>Shield</color></b>, hits eat the Shield first and your
     accessory stays on. Shield is earned in battle - it never recharges on its own.
-  - During a Break you can pay <color=#FD3971>Coins</color> to repair a damaged accessory.
+  - During a Break you can pay <b><color=#FD3971>Coins</color></b> to repair a damaged accessory.
     The more damaged it is, the higher the price.
-  - '<color=#FD3971>Breathing Breaks</color> are your safe moment: heal at the Shrine,
+  - '<b><color=#FD3971>Breathing Breaks</color></b> are your safe moment: heal at the Shrine,
     shop at the Store, upgrade at the Blacksmith.'
-  - Once the area is secured, the team can <color=#FD3971>vote to skip</color> the
+  - Once the area is secured, the team can <b><color=#FD3971>vote to skip</color></b> the
     rest of the Break.
-  - You can't afford everything at the Store and Blacksmith. The <color=#FD3971>Blacksmith</color>
+  - You can't afford everything at the Store and Blacksmith. The <b><color=#FD3971>Blacksmith</color></b>
     adds a perk to the weapon you are holding - choose wisely.
-  - 'Mix elements for <color=#FD3971>reactions</color>: Fire + Ice is Thermal Shock,
+  - 'Mix elements for <b><color=#FD3971>reactions</color></b>: Fire + Ice is Thermal Shock,
     Fire + Lightning is Overload, Ice + Lightning is Shatter.'
-  - <color=#FD3971>Burn</color> stacks for damage, <color=#FD3971>Chill</color> slows
-    more with every hit until the enemy freezes, and <color=#FD3971>Shock</color>
+  - <b><color=#FD3971>Burn</color></b> stacks for damage, <b><color=#FD3971>Chill</color></b> slows
+    more with every hit until the enemy freezes, and <b><color=#FD3971>Shock</color></b>
     sets up a stun on the next electric hit.
-  - A <color=#FD3971>Cursed Rift</color> offers a Rift Mutation, but you pay a price
+  - A <b><color=#FD3971>Cursed Rift</color></b> offers a Rift Mutation, but you pay a price
     for it. Read the card before you take it.
-  - <color=#FD3971>Rift Mutations</color> are rare, can't be stacked, and bend your
+  - <b><color=#FD3971>Rift Mutations</color></b> are rare, can't be stacked, and bend your
     whole run. Pick the ones that fit your build.
   - 'Level-ups pause the action: pick one of three cards. Don''t like them? Spend
-    a <color=#FD3971>Reroll</color> if you have one.'
-  - Some <color=#FD3971>Elites</color> carry a chest. Take them down - or chase them
+    a <b><color=#FD3971>Reroll</color></b> if you have one.'
+  - Some <b><color=#FD3971>Elites</color></b> carry a chest. Take them down - or chase them
     - to claim it.
-  - 'Hold <color=#FD3971>Tab</color> (Select on a gamepad) to see everything you
+  - 'Hold <b><color=#FD3971>Tab</color></b> (Select on a gamepad) to see everything you
     are running: skill, passive, perks and upgrades.'
-  - Press <color=#FD3971>M</color> (R2 on a gamepad) to open the full minimap and
+  - Press <b><color=#FD3971>M</color></b> (R2 on a gamepad) to open the full minimap and
     plan your next move.
-  - '<color=#FD3971>Team Challenges</color> are optional: every Raider must Ready
+  - '<b><color=#FD3971>Team Challenges</color></b> are optional: every Raider must Ready
     up inside the area. Win and the whole team earns a Rift Mutation.'
-  - A <color=#FD3971>Traversal Challenge</color> needs the whole team to cross the
+  - A <b><color=#FD3971>Traversal Challenge</color></b> needs the whole team to cross the
     gaps before the timer runs out. Don't leave anyone behind.
-  - More Raiders means tougher enemies and more XP per level. <color=#FD3971>Cover
-    each other</color> - the game scales with your squad.
-  - '<color=#FD3971>Dash</color> is an escape button: use it to slip out of a swarm.
+  - More Raiders means tougher enemies and more XP per level. <b><color=#FD3971>Cover
+    each other</color></b> - the game scales with your squad.
+  - '<b><color=#FD3971>Dash</color></b> is an escape button: use it to slip out of a swarm.
     It gets its own upgrades as you level.'
-  - 'Every hero grows through <color=#FD3971>Ascensions</color>: one line for a weapon
+  - 'Every hero grows through <b><color=#FD3971>Ascensions</color></b>: one line for a weapon
     weight, one for an element. Rank 3 unlocks a special effect.'
+  - Hero upgrades have <b><color=#FD3971>3 ranks</color></b>. Rank 3 usually unlocks something
+    special - worth sticking with.
   - 'Weapons come in six families: Pistol, SMG, Assault Rifle, Shotgun, Sniper and
-    Grenade Launcher. See them all in the <color=#FD3971>Loadout</color> tab.'
-  - 'Every weapon has a <color=#FD3971>Weight</color>: Light, Medium or Heavy. Light
+    Grenade Launcher. See them all in the <b><color=#FD3971>Loadout</color></b> tab.'
+  - 'Every weapon has a <b><color=#FD3971>Weight</color></b>: Light, Medium or Heavy. Light
     weapons make you move faster, Heavy ones slow you down.'
-  - Heavy weapons hit hard but slow you down. <color=#FD3971>Brute</color> and <color=#FD3971>Kai</color>
+  - Heavy weapons hit hard but slow you down. <b><color=#FD3971>Brute</color></b> and <b><color=#FD3971>Kai</color></b>
     lose the slowdown at Heavy Mastery rank 3.
