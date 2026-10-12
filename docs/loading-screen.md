@@ -137,6 +137,36 @@ Two guards either side of it:
 failsafe. `Hide()` stops the fade tween, so a window that pre-empts this one (the failure path's
 `MainMenuWindow`) can never be replaced by a late `InMatchWindow` from a tween callback.
 
+### Match-start spawn intro (`HeroSpawnIntroManager`, 2026-10-11)
+
+With a `HeroSpawnIntroManager` in the gameplay scene, the hand-off no longer waits for the local
+hero: the screen lifts as soon as the stage reaches **Entering** (chunk views built + shore bake
+done), onto a looping portal at `Global.PlayerSpawnPosition`, and the heroes arrive on screen.
+Without the component, behaviour is exactly as described above.
+
+View-only, no sim change - heroes still spawn at `PlayerSpawnUtility.IsReadyToSpawn`. The manager
+only decides when each hero becomes *visible* on this client:
+
+- Every `CharView` registers in `Initialize`; only heroes registered while `GameState.Lobby` and
+  before the intro finished are held, so a mid-run reconnect never replays an arrival.
+- Held heroes are hidden like a pending fall-respawn (`BlobAnimationView` roots,
+  `WeaponViewController` socket, `CharacterUiWidget`) via `HeroSpawnIntroManager.IsHidden`.
+- While `WaterShoreBaker.IsLoadingScreenUp`, nothing reveals. After it drops: first reveal after
+  `firstRevealDelay`, then one launch per `revealStagger`. With a `travelEffectPrefab`, a particle
+  flies portal -> hero (`travelDuration`, `travelArcHeight` arc, homing on the hero's live sim
+  position) and the hero is revealed when it lands; without one, the reveal is immediate. Each reveal
+  plays `heroSpawnEffectPrefab` through `EffectsManager`'s pool, its UP aimed at the portal
+  (`aimHorizontally` flattens that to the ground plane), + the revive punch-scale
+  (`BlobAnimationView.PunchFromRest`).
+- Portal closes (stop emitting, destroy after `portalDestroyDelay`) once every player with
+  RuntimePlayer data has spawned and been revealed + `portalLingerAfterLastHero`, or on leaving
+  Lobby, or after `portalMaxDuration` since the screen lifted (reveals everyone left).
+- Camera: `FollowCamera.SetIdleFocus` snaps onto the spawn point behind the screen; it is only framed
+  while the camera has no targets, so the local hero takes over as soon as its view registers.
+
+Authoring: add `HeroSpawnIntroManager` next to `EffectsManager` in the gameplay scene; assign a
+**looping** `Portal Prefab` (not pooled) and a **non-looping** `Hero Spawn Effect Prefab` (pooled).
+
 ## Editor authoring
 
 Run **`Tools > RiftRaiders > Create Loading Window`** with the menu scene open (`MenuScene`, the one

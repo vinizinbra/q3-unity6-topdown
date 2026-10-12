@@ -3,6 +3,7 @@ using NaughtyAttributes;
 using PrimeTween;
 using Quantum;
 using QuantumUser.View;
+using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
@@ -189,7 +190,7 @@ public class LoadingWindow : UiWindow
         if (_elapsed < minimumDisplayDuration)
             return;
 
-        if (IsWorldReady(frame) == true)
+        if (IsWorldReady(frame, stage) == true)
         {
             HandOff();
             return;
@@ -213,12 +214,19 @@ public class LoadingWindow : UiWindow
     // slow device it can still be running when the hero appears - lifting the screen then would
     // reveal water with no shoreline foam, which then pops in. No baker in the scene = not pending.
     // The maximumDisplayDuration failsafe still applies, so a stuck bake can't trap the player.
-    private bool IsWorldReady(Frame frame)
+    //
+    // With a HeroSpawnIntroManager in the scene it doesn't wait for the hero at all: the screen lifts
+    // as soon as the world is built (Entering stage), onto the spawn portal, and the heroes arrive
+    // on screen - the manager keeps any hero that spawned earlier hidden until this has lifted.
+    private bool IsWorldReady(Frame frame, LoadingStage stage)
     {
         if (WaterShoreBaker.IsBakePending == true)
             return false;
 
         if (MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.AnyLocalPlayerSetup == true)
+            return true;
+
+        if (stage == LoadingStage.Entering && HeroSpawnIntroManager.Instance != null)
             return true;
 
         return frame != null && PlayerSpawnUtility.IsReadyToSpawn(frame);

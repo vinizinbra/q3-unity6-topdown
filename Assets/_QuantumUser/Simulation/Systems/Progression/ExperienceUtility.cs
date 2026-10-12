@@ -10,13 +10,15 @@ namespace Quantum
         // Called from DamageUtility.ApplyDamage right where it fires EntityDied, for every dying
         // entity regardless of tier - owner is whoever landed the killing hit, same value the
         // EntityDied event just carried. EntityRef.None means there was no traceable instigator
-        // (fall/void death, an un-authored level hazard - see EnemySystem.CheckFallDeath and
-        // AreaDamageSystem.ResolveOwner), which is exactly the case this refuses to drop for. A
-        // player-owned hazard (e.g. a skill's fire trail) still carries a real owner and still
-        // drops, since the kill IS player-caused.
-        public static void TrySpawnDrop(Frame f, EntityRef target, EntityRef owner)
+        // (an un-authored level hazard - see AreaDamageSystem.ResolveOwner), which this refuses to
+        // drop for. A player-owned hazard (e.g. a skill's fire trail) still carries a real owner and
+        // still drops, since the kill IS player-caused. The one ownerless exception is a fall death
+        // (EnemySystem.CheckFallDeath, fellOffLevel = true) - the enemy was almost always knocked or
+        // lured off, so it still pays out. position is where the drop lands: the corpse, or the
+        // nearest platform for a fall death (see DamageUtility.ResolveDeath).
+        public static void TrySpawnDrop(Frame f, EntityRef target, EntityRef owner, FPVector3 position, bool fellOffLevel)
         {
-            if (owner == EntityRef.None)
+            if (owner == EntityRef.None && fellOffLevel == false)
                 return;
 
             // No XP drops at all while a Boss encounter is active (GameState.Boss - see
@@ -45,14 +47,11 @@ namespace Quantum
                 return;
             }
 
-            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
-                return;
-
             EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.ExpOrbPrototype);
 
             if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == true)
             {
-                orbTransform->Position = targetTransform->Position;
+                orbTransform->Position = position;
                 GroundOffsetUtility.Apply(f, orb);
             }
 

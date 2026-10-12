@@ -23,7 +23,7 @@ namespace Quantum
         [SerializeField, Tooltip("Shown only while State == Active (Breathing, still usable by someone) - active glow/light/core.")]
         private GameObject activeVisual;
 
-        [SerializeField, Tooltip("Shown only while State == Expired (Breathing, but every connected player already used it this Break).")]
+        [SerializeField, Tooltip("Shown only while State == Expired (Breathing, but this client's own local player(s) already used it / are on cooldown - see PoiLocalViewState).")]
         private GameObject expiredVisual;
 
         [SerializeField]
@@ -38,7 +38,9 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<PoiActivation>(_entityRef, out var activation) == false)
                 return;
 
-            PoiViewState state = activation->State;
+            // Local, not shared: dims for this client once its own player(s) can't use it, even
+            // while a teammate still can - see PoiLocalViewState.
+            PoiViewState state = PoiLocalViewState.Resolve(f, _entityRef, activation->State);
 
             if (_lastState.HasValue && _lastState.Value == state)
                 return;

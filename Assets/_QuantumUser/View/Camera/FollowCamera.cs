@@ -81,6 +81,11 @@ public class FollowCamera : MonoBehaviour
     // normal multi-player framing exactly where it would have been anyway.
     private Transform _focusOverrideTarget;
 
+    // Fallback point framed only while there are NO targets at all - the match-start intro, between
+    // the level existing and the local hero's view registering (see HeroSpawnIntroManager). Any
+    // target takes over from it, so it never fights normal framing.
+    private Vector3? _idleFocus;
+
     // The scene this camera was loaded with (QuantumGameScene). Captured in Awake so the guard can
     // tell "still where I belong" apart from "someone moved me into DontDestroyOnLoad".
     private Scene _homeScene;
@@ -261,6 +266,20 @@ public class FollowCamera : MonoBehaviour
         _smoothedPosition = center + offset * _zoom;
     }
 
+    // Snaps by default - set behind the loading screen, so the world is revealed already framed.
+    public void SetIdleFocus(Vector3 point, bool snap = true)
+    {
+        _idleFocus = point;
+
+        if (snap == true && _targets.Count == 0 && _focusOverrideTarget == null)
+            _smoothedPosition = point + offset * _zoom;
+    }
+
+    public void ClearIdleFocus()
+    {
+        _idleFocus = null;
+    }
+
     private void Update()
     {
         if (EnforceHomeScene() == false)
@@ -269,16 +288,23 @@ public class FollowCamera : MonoBehaviour
         Vector3 center;
         float spread;
 
+        _targets.RemoveAll(t => t == null);
+
         if (_focusOverrideTarget != null)
         {
             center = _focusOverrideTarget.position;
             spread = 0f;
         }
+        else if (_targets.Count == 0)
+        {
+            if (_idleFocus.HasValue == false)
+                return;
+
+            center = _idleFocus.Value;
+            spread = 0f;
+        }
         else
         {
-            _targets.RemoveAll(t => t == null);
-            if (_targets.Count == 0)
-                return;
 
             center = Vector3.zero;
             foreach (var t in _targets)

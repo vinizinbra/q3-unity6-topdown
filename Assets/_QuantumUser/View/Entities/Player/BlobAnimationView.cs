@@ -464,6 +464,9 @@ namespace Quantum
             _flipSign = (isBackflip ? 1f : -1f) * _facingSign;
         }
 
+        // Last QUpdate's HeroSpawnIntroManager.IsHidden, to catch the reveal edge.
+        private bool _wasIntroHidden;
+
         // Fires for teammate-hold, self-revive, and the auto-revive-on-secure sweep alike (see
         // docs/revive.md) - all funnel through the same PlayerLifeStateUtility.Revive, one event.
         // Animate() skips its entire deformation pass while not Alive (see its own early-return),
@@ -475,6 +478,12 @@ namespace Quantum
         {
             if (e.Target != _entityRef) return;
 
+            PunchFromRest();
+        }
+
+        // Shared by revive and the match-start spawn reveal - both bring bodyRoot back from hidden.
+        private void PunchFromRest()
+        {
             _squashT = 0f;
             _jumpSquashT = 0f;
             _springVelocity = 0f;
@@ -718,6 +727,14 @@ namespace Quantum
             // character has vanished off the map and is about to be teleported back. Polled every
             // tick, same "self-healing, no event needed" idiom AccessoryView already uses.
             bool isFallPending = FallStateUtility.IsFallPending(frame, _entityRef);
+
+            // Match-start intro (HeroSpawnIntroManager): not revealed yet - hidden exactly like a
+            // pending fall-respawn, then punched in from rest the frame it appears.
+            bool introHidden = HeroSpawnIntroManager.IsHidden(_entityRef);
+            if (_wasIntroHidden == true && introHidden == false)
+                PunchFromRest();
+            _wasIntroHidden = introHidden;
+            isFallPending |= introHidden;
 
             Vector3 velocity = kcc.Data.RealVelocity.ToUnityVector3();
             UpdateFacing(frame, velocity);

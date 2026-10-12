@@ -13,6 +13,11 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     public const string PropKeyCharacter = "character";
     public const string PropKeyReady = "ready";
 
+    // Party room properties: the leader's difficulty pick, so every member's party widget shows what the run will use
+    // (the match start still carries it in SyncMatchRoom - these are display only).
+    public const string PropKeyDifficulty = "partyDifficulty";
+    public const string PropKeyNightmare = "partyNightmare";
+
     public CharacterCatalog characterCatalog;
 
     public enum PartyPhase
@@ -70,6 +75,44 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     public bool IsPartyLeader => !InParty || MatchMakingConfig.Instance.Client.LocalPlayer.IsMasterClient;
 
     public bool IsLocalReady => TryGetReady(MatchMakingConfig.Instance.Client.LocalPlayer);
+
+    /// <summary>
+    /// Leader only: writes this client's difficulty pick (its RuntimeConfig) onto the party room. Called when the room is
+    /// joined/created, when leadership changes hands and whenever the leader changes the difficulty dropdown.
+    /// </summary>
+    public void PublishDifficulty()
+    {
+        var client = MatchMakingConfig.Instance != null ? MatchMakingConfig.Instance.Client : null;
+        if (!InParty || client.CurrentRoom == null || !client.LocalPlayer.IsMasterClient || !MatchMakingConfig.Instance.IsInPartyRoom)
+            return;
+
+        RuntimeConfig config = MatchMakingConfig.Instance.RuntimeConfig;
+        client.CurrentRoom.SetCustomProperties(new PhotonHashtable
+        {
+            { PropKeyDifficulty, (int)config.Difficulty },
+            { PropKeyNightmare, config.NightmareLevel }
+        });
+    }
+
+    /// <summary>The difficulty the run will use: the party room's (the leader's pick) in a party, else this client's own.</summary>
+    public string DifficultyDisplayName
+    {
+        get
+        {
+            RuntimeConfig config = MatchMakingConfig.Instance.RuntimeConfig;
+            DifficultyTier tier = config.Difficulty;
+            int nightmare = config.NightmareLevel;
+
+            var room = InParty ? MatchMakingConfig.Instance.Client.CurrentRoom : null;
+            if (room != null && room.CustomProperties.TryGetValue(PropKeyDifficulty, out var t) && t is int roomTier)
+            {
+                tier = (DifficultyTier)roomTier;
+                nightmare = room.CustomProperties.TryGetValue(PropKeyNightmare, out var n) && n is int level ? level : nightmare;
+            }
+
+            return DifficultyConfig.GetDisplayName(tier, nightmare);
+        }
+    }
 
     public void CreateParty()
     {
@@ -271,6 +314,7 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
         MatchMakingConfig.Instance.ReclaimLeadershipIfNeeded();
 
         SetPhase(PartyPhase.InRoom);
+        PublishDifficulty();
         _lastAllOthersReady = false;
         SetLocalReady(false);
         ToastManager.Instance?.Show(
@@ -348,7 +392,13 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
         OnRosterChanged?.Invoke();
     }
 
-    public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged) { }
+    public void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
+    {
+        if (!MatchMakingConfig.Instance.IsInPartyRoom) return;
+
+        if (propertiesThatChanged.ContainsKey(PropKeyDifficulty) || propertiesThatChanged.ContainsKey(PropKeyNightmare))
+            OnRosterChanged?.Invoke();
+    }
 
     public void OnPlayerPropertiesUpdate(Player targetPlayer, PhotonHashtable changedProps)
     {
@@ -361,6 +411,9 @@ public class PartyManager : PgSingleton<PartyManager>, IInRoomCallbacks, IMatchm
     public void OnMasterClientSwitched(Player newMasterClient)
     {
         if (!MatchMakingConfig.Instance.IsInPartyRoom) return;
+
+        // The new leader's own pick is what the run will now use.
+        PublishDifficulty();
 
         CheckAllReadyToast();
         OnRosterChanged?.Invoke();

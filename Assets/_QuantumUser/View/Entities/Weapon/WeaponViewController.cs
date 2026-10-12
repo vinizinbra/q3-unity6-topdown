@@ -1,3 +1,4 @@
+using QuantumUser.View.Managers;
 using QuantumUser.View.Util;
 using UnityEngine;
 
@@ -174,7 +175,8 @@ namespace Quantum
             {
                 Frame frame = game.Frames.Predicted;
                 bool hidden = PlayerLifeStateUtility.IsIncapacitated(frame, _entityRef)
-                    || FallStateUtility.IsFallPending(frame, _entityRef);
+                    || FallStateUtility.IsFallPending(frame, _entityRef)
+                    || HeroSpawnIntroManager.IsHidden(_entityRef);
 
                 if (weaponSocket.gameObject.activeSelf == hidden)
                     weaponSocket.gameObject.SetActive(hidden == false);

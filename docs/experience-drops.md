@@ -14,8 +14,10 @@ separate, later piece of work.
 ```
 DamageUtility.ApplyDamage - the moment health hits zero, before branching on enemy tier
   -> f.Events.EntityDied(target, owner)
-  -> ExperienceUtility.TrySpawnDrop(f, target, owner)
-       owner == EntityRef.None (no traceable instigator - fall/void death, an un-authored level
+  -> FallRespawnUtility.TryResolveFallDropPosition (died below LevelConfig.FallDeathHeight?
+       -> drop position = nearest platform, fellOffLevel = true; else the corpse position)
+  -> ExperienceUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel)
+       owner == EntityRef.None && !fellOffLevel (no traceable instigator - an un-authored level
        hazard)                                  -> drop nothing
        target has no Enemy component             -> drop nothing (player/sentry deaths never drop)
        EnemyTierStatsConfig.Get(data.Tier).ExpValue <= 0 -> drop nothing
@@ -51,6 +53,13 @@ CheckFallDeath`'s fall/void death, and `AreaDamageSystem.ResolveOwner`'s un-auth
 rather than inventing a new one. A player-owned hazard (e.g. a skill's fire trail, which carries a
 real `AreaOwner.Owner`) still has a traceable instigator and correctly still drops - the rule is
 "was there an instigator," not "was this any kind of area/DoT."
+
+**Exception - fall deaths still drop.** An enemy that falls off the level (`EnemySystem.
+CheckFallDeath`) is ownerless but was almost always knocked/lured off by the players, so
+`DamageUtility.ResolveDeath` detects the below-`FallDeathHeight` death and passes
+`fellOffLevel = true`: XP, Coin, Rift Shard and the enemy's own Chest drop still spawn, placed on
+the nearest platform (`FallRespawnUtility.TryResolveFallDropPosition` - same nearest-chunk point a
+falling Elite/player respawns at, ground-snapped) instead of in the void. Scrap stays owner-only.
 
 Director "retirement" (`EnemyLifecycleSystem.Retire`, stale/off-screen enemy cleanup) destroys
 through a completely separate `f.Destroy` path that never calls `ApplyDamage`/fires `EntityDied` -

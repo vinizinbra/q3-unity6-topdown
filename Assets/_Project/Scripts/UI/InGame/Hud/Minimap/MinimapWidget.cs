@@ -1356,15 +1356,18 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (_iconOverlays.TryGetValue(kvp.Key, out MapOverlay pair) == false)
                 continue;
 
+            // Local, not shared - dims once this client's own player(s) can't use it (see PoiLocalViewState).
+            PoiViewState state = PoiLocalViewState.Resolve(frame, kvp.Value, activation->State);
+
             Color color = _iconBaseColor;
-            if (activation->State == PoiViewState.Expired)
+            if (state == PoiViewState.Expired)
             {
                 PoiUsagePolicy policy = _iconPoiUsagePolicy.TryGetValue(kvp.Key, out var cachedPolicy) ? cachedPolicy : PoiUsagePolicy.Reusable;
                 color = _iconBaseColor * (policy == PoiUsagePolicy.Cooldown ? cooldownIconTint : usedIconTint);
             }
 
             pair.SetIconColor(color);
-            pair.PinToEdge = activation->State != PoiViewState.Expired;
+            pair.PinToEdge = state != PoiViewState.Expired;
         }
 
         foreach (var kvp in _iconTraversalEntity)

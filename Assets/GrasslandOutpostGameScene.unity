@@ -3579,6 +3579,7 @@ MonoBehaviour:
   background: {fileID: 1350878725}
   shape: {fileID: 1350878724}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -7073,7 +7074,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -7164,6 +7166,7 @@ MonoBehaviour:
   background: {fileID: 169807749}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -13039,7 +13042,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -13430,7 +13434,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -13449,6 +13454,7 @@ MonoBehaviour:
   background: {fileID: 236136030}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -21826,7 +21832,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -33358,7 +33365,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -33377,6 +33385,7 @@ MonoBehaviour:
   background: {fileID: 430554186}
   shape: {fileID: 0}
   color: {r: 1, g: 1, b: 1, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -36402,7 +36411,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -38047,7 +38057,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -38066,6 +38077,7 @@ MonoBehaviour:
   background: {fileID: 575515731}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -38798,7 +38810,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -38817,6 +38830,7 @@ MonoBehaviour:
   background: {fileID: 589107329}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -49479,7 +49493,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -61118,7 +61133,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -61137,6 +61153,7 @@ MonoBehaviour:
   background: {fileID: 813897369}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -62157,7 +62174,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -68993,7 +69011,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -69954,6 +69973,7 @@ MonoBehaviour:
   background: {fileID: 961269396}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -77247,7 +77267,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -78095,7 +78116,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -78114,6 +78136,7 @@ MonoBehaviour:
   background: {fileID: 1048542419}
   shape: {fileID: 0}
   color: {r: 1, g: 1, b: 1, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -91553,7 +91576,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -94100,7 +94124,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -94119,6 +94144,7 @@ MonoBehaviour:
   background: {fileID: 1224349237}
   shape: {fileID: 0}
   color: {r: 1, g: 1, b: 1, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -100236,7 +100262,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -111407,6 +111434,7 @@ GameObject:
   - component: {fileID: 1326604356}
   - component: {fileID: 1326604357}
   - component: {fileID: 1326604358}
+  - component: {fileID: 1326604359}
   m_Layer: 0
   m_Name: EffectsManager
   m_TagString: Untagged
@@ -111528,6 +111556,57 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.ProjectileGhostTrailManager
   ghostFlightDuration: 0.06
+--- !u!114 &1326604359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326604355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad8aaae6756d24af184bd19ab86e046c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Managers.HeroSpawnIntroManager
+  portalPrefab: {fileID: 19861656, guid: 395f8f15d344d490a866a626542fe0e8, type: 3}
+  portalOffset: {x: 0, y: 5, z: 0}
+  portalScale: 1
+  portalLingerAfterLastHero: 0.6
+  portalMaxDuration: 12
+  portalDestroyDelay: 3
+  travelEffectPrefab: {fileID: 9186021651541148684, guid: 2681a7250227747d78846a699e01a607, type: 3}
+  travelDuration: 0.7
+  travelArcHeight: 3
+  travelEase:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  travelDestroyDelay: 1
+  heroSpawnEffectPrefab: {fileID: 5623422061307436774, guid: 4b7010f0b38814d6784e0c3af59589d4, type: 3}
+  heroSpawnEffectScale: 1
+  aimHorizontally: 1
+  firstRevealDelay: 0.35
+  revealStagger: 0.2
 --- !u!1001 &1327287517
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -119597,7 +119676,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -123158,7 +123238,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -123341,6 +123422,7 @@ MonoBehaviour:
   background: {fileID: 1499151950}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -128400,7 +128482,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -129444,7 +129527,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -129628,7 +129712,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -129647,6 +129732,7 @@ MonoBehaviour:
   background: {fileID: 1551187661}
   shape: {fileID: 0}
   color: {r: 1, g: 1, b: 1, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -133086,7 +133172,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -133105,6 +133192,7 @@ MonoBehaviour:
   background: {fileID: 1637267985}
   shape: {fileID: 0}
   color: {r: 1, g: 1, b: 1, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -133950,7 +134038,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -141134,7 +141223,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -141153,6 +141243,7 @@ MonoBehaviour:
   background: {fileID: 1703612644}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -143467,7 +143558,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -143558,6 +143650,7 @@ MonoBehaviour:
   background: {fileID: 1752693722}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -144545,7 +144638,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -144564,6 +144658,7 @@ MonoBehaviour:
   background: {fileID: 1775809048}
   shape: {fileID: 0}
   color: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  edgeAdjust: {x: 0, y: 0, z: 0, w: 0}
   pulse: 1
   pulseDepth: 0.3
   pulseSpeed: 3.5
@@ -151703,7 +151798,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -152418,7 +152514,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -155053,7 +155150,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -168587,7 +168685,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1
@@ -170665,7 +170764,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b908c2287ece437b83a00c57a184c0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SelectableScaleWidget
-  selectedScaleMultiplier: 1.1
+  selectedScale: {x: 1.05, y: 1.05, z: 1.05}
+  scaleOrigin: {x: 0.5, y: 0.5}
   duration: 0.12
   ease: 6
   useUnscaledTime: 1

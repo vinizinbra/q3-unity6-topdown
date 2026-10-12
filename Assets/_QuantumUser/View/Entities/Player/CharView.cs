@@ -47,6 +47,11 @@ namespace Quantum
         public override void Initialize(QuantumGame game)
         {
             base.Initialize(game);
+
+            // First, so the hero is already hidden on the very first frame its body would render -
+            // the match-start intro reveals it with a burst once the loading screen has lifted.
+            HeroSpawnIntroManager.Instance?.RegisterHero(game.Frames.Predicted, _entityRef);
+
             EntityViewManager.Instance.AddView(_playerRef,_entityRef, this, "PlayerName");
             CharacterUiWidgetManager.Instance?.SpawnWidget(_entityRef, game, transform, ResolvePlayerName(game), widgetOffset);
 
@@ -72,6 +77,7 @@ namespace Quantum
         public override void DeInitialize(QuantumGame game)
         {
             CharacterUiWidgetManager.Instance?.DespawnWidget(_entityRef);
+            HeroSpawnIntroManager.Instance?.UnregisterHero(_entityRef);
             MyLocalPlayer.Instance.Deinitialize(_entityRef);
             base.DeInitialize(game);
             EntityViewManager.Instance.RemoveView(_entityRef);

@@ -11,8 +11,9 @@ namespace Quantum
     public static unsafe class EnemyChestDropUtility
     {
         // Called from DamageUtility.ApplyDamage right alongside ExperienceUtility/ScrapUtility/
-        // RiftShardUtility/CoinUtility's own TrySpawnDrop calls.
-        public static void TrySpawnDrop(Frame f, EntityRef target)
+        // RiftShardUtility/CoinUtility's own TrySpawnDrop calls. position = the corpse, or the
+        // nearest platform for a fall death (see DamageUtility.ResolveDeath).
+        public static void TrySpawnDrop(Frame f, EntityRef target, Photon.Deterministic.FPVector3 position)
         {
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
                 return;
@@ -25,18 +26,15 @@ namespace Quantum
             if (DamageUtility.RollChance(f, data.ChestDropChance) == false)
                 return;
 
-            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
-                return;
-
             EntityRef chest = f.Create(data.ChestDrop);
 
             if (f.Unsafe.TryGetPointer<Transform3D>(chest, out var chestTransform) == true)
             {
-                chestTransform->Position = targetTransform->Position;
+                chestTransform->Position = position;
                 GroundOffsetUtility.Apply(f, chest);
             }
 
-            Log.Debug($"[Chest] {target} ({data.EnemyName}) dropped Chest {chest} at {targetTransform->Position}");
+            Log.Debug($"[Chest] {target} ({data.EnemyName}) dropped Chest {chest} at {position}");
         }
     }
 }

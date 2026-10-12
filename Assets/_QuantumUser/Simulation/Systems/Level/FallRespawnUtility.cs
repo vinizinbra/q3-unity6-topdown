@@ -35,6 +35,33 @@ namespace Quantum
             return groundPosition + FPVector3.Up * config.FallRespawnHeightOffset;
         }
 
+        // Where an enemy that fell off the level (EnemySystem.CheckFallDeath kills it below
+        // LevelConfig.FallDeathHeight) should leave its drops - the same nearest-chunk point a
+        // falling Elite/player respawns at, snapped to the real floor. False (dropPosition =
+        // position, unchanged) when position isn't below FallDeathHeight, i.e. a normal death.
+        // The raycast is lifted to at least the chunk's own origin height first - the inset
+        // position still carries the deep mid-fall Y, which can sit out of the ground probe's reach.
+        public static bool TryResolveFallDropPosition(Frame f, FPVector3 position, out FPVector3 dropPosition)
+        {
+            dropPosition = position;
+
+            LevelConfig config = f.FindAsset(f.RuntimeConfig.LevelConfig);
+
+            if (config == null || position.Y >= config.FallDeathHeight)
+                return false;
+
+            FPVector3 anchor = ResolveNearestChunkRespawnPosition(f, position, config);
+
+            if (TryFindNearestChunk(f, position, out EntityRef chunkEntity))
+                anchor.Y = FPMath.Max(anchor.Y, f.Unsafe.GetPointer<Transform3D>(chunkEntity)->Position.Y);
+
+            if (EnemyMovementUtility.TryFindGroundHeight(f, anchor, EnemyMovementUtility.GetGroundLayerMask(f), out FP groundY) == true)
+                anchor.Y = groundY;
+
+            dropPosition = anchor;
+            return true;
+        }
+
         // Nearest chunk by closest-point-on-AABB distance, not strict containment - naturally
         // resolves to the actual containing chunk (distance 0) whenever position genuinely is
         // inside one, and degrades gracefully to whichever chunk's boundary is closest otherwise

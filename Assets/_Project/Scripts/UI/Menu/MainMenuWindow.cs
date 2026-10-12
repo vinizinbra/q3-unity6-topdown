@@ -152,6 +152,9 @@ public class MainMenuWindow : UiWindow
             config.Difficulty = DifficultyTier.Nightmare;
             config.NightmareLevel = index - (int)DifficultyTier.Hard;
         }
+
+        // In a party, the leader's pick is shown to everyone on the party widget.
+        PartyManager.Instance?.PublishDifficulty();
     }
 
     public override void Show()

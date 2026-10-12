@@ -336,11 +336,17 @@ namespace Quantum
                 DemolitionMasteryUtility.OnExplosionKill(f, owner);
             }
 
-            ExperienceUtility.TrySpawnDrop(f, target, owner);
+            // An enemy that fell off the level (EnemySystem.CheckFallDeath) dies far below the map
+            // with no owner - its XP/Coin/Rift Shard/Chest still drop, just on the nearest platform
+            // instead of into the void. Scrap stays owner-only (it needs a Lux killer to credit).
+            FPVector3 dropPosition = f.Unsafe.TryGetPointer<Transform3D>(target, out var deathTransform) ? deathTransform->Position : FPVector3.Zero;
+            bool fellOffLevel = FallRespawnUtility.TryResolveFallDropPosition(f, dropPosition, out dropPosition);
+
+            ExperienceUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
             ScrapUtility.TrySpawnDrop(f, target, owner);
-            RiftShardUtility.TrySpawnDrop(f, target, owner);
-            CoinUtility.TrySpawnDrop(f, target, owner);
-            EnemyChestDropUtility.TrySpawnDrop(f, target);
+            RiftShardUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
+            CoinUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
+            EnemyChestDropUtility.TrySpawnDrop(f, target, dropPosition);
 
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
             {

@@ -324,7 +324,9 @@ public class CharacterUiWidget : MonoBehaviour
         // SetActive on this widget's own GameObject, which would stop THIS LateUpdate from running
         // and leave it stuck hidden forever - same "must stay active to self-heal" reasoning
         // BlobAnimationView's bodyRoot/handsRoot fields already document.
-        bool isFallPending = FallStateUtility.IsFallPending(frame, _entityRef);
+        // Also hidden until the match-start intro reveals the hero (HeroSpawnIntroManager).
+        bool isFallPending = FallStateUtility.IsFallPending(frame, _entityRef)
+            || QuantumUser.View.Managers.HeroSpawnIntroManager.IsHidden(_entityRef);
         ApplySelfHidden(isFallPending);
 
         if (isFallPending == true)

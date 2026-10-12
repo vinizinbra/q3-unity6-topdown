@@ -14,9 +14,12 @@ namespace Quantum
         // Called from DamageUtility.ApplyDamage right where it fires EntityDied, alongside
         // ExperienceUtility.TrySpawnDrop/ScrapUtility.TrySpawnDrop - same "no traceable instigator,
         // no drop" rule as ExperienceUtility.TrySpawnDrop.
-        public static void TrySpawnDrop(Frame f, EntityRef target, EntityRef owner)
+        // position is where the drop lands (the corpse, or the nearest platform for a fall death -
+        // see DamageUtility.ResolveDeath); fellOffLevel exempts that ownerless fall death from the
+        // "no traceable instigator, no drop" rule below.
+        public static void TrySpawnDrop(Frame f, EntityRef target, EntityRef owner, FPVector3 position, bool fellOffLevel)
         {
-            if (owner == EntityRef.None)
+            if (owner == EntityRef.None && fellOffLevel == false)
                 return;
 
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
@@ -37,9 +40,6 @@ namespace Quantum
                 return;
             }
 
-            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == false)
-                return;
-
             FP lifetime = 30;
             FP minOffset = FP._0;
             FP maxOffset = FP._0;
@@ -57,7 +57,7 @@ namespace Quantum
             }
 
             EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.RiftShardPrototype);
-            OrbSpawnUtility.SpawnWithPop(f, orb, targetTransform->Position, minOffset, maxOffset);
+            OrbSpawnUtility.SpawnWithPop(f, orb, position, minOffset, maxOffset);
 
             if (f.Unsafe.TryGetPointer<CurrencyOrb>(orb, out var currencyOrb) == true)
             {

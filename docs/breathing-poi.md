@@ -85,7 +85,11 @@ approximation) still passes `PoiUsageUtility.CanUse`. A new `PoiActivationSystem
 either this same tick is already reflected) refreshes every `HealingShrine`/`CursedRift` entity's
 own `PoiActivation.State` each tick - deliberately a genuine simulation-side component that View
 code reads directly, not something each View re-derives from `PoiAvailability`/`PoiUsage`
-independently. `HealingShrineUtility`/`CursedRiftUtility` never touch `PoiActivation` themselves -
+independently. **Presentation is per-viewer, though:** `PoiView` and `MinimapWidget` read it through
+`PoiLocalViewState.Resolve` (View-side, `Assets/_QuantumUser/View/Entities/Poi/`), which narrows a
+shared `Active` to `Expired` when none of this client's own local players passes `CanUse` (bots
+own no local slot, so they never count) - "I'm on cooldown, my teammate isn't" reads dimmed for me.
+`HealingShrineUtility`/`CursedRiftUtility` never touch `PoiActivation` themselves -
 "is this usable" (gameplay) and "what should it look like" (presentation) stay cleanly separate.
 
 ## Healing Shrine
@@ -131,9 +135,10 @@ which `InteractionPromptWidget` uses to pop a `ToastManager` toast with that sam
 PRESS-triggered, not proximity-triggered - the toast only fires on an actual attempted
 interaction, never just from standing near the Shrine (the passive world-space label already
 covers that, more quietly).
-Visual state is driven by the shared `PoiActivation.State` (see above) - the Shrine reads
-`Active`/stays visually usable while ANY connected player could still use it, not just the local
-one(s), and only shows `Expired` once every connected player has used it up this Break.
+Visual state is driven by the shared `PoiActivation.State` (see above), narrowed per viewer by
+`PoiLocalViewState.Resolve` (2026-10-11): the Shrine shows `Expired` (dimmed, both in-world and
+on the minimap) as soon as THIS client's own local player(s) are on cooldown / already used it,
+even while a teammate could still use it - feedback is local, not team-wide.
 
 ## Cursed Rift
 

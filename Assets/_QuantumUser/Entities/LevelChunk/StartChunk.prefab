@@ -117,7 +117,7 @@ Transform:
   m_GameObject: {fileID: 1380972659649757760}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 6, y: 1.1, z: 6}
+  m_LocalPosition: {x: 6, y: 1.1, z: 6.3}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -365,7 +365,7 @@ GameObject:
   - component: {fileID: 1801162787624854977}
   - component: {fileID: 5422058663552501656}
   - component: {fileID: 8133384978392384380}
-  - component: {fileID: 5100388225429523433}
+  - component: {fileID: 6262892736316475521}
   m_Layer: 0
   m_Name: riftRaidersSpaceShip_0
   m_TagString: Untagged
@@ -381,9 +381,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5135478454799060880}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.38268346, y: 0, z: 0, w: 0.9238795}
+  m_LocalRotation: {x: 0.38268346, y: 0, z: 0, w: 0.9238795}
   m_LocalPosition: {x: 6, y: 1, z: 6}
-  m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
+  m_LocalScale: {x: 0.45, y: 0.45, z: 0.45}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8687587008823722124}
@@ -461,7 +461,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c9b97bf1a42b4b1e982ff16a3b4c276, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Billboard
---- !u!114 &5100388225429523433
+--- !u!114 &6262892736316475521
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -473,8 +473,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9168c542245be475f8ee71bd6733ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Quantum.HasShadow
-  baseScale: 2.5
-  shadowOffset: {x: 0, y: 0}
+  baseScale: 5.59
+  shadowOffset: {x: 0, y: 0.3}
   shadowAlphaMultiplier: 1
 --- !u!1 &6624686050677841868
 GameObject:

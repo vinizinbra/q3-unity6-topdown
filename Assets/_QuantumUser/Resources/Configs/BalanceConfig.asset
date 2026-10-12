@@ -163,25 +163,25 @@ MonoBehaviour:
     P1:
       RawValue: 65536
     P2:
-      RawValue: 85197
+      RawValue: 78643
     P3:
-      RawValue: 95027
+      RawValue: 91750
     P4:
       RawValue: 101581
   - Tier: 2
     P1:
       RawValue: 65536
     P2:
-      RawValue: 91750
+      RawValue: 85197
     P3:
-      RawValue: 104858
+      RawValue: 98304
     P4:
-      RawValue: 114688
+      RawValue: 108134
   - Tier: 3
     P1:
       RawValue: 65536
     P2:
-      RawValue: 101581
+      RawValue: 98304
     P3:
       RawValue: 117965
     P4:

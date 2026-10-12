@@ -27,6 +27,8 @@ public class PartyRoomWidget : MonoBehaviour
     public TMP_Text roomCodeText;
     public TMP_Text regionText;
     public TMP_Text playerCountText;
+    [Tooltip("The run's difficulty - the party leader's pick (see PartyManager.PublishDifficulty).")]
+    public TMP_Text difficultyText;
     public RoomWidget[] playerWidgets;
     public TMP_Dropdown characterDropdown;
     [Tooltip("Optional - steps characterDropdown back one hero, wrapping around.")]
@@ -254,6 +256,9 @@ public class PartyRoomWidget : MonoBehaviour
             int activeCount = room.Players.Count(kv => kv.Value.IsInactive == false);
             playerCountText.text = $"{activeCount}/{room.MaxPlayers}";
         }
+
+        if (difficultyText != null && PartyManager.Instance != null)
+            difficultyText.text = PartyManager.Instance.DifficultyDisplayName.ToUpperInvariant();
 
         _remotePlayers.Clear();
         if (room != null && localPlayer != null)
