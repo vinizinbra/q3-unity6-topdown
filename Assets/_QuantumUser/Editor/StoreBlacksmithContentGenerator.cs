@@ -197,15 +197,6 @@ namespace QuantumUser.Editor
             // Choose-Weapon level-up/Chest pick - see StoreConfig.cs's own comment and
             // docs/store-blacksmith.md.
 
-            // Weapon Talent Level -> starting perk rarity - see StoreConfig.ResolveTalentRarityTuning.
-            config.TalentRarityTuning = new[]
-            {
-                new WeaponTalentRarityTuning { CommonWeight = 90, RareWeight = 10, EpicWeight = 0, LegendaryWeight = 0 },
-                new WeaponTalentRarityTuning { CommonWeight = 75, RareWeight = 25, EpicWeight = 0, LegendaryWeight = 0 },
-                new WeaponTalentRarityTuning { CommonWeight = 55, RareWeight = 35, EpicWeight = 10, LegendaryWeight = 0 },
-                new WeaponTalentRarityTuning { CommonWeight = 35, RareWeight = 45, EpicWeight = 18, LegendaryWeight = 2 },
-            };
-
             // Accessory Repair/Replacement service pricing (docs/accessory-guard.md): sold one
             // durability point at a time; the first point of a Broken accessory (replacement) costs
             // double. Broken -> full at 3 max = 50 + 25 + 25 = 100.

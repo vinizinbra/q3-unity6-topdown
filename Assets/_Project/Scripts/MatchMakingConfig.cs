@@ -30,6 +30,15 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    [Tooltip("Manually flip this on right before cutting a real release build. Not a Development-Build check (playtest builds here aren't consistently built as Development Builds) - an explicit, hand-set flag so checksum verification stays on by default (including in playtest builds) and is only turned off deliberately. See SessionConfig.asset's ChecksumInterval - Quantum's own guidance is 'useful during development, set to zero for release'.")]
    public bool DisableChecksumsForRelease;
 
+   [Header("Training Zone")]
+   [Tooltip("Map + LevelConfig swapped onto the cloned RuntimeConfig when the offline session is the Training Zone (StartTrainingZoneRunner) - see docs/training-zone.md.")]
+   public AssetRef<Map> TrainingZoneMap;
+   public AssetRef<LevelConfig> TrainingZoneLevel;
+
+   // Which offline session StartOfflineSession builds - set by StartOfflineRunner/StartTrainingZoneRunner
+   // and kept as-is by RestartOfflineMatch, so restarting the Training Zone restarts the Training Zone.
+   private bool _trainingZoneSession;
+
    // Photon identifies the inactive actor a rejoin reclaims BY UserId, so a fresh Guid every app
    // launch makes reconnect structurally impossible: ReconnectToRoomAsync rejects the attempt
    // outright ("UserId mismatch", since the saved ReconnectInformation.UserId is the PREVIOUS
@@ -92,69 +101,10 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // client picks up the same value too (see PropKeyMatchStarted's own comment).
    public const string PropKeySeed = "seed";
 
-   // Player's own meta-progression weapon-talent level, carried in from outside this match (e.g.
-   // an account/profile screen elsewhere would be what actually raises this over time) - read here
-   // right before AddPlayer and copied onto RuntimePlayer.Talents.WeaponLevel, which
-   // PlayerSpawnUtility.Spawn seeds CharacterStats.WeaponTalentLevel from once at spawn. See
-   // PlayerTalents' own comment (RuntimePlayer.User.cs).
-   private static readonly PlayerPrefInt WeaponTalentLevelPref = new PlayerPrefInt("weapon_talent_level", 0);
-
-   // Player's own meta-progression reroll-charge talent, same "carried in from outside this match"
-   // contract as WeaponTalentLevelPref above - read here right before AddPlayer and copied onto
-   // RuntimePlayer.Talents.RerollQuantity, which PlayerSpawnUtility.Spawn seeds CharacterStats.
-   // RerollQuantity from once at spawn. See PlayerTalents' own comment (RuntimePlayer.User.cs).
-   private static readonly PlayerPrefInt RerollQuantityPref = new PlayerPrefInt("reroll_quantity", 0);
-
-   // Player's own meta-progression Store weapon-offer-count talent, same "carried in from outside
-   // this match" contract as WeaponTalentLevelPref/RerollQuantityPref above - read here right
-   // before AddPlayer and copied onto RuntimePlayer.Talents.ShopWeaponOfferCount, which
-   // PlayerSpawnUtility.Spawn seeds CharacterStats.ShopWeaponOfferCount from once at spawn. See
-   // docs/store-blacksmith.md.
-   private static readonly PlayerPrefInt ShopWeaponOfferCountPref = new PlayerPrefInt("shop_weapon_offer_count", 0);
-
-   // Player's own meta-progression Starting-Coins talent, same "carried in from outside this
-   // match" contract as the talent prefs above - read here right before AddPlayer and copied onto
-   // RuntimePlayer.Talents.StartingCoins, which PlayerSpawnUtility.Spawn seeds CharacterStats.Coins
-   // from once at spawn (a genuine currency amount, not a 0-5 level, so no byte clamp on the way in
-   // like the other talent prefs below get).
-   private static readonly PlayerPrefInt StartingCoinsPref = new PlayerPrefInt("starting_coins", 0);
-
-   // Player's own meta-progression self-revive-charge talent, same "carried in from outside this
-   // match" contract as WeaponTalentLevelPref/RerollQuantityPref above - read here right before
-   // AddPlayer and copied onto RuntimePlayer.Talents.SelfReviveCharges, which PlayerSpawnUtility.
-   // Spawn seeds CharacterStats.SelfReviveCharges from once at spawn. See docs/revive.md.
-   private static readonly PlayerPrefInt SelfReviveChargesPref = new PlayerPrefInt("self_revive_charges", 0);
-
-   // Player's own meta-progression Talents (see docs/talents.md), carried in from outside this
-   // match the same way as WeaponTalentLevelPref above - read here right before AddPlayer and
-   // copied onto RuntimePlayer's own Player*/Has*/Can* fields. One JSON-blob pref (PlayerPrefObject)
-   // rather than eighteen separate PlayerPrefInt/PlayerPrefBool fields, since this is now several
-   // heterogeneous fields instead of one scalar.
-   [Serializable]
-   private class TalentSaveData
-   {
-      public byte PlayerDamageLevel;
-      public byte PlayerCooldownLevel;
-      public byte PlayerFireRateLevel;
-      public byte PlayerReloadSpeedLevel;
-      public byte PlayerCriticalChanceLevel;
-      public byte PlayerCriticalDamageLevel;
-      public byte PlayerMaxHealthLevel;
-      public byte PlayerMaxShieldLevel;
-      public byte PlayerDamageReductionLevel;
-      public byte PlayerMoveSpeedLevel;
-      public byte PlayerPickupRangeLevel;
-      public byte PlayerExperienceLevel;
-      public bool HasWeaponChest;
-      public bool HasHeroChest;
-      public bool HasGlobalUpgradeChest;
-      public bool HasUnlockedRift;
-      public bool CanFindStones;
-      public bool HasEvent;
-   }
-
-   private static readonly PlayerPrefObject<TalentSaveData> TalentsPref =
-      new PlayerPrefObject<TalentSaveData>("player_talents", new TalentSaveData());
+   // World-line meta-progression levels (WorldUnlocks) the party leader sent with SyncMatchRoom - consumed by
+   // the next StartRunner, then cleared so a later unsynced start falls back to this client's own save
+   // instead of a stale leader's. See docs/talents.md, "Meta progression".
+   private byte[] _syncedWorldUnlocks;
 
    public TMP_InputField NameField;
    public TMP_Text ConnectionState;
@@ -738,7 +688,8 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          new PhotonHashtable {
             { "room", matchRoomCode }, { "seed", seed }, { "leader", Client.UserId },
             { "difficulty", (int)RuntimeConfig.Difficulty }, { "nightmare", RuntimeConfig.NightmareLevel },
-            { "world", WorldCatalog.Instance != null ? WorldCatalog.Instance.IndexOf(CurrentWorld) : -1 }
+            { "world", WorldCatalog.Instance != null ? WorldCatalog.Instance.IndexOf(CurrentWorld) : -1 },
+            { "unlocks", TalentSaveMapper.Pack(TalentSaveMapper.BuildWorld()) }
          },
          new RaiseEventArgs { Receivers = ReceiverGroup.All },
          SendOptions.SendReliable);
@@ -949,6 +900,11 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
             LogHelper.Warn("MatchMaking", "StartRunner: no seed found in room properties - falling back to RuntimeConfig's own local Seed.");
 
          var runtimeConfig = new QuantumUnityJsonSerializer().CloneConfig(RuntimeConfig);
+         // What the level generates is the LEADER's world progression, identical on every client.
+         runtimeConfig.WorldUnlocks = _syncedWorldUnlocks != null
+            ? TalentSaveMapper.Unpack(_syncedWorldUnlocks)
+            : TalentSaveMapper.BuildWorld();
+         _syncedWorldUnlocks = null;
 
          var sessionConfig = QuantumDeterministicSessionConfigAsset.DefaultConfig;
          if (DisableChecksumsForRelease)
@@ -996,24 +952,12 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // Shared by StartRunner (online) and StartOfflineRunner (offline) - couch co-op talent/avatar
    // setup is identical either way, only how the session itself is started differs.
    //
-   // PlayerPrefInt has no way to tell "never saved, returned its 0 default" apart from "an
-   // account screen genuinely saved 0" (see PlayerPrefProperty.cs - .Value always returns a
-   // value, existence isn't exposed). Since nothing writes any of these prefs yet (same
-   // pre-existing gap every talent pref here has - an account/profile screen elsewhere would
-   // be what actually raises them), a strict overwrite silently stomped whatever was hand-set
-   // directly on RuntimePlayers[i].Talents in the Inspector for local testing - exactly the
-   // "set Starting Coins in the Inspector, still spawned with 0" bug. Only overwriting when
-   // the pref is actually > 0 keeps a real future write taking effect while leaving
-   // Inspector-set test values alone until then.
+   // Talents: TalentSaveMapper writes this device's saved per-player meta-progression LEVELS onto every
+   // local slot (bots included - one save per device, same as before). The raw count fields on
+   // PlayerTalents (RerollQuantity, StartingCoins, SelfReviveCharges, ...) are left alone, so values
+   // hand-set on RuntimePlayers[i].Talents in the Inspector for testing still add on top.
    private void AddLocalPlayers(QuantumRunner runner)
    {
-      // Clamp - PlayerPrefInt stores a plain int, PlayerTalents.WeaponLevel is a byte.
-      byte weaponTalentLevel = (byte)Mathf.Clamp(WeaponTalentLevelPref.Value, 0, byte.MaxValue);
-      byte rerollQuantity = (byte)Mathf.Clamp(RerollQuantityPref.Value, 0, byte.MaxValue);
-      byte shopWeaponOfferCount = (byte)Mathf.Clamp(ShopWeaponOfferCountPref.Value, 0, byte.MaxValue);
-      int startingCoins = Mathf.Max(StartingCoinsPref.Value, 0);
-      byte selfReviveCharges = (byte)Mathf.Clamp(SelfReviveChargesPref.Value, 0, byte.MaxValue);
-      TalentSaveData talents = TalentsPref.Value;
       AssetRef<EntityPrototype> localCharacterAvatar = PartyManager.Instance.ResolveLocalCharacterAvatar();
 
       // The Inspector-authored PlayerNickname on these entries is never the real player's name
@@ -1032,29 +976,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
             RuntimePlayers[i].PlayerNickname = localNickname;
             localNickname = null;
          }
-         if (weaponTalentLevel > 0) RuntimePlayers[i].Talents.WeaponLevel = weaponTalentLevel;
-         if (rerollQuantity > 0) RuntimePlayers[i].Talents.RerollQuantity = rerollQuantity;
-         if (shopWeaponOfferCount > 0) RuntimePlayers[i].Talents.ShopWeaponOfferCount = shopWeaponOfferCount;
-         if (startingCoins > 0) RuntimePlayers[i].Talents.StartingCoins = startingCoins;
-         if (selfReviveCharges > 0) RuntimePlayers[i].Talents.SelfReviveCharges = selfReviveCharges;
-         RuntimePlayers[i].Talents.PlayerDamageLevel = talents.PlayerDamageLevel;
-         RuntimePlayers[i].Talents.PlayerCooldownLevel = talents.PlayerCooldownLevel;
-         RuntimePlayers[i].Talents.PlayerFireRateLevel = talents.PlayerFireRateLevel;
-         RuntimePlayers[i].Talents.PlayerReloadSpeedLevel = talents.PlayerReloadSpeedLevel;
-         RuntimePlayers[i].Talents.PlayerCriticalChanceLevel = talents.PlayerCriticalChanceLevel;
-         RuntimePlayers[i].Talents.PlayerCriticalDamageLevel = talents.PlayerCriticalDamageLevel;
-         RuntimePlayers[i].Talents.PlayerMaxHealthLevel = talents.PlayerMaxHealthLevel;
-         RuntimePlayers[i].Talents.PlayerMaxShieldLevel = talents.PlayerMaxShieldLevel;
-         RuntimePlayers[i].Talents.PlayerDamageReductionLevel = talents.PlayerDamageReductionLevel;
-         RuntimePlayers[i].Talents.PlayerMoveSpeedLevel = talents.PlayerMoveSpeedLevel;
-         RuntimePlayers[i].Talents.PlayerPickupRangeLevel = talents.PlayerPickupRangeLevel;
-         RuntimePlayers[i].Talents.PlayerExperienceLevel = talents.PlayerExperienceLevel;
-         RuntimePlayers[i].Talents.HasWeaponChest = talents.HasWeaponChest;
-         RuntimePlayers[i].Talents.HasHeroChest = talents.HasHeroChest;
-         RuntimePlayers[i].Talents.HasGlobalUpgradeChest = talents.HasGlobalUpgradeChest;
-         RuntimePlayers[i].Talents.HasUnlockedRift = talents.HasUnlockedRift;
-         RuntimePlayers[i].Talents.CanFindStones = talents.CanFindStones;
-         RuntimePlayers[i].Talents.HasEvent = talents.HasEvent;
+         TalentSaveMapper.ApplyPlayer(ref RuntimePlayers[i].Talents);
          LogHelper.Log("CharacterSelect", $"AddPlayer(local slot {i}) - PlayerAvatar={RuntimePlayers[i].PlayerAvatar.Id.Value}");
          runner.Game.AddPlayer(i, RuntimePlayers[i]);
       }
@@ -1065,7 +987,21 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // tested without any network connection at all. Reuses the exact same RuntimeConfig (map/sim
    // config) and RuntimePlayers (couch co-op slots) Inspector setup as online play - only how the
    // session is started differs. Mirrors QuantumRunnerLocalDebug's own local-start arguments.
-   public async void StartOfflineRunner()
+   public void StartOfflineRunner()
+   {
+      _trainingZoneSession = false;
+      StartOfflineSession();
+   }
+
+   // Offline Training Zone (movement/aim tutorial level) - the same local session as StartOfflineRunner,
+   // just on the TrainingZoneScene map with the TrainingZoneLevel config (no run ever starts there).
+   public void StartTrainingZoneRunner()
+   {
+      _trainingZoneSession = true;
+      StartOfflineSession();
+   }
+
+   private async void StartOfflineSession()
    {
       // Same duplicate-start guard as StartRunner - see its own comment. Cleared by LeaveMatch
       // below rather than OnDisconnected, since an offline session never connects to Photon.
@@ -1090,6 +1026,13 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          var runtimeConfig = new QuantumUnityJsonSerializer().CloneConfig(RuntimeConfig);
          // No room to agree a shared seed with (see PropKeySeed) - roll it locally instead.
          runtimeConfig.Seed = Guid.NewGuid().GetHashCode();
+         runtimeConfig.WorldUnlocks = TalentSaveMapper.BuildWorld();
+
+         if (_trainingZoneSession)
+         {
+            runtimeConfig.Map = TrainingZoneMap;
+            runtimeConfig.LevelConfig = TrainingZoneLevel;
+         }
 
          var sessionConfig = QuantumDeterministicSessionConfigAsset.DefaultConfig;
          if (DisableChecksumsForRelease)
@@ -1202,7 +1145,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
       if (QuantumRunner.Default != null)
          QuantumRunner.ShutdownAll();
 
-      StartOfflineRunner();
+      StartOfflineSession();
    }
 
    // Used only by RunResultPopup, where the run has already legitimately ended for everyone -
@@ -1358,6 +1301,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
             RuntimeConfig.NightmareLevel = nightmareLevel;
          if (data.TryGetValue("world", out var world) && world is int worldIndex)
             ApplyWorld(RuntimeConfig, worldIndex);
+         _syncedWorldUnlocks = data.TryGetValue("unlocks", out var unlocks) ? unlocks as byte[] : null;
          MoveToMatchRoomAsync((string)data["room"], (int)data["seed"]);
       }
    }

@@ -226,6 +226,12 @@ namespace Quantum
 
         [Tooltip("Optional - swaps the enemy's body SpriteRenderer (EnemyViewRig.ReferenceSprite) to this sprite for this step, independent of AnimationType. Leave empty to leave whatever sprite is currently showing untouched. Reverts to the enemy's real spawn sprite once the attack fully ends (EnemyAttackVisualsView's attackNoLongerActive edge), regardless of which step last set it.")]
         public Sprite BodySprite;
+        [Tooltip("Optional sprite-sheet animation - when non-empty, plays these frames in order on the body SpriteRenderer for this step INSTEAD of the single BodySprite above (BodySprite is ignored while this has frames; leave it empty to keep the single-sprite swap). Same duration/revert window and same BodySpriteOffset/BodySpriteScale as the single sprite. Tip: select all slices of a sheet in the Project window and drag them onto this array's header.")]
+        public Sprite[] BodySpriteFrames = Array.Empty<Sprite>();
+        [Tooltip("BodySpriteFrames only - frames per second. 0 = spread the frames evenly across this step's Duration (last frame lands right as Duration ends).")]
+        public float BodySpriteFrameRate = 0f;
+        [Tooltip("BodySpriteFrames only, and only with a FrameRate above 0 - loops the sequence until Duration ends instead of holding the last frame.")]
+        public bool BodySpriteLoop;
         [Tooltip("Only applied while BodySprite above is showing (same duration/revert window) - additive root.localPosition offset, authored as if always facing right. X is mirrored by the enemy's current facing sign, same convention every other left/right-sensitive channel here uses.")]
         public Vector3 BodySpriteOffset;
         [Tooltip("Only applied while BodySprite above is showing (same duration/revert window) - multiplies root's own base scale, e.g. for a swapped-in sprite authored at a different reference size than the enemy's normal one. (1,1,1) = unchanged. Reverts to (1,1,1) the instant BodySprite itself reverts, same timer.")]

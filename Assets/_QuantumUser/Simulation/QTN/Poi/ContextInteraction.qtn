@@ -24,7 +24,13 @@ enum InteractableKind : Byte
     // candidate is a PLAYER, not a static world POI. Always outranks every other kind regardless
     // of distance (see InteractableKindUtility.GetPriorityTier), so a nearby dying teammate is
     // never eclipsed by a closer Store/Chest.
-    Revive
+    Revive,
+
+    // The Base's Repair Station (Rift Anchor L2, meta progression) - see RepairStation.qtn.
+    RepairStation,
+
+    // Training Zone end-of-course POI - pressing it returns to the menu. See TrainingZone.qtn.
+    TrainingFinish
 }
 
 // WHY a nearby Interactable can or can't be used right now - richer than a plain found/not-found

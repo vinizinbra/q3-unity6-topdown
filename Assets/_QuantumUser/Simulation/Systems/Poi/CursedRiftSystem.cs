@@ -31,8 +31,8 @@ namespace Quantum
 
                 switch (command)
                 {
-                    case ConfirmCursedRiftCommand:
-                        CursedRiftUtility.Confirm(f, entity, interaction);
+                    case ConfirmCursedRiftCommand confirm:
+                        CursedRiftUtility.Confirm(f, entity, interaction, confirm.OptionIndex);
                         break;
 
                     case CancelCursedRiftCommand:

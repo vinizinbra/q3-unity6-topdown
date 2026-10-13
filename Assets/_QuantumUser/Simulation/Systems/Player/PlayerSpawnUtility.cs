@@ -57,6 +57,11 @@ namespace Quantum
                 TalentUtility.ApplyPerPlayerTalents(f, entity, runtimePlayer, stats);
             }
 
+            // The starting weapon was equipped during f.Create, before PlayerLink existed - give it the
+            // Weapons line's run-wide levels now (later equips get them inside WeaponSystem.Equip).
+            if (f.Unsafe.TryGetPointer<Weapon>(entity, out var startingWeapon))
+                WeaponSystem.ApplyMetaWeaponLevels(f, entity, startingWeapon);
+
             // Local-testing bot (see docs/bots.md) - RuntimePlayer.IsBot is read exactly here and
             // turned into a BotBrain component, so nothing downstream ever fetches RuntimePlayer
             // again to ask "is this a bot": PlayerInputUtility.Resolve, LevelUpSystem's own

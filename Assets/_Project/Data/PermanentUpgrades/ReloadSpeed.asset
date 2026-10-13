@@ -25,5 +25,5 @@ MonoBehaviour:
   valuePerLevel: 5
   valueFormat: +{0}%
   valueFormatPlural: 
-  talentKey: PlayerReloadSpeedLevel
-  mockLevel: 1
+  levelInfos: []
+  id: 4

@@ -113,6 +113,15 @@ namespace Quantum
                 GroundOffsetUtility.Apply(f, spawned);
             }
 
+            // Rift Anchor L3 (meta progression): the Base's starting Weapon Chest guarantees perks.
+            if (spawner.Requirement == SharedTalentRequirement.WeaponChest
+                && WorldUnlockUtility.IsUnlocked(f, WorldUnlock.RiftAnchor, MetaUnlockLevels.BaseChestGuaranteedPerk)
+                && f.Unsafe.TryGetPointer<Chest>(spawned, out var chest))
+            {
+                TalentsConfig talents = TalentUtility.GetConfig(f);
+                chest->MinWeaponPerks = (byte)(talents != null ? talents.BaseChestGuaranteedPerks : 1);
+            }
+
             Log.Debug($"[Talents] {chunkEntity}'s ChunkSpawnConfig entry {index} spawned {spawned}");
         }
 

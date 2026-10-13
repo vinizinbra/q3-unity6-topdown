@@ -4,7 +4,7 @@ namespace Quantum
     using UnityEngine.Scripting;
 
     // Continuous flat-rate heal for anything with Health.RegenRate above 0 - most heroes start at
-    // 0 (see CharacterData.BaseHealthRegenRate) until a HealthRegenUpgradeData grant raises it.
+    // 0 (see CharacterData.BaseHealthRegenRate).
     // Unlike ShieldSystem there's no on-hit delay to gate on - this is meant to be a small constant
     // trickle rather than a big chunk worth suppressing while under fire.
     [Preserve]

@@ -6,7 +6,8 @@ enum SharedTalentRequirement : Byte
     GlobalUpgradeChest,
     UnlockedRift,       // scaffolded - Global.SharedHasUnlockedRift is never set true yet
     FindStones,         // scaffolded - Global.SharedCanFindStones is never set true yet
-    Event               // scaffolded - Global.SharedHasEvent is never set true yet
+    Event,              // scaffolded - Global.SharedHasEvent is never set true yet
+    RepairStation       // Rift Anchor L2 (RuntimeConfig.WorldUnlocks) - the Base's Repair Station
 }
 
 global

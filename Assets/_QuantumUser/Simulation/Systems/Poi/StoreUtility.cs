@@ -87,6 +87,11 @@ namespace Quantum
             if (inventory->RolledAtBreathingIndex == f.Global->BreathingIndex)
                 return;
 
+            // Store L1 stocks once per run; restocking every Break is Store L2 (meta progression).
+            if (inventory->RolledAtBreathingIndex >= 0
+                && WorldUnlockUtility.IsUnlocked(f, WorldUnlock.Store, MetaUnlockLevels.StoreRestock) == false)
+                return;
+
             RollWeaponOffers(f, player, inventory, config);
             RollFoodOffers(f, inventory, config);
             inventory->RolledAtBreathingIndex = f.Global->BreathingIndex;
@@ -95,15 +100,11 @@ namespace Quantum
         }
 
         // Distinct weapons drawn the same uniform-without-replacement way
-        // LevelUpUtility.RollChooseWeaponOptionsFor already does. Two independent axes drive a Store
-        // offer's own quality: Global.SurvivalTime sets Weapon Level + starting perk COUNT via
-        // LevelUpConfig.ResolveWeaponOfferLevel/RollWeaponOfferPerkCount - the exact same shared roll
-        // a Choose-Weapon level-up/Chest pick uses (see docs/store-blacksmith.md) - while the
-        // triggering player's own RuntimePlayer.Talents.WeaponLevel (the SAME persistent
-        // meta-progression stat that seeds CharacterStats.WeaponTalentLevel at spawn, see
-        // PlayerSpawnUtility.Spawn/docs/talents.md - deliberately NOT the live in-run
-        // CharacterStats.WeaponTalentLevel, which is pure bookkeeping now) sets perk RARITY
-        // (StoreConfig.ResolveTalentRarityTuning/RollStorePerks).
+        // LevelUpUtility.RollChooseWeaponOptionsFor already does, each one rolled by the SAME
+        // LevelUpUtility.RollWeaponOption a Choose-Weapon level-up/chest pick uses - so a Store visit at minute
+        // N offers weapons of exactly the same level, perk count and perk rarity as a chest opened at minute N
+        // (rarity from the triggering player's Weapons meta line, see TalentUtility.ResolveWeaponPerkRarity).
+        // The inventory is shared, so whoever opens the Store first this Break sets it for everyone.
         private static void RollWeaponOffers(Frame f, EntityRef player, StoreInventory* inventory, StoreConfig config)
         {
             var offers = inventory->WeaponOffers;
@@ -121,9 +122,6 @@ namespace Quantum
 
             WeaponChoicePoolData pool = f.FindAsset(config.WeaponPool);
             LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
-            byte weaponTalentLevel = ResolveWeaponLevelTalent(f, player);
-            FP survivalSeconds = f.Global->SurvivalTime;
-            byte weaponLevel = levelUpConfig.ResolveWeaponOfferLevel(survivalSeconds);
 
             int poolCount = pool.Weapons.Count;
             int slots = config.MaxWeaponOfferSlots < offers.Length ? config.MaxWeaponOfferSlots : offers.Length;
@@ -146,18 +144,16 @@ namespace Quantum
 
                 taken[roll] = true;
 
-                int perkCount = levelUpConfig.RollWeaponOfferPerkCount(f, survivalSeconds);
-                AssetRef<WeaponPerkData>[] rolledPerks = RollStorePerks(f, levelUpConfig.WeaponPerkPool, perkCount, config,
-                    weaponTalentLevel, pool.Weapons[roll]);
+                LevelUpOption rolled = LevelUpUtility.RollWeaponOption(f, levelUpConfig, pool.Weapons[roll], player);
 
                 StoreWeaponOffer offer = default;
-                offer.WeaponData = pool.Weapons[roll];
-                offer.WeaponLevel = weaponLevel;
-                offer.RolledPerkCount = (byte)rolledPerks.Length;
+                offer.WeaponData = rolled.WeaponData;
+                offer.WeaponLevel = rolled.RolledWeaponLevel;
+                offer.RolledPerkCount = rolled.RolledPerkCount;
 
                 var offerPerks = offer.RolledPerks;
                 for (int p = 0; p < offerPerks.Length; p++)
-                    offerPerks[p] = p < rolledPerks.Length ? rolledPerks[p] : default;
+                    offerPerks[p] = p < rolled.RolledPerkCount ? rolled.RolledPerks[p] : default;
 
                 offer.Price = config.WeaponOfferBasePrice + config.WeaponOfferPricePerPerk * offer.RolledPerkCount;
 
@@ -166,66 +162,6 @@ namespace Quantum
             }
 
             inventory->WeaponOfferCount = (byte)drawn;
-        }
-
-        // Weighted draw WITHOUT REPLACEMENT (WeightedDrawUtility) from the same WeaponPerkPool a
-        // Choose-Weapon level-up pick already draws from (LevelUpConfig.WeaponPerkPool) - weighted
-        // by StoreConfig.TalentRarityTuning (the buyer's own account-level Weapon Talent Level)
-        // rather than WeaponPerkPoolData's own flat Common/Rare/Epic/LegendaryWeight fields, mirrors
-        // BlacksmithUtility.RollPerkOptions' exact shape. One candidate per distinct perk asset, so
-        // "without replacement" is what guarantees a freshly-rolled weapon can never receive the
-        // same perk twice (no AlreadyEquipped exclusion needed here - unlike Blacksmith, this is a
-        // brand new weapon with no perks yet).
-        private static AssetRef<WeaponPerkData>[] RollStorePerks(Frame f, AssetRef<WeaponPerkPoolData> poolRef, int perkCount,
-            StoreConfig config, byte weaponTalentLevel, AssetRef<WeaponDataAsset> weaponRef)
-        {
-            if (perkCount <= 0 || poolRef.IsValid == false)
-                return System.Array.Empty<AssetRef<WeaponPerkData>>();
-
-            WeaponPerkPoolData pool = f.FindAsset(poolRef);
-            WeaponTalentRarityTuning tuning = config.ResolveTalentRarityTuning(weaponTalentLevel);
-
-            // The offer's own weapon, not the buyer's current one - these perks are rolled onto the
-            // weapon being sold. See WeaponPerkData.SupportsWeapon.
-            WeaponPerkTarget target = WeaponPerkTarget.Resolve(f, weaponRef);
-
-            List<WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>>> candidates = new List<WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>>>();
-
-            for (int i = 0; i < pool.Perks.Count; i++)
-            {
-                AssetRef<WeaponPerkData> perkRef = pool.Perks[i];
-
-                if (perkRef.IsValid == false)
-                    continue;
-
-                WeaponPerkData data = f.FindAsset(perkRef);
-
-                if (data.SupportsWeapon(target) == false)
-                    continue;
-
-                int weight = tuning.GetWeight(data.Rarity);
-
-                if (weight <= 0)
-                    continue;
-
-                candidates.Add(new WeightedDrawUtility.Candidate<AssetRef<WeaponPerkData>> { Value = perkRef, Weight = weight });
-            }
-
-            return WeightedDrawUtility.Draw(f, candidates, perkCount);
-        }
-
-        // RuntimePlayer.Talents lives outside the deterministic Frame state proper (it's the raw
-        // per-player join payload, same "carried in from outside this match" data
-        // PlayerSpawnUtility.Spawn already reads once via f.GetPlayerData) - resolved via this
-        // entity's own PlayerLink -> PlayerRef, same lookup pattern used everywhere else in this
-        // codebase that needs a player's own RuntimePlayer outside of spawn time.
-        private static byte ResolveWeaponLevelTalent(Frame f, EntityRef player)
-        {
-            if (f.Unsafe.TryGetPointer<PlayerLink>(player, out var playerLink) == false)
-                return 0;
-
-            RuntimePlayer runtimePlayer = f.GetPlayerData(playerLink->Player);
-            return runtimePlayer != null ? runtimePlayer.Talents.WeaponLevel : (byte)0;
         }
 
         private static void RollFoodOffers(Frame f, StoreInventory* inventory, StoreConfig config)
@@ -284,6 +220,10 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<CharacterStats>(player, out var stats) == true)
                 talentOfferCount = stats->ShopWeaponOfferCount + 1;
+
+            // Store L3 "Expanded Arsenal" (meta progression, world level) - one more offer for everyone.
+            if (WorldUnlockUtility.IsUnlocked(f, WorldUnlock.Store, MetaUnlockLevels.StoreExtraWeaponOffer))
+                talentOfferCount++;
 
             int max = config.MaxWeaponOfferSlots < rolledCount ? config.MaxWeaponOfferSlots : rolledCount;
             return talentOfferCount < max ? talentOfferCount : max;

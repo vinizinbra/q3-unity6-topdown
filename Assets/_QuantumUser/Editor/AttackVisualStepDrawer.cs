@@ -61,7 +61,27 @@ namespace Quantum.Editor
                 EditorGUI.PropertyField(rect, bodySprite);
                 rect.y += lineHeight;
 
-                if (bodySprite.objectReferenceValue != null)
+                // Sprite-sheet frames - array, so it needs its own (expandable) height.
+                SerializedProperty bodySpriteFrames = property.FindPropertyRelative("BodySpriteFrames");
+                float framesHeight = EditorGUI.GetPropertyHeight(bodySpriteFrames, true);
+                EditorGUI.PropertyField(new Rect(rect.x, rect.y, rect.width, framesHeight), bodySpriteFrames, true);
+                rect.y += framesHeight + EditorGUIUtility.standardVerticalSpacing;
+
+                bool hasFrames = bodySpriteFrames.arraySize > 0;
+                if (hasFrames == true)
+                {
+                    SerializedProperty frameRate = property.FindPropertyRelative("BodySpriteFrameRate");
+                    EditorGUI.PropertyField(rect, frameRate);
+                    rect.y += lineHeight;
+
+                    if (frameRate.floatValue > 0f)
+                    {
+                        EditorGUI.PropertyField(rect, property.FindPropertyRelative("BodySpriteLoop"));
+                        rect.y += lineHeight;
+                    }
+                }
+
+                if (bodySprite.objectReferenceValue != null || hasFrames == true)
                 {
                     EditorGUI.PropertyField(rect, bodySpriteOffset);
                     rect.y += lineHeight;
@@ -212,7 +232,18 @@ namespace Quantum.Editor
             height += lineHeight; // BodySprite
 
             SerializedProperty bodySprite = property.FindPropertyRelative("BodySprite");
-            if (bodySprite.objectReferenceValue != null)
+            SerializedProperty bodySpriteFrames = property.FindPropertyRelative("BodySpriteFrames");
+            height += EditorGUI.GetPropertyHeight(bodySpriteFrames, true) + EditorGUIUtility.standardVerticalSpacing; // BodySpriteFrames
+
+            bool hasFrames = bodySpriteFrames.arraySize > 0;
+            if (hasFrames == true)
+            {
+                height += lineHeight; // BodySpriteFrameRate
+                if (property.FindPropertyRelative("BodySpriteFrameRate").floatValue > 0f)
+                    height += lineHeight; // BodySpriteLoop
+            }
+
+            if (bodySprite.objectReferenceValue != null || hasFrames == true)
                 height += lineHeight * 2; // BodySpriteOffset + BodySpriteScale
 
             height += lineHeight; // ShakeImpact

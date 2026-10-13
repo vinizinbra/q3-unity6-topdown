@@ -69,6 +69,15 @@ namespace Quantum
                         HealingShrineUtility.TryInteract(f, filter.Entity, context->ActiveTarget);
                         break;
 
+                    case InteractableKind.RepairStation:
+                        RepairStationUtility.TryInteract(f, filter.Entity, context->ActiveTarget);
+                        break;
+
+                    // Training Zone end POI - the View leaves to the menu (see TrainingZone.qtn).
+                    case InteractableKind.TrainingFinish:
+                        f.Events.TrainingFinished(filter.Entity, context->ActiveTarget);
+                        break;
+
                     case InteractableKind.Store:
                         StoreUtility.TryBeginInteraction(f, filter.Entity, context->ActiveTarget);
                         break;

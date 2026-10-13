@@ -12,7 +12,7 @@ namespace Quantum
         [Header("Core")]
         public FP BaseMaxHealth = 100;
 
-        [Tooltip("Flat HP/sec regenerated while below max. 0 for most heroes - raised by HealthRegenUpgradeData level-up grants, not meant as a large baseline.")]
+        [Tooltip("Flat HP/sec regenerated while below max. 0 for most heroes - not meant as a large baseline.")]
         public FP BaseHealthRegenRate = FP._0;
 
         [Tooltip("Scales MovementDataAsset's WalkSpeed/RunSpeed, which are shared across all characters.")]

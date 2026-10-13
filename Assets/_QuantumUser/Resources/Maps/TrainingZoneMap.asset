@@ -1,0 +1,3859 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1722638350, guid: b156eeaae3f741b40af66649a4748430, type: 3}
+  m_Name: TrainingZoneMap
+  m_EditorClassIdentifier: Quantum.Engine.dll::Quantum.Map
+  Identifier:
+    Path: _QuantumUser/Resources/Maps/TrainingZoneMap
+    Guid:
+      Value: 352988301717222894
+  UserAsset:
+    Id:
+      Value: 0
+  Scene: TrainingZoneScene
+  ScenePath: Assets/_Project/Scenes/TrainingZoneScene.unity
+  SceneGuid: dc621b0df196a4f43823bedcf4a07cbe
+  WorldSize: 512
+  BucketsCount: 16
+  BucketsSubdivisions: 8
+  BucketingAxis: 0
+  SortingAxis: 1
+  SceneMeshCellSize:
+    RawValue: 262144
+  TriangleMeshCellSize: -1
+  StaticColliders3DTrianglesData:
+    Id:
+      Value: 327296474064919172
+  SerializeTrianglesMetadata: 0
+  GridSizeX: 128
+  GridSizeY: 128
+  GridNodeSize: 4
+  NavMeshLinks: []
+  Regions: []
+  StaticColliders2D: []
+  StaticColliders3D: []
+  MapEntities:
+  - Components:
+    - rid: 4950880227405332480
+    - rid: 4950880227405332481
+    - rid: 4950880227405332482
+    - rid: 4950880227405332483
+  - Components:
+    - rid: 7449767488847347712
+    - rid: 7449767488847347713
+    - rid: 7449767488847347714
+    - rid: 7449767488847347715
+  - Components:
+    - rid: 5849247380532101120
+    - rid: 5849247380532101121
+    - rid: 5849247380532101122
+    - rid: 5849247380532101123
+  - Components:
+    - rid: 951407003492679680
+    - rid: 951407003492679681
+    - rid: 951407003492679682
+    - rid: 951407003492679683
+  - Components:
+    - rid: 4290820277442445312
+    - rid: 4290820277442445313
+    - rid: 4290820277442445314
+    - rid: 4290820277442445315
+  - Components:
+    - rid: 8817068532232617984
+    - rid: 8817068532232617985
+    - rid: 8817068532232617986
+    - rid: 8817068532232617987
+  - Components:
+    - rid: 6403848104361066496
+    - rid: 6403848104361066497
+    - rid: 6403848104361066498
+    - rid: 6403848104361066499
+  - Components:
+    - rid: 4189258190816280576
+    - rid: 4189258190816280577
+  - Components:
+    - rid: 641280841116286976
+    - rid: 641280841116286977
+  - Components:
+    - rid: 7642000720253681664
+    - rid: 7642000720253681665
+  - Components:
+    - rid: 3920136716869959680
+    - rid: 3920136716869959681
+    - rid: 3920136716869959682
+    - rid: 3920136716869959683
+  - Components:
+    - rid: 1983921850882719744
+    - rid: 1983921850882719745
+    - rid: 1983921850882719746
+    - rid: 1983921850882719747
+  - Components:
+    - rid: 3828476215635738624
+    - rid: 3828476215635738625
+  - Components:
+    - rid: 6653731281622269952
+    - rid: 6653731281622269953
+  - Components:
+    - rid: 7241686472363868160
+    - rid: 7241686472363868161
+  - Components:
+    - rid: 6346346957648166912
+    - rid: 6346346957648166913
+  - Components:
+    - rid: 2790226238285807616
+    - rid: 2790226238285807617
+  - Components:
+    - rid: 6467592028988375040
+    - rid: 6467592028988375041
+    - rid: 6467592028988375042
+    - rid: 6467592028988375043
+  - Components:
+    - rid: 7043272909720125440
+    - rid: 7043272909720125441
+    - rid: 7043272909720125442
+    - rid: 7043272909720125443
+    - rid: 7043272909720125444
+  SerializedTriangleDataUncompressedSize: 8
+  references:
+    version: 2
+    RefIds:
+    - rid: 641280841116286976
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 11403264
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: 1146880
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 641280841116286977
+      type: {class: TrainingDummySpawnerPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Prototype:
+          Id:
+            Value: 1528835202421246254
+        EnemyData:
+          Id:
+            Value: 358583634716202728
+        RespawnDelay:
+          RawValue: 131072
+        Current:
+          SceneIndexPlusOne: 0
+        RespawnTimer:
+          RawValue: 0
+    - rid: 951407003492679680
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 4325376
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 951407003492679681
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 393216
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 753664
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1146880
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 163840
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 951407003492679682
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 951407003492679683
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 20
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 393216
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 1983921850882719744
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 11796480
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 1983921850882719745
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 851968
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 589824
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 1983921850882719746
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 1983921850882719747
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 22
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 393216
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 2790226238285807616
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 12884378
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: 1022361
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 2790226238285807617
+      type: {class: TrainingDummySpawnerPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Prototype:
+          Id:
+            Value: 1528835202421246254
+        EnemyData:
+          Id:
+            Value: 358583634716202728
+        RespawnDelay:
+          RawValue: 131072
+        Current:
+          SceneIndexPlusOne: 0
+        RespawnTimer:
+          RawValue: 0
+    - rid: 3828476215635738624
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 12779520
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: 825753
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 3828476215635738625
+      type: {class: TrainingDummySpawnerPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Prototype:
+          Id:
+            Value: 1528835202421246254
+        EnemyData:
+          Id:
+            Value: 358583634716202728
+        RespawnDelay:
+          RawValue: 131072
+        Current:
+          SceneIndexPlusOne: 0
+        RespawnTimer:
+          RawValue: 0
+    - rid: 3920136716869959680
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 9961472
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 3920136716869959681
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1048576
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 786432
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 819200
+              Y:
+                RawValue: -32735
+              Z:
+                RawValue: 229376
+            BoxExtents:
+              X:
+                RawValue: 32768
+              Y:
+                RawValue: 163840
+              Z:
+                RawValue: 98304
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 819200
+              Y:
+                RawValue: -32735
+              Z:
+                RawValue: 622592
+            BoxExtents:
+              X:
+                RawValue: 32768
+              Y:
+                RawValue: 163840
+              Z:
+                RawValue: 98304
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 3920136716869959682
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 3920136716869959683
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 28
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 458752
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 4189258190816280576
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 11075584
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: 917504
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 4189258190816280577
+      type: {class: TrainingDummySpawnerPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Prototype:
+          Id:
+            Value: 1528835202421246254
+        EnemyData:
+          Id:
+            Value: 358583634716202728
+        RespawnDelay:
+          RawValue: 131072
+        Current:
+          SceneIndexPlusOne: 0
+        RespawnTimer:
+          RawValue: 0
+    - rid: 4290820277442445312
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 5636096
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 4290820277442445313
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 458752
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 196608
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1146880
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 163840
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 4290820277442445314
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 4290820277442445315
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 20
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 393216
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 4950880227405332480
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 524288
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 4950880227405332481
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 393216
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 393216
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 4950880227405332482
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 4950880227405332483
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 0
+        ChunkSizeWidth: 12
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 393216
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 5849247380532101120
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 2621440
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 5849247380532101121
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 983040
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 720896
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1179648
+              Y:
+                RawValue: 39
+              Z:
+                RawValue: 425984
+            BoxExtents:
+              X:
+                RawValue: 196608
+              Y:
+                RawValue: 196608
+              Z:
+                RawValue: 229376
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1277952
+              Y:
+                RawValue: -32735
+              Z:
+                RawValue: 98304
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 163840
+              Z:
+                RawValue: 98304
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1474560
+              Y:
+                RawValue: 39
+              Z:
+                RawValue: 327680
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 196608
+              Z:
+                RawValue: 327680
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 5849247380532101122
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 5849247380532101123
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 26
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 393216
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 6346346957648166912
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 12779520
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: 1022361
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 6346346957648166913
+      type: {class: TrainingDummySpawnerPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Prototype:
+          Id:
+            Value: 1528835202421246254
+        EnemyData:
+          Id:
+            Value: 358583634716202728
+        RespawnDelay:
+          RawValue: 131072
+        Current:
+          SceneIndexPlusOne: 0
+        RespawnTimer:
+          RawValue: 0
+    - rid: 6403848104361066496
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 8388608
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 6403848104361066497
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 360448
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 622592
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 360448
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 98304
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 884736
+              Y:
+                RawValue: -32735
+              Z:
+                RawValue: 491520
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 163840
+              Z:
+                RawValue: 98304
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1146880
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 327680
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 131072
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1310720
+              Y:
+                RawValue: -32735
+              Z:
+                RawValue: 557056
+            BoxExtents:
+              X:
+                RawValue: 65536
+              Y:
+                RawValue: 163840
+              Z:
+                RawValue: 98304
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1474560
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 6403848104361066498
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 6403848104361066499
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 24
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 360448
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 6467592028988375040
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 13238272
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 6467592028988375041
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 655360
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 393216
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 6467592028988375042
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 6467592028988375043
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 16
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 393216
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 6653731281622269952
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 12884378
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: 825753
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 6653731281622269953
+      type: {class: TrainingDummySpawnerPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Prototype:
+          Id:
+            Value: 1528835202421246254
+        EnemyData:
+          Id:
+            Value: 358583634716202728
+        RespawnDelay:
+          RawValue: 131072
+        Current:
+          SceneIndexPlusOne: 0
+        RespawnTimer:
+          RawValue: 0
+    - rid: 7043272909720125440
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 14024704
+          Y:
+            RawValue: 98304
+          Z:
+            RawValue: 983040
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 7043272909720125441
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 2
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 28180
+          BoxExtents:
+            X:
+              RawValue: 19661
+            Y:
+              RawValue: 327680
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes: []
+        Layer: 0
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 7043272909720125442
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 7043272909720125443
+      type: {class: InteractablePrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Kind:
+          Value: 8
+        Radius:
+          RawValue: 196608
+        Priority: 0
+    - rid: 7043272909720125444
+      type: {class: TrainingFinishPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        LeaveDelay:
+          RawValue: 0
+    - rid: 7241686472363868160
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 12831949
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: 924057
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 7241686472363868161
+      type: {class: TrainingDummySpawnerPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Prototype:
+          Id:
+            Value: 1528835202421246254
+        EnemyData:
+          Id:
+            Value: 358583634716202728
+        RespawnDelay:
+          RawValue: 131072
+        Current:
+          SceneIndexPlusOne: 0
+        RespawnTimer:
+          RawValue: 0
+    - rid: 7449767488847347712
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 1310720
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 7449767488847347713
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 786432
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 524288
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 786432
+              Y:
+                RawValue: -32735
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 163840
+              Z:
+                RawValue: 196608
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 7449767488847347714
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 7449767488847347715
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 20
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 393216
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216
+    - rid: 7642000720253681664
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 11599872
+          Y:
+            RawValue: 65536
+          Z:
+            RawValue: 720896
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 7642000720253681665
+      type: {class: TrainingDummySpawnerPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Prototype:
+          Id:
+            Value: 1528835202421246254
+        EnemyData:
+          Id:
+            Value: 358583634716202728
+        RespawnDelay:
+          RawValue: 131072
+        Current:
+          SceneIndexPlusOne: 0
+        RespawnTimer:
+          RawValue: 0
+    - rid: 8817068532232617984
+      type: {class: Transform3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        Position:
+          X:
+            RawValue: 6946816
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 524288
+        Rotation:
+          X:
+            RawValue: 0
+          Y:
+            RawValue: 0
+          Z:
+            RawValue: 0
+    - rid: 8817068532232617985
+      type: {class: PhysicsCollider3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        ShapeConfig:
+          ShapeType: 16
+          SphereRadius:
+            RawValue: 32768
+          CapsuleRadius:
+            RawValue: 32768
+          CapsuleHeight:
+            RawValue: 131072
+          PositionOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          BoxExtents:
+            X:
+              RawValue: 32768
+            Y:
+              RawValue: 32768
+            Z:
+              RawValue: 32768
+          RotationOffset:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          UserTag: 0
+          IsPersistent: 1
+          CompoundShapes:
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 393216
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 425984
+              Y:
+                RawValue: -32735
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 163840
+              Y:
+                RawValue: 163840
+              Z:
+                RawValue: 131072
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 819200
+              Y:
+                RawValue: 39
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 196608
+              Z:
+                RawValue: 131072
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1146880
+              Y:
+                RawValue: 32813
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 98304
+              Y:
+                RawValue: 229376
+              Z:
+                RawValue: 196608
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+          - ShapeType: 2
+            SphereRadius:
+              RawValue: 32768
+            CapsuleRadius:
+              RawValue: 32768
+            CapsuleHeight:
+              RawValue: 131072
+            PositionOffset:
+              X:
+                RawValue: 1310720
+              Y:
+                RawValue: -65509
+              Z:
+                RawValue: 393216
+            BoxExtents:
+              X:
+                RawValue: 131072
+              Y:
+                RawValue: 131072
+              Z:
+                RawValue: 393216
+            RotationOffset:
+              X:
+                RawValue: 0
+              Y:
+                RawValue: 0
+              Z:
+                RawValue: 0
+            UserTag: 0
+            IsSetFromSourceCollider: 0
+        Layer: 6
+        IsTrigger: 0
+        PhysicsMaterial:
+          Id:
+            Value: 0
+    - rid: 8817068532232617986
+      type: {class: PhysicsCallbacks3DPrototype, ns: Quantum.Prototypes, asm: Quantum.Engine}
+      data:
+        CallbackFlags:
+          Value: 0
+    - rid: 8817068532232617987
+      type: {class: ChunkPrototype, ns: Quantum.Prototypes, asm: Quantum.Simulation}
+      data:
+        Type:
+          Value: 1
+        ChunkSizeWidth: 22
+        ChunkSizeDepth: 12
+        OriginCellX: 0
+        OriginCellZ: 0
+        Waypoints:
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        - LocalPosition:
+            X:
+              RawValue: 0
+            Y:
+              RawValue: 0
+            Z:
+              RawValue: 0
+          ConnectionMask: 0
+        WaypointCount: 0
+        SpawnConfig:
+          Id:
+            Value: 0
+        AllowedConnectionSides:
+          Value: 10
+        ForbiddenNeighbors:
+          Value: 0
+        ConnectedChunks:
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        - SceneIndexPlusOne: 0
+        ConnectedChunkCount: 0
+        Discovered:
+          Value: 0
+        HasRespawnPoint:
+          Value: 1
+        RespawnPoint:
+          X:
+            RawValue: 393216
+          Y:
+            RawValue: 78669
+          Z:
+            RawValue: 393216

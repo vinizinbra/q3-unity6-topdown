@@ -206,7 +206,7 @@ public static class PingPresentation
     // Default highlight - the colour the upgrade-card descriptions use.
     private const string Highlight = "#FD3971";
 
-    // Per-POI highlight = the dominant colour of that POI's minimap icon (Assets/0_Refs/PoiIcons.png),
+    // Per-POI highlight = the dominant colour of that POI's minimap icon (Assets/_Project/Art/Sprites/UI/PoiIcons.png),
     // so the feed word matches the icon the player sees on the map. Team Challenge has no icon of its
     // own and shares the Challenge icon's orange; Elite shares the Cursed Rift pink.
     private const string StoreColor = "#E7BB05";

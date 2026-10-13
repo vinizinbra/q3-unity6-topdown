@@ -64,7 +64,14 @@ namespace Quantum
 
             FP duration = config != null ? config.DownedReviveDuration : (FP._2 + FP._0_50);
 
-            targetLifeState->ReviveProgress += f.DeltaTime;
+            // Co-op L1 "Fast Rescue" (the reviver's own meta progression) - progress runs faster.
+            FP progressRate = FP._1;
+            TalentsConfig talents = TalentUtility.GetConfig(f);
+            if (talents != null && reviver != target && TalentUtility.TryGetTalents(f, reviver, out PlayerTalents rescuer)
+                && rescuer.CoopLevel >= MetaUnlockLevels.CoopFastRescue)
+                progressRate += talents.CoopRescueSpeedBonus;
+
+            targetLifeState->ReviveProgress += f.DeltaTime * progressRate;
 
             if (targetLifeState->ReviveProgress < duration)
                 return;

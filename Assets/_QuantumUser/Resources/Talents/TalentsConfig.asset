@@ -18,3 +18,24 @@ MonoBehaviour:
       Value: 344446873976981054
   PercentPerLevel:
     RawValue: 327680
+  CoinGainPercentPerLevel:
+    RawValue: 655360
+  StartingGoldByLevel: 0000000064000000c80000002c01000090010000f4010000
+  RerollsByLevel: 000000000100000002000000
+  SelfReviveChargesByLevel: 0000000001000000010000000100000002000000
+  SelfReviveHealthBonus:
+    RawValue: 13107
+  CoopRescueSpeedBonus:
+    RawValue: 13107
+  CoopBleedOutBonus:
+    RawValue: 13107
+  CoopRescueHealthBonus:
+    RawValue: 13107
+  ShrineImprovedHealBonus:
+    RawValue: 6554
+  ShrineCooldownMultiplier:
+    RawValue: 49152
+  FoundWeaponLevelBonusByLevel: 000000000100000001000000020000000200000003000000
+  ChestPerkRarityTierByLevel: 000000000000000002000000020000000300000003000000
+  BaseChestGuaranteedPerks: 1
+  GunsmithRarityBreakOffset: 2

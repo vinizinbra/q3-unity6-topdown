@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/MoveSpeed
     Guid:
       Value: 410997976481653038
-  Icon: {fileID: 642217845, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  Icon: {fileID: 1316191119, guid: 1a4ad0db4ca3b49008dfcaa2b6819f70, type: 3}
   DisplayName: Movement Speed
   MaxPicks: 3
   Description: +{0}% Move Speed

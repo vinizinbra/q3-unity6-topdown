@@ -13,7 +13,7 @@ over and over across a run. The game's other three level-up pools live elsewhere
 `LevelUpPoolKind.RiftMutation` pool - rare, non-stackable, run-wide rule/synergy/tradeoff effects,
 which is where the more dramatic build-defining picks live).
 
-**Status: 22 of 26 rows are implemented in code** (the flat `Shield` row was replaced by `Toughness`, not removed - see below)**.** `GlobalUpgradeData` is an abstract base with a
+**Status: 17 upgrades live in the pool.** On 2026-10-13 the six implemented-but-never-pooled rows (Projectile Speed, Toughness, Health Regeneration, Healing Received, Pickup Radius, Skill Duration) were deleted - asset, class and generator entry; their `CharacterStats`/`Health` fields and systems stay for other sources. `GlobalUpgradeData` is an abstract base with a
 real `Apply(Frame f, EntityRef entity)` (same shape as `WeaponPerkData`'s `Apply(Frame, Weapon*)`),
 and `GlobalUpgradeUtility.Grant` dispatches to it generically. Most concrete upgrades derive from
 `CharacterStatMultiplierUpgradeData` (`Assets/_QuantumUser/Simulation/Assets/LevelUp/
@@ -62,18 +62,18 @@ a parallel do-nothing `CharacterStats` field.
 | Critical Chance | `CriticalChanceUpgradeData` | `CharacterStats.CriticalChance` (flat add) | ✅ |
 | Critical Damage | `CriticalDamageUpgradeData` | `CharacterStats.CriticalDamageMultiplier` | ✅ |
 | Weapon Range | `WeaponRangeUpgradeData` | `Weapon.RangeMultiplier` (stacks with `RangeMultiplierWeaponPerkData`) and `CharacterStats.WeaponRangeMultiplier`, re-applied on every equip by `WeaponSystem.ApplyOwnerWeaponRange`. Used to be wiped by the next weapon pickup. | ✅ |
-| Projectile Speed | `ProjectileSpeedUpgradeData` | `CharacterStats.ProjectileSpeedMultiplier` | ✅ (known limitation on homing projectiles - see "What changed" below) |
+| Projectile Speed | `ProjectileSpeedUpgradeData` | `CharacterStats.ProjectileSpeedMultiplier` | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted, stat field kept) |
 
 ### Hero
 
 | Upgrade | Class | Target | Status |
 |---|---|---|---|
 | Max Health | `MaxHealthUpgradeData` | `CharacterStats.MaxHealthMultiplier` + `CharacterSystem.RefreshMaxHealth` | ✅ |
-| Toughness | `ToughnessUpgradeData` | `CharacterStats.DamageTakenMultiplier` (new field, read by `DamageUtility.ResolveDamageReduction`) | ✅ replaced the old `Shield` row - see "Toughness replaces Shield" below |
+| Toughness | `ToughnessUpgradeData` | `CharacterStats.DamageTakenMultiplier` (new field, read by `DamageUtility.ResolveDamageReduction`) | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted, stat field kept) |
 | Movement Speed | `MoveSpeedUpgradeData` | `CharacterStats.MoveSpeedMultiplier` | ✅ |
-| Health Regeneration | `HealthRegenUpgradeData` | `Health.RegenRate` (new field, ticked by new `HealthRegenSystem`) | ✅ |
-| Healing Received | `HealingReceivedUpgradeData` | `CharacterStats.HealingReceivedMultiplier` (now wired into `HealUtility.ResolveHealMultiplier`) | ✅ |
-| Pickup Radius | `PickupRadiusUpgradeData` | `CharacterStats.PickupRangeMultiplier` | ✅ |
+| Health Regeneration | `HealthRegenUpgradeData` | `Health.RegenRate` (new field, ticked by new `HealthRegenSystem`) | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted, stat field kept) |
+| Healing Received | `HealingReceivedUpgradeData` | `CharacterStats.HealingReceivedMultiplier` (now wired into `HealUtility.ResolveHealMultiplier`) | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted, stat field kept) |
+| Pickup Radius | `PickupRadiusUpgradeData` | `CharacterStats.PickupRangeMultiplier` | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted, stat field kept) |
 
 ### Dash
 
@@ -89,7 +89,7 @@ a parallel do-nothing `CharacterStats` field.
 |---|---|---|---|
 | Skill Damage | `SkillDamageUpgradeData` | `CharacterStats.SkillDamageMultiplier` | ✅ |
 | Skill Cooldown | `SkillCooldownUpgradeData` | `CharacterStats.SkillCooldownMultiplier` (new field, HeroSkill's independent half of the old shared `CooldownMultiplier`) | ✅ |
-| Skill Duration | `SkillDurationUpgradeData` | `CharacterStats.SkillDurationMultiplier` | ✅ |
+| Skill Duration | `SkillDurationUpgradeData` | `CharacterStats.SkillDurationMultiplier` | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted, stat field kept) |
 | Skill Area | `SkillAreaUpgradeData` | `CharacterStats.AreaRadiusMultiplier` (wired into `HitPathSkillAction`/`SpawnEntitySkillAction` via `StatUtility.GetAreaMultiplier`, stacking with `SkillSlot.AreaMultiplier`; also folded into `AreaHitData.Detonate`/`ExplodeOnDestroyUtility.ResolveBlastRadius`'s own radius calc, so a thrown bomb like Bunny Bomb scales too, alongside `BlastRadiusUpgrade`/Bigger Boom) | ✅ |
 | Hero Skill Charge | `HeroSkillChargeUpgradeData` | `CharacterSkills.HeroSkill.MaxStacks`/`CurrentStacks` (+1, usable immediately - same shape as Dash Charge) | ✅ |
 
@@ -194,6 +194,8 @@ Several `CharacterStats` fields were seeded but had **zero consumers anywhere** 
 ---
 
 ## Toughness replaces Shield (2026-08-27)
+
+> **Historical:** Toughness itself was removed on 2026-10-13 (never added to the pool). `CharacterStats.DamageTakenMultiplier` and its `DamageUtility` term remain, with no source.
 
 The `Shield` row ("+10 Shield", `ShieldUpgradeData`, flat `CharacterStats.BonusMaxShield`) was
 replaced by **Toughness** ("-10% Damage Taken", `ToughnessUpgradeData`). Player Shield stopped being

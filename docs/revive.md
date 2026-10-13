@@ -587,3 +587,7 @@ re-verified in-Editor yet. Still needed by hand before anything works end-to-end
    hand in the Inspector for testing.
 
 Not yet manually verified end-to-end in-Editor, solo or co-op.
+
+## Meta progression hooks (2026-10-12)
+
+Two menu Upgrades lines feed this (see `docs/talents.md`, "Meta progression"). Revive: L1/L4 set self-revive charges through `TalentsConfig.SelfReviveChargesByLevel`; L2 adds `SelfReviveHealthBonus` HP on a self-revive; L3 restores 1 Accessory Guard block on a self-revive (`PlayerLifeStateUtility.Revive`). Co-op: L1 makes the reviver's hold progress run faster (`ReviveChannelSystem`); L2 lengthens the player's own bleed-out (`EnterDowned`); L3 gives allies this player revives `CoopRescueHealthBonus` extra HP.

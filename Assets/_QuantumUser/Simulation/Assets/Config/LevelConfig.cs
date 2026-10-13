@@ -58,6 +58,14 @@ namespace Quantum
         // MaxRequired 3 means each generated level gets 2 OR 3 of those Breathing POIs, picked
         // randomly, never fewer than 2.
         public Int32 GroupId;
+
+        // Meta-progression gate (menu Upgrades tab > Exploration world lines): with Unlock != None this
+        // entry only enters generation once that RuntimeConfig.WorldUnlocks line reaches UnlockMinLevel
+        // (0 reads as 1) - a locked entry is skipped exactly like a Count 0 entry, and doesn't count as
+        // a member of its ChunkPoolGroups group either. Per entry (not per ChunkType) because Traversal
+        // and Team Challenge share ChunkType.Traversal. See WorldUnlockUtility / docs/talents.md.
+        public WorldUnlock Unlock;
+        public byte UnlockMinLevel;
     }
 
     // One entry in LevelConfig.ChunkPoolGroups - drives LevelGenerationSystem.ResolveGroupSelections,
@@ -96,6 +104,11 @@ namespace Quantum
         // Height above the floor the player spawns at - a small drop onto the floor instead of
         // spawning exactly at Y=0, so they don't spawn clipped into the LobbyStart chunk's own geometry.
         public FP PlayerSpawnHeight = 2;
+
+        // Movement/aim tutorial level (TrainingZoneScene): a fully hand-placed map (empty ChunkPool)
+        // whose match never leaves GameState.Lobby - LobbyBoundarySystem skips the run start, so the
+        // Director never spawns anything. See docs/training-zone.md.
+        public bool IsTrainingZone;
 
         // World-Y threshold below which a character is considered to have fallen off the level -
         // floor is baked at Y=0 (see LevelGenerationSystem.FootprintCenterToWorld), so a single

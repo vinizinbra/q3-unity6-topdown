@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/CriticalRebound
     Guid:
       Value: 291189915456134934
-  Icon: {fileID: 21300000, guid: 6807fa3e9e4a4eb49b3c8ae13841ee18, type: 3}
+  Icon: {fileID: -544649942, guid: 624ad7d047fd5482799e44bb2e6ad8de, type: 3}
   DisplayName: Critical Rebound
   Rarity: 1
   Description: Crits fire a bonus shot (<color=#FD3971><b>{0:0}%</b></color> Damage)

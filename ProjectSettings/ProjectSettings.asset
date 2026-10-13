@@ -851,7 +851,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: CF_FORCE_MOBILE_MODE;CHEATS_ENABLED;QUANTUM_LOGLEVEL_NONE
+    Android: CF_FORCE_MOBILE_MODE;CHEATS_ENABLED;QUANTUM_LOGLEVEL_NONE;META_PLAYTEST
     EmbeddedLinux: QUANTUM_LOGLEVEL_NONE
     GameCoreScarlett: QUANTUM_LOGLEVEL_NONE
     GameCoreXboxOne: QUANTUM_LOGLEVEL_NONE

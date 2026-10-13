@@ -17,7 +17,7 @@ MonoBehaviour:
   description: A fixed Store per run selling weapons, healing consumables and defensive
     accessories, bought with Gold.
   icon: {fileID: 5932103003307302726, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
-  accentColor: {r: 0.99215686, g: 0.7647059, b: 0.019607844, a: 1}
+  accentColor: {r: 0.992, g: 0.765, b: 0.02, a: 1}
   category: 1
   group: 0
   maxLevel: 3
@@ -34,5 +34,8 @@ MonoBehaviour:
     description: The Store restocks every break, offering new things to buy.
   - title: Expanded Arsenal
     description: Adds one extra weapon to the options available in the Store.
-  talentKey: 
-  mockLevel: 1
+  levelZeroText: 
+  requiredUpgrade: 0
+  requiredUpgradeLevel: 1
+  requiredCategoryLevels: 0
+  id: 100

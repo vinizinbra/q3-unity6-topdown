@@ -266,7 +266,7 @@ namespace Quantum
         // use) and adding WallCheckHeight to THAT instead keeps the ray pinned close to the floor
         // regardless of this enemy's own pivot height. Falls back to the raw pivot if no ground is
         // found directly below (shouldn't happen mid-level, but never worth a null-deref over).
-        private static FPVector3 ResolveWallCheckOrigin(Frame f, FPVector3 position, FP wallCheckHeight)
+        internal static FPVector3 ResolveWallCheckOrigin(Frame f, FPVector3 position, FP wallCheckHeight)
         {
             FP baseY = EnemyMovementUtility.TryFindGroundHeight(f, position, EnemyMovementUtility.GetGroundLayerMask(f), out FP groundY)
                 ? groundY

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/OpeningBurst
     Guid:
       Value: 452779746857446377
-  Icon: {fileID: 21300000, guid: 8b7e9e5b45684b80965774ad3fe7f325, type: 3}
+  Icon: {fileID: 331235977, guid: 624ad7d047fd5482799e44bb2e6ad8de, type: 3}
   DisplayName: Opening Burst
   Rarity: 1
   Description: 'First <color=#FD3971><b>{0:0}%</b></color> of mag: <color=#FD3971><b>{1:+0;-0}%</b></color>

@@ -472,3 +472,7 @@ spend. Sacrificing the last point Breaks it exactly like a killing block does, e
    and a couch co-op pass (P1's window doesn't affect P2's screen/movement, P2 can independently
    use the same Rift, a Break ending mid-offer always cancels cleanly with nothing paid,
    Coin/Rift Shard HUD numbers are genuinely independent per player after a shared pickup).
+
+## Meta progression hooks (2026-10-12)
+
+Healing Shrine and Cursed (Sacrifice) Rift chunks are only generated once their menu Upgrades line is bought (see `docs/talents.md`, "Meta progression"). Healing Shrine L2 adds `TalentsConfig.ShrineImprovedHealBonus` to `HealPercent`, and L3 multiplies `CooldownDuration` by `ShrineCooldownMultiplier` (both in `HealingShrineUtility.TryInteract`). Sacrifice Rift L2 rolls a second sacrifice (`CursedRiftInteraction/CursedRiftOfferEntry.AltSacrifice`) shown as a second card for the same mutation; `ConfirmCursedRiftCommand.OptionIndex` picks which one is paid. Rift Anchor L2 adds the Base Repair Station POI (`RepairStation.qtn`, `RepairStationUtility`, `InteractableKind.RepairStation`).

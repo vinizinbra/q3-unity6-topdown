@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/ReloadSpeed
     Guid:
       Value: 522814388069534076
-  Icon: {fileID: 1987535197, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  Icon: {fileID: 1086300440, guid: 1a4ad0db4ca3b49008dfcaa2b6819f70, type: 3}
   DisplayName: Reload Speed
   MaxPicks: 3
   Description: +{0}% Reload Speed

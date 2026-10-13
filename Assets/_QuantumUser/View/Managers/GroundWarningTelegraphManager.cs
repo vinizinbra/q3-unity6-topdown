@@ -34,6 +34,9 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Prefab pulled from TelegraphManager's pool - must carry a TelegraphFade on its root (same shape as any other TelegraphPrefab), optionally with a child TelegraphGrow for a fill-in animation.")]
         private GameObject warningTelegraphPrefab;
 
+        [SerializeField, Tooltip("Lane prefab for EventGroundLineWarning (e.g. BurrowChargeDeliveryData's drill line) - unit-sized, long edge along local X, same shape as a ChargeLane/Rectangle TelegraphPrefab. Empty = line warnings are skipped.")]
+        private GameObject lineTelegraphPrefab;
+
         [SerializeField] private float fadeInDuration = 0.15f;
         [SerializeField] private float fadeOutDuration = 0.15f;
 
@@ -63,6 +66,7 @@ namespace QuantumUser.View.Managers
         private void OnEnable()
         {
             QuantumEvent.Subscribe<EventProjectileLandingWarning>(this, OnProjectileLandingWarning);
+            QuantumEvent.Subscribe<EventGroundLineWarning>(this, OnGroundLineWarning);
         }
 
         private void OnDisable()
@@ -78,14 +82,41 @@ namespace QuantumUser.View.Managers
             Vector3 position = SnapToGround(e.Position.ToUnityVector3());
             Quaternion rotation = Quaternion.LookRotation(Vector3.up, Vector3.forward); // flat ground decal, same convention Circle telegraphs use
 
-            GameObject instance = TelegraphManager.Instance != null
-                ? TelegraphManager.Instance.Get(warningTelegraphPrefab, position, rotation)
-                : Instantiate(warningTelegraphPrefab, position, rotation);
-
             float radius = e.Radius.AsFloat;
-            instance.transform.localScale = new Vector3(radius * 2f, radius * 2f, 1f);
+            Spawn(warningTelegraphPrefab, position, rotation, new Vector3(radius * 2f, radius * 2f, 1f), e.Duration.AsFloat, e.Owner);
+        }
 
-            float duration = e.Duration.AsFloat;
+        // Flat lane From -> To - same pose math as EnemyAttackVisualsView's ChargeLane/Rectangle
+        // (length on local X, Width on local Y, 90-degree twist so the long edge points along the line).
+        private void OnGroundLineWarning(EventGroundLineWarning e)
+        {
+            if (lineTelegraphPrefab == null)
+                return;
+
+            Vector3 from = e.From.ToUnityVector3();
+            Vector3 to = e.To.ToUnityVector3();
+            Vector3 direction = to - from;
+            direction.y = 0f;
+
+            float length = direction.magnitude;
+
+            if (length <= 0.0001f)
+                return;
+
+            direction /= length;
+
+            Vector3 position = SnapToGround((from + to) * 0.5f);
+            Quaternion rotation = Quaternion.LookRotation(Vector3.up, direction) * Quaternion.Euler(0f, 0f, 90f);
+            Spawn(lineTelegraphPrefab, position, rotation, new Vector3(length, e.Width.AsFloat, 1f), e.Duration.AsFloat, e.Owner);
+        }
+
+        private void Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, float duration, EntityRef owner)
+        {
+            GameObject instance = TelegraphManager.Instance != null
+                ? TelegraphManager.Instance.Get(prefab, position, rotation)
+                : Instantiate(prefab, position, rotation);
+
+            instance.transform.localScale = scale;
 
             TelegraphFade fade = instance.GetComponent<TelegraphFade>();
 
@@ -97,12 +128,12 @@ namespace QuantumUser.View.Managers
                 return;
             }
 
-            fade.Initialize(warningTelegraphPrefab, fadeInDuration, fadeOutDuration, duration, EntityRef.None);
+            fade.Initialize(prefab, fadeInDuration, fadeOutDuration, duration, EntityRef.None);
 
             _active.Add(new ActiveWarning
             {
                 Fade = fade,
-                Owner = e.Owner,
+                Owner = owner,
                 FadeOutTime = Time.time + Mathf.Max(duration - fadeOutDuration, 0f),
             });
         }

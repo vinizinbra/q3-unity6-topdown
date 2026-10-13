@@ -2956,6 +2956,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -5414,6 +5417,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -14766,6 +14772,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -16542,7 +16551,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 421420180, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  m_Sprite: {fileID: -1470605165, guid: 1a4ad0db4ca3b49008dfcaa2b6819f70, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -17312,7 +17321,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 421420180, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  m_Sprite: {fileID: -1470605165, guid: 1a4ad0db4ca3b49008dfcaa2b6819f70, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -18678,6 +18687,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuantumUser.View.Managers.GroundWarningTelegraphManager
   warningTelegraphPrefab: {fileID: 3870463405479579449, guid: b557fcfdfd0db4376ba4c16190a9008e, type: 3}
+  lineTelegraphPrefab: {fileID: 2468440791896092637, guid: 4f8787fca955742b995eeedd8d55d28c, type: 3}
   fadeInDuration: 0.15
   fadeOutDuration: 0.15
 --- !u!1 &351392481
@@ -39676,6 +39686,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 3b53085dd93a842f6bf58d8a127aa63f, type: 2}
   targetCamera: {fileID: 1373663323}
   initialTheme: {fileID: 11400000, guid: 5afca4ff16c4d428f87a809bc63735be, type: 2}
+  sceneThemeOnly: 0
 --- !u!1001 &624475488
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -111824,6 +111835,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -129834,6 +129848,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -134182,6 +134199,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -144300,6 +144320,14 @@ MonoBehaviour:
     TalentsConfig:
       Id:
         Value: 344446873976981054
+    WorldUnlocks:
+      Enforce: 0
+      StoreLevel: 0
+      GunsmithLevel: 0
+      ChallengesLevel: 0
+      HealingShrineLevel: 0
+      SacrificeRiftLevel: 0
+      RiftAnchorLevel: 0
     AccessoryGuardConfig:
       Id:
         Value: 390381435654004468
@@ -144401,6 +144429,12 @@ MonoBehaviour:
       HasUnlockedRift: 0
       CanFindStones: 0
       HasEvent: 0
+      PlayerCoinGainLevel: 0
+      WeaponsLevel: 0
+      StartingGoldLevel: 0
+      RerollsLevel: 0
+      ReviveLevel: 0
+      CoopLevel: 0
   MaxPlayerCount: 0
   SimulationSpeedMultiplier: 1
   DisplaySaveAndReloadButton: 0
@@ -152885,6 +152919,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -156004,6 +156041,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -172483,6 +172523,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0

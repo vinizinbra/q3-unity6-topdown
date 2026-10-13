@@ -16,7 +16,7 @@ MonoBehaviour:
   kindLabel: EXPLORATION UPGRADE
   description: 'A risk-and-reward POI: accept a sacrifice in exchange for a benefit.'
   icon: {fileID: 8916302886127676085, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
-  accentColor: {r: 0.3882353, g: 0.007843138, b: 0.972549, a: 1}
+  accentColor: {r: 0.388, g: 0.008, b: 0.973, a: 1}
   category: 1
   group: 1
   maxLevel: 2
@@ -31,5 +31,8 @@ MonoBehaviour:
   - title: Sacrifice Choice
     description: Shows 2 sacrifice options instead of 1, so you can pick the one
       that suits your build.
-  talentKey: 
-  mockLevel: 0
+  levelZeroText: 
+  requiredUpgrade: 0
+  requiredUpgradeLevel: 1
+  requiredCategoryLevels: 5
+  id: 104

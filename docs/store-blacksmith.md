@@ -357,3 +357,14 @@ defaults every other config in this doc already has. Not yet run/authored in the
 8. No `Icon` sprites authored for the 4 `FoodOfferData` assets.
 
 Not yet manually verified end-to-end in-Editor, solo or co-op.
+
+## Meta progression hooks (2026-10-12)
+
+The menu Upgrades tab now gates and tunes both POIs (see `docs/talents.md`, "Meta progression"): the chunks are only generated once Store/Gunsmith L1 is bought. Store L1 rolls its stock once per run and L2 restores the per-Break restock; Store L3 adds one weapon offer on top of `ShopWeaponOfferCount`. Gunsmith L1 is one purchase per run (`BlacksmithUtility.ResolveUsagePolicy` overrides the authored policy) and L2 restores the per-Break offer + purchase; L3 reads `BlacksmithConfig.BreakTuning` `TalentsConfig.GunsmithRarityBreakOffset` Breaks ahead; L4 adds one reroll per Break (`RerollBlacksmithCommand`, `BlacksmithOffer.RerolledAtBreathingIndexPlusOne`, the ChooseWindow Reroll button).
+
+**Update (2026-10-13): one weapon roll for every source.** Store weapon offers are rolled by
+`LevelUpUtility.RollWeaponOption` - the same call Choose Weapon level-ups and chests use - so opening the Store at
+minute N gives weapons of the same level, perk count, perk rarity and perk-conflict rules as a chest at minute N.
+`StoreConfig.TalentRarityTuning`, `StoreUtility.RollStorePerks` and `ResolveWeaponLevelTalent` are gone; perk rarity
+for every source comes from `TalentsConfig.WeaponPerkRarityByLevel` (the Weapons meta line, level 0 = pool weights).
+The Balance Simulator's Store offers use the same roll. See `docs/talents.md`, "Meta progression".

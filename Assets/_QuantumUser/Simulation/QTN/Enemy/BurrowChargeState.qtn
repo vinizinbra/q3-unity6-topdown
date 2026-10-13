@@ -1,0 +1,14 @@
+// Runtime state for one BurrowChargeDeliveryData run (dive -> travel -> mark -> emerge -> charge ->
+// stuck). Added at Begin and removed when the action ends or is interrupted, so only an enemy
+// that's mid-drill-charge carries it. The underground part also carries Burrowed + Invulnerable
+// (same tags BurrowDeliveryData uses), so the view hides the rig and targeting skips it for free.
+component BurrowChargeState
+{
+    Byte Stage;          // see BurrowChargeDeliveryData.Stage* constants
+    FP StageElapsed;     // seconds spent in the current stage (Travel uses it for MaxTravelDuration)
+    FPVector3 LineStart; // where it emerges and the charge begins - locked when the Mark stage starts
+    FPVector3 LineEnd;   // where the charge ends (trimmed short of voids)
+
+    // Players already hit by this charge - each player is hit at most once per run.
+    array<EntityRef>[4] HitTargets;
+}

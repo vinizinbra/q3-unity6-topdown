@@ -415,6 +415,16 @@ namespace QuantumUser.View
             PickerButton(grant.Next(), "Grant Global Upgrade", Picker.GlobalUpgrade);
             PickerButton(grant.Next(), "Grant Hero Upgrade", Picker.HeroUpgrade);
             grant.Close();
+
+            // Permanent meta progression (menu Upgrades tab) - local save only, no Send: these work from
+            // the MenuScene too, where there's no running game to send a cheat command to.
+            CreateSectionLabel(rt, "Meta Progression (save)");
+            ButtonGrid meta = new ButtonGrid(rt, GridColumns);
+            CreateButton(meta.Next(), "Get +500 Rift Shards", () => MetaProgressionSave.AddRiftShards(500));
+            CreateButton(meta.Next(), "Max All Upgrades", MetaProgressionSave.MaxAll);
+            CreateButton(meta.Next(), "Apply Playtest Profile", MetaProgressionSave.ApplyPlaytestProfile);
+            CreateButton(meta.Next(), "Reset Meta Progression", MetaProgressionSave.ResetAll);
+            meta.Close();
         }
 
         private void BuildEnemiesTab(Transform rt)

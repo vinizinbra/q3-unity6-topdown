@@ -17,7 +17,7 @@ MonoBehaviour:
   description: More chances to find upgrades that fit your build. Independent from
     the Gunsmith's own reroll.
   icon: {fileID: -2182646431548928182, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
-  accentColor: {r: 0.6, g: 0.02745098, b: 0.9843137, a: 1}
+  accentColor: {r: 0.6, g: 0.027, b: 0.984, a: 1}
   category: 1
   group: 2
   maxLevel: 2
@@ -32,5 +32,8 @@ MonoBehaviour:
       run.
   - title: Extra Reroll II
     description: Rises to 2 additional rerolls per run.
-  talentKey: 
-  mockLevel: 0
+  levelZeroText: 
+  requiredUpgrade: 0
+  requiredUpgradeLevel: 1
+  requiredCategoryLevels: 0
+  id: 202

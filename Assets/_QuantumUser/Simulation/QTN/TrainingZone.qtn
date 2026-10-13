@@ -1,0 +1,40 @@
+// Training Zone (movement/aim tutorial level) - see docs/training-zone.md.
+
+// Hand-placed marker entity (TrainingZoneScene map entity) that keeps one harmless target dummy alive
+// at its own position: spawns it once the level is generated, and re-spawns it RespawnDelay seconds
+// after it dies/despawns. Driven by TrainingDummySpawnerSystem.
+component TrainingDummySpawner
+{
+    // Generic enemy prototype the dummy is created from (same one DirectorConfig.EnemyPrototype uses);
+    // EnemyData is assigned right after f.Create, exactly like GroupSpawnerUtility.SpawnMember.
+    AssetRef<EntityPrototype> Prototype;
+    AssetRef<EnemyDataAsset> EnemyData;
+    FP RespawnDelay;
+
+    // Runtime.
+    EntityRef Current;
+    FP RespawnTimer;
+}
+
+// The Training Zone's end-of-course POI ("Finish Training" sign) - authored with an Interactable
+// {Kind = TrainingFinish} on the same entity, so finishing goes through the normal Base-Skill-redirect
+// interaction (the zone's last lesson is "how to interact"). Always Available; a press fires
+// TrainingFinished, and the View sends that player back to the menu (TrainingZoneGuideWidget).
+component TrainingFinish
+{
+    // Seconds the View waits after the press before leaving - lets the press feedback read.
+    FP LeaveDelay;
+}
+
+event TrainingFinished
+{
+    EntityRef Player;
+    EntityRef Target;
+}
+
+// Tags a dummy spawned by TrainingDummySpawner - DamageUtility.ResolveDeath skips every on-kill drop
+// (XP/Scrap/Rift Shard/Coin/chest) for it, so shooting targets can't level the player up or fill a wallet.
+component TrainingDummy
+{
+    EntityRef Spawner;
+}

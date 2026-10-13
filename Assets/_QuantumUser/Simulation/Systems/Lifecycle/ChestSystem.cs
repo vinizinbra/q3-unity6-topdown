@@ -88,7 +88,7 @@ namespace Quantum
                 // Two sim steps makes it survive that first frame (rendered once) and destroy on the
                 // next - one visible frame of linger, frame-rate independent.
                 destroy->RemainingTime = f.DeltaTime * 2;
-                LevelUpUtility.BeginChestScreen(f, opener, filter.Chest->Kind);
+                LevelUpUtility.BeginChestScreen(f, opener, filter.Chest->Kind, filter.Chest->MinWeaponPerks);
                 f.Events.ChestOpened(filter.Entity, opener, filter.Transform3D->Position, filter.Chest->Kind);
             }
         }

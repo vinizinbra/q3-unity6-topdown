@@ -5,7 +5,7 @@ namespace QuantumUser.Editor
     using UnityEngine;
 
     /// <summary>
-    /// One-off slicer for Assets/0_Refs/RukkElites.png - splits the 5-pose reference sheet into
+    /// One-off slicer for Assets/_Project/Art/Enemy/World1/RukkElites.png - splits the 5-pose reference sheet into
     /// individual sprites (Rukk_01..Rukk_05, reading order left-to-right, top-to-bottom).
     /// Rects were derived from connected-component detection on the source image (dilated to bridge
     /// dark fur/strap regions close to the pure-black background before measuring each pose's real
@@ -13,7 +13,7 @@ namespace QuantumUser.Editor
     /// </summary>
     public static class RukkElitesSpriteSlicer
     {
-        private const string TexturePath = "Assets/0_Refs/RukkElites.png";
+        private const string TexturePath = "Assets/_Project/Art/Enemy/World1/RukkElites.png";
 
         private static readonly Rect[] SpriteRects =
         {

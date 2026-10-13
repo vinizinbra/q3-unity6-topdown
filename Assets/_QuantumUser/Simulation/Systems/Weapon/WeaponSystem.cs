@@ -47,6 +47,7 @@ namespace Quantum
             ApplyBaseTraits(f, owner, weapon, f.FindAsset(weaponDataRef));
             ApplyOwnerWeaponModifiers(f, owner, weapon);
             ApplyOwnerWeaponRange(f, owner, weapon);
+            ApplyMetaWeaponLevels(f, owner, weapon);
 
             weapon->Ammo = weapon->MagazineSize;
             weapon->FireCooldownTimer = FP._0;
@@ -58,6 +59,32 @@ namespace Quantum
             // Generic View hook - see Events.qtn's own comment on why this fires unconditionally
             // for every equip path rather than each caller raising its own event.
             f.Events.WeaponEquipped(owner, weaponDataRef);
+        }
+
+        // Exploration "Weapons" line (meta progression): how many extra levels every weapon this player equips
+        // gets this run. 0 for non-players (a Sentry barrel's weapon) or without TalentsConfig.
+        public static int ResolveMetaWeaponLevels(Frame f, EntityRef owner)
+        {
+            TalentsConfig talents = TalentUtility.GetConfig(f);
+            if (talents == null || TalentUtility.TryGetTalents(f, owner, out PlayerTalents ownerTalents) == false)
+                return 0;
+
+            return TalentsConfig.Resolve(talents.WeaponLevelBonusByLevel, ownerTalents.WeaponLevel);
+        }
+
+        // Runs inside Equip (right after SeedStats reset Level to 0), so every equip path - Choose Weapon,
+        // chest, Store, cheat - carries the bonus, and a rolled offer level is then added on top by its
+        // caller. Also called once by PlayerSpawnUtility for the starting weapon, which is equipped before
+        // the hero has a PlayerLink (so the Equip-time call above found no talents).
+        public static void ApplyMetaWeaponLevels(Frame f, EntityRef owner, Weapon* weapon)
+        {
+            int levels = ResolveMetaWeaponLevels(f, owner);
+            if (levels <= 0 || f.RuntimeConfig.LevelUpConfig.IsValid == false)
+                return;
+
+            FP bonusPerLevel = f.FindAsset(f.RuntimeConfig.LevelUpConfig).WeaponLevelDamageBonusPerLevel;
+            for (int i = 0; i < levels; i++)
+                AddLevel(weapon, bonusPerLevel);
         }
 
         // Called by StoreUtility.BuyWeaponLevelUp when a player buys the Store's guaranteed

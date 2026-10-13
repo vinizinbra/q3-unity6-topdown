@@ -292,6 +292,9 @@ may use edge cells too (narrow 2-wide roofs) and then keeps the 8 neighbour cell
 Those edge-cell props are pushed half a cell inward from each open side (a 2-wide roof -> its centre line) so they never
 hang over the lip. Telha sheets are ALIGNED: laid edge to edge parallel to the walls (no model yaw, AnyYaw off -> only
 90-degree turns).
+Text keep-out (2026-10-12): `TilesetPlatformBuilder.CollectKeepOuts` gathers every TextMeshPro renderer in the builder's scene
+(found by component name - no TMPro reference) and ground / rooftop scatter and wall props skip positions within their bounds
++ 1.2 m - the Training Zone's painted station labels never get props on them.
 Water scatter (2026-10-09, `TilesetDefinition.waterScatter` / `waterDensity` / `waterRing`, `TilesetPlatformBuilder.ScatterWater`):
 props floating in OPEN WATER around the base platforms, baked with the level like every other piece. Empty cells (no
 cube box over them) at Chebyshev distance waterRing.x..y cells from a cluster, one hash chance per cell; a cell near

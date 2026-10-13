@@ -36,7 +36,7 @@ public class CatalogEntryData : ScriptableObject
     [Tooltip("Tints the icon (white = untouched). Darken it for a generic placeholder icon so it reads on the light tile.")]
     public Color iconTint = Color.white;
 
-    [Tooltip("WorldCatalog index this entry belongs to; -1 = not world specific.")]
+    [Tooltip("Rift Mutations only. Enemies and bosses take their world from the game (the first WorldCatalog world whose SurvivalConfig spawns them) - see CatalogTab.BuildWorldEntries.")]
     public int worldIndex = -1;
 
     [Tooltip("The gameplay asset this describes (EnemyDataAsset, RiftMutationData...). The source of the name, description and icon.")]

@@ -25,5 +25,5 @@ MonoBehaviour:
   valuePerLevel: 5
   valueFormat: +{0}%
   valueFormatPlural: 
-  talentKey: PlayerExperienceLevel
-  mockLevel: 2
+  levelInfos: []
+  id: 12

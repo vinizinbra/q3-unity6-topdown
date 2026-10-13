@@ -16,9 +16,9 @@ public struct PermanentUpgradeLevelInfo
 
 /// <summary>
 /// One permanent (meta-progression) upgrade as the Upgrades tab presents it: name, icon, levels, cost,
-/// and how its value reads. UI-facing only for now - it carries no gameplay. It is meant to be translated
-/// into the Talents carried on RuntimePlayer (see docs/talents.md); <see cref="talentKey"/> names the
-/// talent field it will drive. Not related to Quantum's in-run UpgradeData.
+/// and how its value reads. Listed on <see cref="GameDB"/>; the bought level lives in
+/// <see cref="MetaProgressionSave"/> under <see cref="id"/>, and <see cref="TalentSaveMapper"/> carries it into
+/// a match (see docs/talents.md, "Meta progression"). Not related to Quantum's in-run UpgradeData.
 /// </summary>
 [CreateAssetMenu(fileName = "PermanentUpgrade", menuName = "RiftRaiders/Permanent Upgrade")]
 public class PermanentUpgradeData : ScriptableObject
@@ -63,12 +63,24 @@ public class PermanentUpgradeData : ScriptableObject
              + "instead of numeric CURRENT/NEXT values. Keep its length equal to Max Level.")]
     public PermanentUpgradeLevelInfo[] levelInfos;
 
-    [Header("Talent mapping (future)")]
-    [Tooltip("Name of the talent field this drives, e.g. PlayerDamageLevel or HasWeaponChest. Informational until save data exists.")]
-    public string talentKey;
+    [Tooltip("CURRENT card text while nothing is bought yet (level 0). Empty = \"Not unlocked yet.\"")]
+    public string levelZeroText;
 
-    [Header("Mock (until there is save data)")]
-    [Min(0)] public int mockLevel;
+    [Header("Unlock requirement (both must hold; leave empty for none)")]
+    [Tooltip("Another line that must be owned first, e.g. Store for Weapons/Gunsmith/Co-op.")]
+    public PermanentUpgradeId requiredUpgrade;
+
+    [Tooltip("Level of Required Upgrade needed (ignored when Required Upgrade is None).")]
+    [Min(0)] public int requiredUpgradeLevel = 1;
+
+    [Tooltip("Total levels bought across every line of this line's category (Exploration) needed first. "
+             + "Every bought level counts as 1, whatever the line, including the ones used for other requirements.")]
+    [Min(0)] public int requiredCategoryLevels;
+
+    [Header("Identity in the save / simulation")]
+    [Tooltip("Save key + what TalentSaveMapper maps this line to (a RuntimePlayer.Talents level or a "
+             + "RuntimeConfig.WorldUnlocks level). Never change it on a shipped line - saved levels are keyed by it.")]
+    public PermanentUpgradeId id;
 
     public string Name => string.IsNullOrEmpty(displayName) ? name : displayName;
 

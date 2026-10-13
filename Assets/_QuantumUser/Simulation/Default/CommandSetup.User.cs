@@ -29,6 +29,7 @@
             factories.Add(new CloseStoreCommand());
             factories.Add(new SelectBlacksmithPerkCommand());
             factories.Add(new CancelBlacksmithCommand());
+            factories.Add(new RerollBlacksmithCommand());
             factories.Add(new BuyAccessoryServiceCommand());
             factories.Add(new SelfReviveCommand());
             factories.Add(new SetTutorialPauseCommand());

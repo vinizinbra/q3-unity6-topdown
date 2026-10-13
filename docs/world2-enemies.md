@@ -1,6 +1,6 @@
 # World 2 Enemy Roster (Desert / oil biome)
 
-12 normal enemies in three folder groups (BlackMoles / DesertSecurity / Wildlife - organizational only; the old per-spawn `EnemyFaction`/`FactionSkins` skin system was removed, each enemy has one `ViewPrefab`). Every asset is a clone with its OWN Quantum guids (tuning never
+12 normal enemies (+ 4 Elites: Rift Drillbreaker, Mole Brute, Rift Bulwark, Rift Scarab Matriarch) in three folder groups (BlackMoles / DesertSecurity / Wildlife - organizational only; the old per-spawn `EnemyFaction`/`FactionSkins` skin system was removed, each enemy has one `ViewPrefab`). Every asset is a clone with its OWN Quantum guids (tuning never
 touches World 1) under `Resources/Enemy/World2/<Group>/<Name>/W2-<Name>.asset`; placeholder views are
 Prefab Variants of the W1 view under `_Project/Prefabs/View/EnemyView/World2/<Group>/`. None are in a
 `SurvivalConfig`/group yet - spawn with `EnemyDataAsset`'s "Spawn Near Local Player" Inspector button.
@@ -20,6 +20,10 @@ Naming: W1 enemy files are `W1-*`, W2 are `W2-*`; `_Hazards/` and `_Passives/` a
 | Sandworm Larva | Wildlife | Normal | W1-NormalMelee + elite burrow | see `docs/enemy-burrow.md` |
 | Scarab Nest | Wildlife | Specialist | W1-Turret (stationary) | `SpawnPackDeliveryData` hatching Scarab Swarms |
 | Dune Crusher | Wildlife | Heavy | W1-HeavySlammer body | W1 boss cone punch, retuned |
+| Rift Drillbreaker | BlackMoles | **Elite** | W2-MoleEnforcer body + Leviathan Hunt | single attack: simplified boss homing burrow, erupts under the target - see below |
+| Mole Brute | BlackMoles | **Elite** | W2-MoleEnforcer body + W1 boss punch | W1 boss cone slam punch, unchanged numbers - see below |
+| Rift Bulwark | BlackMoles | **Elite** | W1-ChargerElite | shielded charger: 80% frontal damage reduction, 3s DownTime punish window - see below |
+| Rift Scarab Matriarch | Wildlife | **Elite** | W1-EliteBruteChest (Rukk elite) + Scarab Nest spawn | W1 brute jump slam + spawns Scarab Swarms - see below |
 
 ## Survival configs (Director)
 - **`Director/World1/W1-SurvivalConfig.asset`** - the live Grassland Outpost run (formerly
@@ -35,8 +39,10 @@ Naming: W1 enemy files are `W1-*`, W2 are `W2-*`; `_Hazards/` and `_Passives/` a
   Dunes Wake (**Dune Crusher**, **Scarab Nest**, Final Exam). Pacing opens near W1's Run 1 end-state and the
   Final Exam is ~15% over W1's (budget 34 vs 30, max alive 32 vs 28). 6 packs in `World2/Groups/`:
   ScarabRush, ShieldGunline, EnforcerScarab, TarGrunt, SniperShield, CrusherLarva. Tier C (Rusher, Enforcer,
-  Tar Launcher, Fuel Runner, Dune Crusher, Scarab Nest) is capped and loose-OR-packed per phase. **Elites (4)
-  are World 1's placeholders; the Boss is the Dune Leviathan** (see below).
+  Tar Launcher, Fuel Runner, Dune Crusher, Scarab Nest) is capped and loose-OR-packed per phase. **Elites (4,
+  one per run's Elite phase, 2026-10-13): R1 Rift Drillbreaker, R2 Rift Bulwark, R3 Mole Brute, R4 Rift Scarab
+  Matriarch** (each phase's `GuaranteedEnemyData`; they replaced World 1's placeholders); **the Boss is the Dune
+  Leviathan** (see below).
   Not wired to any scene/RuntimeConfig yet; not playtested.
 - Older drafts (`SurvivalConfig`, `_MVP`, `SurvivalWorld1Config`, `_Iteration2`, `TestConfig`) and their 78
   groups in `Director/EnemyGroups/` are legacy - nothing in the game references them.
@@ -59,6 +65,72 @@ W2 generator.
 - **Passive LeviathanOilSeep**: GroundTrail **BurrowedOnly** + `OnlyDuringAction = LeviathanFrenzy` - oil seeps up only along Frenzy tunnels (phase 3), so the plain Hunt stays clean.
 - **Phases** (by HP): >80% Bite + Hunt; 80-40% + Tar Rain (dmg 1.2x); <40% Tar Rain + Brood + Frenzy (dmg 1.4x).
 Not playtested; numbers are first-pass.
+
+## Rift Drillbreaker (Elite) - drill hunt (2026-10-12)
+Heavy mole with a rift drill, crystals through shoulder and back. `BlackMoles/RiftDrillbreakerElite/W2-RiftDrillbreakerElite.asset`;
+view `_Project/Prefabs/View/EnemyView/World2/BlackMoles/RiftDrillbreakerElite.prefab` = Prefab Variant of MoleEnforcer
+with the final art (`_Project/Art/Enemy/World2/World2RiftDrillbreakerElite.png` sliced Idle/Windup/Attack, 150 PPU). Enforcer body
+(MoveSpeed 3), W1-ChargerElite economy/chest drop. Deliberately a **simple elite: one attack, no skills**.
+- **Basic - Drill Hunt** (`RiftDrillbreaker_DrillHunt` + `...Delivery`): own copies of the Dune Leviathan's
+  `LeviathanHunt` (BurrowDeliveryData, homing, AttackOnResurface), simplified: EngageRange 12 (boss 25), Damage 20 (25),
+  radius 2 (3), burrow speed 6 (7), max 2s underground (3), Cooldown 5s (7), DownTime 1.5s (0.8) - a punish window
+  after it surfaces. Boss step visuals kept (dive dust, trail, eruption) with the particles scaled down (trail 2, eruption
+  3 / 1.2); Windup sprite on Anticipation/Begin, Attack sprite on the eruption (End).
+- **Unwired, kept in the asset**: the first pass's `RiftDrillbreaker_DrillSlam` (+ telegraph) and the drill charge
+  (`RiftDrillbreaker_DrillChargeAction` / `...Delivery`) below - liked, but not for this elite; reusable for another one.
+- **Drill charge (unused)**: `BurrowChargeDeliveryData` (new, reusable). Action: EngageRange 12, windup 0.5s (Larva
+  burrow visuals/dust), Damage 30, DamageRange 1 (line width 2), W1-Charger's effects (damage + knockback),
+  Cooldown 7s, DownTime 0.5s, not interruptible. No action Telegraph - the warning is the underground line.
+- **`BurrowChargeDeliveryData`** stages (state on the new `BurrowChargeState` component, added/removed per run):
+  Dive 0.5s -> Travel underground at 9 u/s to an entry point 5u from the target, on the side it dove from +-50 deg
+  (2s cap) -> **Mark** 1s: line locked from the entry point through the target's live position, 11u long
+  (trimmed short of voids), shown via the new **`GroundLineWarning`** event -> Emerge 0.25s -> Charge 16 u/s along
+  the line, each player hit once, stops at the end or on a wall -> **Stuck 1.5s**: planted + Rupture x1.5 (not a
+  Stun, so Elite stun resistance/immunity can't shorten the punish window), then normal DownTime.
+  Dive..Emerge reuse `Burrowed` + `Invulnerable` + the DeadEnemy-layer trick from `BurrowDeliveryData`.
+  `OnInterrupted` surfaces it cleanly.
+- **`GroundLineWarning`** (Events.qtn): From/To/Width/Duration/Owner - lane counterpart of `ProjectileLandingWarning`,
+  rendered by `GroundWarningTelegraphManager` with its new `lineTelegraphPrefab` (SquareTelegraph, set in
+  GrasslandOutpostGameScene + TrainingZoneScene), owner-bound the same way.
+Not playtested; numbers are first-pass.
+
+## Mole Brute (Elite) - boss cone slam punch (2026-10-12)
+`BlackMoles/MoleBruteElite/W2-MoleBruteElite.asset`; view `.../World2/BlackMoles/MoleBruteElite.prefab` = Prefab
+Variant of MoleEnforcer (placeholder). Enforcer body (MoveSpeed 3), W1-ChargerElite economy/chest drop, no skills.
+Basic action = own copies of `W1-World1Boss-Punch` / `-GroundPunchDelivery` / `-ConePunchTelegraph`
+(`MoleBrute_ConeSlamPunch*`) with the **boss numbers kept as-is**: cone 180 deg, range 6, 25 dmg, 0.7s windup, 1s
+DownTime, 5s cooldown, GenericDamageX1 + KnockbackStrong. Final art (2026-10-12): `_Project/Art/Enemy/World2/World2MoleBruteElite.png`
+sliced Idle/Windup/Attack (130 PPU) - Idle on the view, Windup on AnticipationStep, Attack on BeginStep (holds until
+the attack ends). Compare Dune Crusher below for a Heavy-scaled version.
+Not in the W2 SurvivalConfig yet; not playtested.
+
+## Rift Bulwark (Elite) - shielded charger (2026-10-12)
+`BlackMoles/RiftBulwarkElite/W2-RiftBulwarkElite.asset` (clone of W1-ChargerElite, own guids) + its sub-asset action
+`RiftBulwark_ShieldCharge` (clone of `W1-ChargerEliteEnemyActionData`; Delivery/Effects/Telegraph are still the shared
+W1 Charger-elite assets). View `.../World2/BlackMoles/RiftBulwarkElite.prefab` = Prefab Variant of `Wildlife-ChargerElite`
+with the final art (`_Project/Art/Enemy/World2/World2RiftBulwarkElite.png`, Idle/Windup/Attack, 130 PPU).
+- **Shield**: `Stats.Traits = FrontalDamageReduction`, 0.8 over a 120 deg arc (Shield Bot's numbers) - the hit-side
+  check uses `Aim.Angle`, which `UpdateRecovery` never turns, so after a charge carries it past the players it stays
+  facing the charge direction and its back is open for the whole DownTime.
+- **Shield Charge**: Charger-elite numbers (Damage 20, windup 0.9s) with **DownTime 3s** (elite 1s) - the punish window
+  that pays for the frontal reduction - and Cooldown 2s. MoveSpeed 3 (elite 4).
+- Visuals: Windup sprite + the Charger's `DustTrail` (parented) on Anticipation; Attack sprite on Begin/OnGoing;
+  `VFX3D_SimpleJump` launch puff (ground-snapped, scale 2.5) on Begin; Drillbreaker's `DustTrailWithRocks` on OnGoing;
+  Leaper's `RR_ToonBodySlam` on End (shield thud).
+Not in the W2 SurvivalConfig yet; not playtested.
+
+## Rift Scarab Matriarch (Elite) - jump slam + swarm spawn (2026-10-12)
+`Wildlife/RiftScarabMatriarchElite/W2-RiftScarabMatriarchElite.asset` = clone of `W1-EliteBruteChest` (Rukk Brute elite:
+body, economy, chest drop, own guids). View `.../World2/Wildlife/RiftScarabMatriarchElite.prefab` = Prefab Variant of
+that Rukk elite view with the final art (`_Project/Art/Enemy/World2/World2RiftScarabMatriarchElite.png`, Idle/Windup only, 140 PPU) and the
+Rukk weapon/chest/hand children switched off.
+- **Basic - Jump Slam** (`ScarabMatriarch_JumpSlam`): the Rukk elite's action unchanged (Jump anticipation 0.5s -> Slam,
+  radius 3, 50 dmg, RR_ToonBodySlam). Delivery/Effects/Telegraph are still the shared W1 assets. No sprite swap.
+- **Skill - Spawn Swarm** (`ScarabMatriarch_SpawnSwarm` + `...Delivery`): copies of the Scarab Nest's spawn action
+  (SpawnPack of Scarab Swarms, 3/4/5/6 by player count, EngageRange 12). Windup 1s with **placeholder** Shake + the
+  Windup sprite (shell cracked open), Cooldown 10s (nest 6), DownTime 0.5s. Same SpawnPack caveat as the Nest: hatched
+  swarms have no `EnemyLifecycle`, so they don't count toward the Director's cap.
+Not in the W2 SurvivalConfig yet; not playtested.
 
 ## Dune Crusher - boss-style cone slam
 `DuneCrusherConeSlam` / `...Delivery` / `...Telegraph` are copies of `W1-World1Boss-Punch`,

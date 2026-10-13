@@ -21,7 +21,7 @@ namespace Quantum
             if (PoiAvailabilityUtility.IsAvailable(f, blacksmith->Availability) == false)
                 return ContextInteractionState.PhaseUnavailable;
 
-            if (PoiUsageUtility.CanUse(f, player, forge, blacksmith->UsagePolicy) == false)
+            if (PoiUsageUtility.CanUse(f, player, forge, ResolveUsagePolicy(f, blacksmith)) == false)
                 return ContextInteractionState.AlreadyUsed;
 
             // Checked last, same ordering HealingShrineUtility uses for its own full-Health check -
@@ -152,6 +152,10 @@ namespace Quantum
             if (offer->RolledAtBreathingIndex == f.Global->BreathingIndex)
                 return offer;
 
+            // Gunsmith L1 rolls once per run; a fresh offer every Break is Gunsmith L2 (meta progression).
+            if (offer->RolledAtBreathingIndex >= 0 && HasRestock(f) == false)
+                return offer;
+
             AssetRef<WeaponPerkData>[] rolled = RollPerkOptions(f, player, config);
             var choices = offer->PerkChoices;
 
@@ -183,7 +187,12 @@ namespace Quantum
                 return System.Array.Empty<AssetRef<WeaponPerkData>>();
 
             WeaponPerkPoolData pool = f.FindAsset(config.PerkPool);
-            BlacksmithBreakTuning tuning = config.ResolveBreakTuning(f.Global->BreathingIndex);
+            // Gunsmith L3 "Master Craftsman" (meta progression) reads the rarity table ahead, as if later in the run.
+            int tuningBreak = f.Global->BreathingIndex;
+            TalentsConfig talents = TalentUtility.GetConfig(f);
+            if (talents != null && WorldUnlockUtility.IsUnlocked(f, WorldUnlock.Gunsmith, MetaUnlockLevels.GunsmithMasterCraftsman))
+                tuningBreak += talents.GunsmithRarityBreakOffset;
+            BlacksmithBreakTuning tuning = config.ResolveBreakTuning(tuningBreak);
 
             // Same exclusions as a level-up draw: already owned, can do nothing on this weapon, or
             // made redundant by a perk it already has would each be a dead purchase. See
@@ -262,12 +271,65 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<Blacksmith>(forge, out var blacksmith) == true)
             {
-                PoiUsageUtility.MarkUsed(f, player, forge, blacksmith->UsagePolicy);
+                PoiUsageUtility.MarkUsed(f, player, forge, ResolveUsagePolicy(f, blacksmith));
             }
 
             f.Remove<BlacksmithInteraction>(player);
 
             Log.Debug($"[Blacksmith] {player} bought perk {perkRef} for {price} Coins - interaction complete");
+        }
+
+        // Gunsmith L1 is one purchase per RUN; per-Break purchases (the authored policy) come with Gunsmith L2.
+        public static PoiUsagePolicy ResolveUsagePolicy(Frame f, Blacksmith* blacksmith)
+        {
+            return HasRestock(f) ? blacksmith->UsagePolicy : PoiUsagePolicy.OncePerPlayerPerRun;
+        }
+
+        private static bool HasRestock(Frame f)
+        {
+            return WorldUnlockUtility.IsUnlocked(f, WorldUnlock.Gunsmith, MetaUnlockLevels.GunsmithRestock);
+        }
+
+        // Gunsmith L4 (meta progression): true while this player still has this Break's reroll.
+        public static bool CanReroll(Frame f, EntityRef player)
+        {
+            if (WorldUnlockUtility.IsUnlocked(f, WorldUnlock.Gunsmith, MetaUnlockLevels.GunsmithReroll) == false)
+                return false;
+
+            return f.Unsafe.TryGetPointer<BlacksmithOffer>(player, out var offer) == false
+                   || offer->RerolledAtBreathingIndexPlusOne != f.Global->BreathingIndex + 1;
+        }
+
+        public static bool IsRerollUnlocked(Frame f)
+        {
+            return WorldUnlockUtility.IsUnlocked(f, WorldUnlock.Gunsmith, MetaUnlockLevels.GunsmithReroll);
+        }
+
+        // Called from BlacksmithSystem when a RerollBlacksmithCommand lands - redraws the cached offer AND the
+        // open window's copy (so a Cancel + reopen keeps the rerolled options), once per Break.
+        public static void Reroll(Frame f, EntityRef player, BlacksmithInteraction* interaction)
+        {
+            if (CanReroll(f, player) == false || f.RuntimeConfig.BlacksmithConfig.IsValid == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<BlacksmithOffer>(player, out var offer) == false)
+                return;
+
+            AssetRef<WeaponPerkData>[] rolled = RollPerkOptions(f, player, f.FindAsset(f.RuntimeConfig.BlacksmithConfig));
+            var offerChoices = offer->PerkChoices;
+            var windowChoices = interaction->PerkChoices;
+
+            for (int i = 0; i < offerChoices.Length; i++)
+            {
+                offerChoices[i] = i < rolled.Length ? rolled[i] : default;
+                windowChoices[i] = offerChoices[i];
+            }
+
+            offer->PerkChoiceCount = (byte)rolled.Length;
+            interaction->PerkChoiceCount = (byte)rolled.Length;
+            offer->RerolledAtBreathingIndexPlusOne = f.Global->BreathingIndex + 1;
+
+            Log.Debug($"[Blacksmith] {player} rerolled the offer - {rolled.Length} perk option(s)");
         }
 
         // Called from BlacksmithSystem when a CancelBlacksmithCommand lands - free (PoiUsage is

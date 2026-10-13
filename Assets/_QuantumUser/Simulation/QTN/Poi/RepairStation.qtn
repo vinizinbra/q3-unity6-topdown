@@ -1,0 +1,20 @@
+// Repair Station - the Base's free upkeep service (the LobbyStart chunk's space ship), unlocked by Rift
+// Anchor L2 (meta progression; spawned from the LobbyStart ChunkSpawnConfig under
+// SharedTalentRequirement.RepairStation). Press-to-use through the same generic Base-Skill redirect as Healing
+// Shrine (Interactable/ContextInteraction, see ContextInteraction.qtn): restores RepairPoints Accessory Guard
+// blocks, no Coins. Radius lives on the sibling Interactable component. See RepairStationUtility.
+//
+// Not a PoiUsagePolicy: the charge ARMS WHEN A BREAK STARTS (not per BreathingIndex, which only ticks when a
+// Break ends) - so it isn't ready at the start of a run, and once used it waits for the next Break.
+component RepairStation
+{
+    PoiAvailability Availability;
+    Int32 RepairPoints;
+}
+
+// Per player: how many Breaks had started when they last used a Repair Station (0 = never). Usable while
+// RepairStationUtility.BreaksStarted is greater - see RepairStationUtility.CanUse.
+component RepairStationUsage
+{
+    Int32 UsedAtBreaksStarted;
+}

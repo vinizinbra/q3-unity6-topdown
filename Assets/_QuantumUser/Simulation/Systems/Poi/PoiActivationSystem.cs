@@ -38,11 +38,18 @@ namespace Quantum
                 PoiActivationUtility.Refresh(f, entity, store.Availability, PoiUsagePolicy.Reusable);
             }
 
+            var stations = f.Filter<RepairStation>();
+
+            while (stations.Next(out EntityRef entity, out RepairStation station))
+            {
+                RepairStationUtility.RefreshActivation(f, entity, station.Availability);
+            }
+
             var forges = f.Filter<Blacksmith>();
 
             while (forges.Next(out EntityRef entity, out Blacksmith forge))
             {
-                PoiActivationUtility.Refresh(f, entity, forge.Availability, forge.UsagePolicy);
+                PoiActivationUtility.Refresh(f, entity, forge.Availability, BlacksmithUtility.ResolveUsagePolicy(f, &forge));
             }
 
             // Per-PLAYER, not per-POI (unlike every loop above) - decays any Cooldown-policy

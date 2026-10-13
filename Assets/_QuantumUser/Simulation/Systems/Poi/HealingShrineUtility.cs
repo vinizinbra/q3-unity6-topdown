@@ -1,5 +1,7 @@
 namespace Quantum
 {
+    using Photon.Deterministic;
+
     // Healing Shrine's own interaction - unlike Cursed Rift, this is a genuine one-shot: no
     // per-player session component, no Choice Window, no input lock. Pressing the (redirected)
     // Base Skill button while State == Available heals immediately and marks the shrine used for
@@ -60,11 +62,23 @@ namespace Quantum
 
             // Owner == the healed player itself - Shield is never touched (HealUtility only ever
             // touches Health), matching the spec's own "do not restore Shield" rule for free.
-            HealUtility.ApplyHeal(f, player, player, healingShrine->HealPercent);
-            PoiUsageUtility.MarkUsed(f, player, shrine, healingShrine->UsagePolicy, healingShrine->CooldownDuration);
+            // Meta progression (Healing Shrine L2/L3, the leader's world levels) scales the authored values.
+            FP healPercent = healingShrine->HealPercent;
+            FP cooldown = healingShrine->CooldownDuration;
+            TalentsConfig talents = TalentUtility.GetConfig(f);
+            if (talents != null)
+            {
+                if (WorldUnlockUtility.IsUnlocked(f, WorldUnlock.HealingShrine, MetaUnlockLevels.ShrineImprovedHealing))
+                    healPercent += talents.ShrineImprovedHealBonus;
+                if (WorldUnlockUtility.IsUnlocked(f, WorldUnlock.HealingShrine, MetaUnlockLevels.ShrineFasterRecovery))
+                    cooldown *= talents.ShrineCooldownMultiplier;
+            }
+
+            HealUtility.ApplyHeal(f, player, player, healPercent);
+            PoiUsageUtility.MarkUsed(f, player, shrine, healingShrine->UsagePolicy, cooldown);
             f.Events.HealingShrineUsed(player, shrine);
 
-            Log.Debug($"[HealingShrine] {player} interacted with {shrine} - healed {healingShrine->HealPercent.AsFloat:P0} of Max Health");
+            Log.Debug($"[HealingShrine] {player} interacted with {shrine} - healed {healPercent.AsFloat:P0} of Max Health");
         }
     }
 }

@@ -731,7 +731,14 @@ public class IntroSequence : MonoBehaviour
         onFinished?.Invoke();
 
         if (loadNextScene == true && string.IsNullOrEmpty(nextSceneName) == false)
-            SceneLoader.Load(nextSceneName);
+        {
+            // Straight into the Training Zone (see GameManager). MenuScene still has to load first -
+            // it owns MatchMakingConfig, which starts the session - but the cover stays up until the
+            // Training Zone's match window is showing, so the menu is never seen in between.
+            GameManager.RequestTrainingZoneAfterIntro();
+            string sceneName = nextSceneName;
+            SceneLoader.Cover(() => UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName), GameManager.IsInMatchWindowShown);
+        }
     }
 
     private IEnumerator PlayStep(int index, Step step)

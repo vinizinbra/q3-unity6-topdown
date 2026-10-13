@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
   displayName: Rift Anchor / Base
   kindLabel: EXPLORATION UPGRADE
-  description: 'The team''s preparation point: gear at the start of the run and upkeep
-    services during breaks.'
+  description: Your landing spot at the start of every run. Upgrade it to find gear
+    waiting for you and to fix your Accessory during breaks.
   icon: {fileID: 6697352333098020210, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
-  accentColor: {r: 0.011764706, g: 0.90588236, b: 0.9882353, a: 1}
+  accentColor: {r: 0.012, g: 0.906, b: 0.988, a: 1}
   category: 1
   group: 1
   maxLevel: 3
@@ -28,11 +28,16 @@ MonoBehaviour:
   valueFormatPlural: 
   levelInfos:
   - title: Starting Weapon Chest
-    description: Adds a Weapon Chest at the Base at the start of every run.
-  - title: Repair Station
-    description: Unlocks a Base station that repairs 1 Accessory Guard block per
-      break on interaction.
-  - title: Expanded Weapon Chest
-    description: The starting chest offers 2 weapons to choose from.
-  talentKey: 
-  mockLevel: 0
+    description: A Weapon Chest waits next to the ship when the run starts. Open
+      it to pick a new weapon before the fight begins.
+  - title: Recover 1 Accessory
+    description: Once per break, interact with the ship to restore 1 Accessory Guard
+      block. The ship glows when it's ready again.
+  - title: Starter Perk
+    description: Every weapon offered by the starting Weapon Chest comes with at
+      least 1 perk.
+  levelZeroText: Nothing to see here...
+  requiredUpgrade: 0
+  requiredUpgradeLevel: 1
+  requiredCategoryLevels: 0
+  id: 105

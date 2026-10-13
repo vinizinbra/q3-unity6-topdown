@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 306154358074219271
   DisplayName: Grassland Outpost
-  Icon: {fileID: 0}
+  Icon: {fileID: 6550193753388699964, guid: bef74295260841d1ab196cfe84053989, type: 3}
   Theme: {fileID: 11400000, guid: 5afca4ff16c4d428f87a809bc63735be, type: 2}
   SurvivalConfig:
     Id:

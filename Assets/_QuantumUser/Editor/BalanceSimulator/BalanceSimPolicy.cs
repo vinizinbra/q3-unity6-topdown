@@ -408,8 +408,8 @@ namespace QuantumUser.Editor.BalanceSimulator
                     available.Remove(perk);
                     weapon.AddPerk(perk, scenario.UnquantifiedPerkDpsValue);
 
-                    // Choose Weapon (WeaponGenerator.DrawDistinctPerks) drops perks that conflict with
-                    // one already rolled; Store offers (StoreUtility.RollStorePerks) don't.
+                    // WeaponGenerator.DrawDistinctPerks drops perks that conflict with one already rolled
+                    // (every weapon source uses it now); only a custom rarityWeight caller skips that.
                     if (rarityWeight == null)
                         available.RemoveAll(other => perk.ConflictsWith(other) || other.ConflictsWith(perk));
                 }
@@ -636,7 +636,6 @@ namespace QuantumUser.Editor.BalanceSimulator
             // ShopWeaponOfferCount talent is 0 for a fresh account -> 1 visible offer.
             int offerCount = Math.Min(1, Math.Max(1, store.MaxWeaponOfferSlots));
             int bought = 0;
-            WeaponTalentRarityTuning tuning = store.ResolveTalentRarityTuning(0);
             var taken = new HashSet<int>();
             double currentDps = player.WeaponDps(scenario);
 
@@ -651,7 +650,9 @@ namespace QuantumUser.Editor.BalanceSimulator
                 if (data == null)
                     continue;
 
-                SimWeapon offer = RollOffer(data, survivalTime, assets.LevelUpPerkPool, tuning.GetWeight);
+                // The game rolls a Store offer with the same LevelUpUtility.RollWeaponOption a chest/level-up
+                // uses, so it's the same roll here too (fresh account: Weapons line 0 = pool weights).
+                SimWeapon offer = RollOffer(data, survivalTime, assets.LevelUpPerkPool, null);
                 double price = D(store.WeaponOfferBasePrice) + D(store.WeaponOfferPricePerPerk) * offer.Perks.Count;
                 double dps = OfferDps(player, offer);
 

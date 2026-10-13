@@ -25,5 +25,5 @@ MonoBehaviour:
   valuePerLevel: 10
   valueFormat: +{0}%
   valueFormatPlural: 
-  talentKey: PlayerCoinGainLevel
-  mockLevel: 1
+  levelInfos: []
+  id: 13

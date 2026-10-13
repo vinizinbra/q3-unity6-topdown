@@ -62,3 +62,18 @@ MonoBehaviour:
     Requirement: 1
     Chance:
       RawValue: 65536
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1451656702520266830
+      Weight: 1
+    Offset:
+      X:
+        RawValue: 393216
+      Y:
+        RawValue: 131072
+      Z:
+        RawValue: 393216
+    Requirement: 7
+    Chance:
+      RawValue: 65536

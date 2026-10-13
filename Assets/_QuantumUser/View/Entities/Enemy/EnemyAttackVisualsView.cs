@@ -416,7 +416,7 @@ namespace Quantum
             if (step != null)
             {
                 blobAnimationView.PlayAttackStep(step);
-                blobAnimationView.ApplyStepSprite(step.BodySprite, step.Duration, step.BodySpriteOffset, step.BodySpriteScale);
+                blobAnimationView.ApplyStepSprite(step);
                 SpawnStepParticle(frame, enemy, step);
                 TriggerStepShake(frame, enemy, step);
             }

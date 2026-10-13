@@ -400,6 +400,8 @@
                 // DestroyAfterTimeSystem, preserving that system's own "must be last" invariant since
                 // this also calls f.Destroy.
                 new EnemyLifecycleSystem(),
+                // Training Zone target dummies - see TrainingZone.qtn.
+                new TrainingDummySpawnerSystem(),
                 // After every system that can flip an enemy's IsKinematic or write its velocity this
                 // tick - re-pins Anchored enemies before the next physics step.
                 new AnchoredSystem(),

@@ -32,6 +32,9 @@ namespace Quantum
         [SerializeField, Tooltip("Applied on Awake if set, so a theme can be previewed without whatever will eventually call Load() for the current world.")]
         [Expandable] private WorldTheme initialTheme;
 
+        [SerializeField, Tooltip("Always use initialTheme and ignore the match's own world. For scenes with a fixed look regardless of the world picked in the menu - the Training Zone (Grassland Outpost).")]
+        private bool sceneThemeOnly;
+
         // Single source of truth for "which WorldTheme is currently active" (CurrentTheme below).
         // Renderers that showed a waterMaterials entry when first looked up, with that original material -
         // WorldWaterTheme.SurfaceMaterial swaps onto these and a world without an override restores them.
@@ -46,7 +49,7 @@ namespace Quantum
 
             // The match's own world (RuntimeConfig.WorldDefinition) wins; initialTheme is only
             // the fallback for editing/previewing the scene without a running match.
-            WorldTheme theme = ResolveMatchTheme(QuantumRunner.Default != null ? QuantumRunner.Default.Game : null) ?? initialTheme;
+            WorldTheme theme = sceneThemeOnly ? initialTheme : ResolveMatchTheme(QuantumRunner.Default != null ? QuantumRunner.Default.Game : null) ?? initialTheme;
             if (theme != null)
                 Load(theme);
 
@@ -56,6 +59,9 @@ namespace Quantum
 
         private void LoadMatchWorld(QuantumGame game)
         {
+            if (sceneThemeOnly)
+                return;
+
             WorldTheme theme = ResolveMatchTheme(game);
             if (theme != null && theme != CurrentTheme)
                 Load(theme);

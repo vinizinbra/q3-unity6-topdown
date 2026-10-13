@@ -218,6 +218,26 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class BurrowChargeStatePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.BurrowChargeStatePrototype> {
+    public Byte Stage;
+    public FP StageElapsed;
+    public FPVector3 LineStart;
+    public FPVector3 LineEnd;
+    [ArrayLengthAttribute(4)]
+    public Quantum.QuantumEntityPrototype[] HitTargets = new Quantum.QuantumEntityPrototype[4];
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.BurrowChargeStatePrototype prototype);
+    public override Quantum.Prototypes.BurrowChargeStatePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.BurrowChargeStatePrototype();
+      converter.Convert(this.Stage, out result.Stage);
+      converter.Convert(this.StageElapsed, out result.StageElapsed);
+      converter.Convert(this.LineStart, out result.LineStart);
+      converter.Convert(this.LineEnd, out result.LineEnd);
+      converter.Convert(this.HitTargets, out result.HitTargets);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class ChargeHitTrackingPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.ChargeHitTrackingPrototype> {
     [ArrayLengthAttribute(4)]
     public Quantum.QuantumEntityPrototype[] RecentTargets = new Quantum.QuantumEntityPrototype[4];
@@ -293,12 +313,14 @@ namespace Quantum.Prototypes.Unity {
     public Quantum.QuantumEntityPrototype Rift;
     public AssetRef<SacrificeDefinition> Sacrifice;
     public Quantum.Prototypes.LevelUpOptionPrototype Mutation;
+    public AssetRef<SacrificeDefinition> AltSacrifice;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.CursedRiftInteractionPrototype prototype);
     public override Quantum.Prototypes.CursedRiftInteractionPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.CursedRiftInteractionPrototype();
       converter.Convert(this.Rift, out result.Rift);
       converter.Convert(this.Sacrifice, out result.Sacrifice);
       converter.Convert(this.Mutation, out result.Mutation);
+      converter.Convert(this.AltSacrifice, out result.AltSacrifice);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -308,12 +330,14 @@ namespace Quantum.Prototypes.Unity {
     public Quantum.QuantumEntityPrototype Rift;
     public AssetRef<SacrificeDefinition> Sacrifice;
     public Quantum.Prototypes.LevelUpOptionPrototype Mutation;
+    public AssetRef<SacrificeDefinition> AltSacrifice;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.CursedRiftOfferEntryPrototype prototype);
     public override Quantum.Prototypes.CursedRiftOfferEntryPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.CursedRiftOfferEntryPrototype();
       converter.Convert(this.Rift, out result.Rift);
       converter.Convert(this.Sacrifice, out result.Sacrifice);
       converter.Convert(this.Mutation, out result.Mutation);
+      converter.Convert(this.AltSacrifice, out result.AltSacrifice);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -1031,6 +1055,36 @@ namespace Quantum.Prototypes.Unity {
     public override Quantum.Prototypes.TeamChallengeSpawnPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.TeamChallengeSpawnPrototype();
       converter.Convert(this.Poi, out result.Poi);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class TrainingDummyPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TrainingDummyPrototype> {
+    public Quantum.QuantumEntityPrototype Spawner;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TrainingDummyPrototype prototype);
+    public override Quantum.Prototypes.TrainingDummyPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.TrainingDummyPrototype();
+      converter.Convert(this.Spawner, out result.Spawner);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class TrainingDummySpawnerPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TrainingDummySpawnerPrototype> {
+    public AssetRef<EntityPrototype> Prototype;
+    public AssetRef<EnemyDataAsset> EnemyData;
+    public FP RespawnDelay;
+    public Quantum.QuantumEntityPrototype Current;
+    public FP RespawnTimer;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TrainingDummySpawnerPrototype prototype);
+    public override Quantum.Prototypes.TrainingDummySpawnerPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.TrainingDummySpawnerPrototype();
+      converter.Convert(this.Prototype, out result.Prototype);
+      converter.Convert(this.EnemyData, out result.EnemyData);
+      converter.Convert(this.RespawnDelay, out result.RespawnDelay);
+      converter.Convert(this.Current, out result.Current);
+      converter.Convert(this.RespawnTimer, out result.RespawnTimer);
       ConvertUser(converter, ref result);
       return result;
     }

@@ -631,6 +631,19 @@ event ProjectileLandingWarning
     EntityRef  Owner;
 }
 
+// Line counterpart of ProjectileLandingWarning: a flat ground lane From -> To, Width wide, shown for
+// Duration. Fired by BurrowChargeDeliveryData while the enemy is still underground, marking the
+// line it will erupt and charge along. Owner-bound the same way (the View drops it early if the
+// owner is stunned/frozen, leaves Active, or dies). Listener: GroundWarningTelegraphManager (View).
+event GroundLineWarning
+{
+    FPVector3  From;
+    FPVector3  To;
+    FP         Width;
+    FP         Duration;
+    EntityRef  Owner;
+}
+
 // Fired once by RingSlamDeliveryData.Begin() - the View-side hook to draw a growing ring OUTLINE
 // (RingWaveVisualManager, a LineRenderer) alongside the existing paired Circle telegraph (which
 // only ever shows the FINAL size up front). Center is a one-time snapshot - RingSlamDeliveryData

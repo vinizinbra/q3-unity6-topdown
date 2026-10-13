@@ -31,6 +31,10 @@ namespace Quantum
                     case CancelBlacksmithCommand:
                         BlacksmithUtility.Cancel(f, entity, interaction);
                         break;
+
+                    case RerollBlacksmithCommand:
+                        BlacksmithUtility.Reroll(f, entity, interaction);
+                        break;
                 }
             }
         }

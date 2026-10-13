@@ -15,11 +15,21 @@ namespace Quantum
             if (sharedState != PoiViewState.Active || MyLocalPlayer.Instance == null)
                 return sharedState;
 
+            // Repair Station has its own per-player charge (re-armed when a Break starts), not a PoiUsagePolicy.
+            if (f.Has<RepairStation>(poi))
+                return ResolveLocal(f, poi, sharedState, player => RepairStationUtility.CanUse(f, player));
+
             PoiUsagePolicy policy = ResolveUsagePolicy(f, poi);
 
             if (policy == PoiUsagePolicy.Reusable)
                 return sharedState;
 
+            return ResolveLocal(f, poi, sharedState, player => PoiUsageUtility.CanUse(f, player, poi, policy));
+        }
+
+        // Active while any of THIS client's local players can still use it, Expired once none can.
+        private static PoiViewState ResolveLocal(Frame f, EntityRef poi, PoiViewState sharedState, System.Func<EntityRef, bool> canUse)
+        {
             var slots = MyLocalPlayer.Instance.Slots;
             bool anyLocalPlayer = false;
 
@@ -30,7 +40,7 @@ namespace Quantum
 
                 anyLocalPlayer = true;
 
-                if (PoiUsageUtility.CanUse(f, slots[i].EntityRef, poi, policy) == true)
+                if (canUse(slots[i].EntityRef) == true)
                     return PoiViewState.Active;
             }
 
@@ -49,7 +59,8 @@ namespace Quantum
                 return rift->UsagePolicy;
 
             if (f.Unsafe.TryGetPointer<Blacksmith>(poi, out var forge))
-                return forge->UsagePolicy;
+                return BlacksmithUtility.ResolveUsagePolicy(f, forge);
+
 
             return PoiUsagePolicy.Reusable;
         }

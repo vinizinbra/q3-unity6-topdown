@@ -44,6 +44,8 @@ MonoBehaviour:
     Count: 1
     MustHave: 1
     GroupId: 0
+    Unlock: 0
+    UnlockMinLevel: 0
   - Type: 1
     Prototypes:
     - Prototype:
@@ -69,6 +71,8 @@ MonoBehaviour:
     Count: 20
     MustHave: 0
     GroupId: 0
+    Unlock: 0
+    UnlockMinLevel: 0
   - Type: 4
     Prototypes:
     - Prototype:
@@ -79,6 +83,8 @@ MonoBehaviour:
     Count: 1
     MustHave: 0
     GroupId: 1
+    Unlock: 3
+    UnlockMinLevel: 1
   - Type: 5
     Prototypes:
     - Prototype:
@@ -89,6 +95,8 @@ MonoBehaviour:
     Count: 1
     MustHave: 0
     GroupId: 1
+    Unlock: 4
+    UnlockMinLevel: 1
   - Type: 6
     Prototypes:
     - Prototype:
@@ -99,6 +107,8 @@ MonoBehaviour:
     Count: 1
     MustHave: 0
     GroupId: 1
+    Unlock: 5
+    UnlockMinLevel: 1
   - Type: 3
     Prototypes:
     - Prototype:
@@ -109,6 +119,8 @@ MonoBehaviour:
     Count: 1
     MustHave: 1
     GroupId: 0
+    Unlock: 1
+    UnlockMinLevel: 1
   - Type: 7
     Prototypes:
     - Prototype:
@@ -119,6 +131,8 @@ MonoBehaviour:
     Count: 1
     MustHave: 1
     GroupId: 0
+    Unlock: 2
+    UnlockMinLevel: 1
   - Type: 4
     Prototypes:
     - Prototype:
@@ -129,6 +143,8 @@ MonoBehaviour:
     Count: 1
     MustHave: 1
     GroupId: 0
+    Unlock: 3
+    UnlockMinLevel: 2
   ChunkPoolGroups:
   - GroupId: 1
     MinRequired: 2

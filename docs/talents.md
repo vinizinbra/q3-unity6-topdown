@@ -313,6 +313,9 @@ after its existing `PlayerSpawnUtility.IsReadyToSpawn` check - this is the singl
 
 ## Persistence (`MatchMakingConfig.cs`)
 
+**Superseded (2026-10-12)** by `MetaProgressionSave` + `TalentSaveMapper` - see "Meta progression" below. The
+`player_talents` JSON pref and the scalar talent prefs described here are no longer read. Kept for history:
+
 Mirrors `WeaponTalentLevelPref` exactly, but as one `PlayerPrefObject<TalentSaveData>` JSON-blob
 pref (`"player_talents"`) instead of eighteen separate `PlayerPrefInt`/`PlayerPrefBool` fields,
 since Talents is now several heterogeneous fields rather than one scalar. Read once in
@@ -351,19 +354,95 @@ raises this over time"). Building that screen is out of scope for this pass.
    `RefreshMaxShield` calls to actually show up on `Health`/`Shield`, not just on `CharacterStats`
    itself).
 
-## Exploration upgrade lines ("Rift Jumpers" v1.0) - UI placeholder
+## Meta progression - menu Upgrades tab drives the match (2026-10-12)
 
-The menu's Upgrades tab > Exploration list shows 11 lines / 34 levels (Equipment: Store 3, Gunsmith 4,
-Weapons 5; World: Challenges 2, Healing Shrine 3, Sacrifice Rift 2, Rift Anchor/Base 3; Economy:
-Starting Gold 3, Rerolls 2; Survival: Revive 4, Co-op 3). **UI only - no line drives the simulation yet**,
-and none maps to a `RuntimePlayer.Talents` field (`talentKey` empty). The old `HasWeaponChest`/`HasHeroChest`/
-`HasGlobalUpgradeChest`/`HasUnlockedRift`/`CanFindStones`/`HasEvent` talents stay scaffolded but no longer
-have a UI line.
+The menu's Upgrades tab (12 Power + 11 Exploration lines) is now real: bought with saved Rift Shards,
+carried into the match, and every level has an effect. Three layers, each value in exactly one place:
 
-- Each line is a `PermanentUpgradeData` with `levelInfos[]` (title + description per level). With it set,
-  CURRENT/NEXT show level titles ("Locked" at 0) and the detail text describes the next level.
-- Source of truth for the texts/costs is the table in `Scripts/UI/Menu/Upgrades/Editor/ExplorationUpgradesGenerator.cs`
-  (Tools > RiftRaiders > Upgrades > Rebuild Exploration Upgrades): regenerates the assets and rewires
-  `UpgradesTab.upgrades` in the open scene (save the scene afterwards). Costs are placeholders (150 + 50/level).
-- Open design questions carried from the spec: Revive L1 vs the solo mode's built-in revive (adds to it or
-  replaces it?), and the final Revive Recovery HP value. Gunsmith Reroll is independent from the general Rerolls line.
+| Layer | Where | Holds |
+|---|---|---|
+| Catalog (Unity) | `GameDB` (`Assets/_Project/Resources/GameDB.asset`, `GameDB.Instance`) | `PermanentUpgrades`: every `PermanentUpgradeData` (text, icon, cost, maxLevel). `UpgradesTab` reads it - no scene list anymore. |
+| Save (Unity) | `MetaProgressionSave` (one JSON pref `"meta_progression"`) | Rift Shard wallet + bought level per `PermanentUpgradeId` (keyed by enum NAME). `Changed` event refreshes the tab + `RiftShardWalletWidget` (TopBar). |
+| Sim (Quantum) | `RuntimePlayer.Talents` (per player) + `RuntimeConfig.WorldUnlocks` (world) + `TalentsConfig` | LEVELS only travel; what a level is worth is `TalentsConfig`; from which level a behaviour starts is `MetaUnlockLevels` (mirrors the card order). |
+
+- **`PermanentUpgradeId`** (`Scripts/MetaProgression/`) replaced the old `talentKey` string / `mockLevel` on
+  `PermanentUpgradeData`. Append-only enum; it is the save key and the mapper's switch.
+- **`TalentSaveMapper`** is the one place save levels become match data: `ApplyPlayer(ref PlayerTalents)`
+  (Power + Weapons/StartingGold/Rerolls/Revive/Coop levels) and `BuildWorld()` (Store/Gunsmith/Challenges/
+  HealingShrine/SacrificeRift/RiftAnchor). It replaced `TalentSaveData` and the five scalar prefs in
+  `MatchMakingConfig` (`weapon_talent_level`, `reroll_quantity`, ...). The raw count fields on `PlayerTalents`
+  (`RerollQuantity`, `StartingCoins`, `SelfReviveCharges`, `WeaponLevel`, `ShopWeaponOfferCount`) are no longer
+  written by the menu - they stay as Inspector test extras that add on top.
+- **World lines come from the party leader**: `SyncMatchRoom` carries `"unlocks"` (packed bytes) next to
+  difficulty/world; `StartRunner` uses it once (else the local save); offline uses the local save. World levels
+  are on `RuntimeConfig` (not `RuntimePlayer`) because level generation runs from frame 0, before any
+  `RuntimePlayer` exists. `WorldUnlocks.Enforce == false` (any hand-authored RuntimeConfig, e.g. playing the
+  gameplay scene directly) = everything unlocked; add `LocalDebugMetaProgression` next to
+  `QuantumRunnerLocalDebug` and tick it to test with the saved progression instead.
+- **Rift Shards**: `RunResultManager` banks the local player's `RiftShardsEarned` into the save once per match.
+  CheatMenu > Loot > "Meta Progression (save)": Get +500 Rift Shards / Max All Upgrades / Reset (save-only,
+  work in the MenuScene too).
+
+### What each level does
+
+| Line | Effect | Code |
+|---|---|---|
+| Power (12) | `TalentUtility.ApplyPerPlayerTalents` - `PercentPerLevel` (5%); Coin Gain uses `CoinGainPercentPerLevel` (10%). | `TalentUtility` |
+| Store | L1 chunk generated (rolled once per run) · L2 restock every Break · L3 +1 weapon offer | `LevelConfig.ChunkPoolEntry.Unlock`, `StoreUtility.EnsureInventoryRolled/ResolveWeaponOfferCount` |
+| Gunsmith | L1 chunk, 1 purchase per run · L2 per-Break offer + purchase · L3 rarity rows read `GunsmithRarityBreakOffset` Breaks ahead · L4 1 reroll per Break (`RerollBlacksmithCommand`, ChooseWindow Reroll button) | `BlacksmithUtility.ResolveUsagePolicy/Reroll` |
+| Weapons (per player, = `Talents.WeaponLevel`) | Lv N: EVERY weapon the player equips this run gets `WeaponLevelBonusByLevel` (+N) extra levels - starting weapon (applied at spawn), Choose Weapon, chests, Store, cheats (`WeaponSystem.ApplyMetaWeaponLevels` inside `Equip`; offer cards show the total). Perk rarity: `TalentsConfig.WeaponPerkRarityByLevel` (level 0 = the perk pool's own weights). There is ONE weapon roll for every source - Store offers call the same `LevelUpUtility.RollWeaponOption` as Choose Weapon/chests, so a chest at minute N = the Store at minute N (level, perk count, rarity, perk conflicts). `StoreConfig.TalentRarityTuning`/`RollStorePerks` were removed | `WeaponSystem.Equip`, `LevelUpUtility.RollWeaponOption`, `StoreUtility.RollWeaponOffers` |
+| Challenges | L1 Traversal chunk · L2 Team Challenge chunk | `ChunkPoolEntry.Unlock` |
+| Healing Shrine | L1 chunk · L2 +`ShrineImprovedHealBonus` heal · L3 cooldown × `ShrineCooldownMultiplier` | `HealingShrineUtility.TryInteract` |
+| Sacrifice Rift | L1 chunk · L2 two sacrifice cards for the same mutation (`AltSacrifice`, `ConfirmCursedRiftCommand.OptionIndex`) | `CursedRiftUtility` |
+| Rift Anchor | L1 starting Weapon Chest (`SharedTalentRequirement.WeaponChest`) · L2 Repair Station POI on the Base's space ship (`RepairStation` component/`InteractableKind`, `LevelProps/RepairStation.prefab` at StartChunkSpawnConfig offset (6,2,6), free 1 Accessory Guard block; its own charge re-arms when each Break STARTS - `RepairStationUsage`/`RepairStationUtility.BreaksStarted`, so it is not ready at run start; while ready the purple SpinPortal plays with the LOCAL hero's accessory on top - `RepairStationAccessoryView`, sortingOrder 10 > portal 0, JuicyEffects scale-in + squash-wobble blob idle on the parent, scale unified with the dropped accessory: parent = AccessoryOrb base x 0.75, sprite x the hero's CollectibleScale) · L3 starting chest options get ≥ `BaseChestGuaranteedPerks` perks (`Chest.MinWeaponPerks`) | `TalentGateSystem`, `RepairStationUtility` |
+| Starting Gold | `StartingGoldByLevel` Coins | `ApplyPerPlayerTalents` |
+| Rerolls | `RerollsByLevel` rerolls | `ApplyPerPlayerTalents` |
+| Revive | L1/L4 `SelfReviveChargesByLevel` · L2 self-revive +`SelfReviveHealthBonus` HP · L3 self-revive restores 1 guard block | `PlayerLifeStateUtility.Revive` |
+| Co-op | L1 revive hold ×(1+`CoopRescueSpeedBonus`) · L2 own bleed-out ×(1+`CoopBleedOutBonus`) · L3 allies you revive +`CoopRescueHealthBonus` HP | `ReviveChannelSystem`, `PlayerLifeStateUtility` |
+
+### Unlock requirements (Exploration)
+
+A line can carry an unlock requirement on its `PermanentUpgradeData`: `requiredUpgrade` + `requiredUpgradeLevel`
+(another line owned at a level) and/or `requiredCategoryLevels` (total levels bought across every Exploration
+line - every bought level counts 1, whatever the line, including the ones that satisfied other requirements).
+`MetaProgressionSave.GetLockReason` evaluates it ("Requires Store Lv. 1" / "Requires 3 Exploration upgrades
+(1/3)"), and `TryPurchase` refuses a locked line. Owned levels are never taken away. The requirements are set
+in the `ExplorationUpgradesGenerator` table:
+
+| Requirement | Lines |
+|---|---|
+| none | Store, Starting Gold, Rerolls, Rift Anchor |
+| Store Lv. 1 | Weapons, Gunsmith, Co-op |
+| 3 Exploration upgrades | Challenges, Healing Shrine, Revive |
+| 5 Exploration upgrades | Sacrifice Rift |
+
+UI: a locked row swaps its cost gem for `RR_Icon_Lock` (`UpgradeRowWidget.lockSprite`; the cost text autosizes), shows "LOCKED", greys the
+icon and name, and shows the reason (in #FD3971) where the description was. The detail panel's button reads
+LOCKED with the lock icon, and the NEXT card is titled "LOCKED · LV n" with the reason above the next level's
+text. The Exploration subtitle shows the owned Exploration level count. Pressing UPGRADE on a locked line or without enough Rift Shards shows a ToastManager message (the reason, or how many shards are missing).
+
+### Playtest profile (balancing / dev meetups)
+
+`GameDB.PlaytestConfig` -> `Assets/_Project/Data/MetaProgressionPlaytestConfig.asset` (`MetaProgressionPlaytestConfig`:
+a list of `PermanentUpgradeId` + level; ships as a mid-progression profile). Two ways to use it:
+
+- **`META_PLAYTEST` define** (main Editor toolbar dropdown "Meta: Normal / Playtest", per active
+  build target): `MetaProgressionSave.GetLevel` returns max(saved, profile) - a floor every device in a playtest
+  build gets with no setup, never written to the save (define off = real progression back). Buying on top saves
+  floor + 1. Since world lines come from the party leader, every device on the same build agrees anyway.
+- **Cheat > Loot > Apply Playtest Profile**: writes the profile INTO the save (raise-only) - for a normal build
+  with cheats, persists until Reset Meta Progression.
+
+A locked POI's chunk is **not generated** (`LevelGenerationSystem.BuildShuffledBag` skips it; group Min/Max and
+`VerifyGroupRequirements` clamp to unlocked members), so the minimap never shows it. Gating is per
+`ChunkPoolEntry` (not per `ChunkType`) because Traversal and Team Challenge share `ChunkType.Traversal`.
+
+`PermanentUpgradeData.levelZeroText` (optional) replaces the CURRENT card's "Not unlocked yet." at level 0 - Rift
+Anchor uses "Nothing to see here...".
+
+Texts/costs: `ExplorationUpgradesGenerator` (Tools > RiftRaiders > Upgrades > Rebuild Exploration Upgrades) is
+still the source of truth for the Exploration card text/cost and now rewires `GameDB` instead of the scene.
+
+**Known simplifications / not done**: bots never use the Repair Station; Max Shield has a talent field but no menu line; one save per device (couch co-op locals share
+it); the Balance Simulator doesn't model meta talents; "Downed time shrinks with each revive" was dropped from
+the Co-op card (never implemented).

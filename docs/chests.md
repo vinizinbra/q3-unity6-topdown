@@ -190,3 +190,7 @@ Two supporting changes came with it:
    re-trigger for a second nearby player mid-screen, one player confirming does NOT close the screen
    for anyone still picking, and gameplay only resumes once every connected player has confirmed (or
    the countdown expires) - exactly like a real level-up.
+
+## Meta progression hooks (2026-10-12)
+
+`Chest.MinWeaponPerks` gives ChooseWeapon chest options a perk floor. `TalentGateSystem` sets it on the Base starting Weapon Chest at Rift Anchor L3, and `BeginChestScreen` threads it through to `RollWeaponOption`. The starting chest itself now spawns at Rift Anchor L1, or with the legacy `HasWeaponChest`. A player's Weapons line also changes chest weapons: +levels, plus a better perk-rarity row on chest options. See `docs/talents.md`, "Meta progression".

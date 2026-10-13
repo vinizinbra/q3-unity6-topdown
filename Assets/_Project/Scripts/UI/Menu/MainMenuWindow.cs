@@ -19,6 +19,9 @@ public class MainMenuWindow : UiWindow
     public Button quickPlayButton;
     public Button practiceButton;
 
+    [Tooltip("Optional - starts the offline Training Zone (movement/aim tutorial level).")]
+    public Button trainingButton;
+
     [Tooltip("Shown only while there is a live match to rejoin (MatchMakingConfig.CanReconnect). Hidden entirely otherwise - it is not a disabled-but-visible control.")]
     public Button reconnectButton;
 
@@ -33,6 +36,9 @@ public class MainMenuWindow : UiWindow
     [Tooltip("Optional - one entry per WorldCatalog world. Writes the chosen WorldDefinition onto MatchMakingConfig.RuntimeConfig (World, SurvivalConfig, WorldBalance); in a party only the leader's pick is used (carried in the match-start event), so it's read-only for everyone else.")]
     public TMP_Dropdown worldDropdown;
 
+    [Tooltip("Optional - the map picture next to the world picker; shows the picked world's WorldDefinition.Icon (its biome thumbnail).")]
+    public UnityEngine.UI.Image worldIcon;
+
     // WorldCatalog index. Remembered across sessions.
     private static readonly PlayerPrefInt WorldIndexPref = new PlayerPrefInt("menu_world_index", 0);
 
@@ -40,6 +46,12 @@ public class MainMenuWindow : UiWindow
     [Tooltip("Optional - Easy/Medium/Hard/Nightmare 1..maxNightmareLevel. Writes MatchMakingConfig.RuntimeConfig.Difficulty/NightmareLevel; in a party only the leader's pick is used (carried in the match-start event), so it's read-only for everyone else.")]
     public TMP_Dropdown difficultyDropdown;
     public int maxNightmareLevel = 10;
+
+    [Tooltip("Caption text colour of the selected difficulty - dark tones so they read on the dropdown's white background.")]
+    public Color easyColor = new Color32(0x2E, 0x7D, 0x32, 0xFF);
+    public Color mediumColor = new Color32(0xB2, 0x80, 0x00, 0xFF);
+    public Color hardColor = new Color32(0xC6, 0x28, 0x28, 0xFF);
+    public Color nightmareColor = new Color32(0x7B, 0x1E, 0x3A, 0xFF);
 
     // Dropdown index, not tier - Nightmare N is index 2 + N. Remembered across sessions.
     private static readonly PlayerPrefInt DifficultyIndexPref = new PlayerPrefInt("menu_difficulty_index", (int)DifficultyTier.Medium);
@@ -53,6 +65,9 @@ public class MainMenuWindow : UiWindow
 
         if (practiceButton != null)
             practiceButton.onClick.AddListener(Practice);
+
+        if (trainingButton != null)
+            trainingButton.onClick.AddListener(Training);
        /* quickPlayButton.onClick.AddListener(QuickPlay);*/
 
         InitializeWorldDropdown();
@@ -68,6 +83,9 @@ public class MainMenuWindow : UiWindow
 
         if (practiceButton != null)
             practiceButton.onClick.RemoveListener(Practice);
+
+        if (trainingButton != null)
+            trainingButton.onClick.RemoveListener(Training);
        /* quickPlayButton.onClick.RemoveListener(QuickPlay);*/
 
         if (difficultyDropdown != null)
@@ -106,12 +124,25 @@ public class MainMenuWindow : UiWindow
         }
 
         MatchMakingConfig.ApplyWorld(runtimeConfig, index);
+        ShowWorldIcon(index);
+    }
+
+    private void ShowWorldIcon(int index)
+    {
+        if (worldIcon == null)
+            return;
+
+        WorldDefinition world = WorldCatalog.Instance != null ? WorldCatalog.Instance.Get(index) : null;
+        Sprite icon = world != null ? world.Icon : null;
+        if (icon != null)
+            worldIcon.sprite = icon;
     }
 
     private void OnWorldChanged(int index)
     {
         WorldIndexPref.Value = index;
         MatchMakingConfig.ApplyWorld(matchMakingConfig != null ? matchMakingConfig.RuntimeConfig : MatchMakingConfig.Instance.RuntimeConfig, index);
+        ShowWorldIcon(index);
     }
 
     private void InitializeDifficultyDropdown()
@@ -153,8 +184,22 @@ public class MainMenuWindow : UiWindow
             config.NightmareLevel = index - (int)DifficultyTier.Hard;
         }
 
+        if (difficultyDropdown != null && difficultyDropdown.captionText != null)
+            difficultyDropdown.captionText.color = GetDifficultyColor(config.Difficulty);
+
         // In a party, the leader's pick is shown to everyone on the party widget.
         PartyManager.Instance?.PublishDifficulty();
+    }
+
+    private Color GetDifficultyColor(DifficultyTier tier)
+    {
+        switch (tier)
+        {
+            case DifficultyTier.Easy: return easyColor;
+            case DifficultyTier.Hard: return hardColor;
+            case DifficultyTier.Nightmare: return nightmareColor;
+            default: return mediumColor;
+        }
     }
 
     public override void Show()
@@ -275,5 +320,17 @@ public class MainMenuWindow : UiWindow
         }
 
         GameManager.Instance.PlayOffline();
+    }
+
+    // Same party guard as Practice - the Training Zone is an offline session too.
+    private void Training()
+    {
+        if (PartyManager.Instance.InParty)
+        {
+            ToastManager.Instance?.Show("Leave your party before entering the Training Zone.");
+            return;
+        }
+
+        GameManager.Instance.PlayTrainingZone();
     }
 }

@@ -17,10 +17,10 @@ MonoBehaviour:
   description: Start every run with Gold to buy gear earlier, without relying only
     on combat income.
   icon: {fileID: -1990552122927095940, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
-  accentColor: {r: 0.99215686, g: 0.7647059, b: 0.007843138, a: 1}
+  accentColor: {r: 0.992, g: 0.765, b: 0.008, a: 1}
   category: 1
   group: 2
-  maxLevel: 3
+  maxLevel: 5
   baseCost: 150
   costStep: 50
   valuePerLevel: 5
@@ -28,10 +28,17 @@ MonoBehaviour:
   valueFormatPlural: 
   levelInfos:
   - title: Starting Gold I
-    description: Start every run with 25 extra Gold.
+    description: Start every run with 100 Gold.
   - title: Starting Gold II
-    description: Extra starting Gold rises to 50.
+    description: Starting Gold rises to 200.
   - title: Starting Gold III
-    description: Extra starting Gold rises to 100.
-  talentKey: 
-  mockLevel: 0
+    description: Starting Gold rises to 300.
+  - title: Starting Gold IV
+    description: Starting Gold rises to 400.
+  - title: Starting Gold V
+    description: Starting Gold rises to 500.
+  levelZeroText: 
+  requiredUpgrade: 0
+  requiredUpgradeLevel: 1
+  requiredCategoryLevels: 0
+  id: 201

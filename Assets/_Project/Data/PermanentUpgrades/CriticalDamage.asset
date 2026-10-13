@@ -25,5 +25,5 @@ MonoBehaviour:
   valuePerLevel: 5
   valueFormat: +{0}%
   valueFormatPlural: 
-  talentKey: PlayerCriticalDamageLevel
-  mockLevel: 1
+  levelInfos: []
+  id: 6

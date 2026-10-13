@@ -172,7 +172,7 @@ namespace Quantum
         // are each solid ground but have nothing connecting them underground either.
         private const int PathSampleCount = 6;
 
-        private static bool IsPathClear(Frame f, FPVector3 from, FPVector3 to, int groundLayerMask)
+        internal static bool IsPathClear(Frame f, FPVector3 from, FPVector3 to, int groundLayerMask)
         {
             for (int i = 0; i <= PathSampleCount; i++)
             {

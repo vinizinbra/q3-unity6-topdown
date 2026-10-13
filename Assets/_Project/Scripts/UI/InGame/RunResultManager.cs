@@ -13,6 +13,7 @@ public class RunResultManager : QuantumGlobalMonoBehaviour
 {
     private bool _resultPending;
     private bool _pendingWon;
+    private bool _shardsBanked;
 
     private void Awake()
     {
@@ -108,8 +109,24 @@ public class RunResultManager : QuantumGlobalMonoBehaviour
         // holds/challenges, never ticked during Boss), so it read well short of the real run.
         FP runTime = frame.Global->RunTime;
 
+        BankRiftShards(riftShardsEarned);
+
         RunResultPopup popup = InMatchPopupManager.instance.Open<RunResultPopup>();
         popup?.Setup(won, enemiesKilled, damageDealt, timesDowned, riftShardsEarned, runTime, teamResults);
+    }
+
+    // The run's Rift Shards are the permanent meta currency (menu Upgrades tab): this device's local player's
+    // earnings go into MetaProgressionSave, once per match even if a result were ever shown twice. One wallet
+    // per device, so extra couch co-op slots don't bank separately (see docs/talents.md, "Meta progression").
+    private void BankRiftShards(FP riftShardsEarned)
+    {
+        if (_shardsBanked)
+            return;
+
+        _shardsBanked = true;
+        int amount = FPMath.FloorToInt(riftShardsEarned);
+        if (amount > 0)
+            MetaProgressionSave.AddRiftShards(amount);
     }
 
     // Prefers the player's own Photon nickname over the hero name, falling back to the hero's

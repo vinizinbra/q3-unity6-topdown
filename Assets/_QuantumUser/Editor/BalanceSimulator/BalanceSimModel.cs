@@ -76,12 +76,10 @@ namespace QuantumUser.Editor.BalanceSimulator
                 case CriticalDamageUpgradeData: CriticalDamageMultiplier *= m; return true;
                 case SkillDamageUpgradeData: SkillDamageMultiplier *= m; return true;
                 case SkillCooldownUpgradeData: SkillCooldownMultiplier *= m; return true;
-                case SkillDurationUpgradeData: SkillDurationMultiplier *= m; return true;
                 case SkillAreaUpgradeData: AreaRadiusMultiplier *= m; return true;
                 case ExperienceGainUpgradeData: ExperienceGainMultiplier *= m; return true;
                 case CoinGainUpgradeData: CoinGainMultiplier *= m; return true;
                 case MaxHealthUpgradeData: MaxHealthMultiplier *= m; return true;
-                case ToughnessUpgradeData: DamageTakenMultiplier *= m; return true;
                 default: return false;
             }
         }

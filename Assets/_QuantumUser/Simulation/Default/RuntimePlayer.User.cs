@@ -30,10 +30,11 @@ namespace Quantum
     [System.Serializable]
     public struct PlayerTalents
     {
-        // Weapon-talent level - seeds CharacterStats.WeaponTalentLevel once at spawn
-        // (PlayerSpawnUtility.Spawn). Distinct from CharacterStats.WeaponTalentLevel itself, which
-        // then keeps incrementing live for the rest of THIS match on every
-        // LevelUpCategory.ChooseWeapon pick - this field is only ever read once.
+        // Exploration "Weapons" line level (0-5), written by the menu's TalentSaveMapper. For the whole run,
+        // every weapon THIS player equips gets TalentsConfig.WeaponLevelBonusByLevel extra levels
+        // (WeaponSystem.ApplyMetaWeaponLevels, on every Equip + the starting weapon at spawn), and every newly
+        // rolled weapon - Store, chest or level-up alike - rolls perks on TalentsConfig.WeaponPerkRarityByLevel.
+        // Also seeds CharacterStats.WeaponTalentLevel (bookkeeping only).
         public byte WeaponLevel;
 
         // Reroll-charge talent - seeds CharacterStats.RerollQuantity once at spawn
@@ -89,5 +90,16 @@ namespace Quantum
         public bool HasUnlockedRift;            // scaffolded only - not yet consumed anywhere
         public bool CanFindStones;              // scaffolded only - not yet consumed anywhere
         public bool HasEvent;                   // scaffolded only - not yet consumed anywhere
+
+        // Menu Upgrades tab (docs/talents.md, "Meta progression") - raw purchased LEVELS of the
+        // per-player lines, written by the menu's TalentSaveMapper from the local save. What each
+        // level is worth lives in TalentsConfig (resolved by TalentUtility at spawn), never here, so a
+        // number is tuned in exactly one place. The raw count fields above (RerollQuantity,
+        // StartingCoins, SelfReviveCharges...) stay as Inspector-only test extras added on top.
+        public byte PlayerCoinGainLevel;        // Power: Coin Gain
+        public byte StartingGoldLevel;          // Exploration: Starting Gold
+        public byte RerollsLevel;               // Exploration: Rerolls
+        public byte ReviveLevel;                // Exploration: Revive (self-revive charges/recovery/guard)
+        public byte CoopLevel;                  // Exploration: Co-op (rescue speed/downed time/rescue HP)
     }
 }

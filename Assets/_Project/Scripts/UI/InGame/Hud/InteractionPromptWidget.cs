@@ -591,8 +591,14 @@ public class InteractionPromptWidget : MonoBehaviour
 
         // Busy (this player already has the real Choice Window open) hides the world prompt
         // entirely rather than showing a redundant message on top of that screen.
+        // Before the run starts (Lobby) a POI that is merely "not in this phase" stays silent - otherwise the
+        // Base's Repair Station prompt pops up on top of the players the moment they spawn. A POI that IS usable
+        // in Lobby (the Training Zone's Finish) still shows.
+        bool lobbyIdle = state == ContextInteractionState.PhaseUnavailable
+            && _game.Frames.Predicted.Global->CurrentState == GameState.Lobby;
+
         bool shown = state == ContextInteractionState.Available
-            || state == ContextInteractionState.PhaseUnavailable
+            || (state == ContextInteractionState.PhaseUnavailable && lobbyIdle == false)
             || state == ContextInteractionState.AlreadyUsed
             || state == ContextInteractionState.NotNeeded
             || state == ContextInteractionState.Occupied;

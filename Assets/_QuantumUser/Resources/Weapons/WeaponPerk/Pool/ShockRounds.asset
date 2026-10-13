@@ -16,10 +16,10 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/ShockRounds
     Guid:
       Value: 361375898294280482
-  Icon: {fileID: 21300000, guid: b3816e56a6d94656830b06f9b6dc0046, type: 3}
+  Icon: {fileID: 37438705, guid: 624ad7d047fd5482799e44bb2e6ad8de, type: 3}
   DisplayName: Shock Rounds
   Rarity: 2
-  Description: 'Applies Shock on Hit'
+  Description: Applies Shock on Hit
   Element: 3
   ProcChance:
     RawValue: 65536

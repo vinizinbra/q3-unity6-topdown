@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/RiftMutation/BulletStorm
     Guid:
       Value: 287850747359276030
-  Icon: {fileID: 5783757731151388582, guid: 0b2ee31a186884c98b52ec43f0ba0d01, type: 3}
+  Icon: {fileID: 622084819, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Bullet Storm
   Rarity: 2
   Scope: 0

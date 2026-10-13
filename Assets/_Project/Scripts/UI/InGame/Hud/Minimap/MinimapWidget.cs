@@ -1328,7 +1328,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             case ChunkType.CursedRift:
                 return frame.Unsafe.TryGetPointer<CursedRift>(poiEntity, out var rift) ? rift->UsagePolicy : PoiUsagePolicy.Reusable;
             case ChunkType.Blacksmith:
-                return frame.Unsafe.TryGetPointer<Blacksmith>(poiEntity, out var forge) ? forge->UsagePolicy : PoiUsagePolicy.Reusable;
+                return frame.Unsafe.TryGetPointer<Blacksmith>(poiEntity, out var forge) ? BlacksmithUtility.ResolveUsagePolicy(frame, forge) : PoiUsagePolicy.Reusable;
             default:
                 return PoiUsagePolicy.Reusable;
         }

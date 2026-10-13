@@ -12,4 +12,7 @@ component Chest
     FP PickupRadius;
     Boolean Opened;   // guards against being collected twice while the screen it opened is still
                        // resolving - ChestSystem destroys the entity once this is true.
+    Byte MinWeaponPerks; // ChooseWeapon chests: every rolled weapon option gets at least this many perks.
+                         // 0 = the normal SurvivalTime curve. Set at spawn by TalentGateSystem on the Base's
+                         // starting Weapon Chest (Rift Anchor L3, meta progression) - see docs/talents.md.
 }

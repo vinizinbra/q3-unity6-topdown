@@ -25,6 +25,11 @@ namespace Quantum
             if (f.Global->CurrentState != GameState.Lobby)
                 return;
 
+            // The Training Zone never starts a run - it stays in Lobby (no Director/spawning) for its
+            // whole session. See LevelConfig.IsTrainingZone.
+            if (f.FindAsset(f.RuntimeConfig.LevelConfig) is { IsTrainingZone: true })
+                return;
+
             // TryGetLobbyStartBounds builds its AABB around Global.PlayerSpawnPosition, which isn't
             // assigned until the very last step of generation (LevelGenerationSystem
             // .AssignPlayerSpawnPosition). Read any earlier it's still default (0,0,0), so the bounds

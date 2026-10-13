@@ -88,13 +88,6 @@ namespace QuantumUser.Editor
                 Description = "+{0}% Weapon Range",
                 Configure = p => ((WeaponRangeUpgradeData)p).Multiplier = FP.FromString("1.15")
             },
-            new UpgradeSpec
-            {
-                Type = typeof(ProjectileSpeedUpgradeData), FileName = "ProjectileSpeed",
-                DisplayName = "Projectile Speed",
-                Description = "+{0}% Projectile Speed",
-                Configure = p => Multiplier(p, "1.2")
-            },
 
             // -- Hero --
             new UpgradeSpec
@@ -106,41 +99,10 @@ namespace QuantumUser.Editor
             },
             new UpgradeSpec
             {
-                // Replaced the old flat "+10 Shield" pick - see docs/global-upgrades.md. 0.9
-                // compounds per pick (never additive), so stacking it all run approaches but never
-                // reaches immunity.
-                Type = typeof(ToughnessUpgradeData), FileName = "Toughness",
-                DisplayName = "Toughness",
-                Description = "-{0}% Damage Taken",
-                Configure = p => Multiplier(p, "0.9")
-            },
-            new UpgradeSpec
-            {
                 Type = typeof(MoveSpeedUpgradeData), FileName = "MoveSpeed",
                 DisplayName = "Movement Speed",
                 Description = "+{0}% Move Speed",
                 Configure = p => Multiplier(p, "1.1")
-            },
-            new UpgradeSpec
-            {
-                Type = typeof(HealthRegenUpgradeData), FileName = "HealthRegen",
-                DisplayName = "Health Regeneration",
-                Description = "+{0} HP/sec",
-                Configure = p => ((HealthRegenUpgradeData)p).RegenAmount = FP._1
-            },
-            new UpgradeSpec
-            {
-                Type = typeof(HealingReceivedUpgradeData), FileName = "HealingReceived",
-                DisplayName = "Healing Received",
-                Description = "+{0}% Healing",
-                Configure = p => Multiplier(p, "1.2")
-            },
-            new UpgradeSpec
-            {
-                Type = typeof(PickupRadiusUpgradeData), FileName = "PickupRadius",
-                DisplayName = "Pickup Radius",
-                Description = "+{0}% Pickup Radius",
-                Configure = p => Multiplier(p, "1.2")
             },
 
             // -- Dash --
@@ -173,13 +135,6 @@ namespace QuantumUser.Editor
                 DisplayName = "Skill Cooldown",
                 Description = "-{0}% Cooldown",
                 Configure = p => Multiplier(p, "1.15")
-            },
-            new UpgradeSpec
-            {
-                Type = typeof(SkillDurationUpgradeData), FileName = "SkillDuration",
-                DisplayName = "Skill Duration",
-                Description = "+{0}% Duration",
-                Configure = p => Multiplier(p, "1.2")
             },
             new UpgradeSpec
             {

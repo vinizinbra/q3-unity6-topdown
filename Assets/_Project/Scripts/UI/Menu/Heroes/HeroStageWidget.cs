@@ -64,9 +64,14 @@ public class HeroStageWidget : MonoBehaviour
             flicker = null;
         }
 
+        // The alpha tweens are nested in each particle's Sequence - stopping them directly is an error,
+        // so stop the Sequence itself.
+        foreach (Sequence s in particleFades.Values)
+            s.Stop();
+        particleFades.Clear();
+
         foreach (Image p in particlePool)
         {
-            Tween.StopAll(p);
             Tween.StopAll(p.transform);
             p.gameObject.SetActive(false);
         }
@@ -75,6 +80,7 @@ public class HeroStageWidget : MonoBehaviour
     }
 
     private readonly System.Collections.Generic.List<Image> particlePool = new System.Collections.Generic.List<Image>();
+    private readonly System.Collections.Generic.Dictionary<Image, Sequence> particleFades = new System.Collections.Generic.Dictionary<Image, Sequence>();
     private Coroutine particleRoutine;
 
     private IEnumerator Particles()
@@ -131,7 +137,7 @@ public class HeroStageWidget : MonoBehaviour
         // Chain builds its Sequence with scaled time, and PrimeTween logs an error (with a stack
         // trace) per particle for the mismatch with these unscaled children - 38 of them in one menu
         // session on a device build.
-        Sequence.Create(useUnscaledTime: true)
+        particleFades[p] = Sequence.Create(useUnscaledTime: true)
             .Chain(Tween.Alpha(p, peak, life * 0.25f, Ease.OutQuad, useUnscaledTime: true))
             .Chain(Tween.Alpha(p, 0f, life * 0.75f, Ease.InQuad, useUnscaledTime: true))
             .OnComplete(p, img => img.gameObject.SetActive(false));

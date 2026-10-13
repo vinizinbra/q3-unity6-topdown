@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/SkillArea
     Guid:
       Value: 413323579687518313
-  Icon: {fileID: -923845276, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  Icon: {fileID: 430780027, guid: 1a4ad0db4ca3b49008dfcaa2b6819f70, type: 3}
   DisplayName: Skill Area
   MaxPicks: 3
   Description: +{0}% Radius

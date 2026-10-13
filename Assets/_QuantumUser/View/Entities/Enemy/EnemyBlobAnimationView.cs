@@ -176,6 +176,15 @@ namespace Quantum
         // value, since a zero scale would collapse the sprite to nothing.
         private Vector3 _bodySpriteScale = Vector3.one;
 
+        // Sprite-sheet sequence for the current step sprite swap (AttackVisualStep.BodySpriteFrames) -
+        // null = single-sprite swap, nothing to advance. Rides the same _bodySpriteTimeRemaining
+        // window; _bodySpriteElapsed is how far into it we are, used to pick the frame.
+        private Sprite[] _bodySpriteFrames;
+        private float _bodySpriteFrameRate;
+        private bool _bodySpriteLoop;
+        private float _bodySpriteDuration;
+        private float _bodySpriteElapsed;
+
         // Positive = compressed, negative = stretched. Single value - unlike the player's blob,
         // there's no separate jump-squash to keep independent from the idle/run breathing squash.
         private float _squashT;
@@ -336,6 +345,7 @@ namespace Quantum
                 return;
 
             rig.ReferenceSprite.sprite = sprite;
+            _bodySpriteFrames = null;
             _bodySpriteTimeRemaining = duration;
             _bodySpriteOffset = offset;
 
@@ -343,6 +353,59 @@ namespace Quantum
             // this channel actually wants - Vector3.one isn't a compile-time constant, so it can't be
             // the parameter's own default. Treat an all-zero caller value as "unset" instead.
             _bodySpriteScale = scale == Vector3.zero ? Vector3.one : scale;
+        }
+
+        // Entry point EnemyAttackVisualsView uses - routes to the sprite-sheet sequence when the
+        // step has BodySpriteFrames, else to the plain single-sprite swap above (unchanged path for
+        // every step authored before frames existed).
+        public void ApplyStepSprite(AttackVisualStep step)
+        {
+            if (step == null)
+                return;
+
+            if (step.BodySpriteFrames == null || step.BodySpriteFrames.Length == 0)
+            {
+                ApplyStepSprite(step.BodySprite, step.Duration, step.BodySpriteOffset, step.BodySpriteScale);
+                return;
+            }
+
+            if (rig == null || rig.ReferenceSprite == null)
+                return;
+
+            _bodySpriteFrames = step.BodySpriteFrames;
+            _bodySpriteFrameRate = step.BodySpriteFrameRate;
+            _bodySpriteLoop = step.BodySpriteLoop;
+            _bodySpriteDuration = step.Duration;
+            _bodySpriteElapsed = 0f;
+            _bodySpriteTimeRemaining = step.Duration;
+            _bodySpriteOffset = step.BodySpriteOffset;
+            _bodySpriteScale = step.BodySpriteScale == Vector3.zero ? Vector3.one : step.BodySpriteScale;
+
+            ShowBodySpriteFrame();
+        }
+
+        // Picks the frame for _bodySpriteElapsed - FrameRate > 0 steps at that fps (looping or
+        // holding the last frame), FrameRate <= 0 spreads the frames evenly over the step Duration.
+        // A null slot in the array just leaves the previous frame up.
+        private void ShowBodySpriteFrame()
+        {
+            int count = _bodySpriteFrames.Length;
+            int index;
+
+            if (_bodySpriteFrameRate > 0f)
+            {
+                index = Mathf.FloorToInt(_bodySpriteElapsed * _bodySpriteFrameRate);
+                index = _bodySpriteLoop == true ? index % count : Mathf.Min(index, count - 1);
+            }
+            else
+            {
+                float t = _bodySpriteDuration > 0f ? _bodySpriteElapsed / _bodySpriteDuration : 1f;
+                index = Mathf.Min(Mathf.FloorToInt(t * count), count - 1);
+            }
+
+            Sprite frame = _bodySpriteFrames[index];
+            if (frame != null)
+                rig.ReferenceSprite.sprite = frame;
         }
 
         // Called by EnemyAttackVisualsView on the attackNoLongerActive edge (Enemy.Phase leaving
@@ -353,6 +416,7 @@ namespace Quantum
         public void ResetBodySprite()
         {
             _bodySpriteTimeRemaining = 0f;
+            _bodySpriteFrames = null;
             _bodySpriteOffset = Vector3.zero;
             _bodySpriteScale = Vector3.one;
 
@@ -571,6 +635,11 @@ namespace Quantum
 
                 if (_bodySpriteTimeRemaining <= 0f)
                     ResetBodySprite();
+                else if (_bodySpriteFrames != null && rig != null && rig.ReferenceSprite != null)
+                {
+                    _bodySpriteElapsed += dt;
+                    ShowBodySpriteFrame();
+                }
             }
 
             bool triggerStillPlaying = (_state == State.AttackStep && _currentStep != null && _stateTimer < _currentStep.Duration)

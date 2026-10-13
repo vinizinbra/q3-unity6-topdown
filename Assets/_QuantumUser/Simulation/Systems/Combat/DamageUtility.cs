@@ -342,11 +342,15 @@ namespace Quantum
             FPVector3 dropPosition = f.Unsafe.TryGetPointer<Transform3D>(target, out var deathTransform) ? deathTransform->Position : FPVector3.Zero;
             bool fellOffLevel = FallRespawnUtility.TryResolveFallDropPosition(f, dropPosition, out dropPosition);
 
-            ExperienceUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
-            ScrapUtility.TrySpawnDrop(f, target, owner);
-            RiftShardUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
-            CoinUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
-            EnemyChestDropUtility.TrySpawnDrop(f, target, dropPosition);
+            // Training Zone target dummies drop nothing - see TrainingZone.qtn.
+            if (f.Has<TrainingDummy>(target) == false)
+            {
+                ExperienceUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
+                ScrapUtility.TrySpawnDrop(f, target, owner);
+                RiftShardUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
+                CoinUtility.TrySpawnDrop(f, target, owner, dropPosition, fellOffLevel);
+                EnemyChestDropUtility.TrySpawnDrop(f, target, dropPosition);
+            }
 
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
             {
@@ -685,9 +689,9 @@ namespace Quantum
             {
                 multiplier *= FPMath.Clamp(FP._1 - stats->DamageReduction, FP._0, FP._1);
 
-                // The Toughness Global Upgrade's own compounding term - multiplicative rather than
-                // folded into the additive fraction above precisely because it stacks indefinitely
-                // (see CharacterStats.qtn). Floored at 0, but never clamped up to 1: a value above
+                // Compounding damage-taken term (no source today - the Toughness Global Upgrade that
+                // fed it was removed) - multiplicative rather than folded into the additive fraction
+                // above so an indefinitely stacking source can't reach immunity (see CharacterStats.qtn). Floored at 0, but never clamped up to 1: a value above
                 // 1 is a legitimate "takes MORE damage" tradeoff for a future pick.
                 multiplier *= FPMath.Max(FP._0, stats->DamageTakenMultiplier);
             }

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dd6a407aac1047f58878b82114b1143, type: 3}
+  m_Name: GameDB
+  m_EditorClassIdentifier: Assembly-CSharp::GameDB
+  PermanentUpgrades:
+  - {fileID: 11400000, guid: c590165023a2b4eb58085b0d548c99ea, type: 2}
+  - {fileID: 11400000, guid: d96e417b8038f41f4a471a838215991d, type: 2}
+  - {fileID: 11400000, guid: ac550cab6b4974a79bf85c700a0f4fcc, type: 2}
+  - {fileID: 11400000, guid: 6459216bb364c43419fa329e8b3b251b, type: 2}
+  - {fileID: 11400000, guid: e0f278935ad3241d38ccd838894453e0, type: 2}
+  - {fileID: 11400000, guid: 47f9e981a7eb74c6ea542de80db150aa, type: 2}
+  - {fileID: 11400000, guid: 21ac8be069f9e4af095207389716c04b, type: 2}
+  - {fileID: 11400000, guid: 1e1bb1591489e420b90d09b368a15bac, type: 2}
+  - {fileID: 11400000, guid: 6e25c1fa37d824352bea5bb355503a4c, type: 2}
+  - {fileID: 11400000, guid: 9e4f44e89c6534fadb30dfa58c06bd3d, type: 2}
+  - {fileID: 11400000, guid: 8e3eb14fec36649ebb28224e71940422, type: 2}
+  - {fileID: 11400000, guid: 2e2d785747c964f908fce44a781c7fc1, type: 2}
+  - {fileID: 11400000, guid: 39c6d6b98ebf5423c81f84ac8000dfc2, type: 2}
+  - {fileID: 11400000, guid: cd016ffe7193f4ec18ecfea2bfc1a7ad, type: 2}
+  - {fileID: 11400000, guid: 5fedbac0e2a544dbcb46013233a116d2, type: 2}
+  - {fileID: 11400000, guid: 4dcbd1e813c2048648af817bfdf77146, type: 2}
+  - {fileID: 11400000, guid: 52df548780a2747038c5b57c17bc5412, type: 2}
+  - {fileID: 11400000, guid: 4fdc48f53fd714496b38344860006756, type: 2}
+  - {fileID: 11400000, guid: 62ef5c4e94c0b4889a44175e3b5b31ff, type: 2}
+  - {fileID: 11400000, guid: 48f7ce8456c6e47e6b47e40df580ec5c, type: 2}
+  - {fileID: 11400000, guid: 5757a6a63dbf24c9db1a56e09fab1968, type: 2}
+  - {fileID: 11400000, guid: da556e4f96c784abda091feccbe885f3, type: 2}
+  - {fileID: 11400000, guid: 0778c067776494bc892253929af11d83, type: 2}
+  PlaytestConfig: {fileID: 11400000, guid: 94777176dbb934f8e9956b91c20194ad, type: 2}

@@ -9,16 +9,13 @@ using UnityEngine.UI;
 /// category (one <see cref="UpgradeRowWidget"/> prefab, instantiated per <see cref="PermanentUpgradeData"/>),
 /// with the selected upgrade's details and an UPGRADE button on the right.
 ///
-/// UI only: levels live in memory (seeded from each asset's mockLevel) and UPGRADE just raises the level -
-/// no wallet, no save file yet. Replace <see cref="GetLevel"/> / <see cref="TryUpgrade"/> with the real
-/// progress class once it exists.
+/// The lines come from <see cref="GameDB"/>; levels and the Rift Shard wallet from <see cref="MetaProgressionSave"/>
+/// (UPGRADE spends shards there). Any save change - a purchase, a cheat, shards banked after a run - refreshes the
+/// rows and the detail panel. See docs/talents.md, "Meta progression".
 /// </summary>
 public class UpgradesTab : TabContent
 {
     private const string LogTag = "Upgrades";
-
-    [Header("Data")]
-    [SerializeField] private List<PermanentUpgradeData> upgrades = new List<PermanentUpgradeData>();
 
     [Header("Lists (index = PermanentUpgradeCategory)")]
     [SerializeField, Tooltip("The row placed in the first list in the scene: cloned once per upgrade (into every list), hidden itself.")]
@@ -74,11 +71,19 @@ public class UpgradesTab : TabContent
     [SerializeField] private Color nextColor = new Color(0.1f, 0.65f, 0.25f);
     [SerializeField, Tooltip("UPGRADE button tint once the upgrade is maxed. The button stays focusable (see RefreshDetail).")]
     private Color maxedButtonColor = new Color(0.45f, 0.47f, 0.53f);
+    [SerializeField, Tooltip("UPGRADE button tint while the wallet can't pay the next level.")]
+    private Color cantAffordButtonColor = new Color(0.55f, 0.3f, 0.35f);
 
-    private readonly Dictionary<PermanentUpgradeData, int> levels = new Dictionary<PermanentUpgradeData, int>();
+    [Header("Locked lines (unlock requirement not met)")]
+    [SerializeField, Tooltip("The UPGRADE button's currency icon - swapped for Lock Sprite while the line is locked.")]
+    private Image upgradeCostIcon;
+    [SerializeField] private Sprite lockSprite;
+    [SerializeField] private Color lockReasonColor = new Color(0.992f, 0.224f, 0.443f);
+
     private readonly List<UpgradeRowWidget>[] rows =
         { new List<UpgradeRowWidget>(), new List<UpgradeRowWidget>() };
     private Color upgradeButtonColor;
+    private Sprite upgradeCostIconSprite;
     private UpgradeRowWidget selected;
     private int category;
     private bool built;
@@ -88,6 +93,7 @@ public class UpgradesTab : TabContent
         base.Awake();
         upgradeButton.onClick.AddListener(OnUpgradePressed);
         upgradeButtonColor = upgradeButton.targetGraphic.color;
+        upgradeCostIconSprite = upgradeCostIcon != null ? upgradeCostIcon.sprite : null;
         categoryTabs.Changed += OnCategoryChanged;
     }
 
@@ -97,10 +103,38 @@ public class UpgradesTab : TabContent
             Build();
     }
 
+    private void OnEnable()
+    {
+        MetaProgressionSave.Changed += OnSaveChanged;
+    }
+
+    private void OnDisable()
+    {
+        MetaProgressionSave.Changed -= OnSaveChanged;
+    }
+
+    private void OnSaveChanged()
+    {
+        if (!built)
+            return;
+
+        foreach (List<UpgradeRowWidget> list in rows)
+        {
+            foreach (UpgradeRowWidget row in list)
+                row.SetLevel(GetLevel(row.Data), MetaProgressionSave.GetLockReason(row.Data));
+        }
+
+        RefreshSubtitle();
+        if (selected != null)
+            RefreshDetail();
+    }
+
     protected override void OnShow()
     {
         if (!built)
             Build();
+        else
+            OnSaveChanged(); // the save may have changed while hidden (run result, cheat)
     }
 
     protected override void OnHide()
@@ -110,27 +144,9 @@ public class UpgradesTab : TabContent
     // The row being viewed in the active category.
     public override Selectable DefaultFocus => selected != null ? selected.GetComponent<Selectable>() : null;
 
-    // TODO: read from the player's saved progress once that class exists.
-    private int GetLevel(PermanentUpgradeData data)
+    private static int GetLevel(PermanentUpgradeData data)
     {
-        if (!levels.TryGetValue(data, out int level))
-        {
-            level = Mathf.Clamp(data.mockLevel, 0, data.maxLevel);
-            levels[data] = level;
-        }
-
-        return level;
-    }
-
-    // TODO: spend currency + persist. For now it only raises the in-memory level.
-    private bool TryUpgrade(PermanentUpgradeData data)
-    {
-        int level = GetLevel(data);
-        if (level >= data.maxLevel)
-            return false;
-
-        levels[data] = level + 1;
-        return true;
+        return Mathf.Clamp(MetaProgressionSave.GetLevel(data.id), 0, data.maxLevel);
     }
 
     private void Build()
@@ -146,7 +162,7 @@ public class UpgradesTab : TabContent
         for (int c = 0; c < rows.Length; c++)
         {
             int previousGroup = int.MinValue;
-            foreach (PermanentUpgradeData data in upgrades)
+            foreach (PermanentUpgradeData data in GameDB.Instance.PermanentUpgrades)
             {
                 if (data == null || (int)data.category != c)
                     continue;
@@ -193,8 +209,7 @@ public class UpgradesTab : TabContent
     {
         category = Mathf.Clamp(index, 0, rows.Length - 1);
 
-        if (subtitleText != null && subtitles != null && category < subtitles.Length)
-            subtitleText.text = subtitles[category];
+        RefreshSubtitle();
 
         if (!built)
             return;
@@ -203,6 +218,18 @@ public class UpgradesTab : TabContent
             scrolls[category].verticalNormalizedPosition = 1f;
 
         Select(rows[category].Count > 0 ? rows[category][0] : null);
+    }
+
+    // Exploration lines unlock by how many Exploration levels are owned in total, so that count rides along.
+    private void RefreshSubtitle()
+    {
+        if (subtitleText == null || subtitles == null || category >= subtitles.Length)
+            return;
+
+        string text = subtitles[category];
+        if ((PermanentUpgradeCategory)category == PermanentUpgradeCategory.Exploration)
+            text += $"  <b>Exploration upgrades owned: {MetaProgressionSave.CountLevels(PermanentUpgradeCategory.Exploration)}</b>";
+        subtitleText.text = text;
     }
 
     private void OnRowClicked(UpgradeRowWidget row)
@@ -244,29 +271,40 @@ public class UpgradesTab : TabContent
         PermanentUpgradeData data = selected.Data;
         int level = GetLevel(data);
         bool maxed = level >= data.maxLevel;
+        string lockReason = maxed ? null : MetaProgressionSave.GetLockReason(data);
+        bool locked = lockReason != null;
 
         detailName.text = data.Name.ToUpperInvariant();
         detailKind.text = data.kindLabel;
         detailKind.color = data.accentColor;
         detailIcon.sprite = data.icon;
         detailIcon.enabled = data.icon != null;
-        detailDescription.text = data.description;
+        // Lines without per-level cards have nowhere else to say why they're locked.
+        detailDescription.text = locked && !data.HasLevelInfo
+            ? $"{data.description}\n<color=#{ColorUtility.ToHtmlStringRGB(lockReasonColor)}>LOCKED - {lockReason}</color>"
+            : data.description;
         detailPips.Set(data.maxLevel, level, data.accentColor);
         detailLevel.text = level + " / " + data.maxLevel;
         currentValue.text = data.ValueLabel(level);
         nextValue.text = maxed ? "MAX" : data.ValueLabel(level + 1);
         nextValue.color = maxed ? currentValue.color : nextColor;
-        RefreshLevelInfo(data, level, maxed);
-        upgradeCost.text = maxed ? string.Empty : data.CostFor(level).ToString();
-        upgradeLabel.text = maxed ? "MAXED" : "UPGRADE";
+        RefreshLevelInfo(data, level, maxed, lockReason);
+        upgradeCost.text = maxed || locked ? string.Empty : data.CostFor(level).ToString();
+        upgradeLabel.text = maxed ? "MAXED" : locked ? "LOCKED" : "UPGRADE";
+        if (upgradeCostIcon != null)
+        {
+            upgradeCostIcon.sprite = locked && lockSprite != null ? lockSprite : upgradeCostIconSprite;
+            upgradeCostIcon.enabled = !maxed;
+        }
         // Never interactable = false: UGUI clears the selection of a selectable that goes non-interactable,
         // which would strand gamepad focus on an empty scope. Maxed just greys it out; pressing does nothing.
-        upgradeButton.targetGraphic.color = maxed ? maxedButtonColor : upgradeButtonColor;
+        upgradeButton.targetGraphic.color = maxed || locked ? maxedButtonColor
+            : MetaProgressionSave.CanAfford(data) ? upgradeButtonColor : cantAffordButtonColor;
     }
 
     // Upgrades with one title + text per level (Exploration lines) show what the owned level does and what the next
     // one adds, in place of the numeric CURRENT / NEXT values.
-    private void RefreshLevelInfo(PermanentUpgradeData data, int level, bool maxed)
+    private void RefreshLevelInfo(PermanentUpgradeData data, int level, bool maxed, string lockReason)
     {
         bool perLevel = data.HasLevelInfo && levelInfoBlock != null;
         if (currentNextBlock != null)
@@ -281,7 +319,7 @@ public class UpgradesTab : TabContent
         if (level <= 0)
         {
             currentLevelHeader.text = $"<size=70%><color=#{muted}>CURRENT</color></size>  LOCKED";
-            currentLevelText.text = "Not unlocked yet.";
+            currentLevelText.text = string.IsNullOrEmpty(data.levelZeroText) ? "Not unlocked yet." : data.levelZeroText;
         }
         else
         {
@@ -299,12 +337,20 @@ public class UpgradesTab : TabContent
         else
         {
             PermanentUpgradeLevelInfo next = data.LevelInfo(level + 1);
-            nextLevelLabel.text = $"NEXT · LV {level + 1}";
             nextLevelHeader.text = next.title.ToUpperInvariant();
-            nextLevelText.text = next.description;
+            if (lockReason != null)
+            {
+                nextLevelLabel.text = $"LOCKED · LV {level + 1}";
+                nextLevelText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(lockReasonColor)}>{lockReason}.</color>\n{next.description}";
+            }
+            else
+            {
+                nextLevelLabel.text = $"NEXT · LV {level + 1}";
+                nextLevelText.text = next.description;
+            }
         }
 
-        Color accentColor = maxed ? new Color(0.45f, 0.47f, 0.53f) : data.accentColor;
+        Color accentColor = maxed ? new Color(0.45f, 0.47f, 0.53f) : lockReason != null ? lockReasonColor : data.accentColor;
         nextLevelLabel.color = accentColor;
         if (nextLevelAccent != null)
             nextLevelAccent.color = accentColor;
@@ -314,10 +360,30 @@ public class UpgradesTab : TabContent
 
     private void OnUpgradePressed()
     {
-        if (selected == null || !TryUpgrade(selected.Data))
+        if (selected == null)
             return;
 
-        selected.SetLevel(GetLevel(selected.Data));
-        RefreshDetail();
+        // A press that can't buy says why (the button stays focusable for gamepad, see RefreshDetail).
+        PermanentUpgradeData data = selected.Data;
+        int level = GetLevel(data);
+        if (level >= data.maxLevel)
+            return;
+
+        string lockReason = MetaProgressionSave.GetLockReason(data);
+        if (lockReason != null)
+        {
+            ToastManager.Instance?.Show($"Locked - {lockReason}");
+            return;
+        }
+
+        if (!MetaProgressionSave.CanAfford(data))
+        {
+            int missing = data.CostFor(level) - MetaProgressionSave.RiftShards;
+            ToastManager.Instance?.Show($"Not enough Rift Shards - you need {missing} more");
+            return;
+        }
+
+        // Rows and the detail panel refresh from MetaProgressionSave.Changed.
+        MetaProgressionSave.TryPurchase(data);
     }
 }

@@ -76,17 +76,19 @@ public class SelectableScaleWidget : MonoBehaviour, ISelectHandler, IDeselectHan
             return;
         }
 
-        if (_scaleTween.isAlive || _wantSelected == _appliedSelected)
+        // Only grows while the UI is driven by navigation - mouse / touch users get no focus cue (see UiInputMode).
+        bool want = _wantSelected && UiInputMode.Navigating;
+        if (_scaleTween.isAlive || want == _appliedSelected)
             return;
 
-        if (_wantSelected)
+        if (want)
             _baseScale = transform.localScale;
 
-        Vector3 targetScale = _wantSelected ? Vector3.Scale(_baseScale, selectedScale) : _baseScale;
+        Vector3 targetScale = want ? Vector3.Scale(_baseScale, selectedScale) : _baseScale;
         _scaleTween = Tween.Custom(this, transform.localScale, targetScale, duration,
             (widget, scale) => widget.ApplyScale(scale), ease, useUnscaledTime: useUnscaledTime);
 
-        _appliedSelected = _wantSelected;
+        _appliedSelected = want;
     }
 
     // Sets the scale, then shifts localPosition so the rect's scaleOrigin point stays where it sits at

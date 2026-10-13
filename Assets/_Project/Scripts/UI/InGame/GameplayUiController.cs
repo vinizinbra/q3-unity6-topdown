@@ -316,16 +316,18 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                     }
 
                     LevelUpOption option = choice->Options[j];
-                    WeaponCardWidget.CardData data = BuildWeaponCardData(frame, option.WeaponData, option.RolledPerks, option.RolledPerkCount, option.RolledWeaponLevel);
+                    // + the Weapons line's run-wide levels (WeaponSystem.Equip adds them on pick).
+                    int shownLevel = option.RolledWeaponLevel + WeaponSystem.ResolveMetaWeaponLevels(frame, slots[i].EntityRef);
+                    WeaponCardWidget.CardData data = BuildWeaponCardData(frame, option.WeaponData, option.RolledPerks, option.RolledPerkCount, shownLevel);
 
                     // Preview the SAME level-adjusted damage the pick will actually equip with - the
                     // same ResolveLevelDamageMultiplier post-multiply BuildStoreWeaponCardData already
                     // applies for a Store offer (see that method), otherwise the card's Damage stat
                     // stays at the plain Level-0 base even though its own "+N" name suffix above
                     // already advertises a higher level.
-                    if (option.RolledWeaponLevel > 0 && levelUpConfig != null)
+                    if (shownLevel > 0 && levelUpConfig != null)
                     {
-                        FP multiplier = WeaponSystem.ResolveLevelDamageMultiplier(option.RolledWeaponLevel, levelUpConfig.WeaponLevelDamageBonusPerLevel);
+                        FP multiplier = WeaponSystem.ResolveLevelDamageMultiplier(shownLevel, levelUpConfig.WeaponLevelDamageBonusPerLevel);
                         data.Damage *= multiplier.AsFloat;
                     }
 
@@ -537,8 +539,12 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             ? frame.FindAsset(frame.RuntimeConfig.LevelUpConfig)
             : null;
 
-        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: BuildCoinWalletSubtitle(frame, entity), allowCancel: true, allowReroll: false,
+        // Reroll only exists with Gunsmith L4 (meta progression) - one per Break, shown as a 1/0 charge.
+        bool rerollUnlocked = BlacksmithUtility.IsRerollUnlocked(frame);
+        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: BuildCoinWalletSubtitle(frame, entity), allowCancel: true, allowReroll: rerollUnlocked,
             currentWeapon: BuildCurrentWeaponCardData(frame, entity, levelUpConfig));
+        if (rerollUnlocked)
+            window.UpdateRerollButton(BlacksmithUtility.CanReroll(frame, entity) ? 1 : 0, false);
     }
 
     // Store food/utility card - mirrors BuildSacrificeCardData's own shape (reads the offer asset's
@@ -692,7 +698,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // own comment) unchanged, then layers the purchase affordance on top.
     private static unsafe WeaponCardWidget.CardData BuildStoreWeaponCardData(Frame frame, EntityRef entity, EntityRef store, int offerIndex, StoreWeaponOffer offer, StoreConfig config)
     {
-        WeaponCardWidget.CardData data = BuildWeaponCardData(frame, offer.WeaponData, offer.RolledPerks, offer.RolledPerkCount, offer.WeaponLevel);
+        // + the Weapons line's run-wide levels (WeaponSystem.Equip adds them on purchase).
+        int shownLevel = offer.WeaponLevel + WeaponSystem.ResolveMetaWeaponLevels(frame, entity);
+        WeaponCardWidget.CardData data = BuildWeaponCardData(frame, offer.WeaponData, offer.RolledPerks, offer.RolledPerkCount, shownLevel);
         data.ButtonLabel = "BUY";
 
         // Preview the SAME level-adjusted damage the offer will actually equip with (WeaponSystem.
@@ -700,9 +708,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         // applies, extracted so this can be shown before purchase without mutating a real Weapon) -
         // otherwise the card would show a plain-Level-0 base Damage even though the weapon's own
         // "+N" title (see BuildWeaponCardData) already advertises a higher level.
-        if (offer.WeaponLevel > 0)
+        if (shownLevel > 0)
         {
-            FP multiplier = WeaponSystem.ResolveLevelDamageMultiplier(offer.WeaponLevel, config.WeaponLevelUpDamageBonusPerLevel);
+            FP multiplier = WeaponSystem.ResolveLevelDamageMultiplier(shownLevel, config.WeaponLevelUpDamageBonusPerLevel);
             data.Damage *= multiplier.AsFloat;
         }
 
@@ -766,7 +774,14 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // 3-card grid to fill anymore.
     private static unsafe void RefreshCursedRiftWindow(Frame frame, EntityRef entity, CursedRiftInteraction* interaction, ChooseWindow window)
     {
-        var cardData = new[] { BuildCursedRiftOfferCardData(frame, entity, interaction) };
+        // A second card (same mutation, different cost) with Sacrifice Rift L2 - see CursedRiftInteraction.AltSacrifice.
+        var cardData = interaction->AltSacrifice.IsValid
+            ? new[]
+            {
+                BuildCursedRiftOfferCardData(frame, entity, interaction, interaction->Sacrifice),
+                BuildCursedRiftOfferCardData(frame, entity, interaction, interaction->AltSacrifice)
+            }
+            : new[] { BuildCursedRiftOfferCardData(frame, entity, interaction, interaction->Sacrifice) };
 
         window.Refresh("CURSED RIFT", 0f, cardData, null, subtitle: "SACRIFICE FOR A MUTATION", allowCancel: true, allowReroll: false);
     }
@@ -778,16 +793,17 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // purchase cards and the old standalone Sacrifice card already used. A sacrifice isn't an
     // UpgradeData (see SacrificeDefinition's own comment), so its cost text is built here rather
     // than inside BuildCardData.
-    private static unsafe UpgradeCardWidget.CardData BuildCursedRiftOfferCardData(Frame frame, EntityRef entity, CursedRiftInteraction* interaction)
+    private static unsafe UpgradeCardWidget.CardData BuildCursedRiftOfferCardData(Frame frame, EntityRef entity, CursedRiftInteraction* interaction,
+        AssetRef<SacrificeDefinition> sacrificeRef)
     {
         if (interaction->Mutation.Upgrade.IsValid == false)
             return default;
 
         UpgradeCardWidget.CardData data = BuildCardData(frame, entity, interaction->Mutation);
 
-        if (interaction->Sacrifice.IsValid == true)
+        if (sacrificeRef.IsValid == true)
         {
-            SacrificeDefinition sacrifice = frame.FindAsset(interaction->Sacrifice);
+            SacrificeDefinition sacrifice = frame.FindAsset(sacrificeRef);
 
             if (sacrifice != null)
             {
@@ -813,9 +829,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 break;
 
             case ChoiceWindowOwner.CursedRift:
-                // Single card now (see RefreshCursedRiftWindow) - a click always means "confirm
-                // the one rolled sacrifice+mutation pair," so optionIndex carries no meaning here.
-                _game.SendCommand(slotIndex, new ConfirmCursedRiftCommand());
+                // optionIndex picks which sacrifice card was paid (1 = AltSacrifice, Sacrifice Rift L2).
+                _game.SendCommand(slotIndex, new ConfirmCursedRiftCommand { OptionIndex = (byte)optionIndex });
                 break;
 
             case ChoiceWindowOwner.Store:
@@ -1197,6 +1212,12 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     private void OnRerollClicked(int slotIndex)
     {
+        if (_windowOwner[slotIndex] == ChoiceWindowOwner.Blacksmith)
+        {
+            _game.SendCommand(slotIndex, new RerollBlacksmithCommand());
+            return;
+        }
+
         _game.SendCommand(slotIndex, new RerollLevelUpOptionsCommand());
     }
 

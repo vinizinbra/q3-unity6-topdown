@@ -70,11 +70,20 @@ namespace Quantum
             }
 
             AssetRef<SacrificeDefinition> sacrificeRef;
+            AssetRef<SacrificeDefinition> altSacrificeRef;
             LevelUpOption mutation;
 
-            if (TryGetCachedOffer(f, player, rift, out sacrificeRef, out mutation) &&
+            // Sacrifice Rift L2 "Sacrifice Choice" (meta progression, world level): two sacrifices to pick from.
+            int sacrificeChoices = WorldUnlockUtility.IsUnlocked(f, WorldUnlock.SacrificeRift, MetaUnlockLevels.SacrificeChoice) ? 2 : 1;
+
+            if (TryGetCachedOffer(f, player, rift, out sacrificeRef, out altSacrificeRef, out mutation) &&
                 IsOfferStillValid(f, player, sacrificeRef, mutation) == true)
             {
+                // The alternative can go stale on its own (e.g. a Coin Offering after a Store visit) -
+                // drop just that card rather than rerolling the whole offer.
+                if (altSacrificeRef.IsValid && f.FindAsset(altSacrificeRef).IsEligible(f, player) == false)
+                    altSacrificeRef = default;
+
                 Log.Debug($"[CursedRift] {player} reopened their persisted offer at {rift}");
             }
             else
@@ -88,7 +97,7 @@ namespace Quantum
                 }
 
                 SacrificePoolData pool = f.FindAsset(config.SacrificePool);
-                AssetRef<SacrificeDefinition>[] rolledSacrifice = RollSacrificeOptions(f, player, pool, 1);
+                AssetRef<SacrificeDefinition>[] rolledSacrifice = RollSacrificeOptions(f, player, pool, sacrificeChoices);
 
                 if (rolledSacrifice.Length == 0)
                 {
@@ -106,8 +115,9 @@ namespace Quantum
                 }
 
                 sacrificeRef = rolledSacrifice[0];
+                altSacrificeRef = rolledSacrifice.Length > 1 ? rolledSacrifice[1] : default;
                 mutation = rolledMutation[0];
-                SetCachedOffer(f, player, rift, sacrificeRef, mutation);
+                SetCachedOffer(f, player, rift, sacrificeRef, altSacrificeRef, mutation);
 
                 Log.Debug($"[CursedRift] {player} rolled a new offer at {rift} - sacrifice {sacrificeRef} for a mutation reward");
             }
@@ -115,6 +125,7 @@ namespace Quantum
             f.AddOrGet<CursedRiftInteraction>(player, out var interaction);
             interaction->Rift = rift;
             interaction->Sacrifice = sacrificeRef;
+            interaction->AltSacrifice = altSacrificeRef;
             interaction->Mutation = mutation;
         }
 
@@ -143,9 +154,11 @@ namespace Quantum
         // CursedRiftOffers is per-player, keyed by the rolling Rift's own EntityRef - same
         // fixed-array-of-keyed-entries convention PoiUsage/RiftMutationPicks already use (see
         // CursedRift.qtn's own comment on the 8-slot size).
-        private static bool TryGetCachedOffer(Frame f, EntityRef player, EntityRef rift, out AssetRef<SacrificeDefinition> sacrifice, out LevelUpOption mutation)
+        private static bool TryGetCachedOffer(Frame f, EntityRef player, EntityRef rift, out AssetRef<SacrificeDefinition> sacrifice,
+            out AssetRef<SacrificeDefinition> altSacrifice, out LevelUpOption mutation)
         {
             sacrifice = default;
+            altSacrifice = default;
             mutation = default;
 
             if (f.Unsafe.TryGetPointer<CursedRiftOffers>(player, out var offers) == false)
@@ -159,6 +172,7 @@ namespace Quantum
                     continue;
 
                 sacrifice = entries[i].Sacrifice;
+                altSacrifice = entries[i].AltSacrifice;
                 mutation = entries[i].Mutation;
                 return true;
             }
@@ -166,7 +180,8 @@ namespace Quantum
             return false;
         }
 
-        private static void SetCachedOffer(Frame f, EntityRef player, EntityRef rift, AssetRef<SacrificeDefinition> sacrifice, LevelUpOption mutation)
+        private static void SetCachedOffer(Frame f, EntityRef player, EntityRef rift, AssetRef<SacrificeDefinition> sacrifice,
+            AssetRef<SacrificeDefinition> altSacrifice, LevelUpOption mutation)
         {
             f.AddOrGet<CursedRiftOffers>(player, out var offers);
             var entries = offers->Entries;
@@ -176,7 +191,7 @@ namespace Quantum
                 if (entries[i].Rift != rift && entries[i].Rift != EntityRef.None)
                     continue;
 
-                entries[i] = new CursedRiftOfferEntry { Rift = rift, Sacrifice = sacrifice, Mutation = mutation };
+                entries[i] = new CursedRiftOfferEntry { Rift = rift, Sacrifice = sacrifice, AltSacrifice = altSacrifice, Mutation = mutation };
                 return;
             }
 
@@ -264,9 +279,12 @@ namespace Quantum
         // last time (defensive against it having become invalid between roll and click - nothing
         // currently runs mid-interaction to actually cause that, but the check is cheap and correct
         // either way).
-        public static void Confirm(Frame f, EntityRef player, CursedRiftInteraction* interaction)
+        // optionIndex 1 pays AltSacrifice instead (Sacrifice Rift L2); anything else pays Sacrifice.
+        public static void Confirm(Frame f, EntityRef player, CursedRiftInteraction* interaction, int optionIndex = 0)
         {
-            AssetRef<SacrificeDefinition> sacrificeRef = interaction->Sacrifice;
+            AssetRef<SacrificeDefinition> sacrificeRef = optionIndex == 1 && interaction->AltSacrifice.IsValid
+                ? interaction->AltSacrifice
+                : interaction->Sacrifice;
             SacrificeDefinition sacrifice = sacrificeRef.IsValid ? f.FindAsset(sacrificeRef) : null;
 
             if (sacrifice == null || sacrifice.IsEligible(f, player) == false)

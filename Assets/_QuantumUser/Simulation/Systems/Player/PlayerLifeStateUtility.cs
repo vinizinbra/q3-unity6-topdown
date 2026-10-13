@@ -41,6 +41,12 @@ namespace Quantum
 
             lifeState->State = PlayerLifeStateKind.Downed;
             lifeState->BleedOutRemaining = config != null ? config.DownedBleedOutDuration : 20;
+
+            // Co-op L2 "Last Stand" (this player's own meta progression) - a longer bleed-out.
+            TalentsConfig talents = TalentUtility.GetConfig(f);
+            if (talents != null && TalentUtility.TryGetTalents(f, target, out PlayerTalents targetTalents)
+                && targetTalents.CoopLevel >= MetaUnlockLevels.CoopLastStand)
+                lifeState->BleedOutRemaining *= FP._1 + talents.CoopBleedOutBonus;
             lifeState->ReviveProgress = FP._0;
             lifeState->ReviveHolder = EntityRef.None;
 
@@ -108,7 +114,8 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Health>(target, out var health) == true)
             {
                 FP healthPercent = config != null ? config.ReviveHealthPercent : FP.FromString("0.40");
-                health->CurrentHealth = health->MaxHealth * healthPercent;
+                healthPercent += ResolveReviveHealthBonus(f, target, reviver);
+                health->CurrentHealth = health->MaxHealth * FPMath.Min(healthPercent, FP._1);
             }
 
             lifeState->State = PlayerLifeStateKind.Alive;
@@ -127,9 +134,37 @@ namespace Quantum
                 status->ReviveImmunityRemaining = invulnDuration;
             }
 
+            // Revive L3 "Revive Guard" (meta progression) - a self-revive also restores 1 Accessory Guard block.
+            if (reviver == target && TalentUtility.TryGetTalents(f, target, out PlayerTalents selfTalents)
+                && selfTalents.ReviveLevel >= MetaUnlockLevels.ReviveGuard)
+                AccessoryGuardUtility.RestorePoints(f, target, 1);
+
             f.Events.PlayerRevived(target, reviver);
 
             Log.Debug($"[Revive] {target} revived by {reviver}");
+        }
+
+        // Meta progression on top of ReviveConfig.ReviveHealthPercent: Revive L2 "Revive Recovery" for a
+        // self-revive (target's own talent), Co-op L3 "Rescue Recovery" for an ally revive (the REVIVER's
+        // talent). The area-secured auto-revive (reviver None) gets neither.
+        private static FP ResolveReviveHealthBonus(Frame f, EntityRef target, EntityRef reviver)
+        {
+            TalentsConfig talents = TalentUtility.GetConfig(f);
+            if (talents == null || reviver == EntityRef.None)
+                return FP._0;
+
+            if (reviver == target)
+            {
+                return TalentUtility.TryGetTalents(f, target, out PlayerTalents self)
+                       && self.ReviveLevel >= MetaUnlockLevels.ReviveRecovery
+                    ? talents.SelfReviveHealthBonus
+                    : FP._0;
+            }
+
+            return TalentUtility.TryGetTalents(f, reviver, out PlayerTalents rescuer)
+                   && rescuer.CoopLevel >= MetaUnlockLevels.CoopRescueRecovery
+                ? talents.CoopRescueHealthBonus
+                : FP._0;
         }
 
         // Called once, edge-detected the tick Global.BreathingAreaSecured flips false -> true

@@ -27,6 +27,7 @@ which one to open.
 - **Worlds** — `WorldDefinition`s on `Resources/Worlds/WorldCatalog` (Theme + SurvivalConfig + optional `WorldBalanceData` multipliers over the global BalanceConfig); leader picks in the menu, synced via `RuntimeConfig.World`; `EnvironmentManager` loads the theme from it. → `docs/worlds.md`
 - **Game State** — `Global.CurrentState` match-flow state machine (`GameState` enum) replacing ad hoc phase booleans; thin `SetState` + `GameStateChanged` event. → `docs/game-state.md`
 - **Breathing Phase & Run-Phase State Machine** — repeating Breathing Breaks as `SurvivalConfig.Phases[]` entries; independent SurvivalTime/PhaseTimer clocks; skip-vote; encounter-clear hold. → `docs/run-phase.md`
+- **Training Zone** — offline movement + aim tutorial level (own scene/map, hand-placed station chunks, `LevelConfig.IsTrainingZone` keeps it in Lobby); ground text, respawning harmless `TrainingDummySpawner` targets; layout is code in `TrainingZoneBuilder` (Tools ▸ RiftRaiders ▸ Level). → `docs/training-zone.md`
 - **Boss Encounter** — SurvivalConfig Boss phase teleports/seals the arena, spawns the boss, hard-pauses over a reveal card + camera cutaway; dedicated Boss HUD. → `docs/boss-encounter.md`
 
 ## Progression & economy
@@ -38,7 +39,7 @@ which one to open.
 - **Rift Mutations** — rare non-stackable run-wide picks, rebuilt around the Accessory. → `docs/rift-mutations.md`
 - **Weapon Perks** — ~35 roguelite weapon modifiers baked into `Weapon` at equip; ramp pool, on-kill/crit signals, post-impact procs. → `docs/weapon-perks.md`
 - **Hero Mastery** — two ranked Ascension lines per hero (Weapon Family + Element), drafted through the existing Passive Upgrade pool; rank 3 unlocks a hero-specific special effect. → `docs/hero-mastery.md`
-- **Talents (meta-progression) + Lobby Start** — permanent out-of-match unlocks on `RuntimePlayer.Talents`; `ChunkSpawnConfig` talent-gated spawns; run starts when a player leaves the LobbyStart chunk. → `docs/talents.md`
+- **Talents (meta-progression) + Lobby Start** — menu Upgrades tab (Power/Exploration) bought with saved Rift Shards: `GameDB` catalog → `MetaProgressionSave` → `TalentSaveMapper` → `RuntimePlayer.Talents` + leader's `RuntimeConfig.WorldUnlocks` (locked POI chunks aren't generated); amounts in `TalentsConfig`, level thresholds in `MetaUnlockLevels`; `ChunkSpawnConfig` talent-gated spawns; run starts when a player leaves the LobbyStart chunk. → `docs/talents.md`
 
 ## Breathing-only POIs
 

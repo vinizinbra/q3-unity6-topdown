@@ -4,34 +4,6 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine;
 
-    // Weapon-Talent-Level-driven perk rarity tuning for a freshly-rolled Store weapon offer (see
-    // StoreConfig.TalentRarityTuning/StoreUtility.RollStorePerks) - same shape as
-    // BlacksmithConfig.BlacksmithBreakTuning (Common/Rare/Epic/Legendary weights + GetWeight),
-    // deliberately mirrored rather than shared: that one is indexed by Breathing Break, this one by
-    // RuntimePlayer.Talents.WeaponLevel (the SAME account-level stat StoreUtility.
-    // ResolveWeaponLevelTalent already reads for weapon-offer selection - see its own comment on why
-    // that's deliberately not the live in-run CharacterStats.WeaponTalentLevel).
-    [Serializable]
-    public struct WeaponTalentRarityTuning
-    {
-        public int CommonWeight;
-        public int RareWeight;
-        public int EpicWeight;
-        public int LegendaryWeight;
-
-        public int GetWeight(UpgradeRarity rarity)
-        {
-            switch (rarity)
-            {
-                case UpgradeRarity.Common: return CommonWeight;
-                case UpgradeRarity.Rare: return RareWeight;
-                case UpgradeRarity.Epic: return EpicWeight;
-                case UpgradeRarity.Legendary: return LegendaryWeight;
-                default: return 0;
-            }
-        }
-    }
-
     // Tuning for the Store POI (see docs/store-blacksmith.md) - referenced from RuntimeConfig.
     // StoreConfig, mirrors CursedRiftConfig's own "one config asset per POI" shape.
     public class StoreConfig : AssetObject
@@ -54,25 +26,9 @@ namespace Quantum
         // level-up/Chest pick draw from the exact same random configuration - see
         // StoreUtility.RollWeaponOffers and docs/store-blacksmith.md.
 
-        [Header("Weapon Talent Level -> Starting Perk Rarity")]
-        public WeaponTalentRarityTuning[] TalentRarityTuning =
-        {
-            new WeaponTalentRarityTuning { CommonWeight = 90, RareWeight = 10, EpicWeight = 0, LegendaryWeight = 0 },
-            new WeaponTalentRarityTuning { CommonWeight = 75, RareWeight = 25, EpicWeight = 0, LegendaryWeight = 0 },
-            new WeaponTalentRarityTuning { CommonWeight = 55, RareWeight = 35, EpicWeight = 10, LegendaryWeight = 0 },
-            new WeaponTalentRarityTuning { CommonWeight = 35, RareWeight = 45, EpicWeight = 18, LegendaryWeight = 2 },
-        };
-
-        public WeaponTalentRarityTuning ResolveTalentRarityTuning(int weaponTalentLevel)
-        {
-            if (TalentRarityTuning == null || TalentRarityTuning.Length == 0)
-                return default;
-
-            int index = weaponTalentLevel < 0 ? 0 : weaponTalentLevel;
-            index = index < TalentRarityTuning.Length ? index : TalentRarityTuning.Length - 1;
-
-            return TalentRarityTuning[index];
-        }
+        // Starting perk RARITY isn't authored here either: every newly rolled weapon (Store, chest, level-up)
+        // uses TalentsConfig.WeaponPerkRarityByLevel by the buyer's Weapons line level - see
+        // LevelUpUtility.RollWeaponOption.
 
         public AssetRef<FoodOfferPoolData> FoodPool;
         public int FoodOfferCount = 2;

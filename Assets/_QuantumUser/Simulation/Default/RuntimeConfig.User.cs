@@ -135,6 +135,11 @@
         // see TalentsConfig, TalentUtility and RuntimePlayer's own Player*/Has*/Can* fields.
         public AssetRef<TalentsConfig> TalentsConfig;
 
+        // World-feature meta-progression (which Breathing POIs/challenges/Base services exist and how far
+        // they're upgraded) - the leader's levels, written by MatchMakingConfig before CloneConfig. Leave
+        // Enforce off when authoring by hand: everything unlocked. See WorldUnlocks/WorldUnlockUtility.
+        public WorldUnlocks WorldUnlocks;
+
         [Header("Accessory Guard")]
         // Recoverable Accessory Guard tuning - durability, how the accessory pops off/is recovered,
         // and what a Merchant repair/replacement costs. See AccessoryGuardConfig,

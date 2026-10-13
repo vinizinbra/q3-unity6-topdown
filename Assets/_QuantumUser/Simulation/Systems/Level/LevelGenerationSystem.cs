@@ -124,7 +124,7 @@ namespace Quantum
             SeedFromExistingChunks(f, config, gridOriginX, gridOriginZ, occupied, neighborAllowedSides, placed, firstStep);
 
             RNGSession bagRng = new RNGSession(f.Global->LevelGenSeed);
-            List<ChunkRequest> bag = BuildShuffledBag(config, ref bagRng, firstStep);
+            List<ChunkRequest> bag = BuildShuffledBag(f, config, ref bagRng, firstStep);
 
             if (firstStep)
             {
@@ -150,7 +150,7 @@ namespace Quantum
 
             Log.Debug($"[LevelGen] grow complete - placed={placed.Count}");
 
-            VerifyGroupRequirements(config, placed);
+            VerifyGroupRequirements(f, config, placed);
 
             FillInnerGaps(f, config, gridOriginX, gridOriginZ, occupied);
 
@@ -396,13 +396,13 @@ namespace Quantum
         // Global.LevelGenSeed (NOT f.RNG, which keeps advancing as chunks are placed) - a pure
         // function of (config, seed), so every tick and every client reconstructs the identical
         // ordered bag without any of it having to live in frame state. See StepGeneration.
-        private List<ChunkRequest> BuildShuffledBag(LevelConfig config, ref RNGSession rng, bool logDetails)
+        private List<ChunkRequest> BuildShuffledBag(Frame f, LevelConfig config, ref RNGSession rng, bool logDetails)
         {
             List<ChunkRequest> startRequests = new List<ChunkRequest>();
             List<ChunkRequest> mustHaveRequests = new List<ChunkRequest>();
             List<ChunkRequest> optionalRequests = new List<ChunkRequest>();
 
-            HashSet<ChunkType> excludedGroupMembers = ResolveExcludedGroupMembers(config, ref rng, logDetails);
+            HashSet<ChunkType> excludedGroupMembers = ResolveExcludedGroupMembers(f, config, ref rng, logDetails);
 
             foreach (ChunkPoolEntry entry in config.ChunkPool)
             {
@@ -418,6 +418,17 @@ namespace Quantum
 
                 if (entry.GroupId != 0 && excludedGroupMembers.Contains(entry.Type))
                 {
+                    continue;
+                }
+
+                // Meta-progression: a POI the party hasn't unlocked isn't generated at all.
+                if (WorldUnlockUtility.IsUnlocked(f, entry) == false)
+                {
+                    if (logDetails)
+                    {
+                        Log.Debug($"[LevelGen] ChunkPool entry {entry.Type} locked by meta progression ({entry.Unlock} < {entry.UnlockMinLevel}) - skipping");
+                    }
+
                     continue;
                 }
 
@@ -471,7 +482,7 @@ namespace Quantum
         // method, so every tick and every client rebuilds the identical exclusion set. logDetails
         // mirrors BuildShuffledBag's own convention (only the first tick logs, so the line doesn't
         // repeat once per generation tick).
-        private HashSet<ChunkType> ResolveExcludedGroupMembers(LevelConfig config, ref RNGSession rng, bool logDetails)
+        private HashSet<ChunkType> ResolveExcludedGroupMembers(Frame f, LevelConfig config, ref RNGSession rng, bool logDetails)
         {
             HashSet<ChunkType> excluded = new HashSet<ChunkType>();
 
@@ -491,7 +502,8 @@ namespace Quantum
 
                 foreach (ChunkPoolEntry entry in config.ChunkPool)
                 {
-                    if (entry.GroupId == requirement.GroupId)
+                    // Locked members aren't candidates, so MinRequired/MaxRequired clamp to what's unlocked.
+                    if (entry.GroupId == requirement.GroupId && WorldUnlockUtility.IsUnlocked(f, entry))
                     {
                         members.Add(entry.Type);
                     }
@@ -1194,7 +1206,7 @@ namespace Quantum
         // already destroyed (see TryPlaceRequest) by the time this runs. A shortfall is logged as
         // an Error, same visibility a failed plain MustHave chunk already gets, so a level that
         // can't fit enough of a group's members doesn't silently ship without them.
-        private void VerifyGroupRequirements(LevelConfig config, List<PlacedChunk> placed)
+        private void VerifyGroupRequirements(Frame f, LevelConfig config, List<PlacedChunk> placed)
         {
             if (config.ChunkPoolGroups == null)
             {
@@ -1209,15 +1221,17 @@ namespace Quantum
                 }
 
                 int placedCount = 0;
+                int unlockedCount = 0;
                 string memberList = null;
 
                 foreach (ChunkPoolEntry entry in config.ChunkPool)
                 {
-                    if (entry.GroupId != requirement.GroupId)
+                    if (entry.GroupId != requirement.GroupId || WorldUnlockUtility.IsUnlocked(f, entry) == false)
                     {
                         continue;
                     }
 
+                    unlockedCount++;
                     memberList = memberList == null ? entry.Type.ToString() : $"{memberList}, {entry.Type}";
 
                     if (FindChunkOfType(placed, entry.Type) != null)
@@ -1226,13 +1240,16 @@ namespace Quantum
                     }
                 }
 
-                if (placedCount < requirement.MinRequired)
+                // Can't demand more members than meta progression has unlocked.
+                int minRequired = requirement.MinRequired < unlockedCount ? requirement.MinRequired : unlockedCount;
+
+                if (placedCount < minRequired)
                 {
-                    Log.Error($"[LevelGen] group {requirement.GroupId} ({memberList}) only placed {placedCount}/{requirement.MinRequired} required types - level will generate short of that guarantee.");
+                    Log.Error($"[LevelGen] group {requirement.GroupId} ({memberList}) only placed {placedCount}/{minRequired} required types - level will generate short of that guarantee.");
                 }
                 else
                 {
-                    Log.Debug($"[LevelGen] group {requirement.GroupId} ({memberList}) placed {placedCount}/{requirement.MinRequired} required types - OK.");
+                    Log.Debug($"[LevelGen] group {requirement.GroupId} ({memberList}) placed {placedCount}/{minRequired} required types - OK.");
                 }
             }
         }

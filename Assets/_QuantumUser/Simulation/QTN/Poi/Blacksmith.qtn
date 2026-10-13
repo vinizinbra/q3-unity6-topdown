@@ -24,6 +24,10 @@ component BlacksmithOffer
 
     array<AssetRef<WeaponPerkData>>[3] PerkChoices;
     Byte PerkChoiceCount; // may be < 3 if fewer than 3 perks were eligible
+
+    // Gunsmith L4 "Gunsmith Reroll" (meta progression): BreathingIndex + 1 of this player's last reroll
+    // (0 = never) - one reroll per Break. +1 so a fresh zero-init never reads as "rerolled in Break 0".
+    Int32 RerolledAtBreathingIndexPlusOne;
 }
 
 // One player's own in-progress Blacksmith visit - presence = this player's own Choice UI is open

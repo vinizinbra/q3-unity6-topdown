@@ -16,7 +16,7 @@ MonoBehaviour:
   kindLabel: EXPLORATION UPGRADE
   description: A healing point found while exploring. Usable again after a cooldown.
   icon: {fileID: 1793719643770292802, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
-  accentColor: {r: 0.27058825, g: 0.9254902, b: 0.21568628, a: 1}
+  accentColor: {r: 0.271, g: 0.925, b: 0.216, a: 1}
   category: 1
   group: 1
   maxLevel: 3
@@ -27,10 +27,13 @@ MonoBehaviour:
   valueFormatPlural: 
   levelInfos:
   - title: Unlock Healing Shrine
-    description: Unlocks the Healing Shrine, restoring 20% of max HP per use.
+    description: Unlocks the Healing Shrine, restoring 25% of max HP per use.
   - title: Improved Healing
-    description: Shrine healing rises from 20% to 30% of max HP.
+    description: Shrine healing rises from 25% to 35% of max HP.
   - title: Faster Recovery
     description: Shrine cooldown is 25% shorter, so it can be used more often.
-  talentKey: 
-  mockLevel: 0
+  levelZeroText: 
+  requiredUpgrade: 0
+  requiredUpgradeLevel: 1
+  requiredCategoryLevels: 3
+  id: 103

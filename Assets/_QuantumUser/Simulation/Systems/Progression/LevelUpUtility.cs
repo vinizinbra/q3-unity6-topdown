@@ -47,7 +47,8 @@ namespace Quantum
         // picked, the whole screen resolved and closed out from under everyone else before they'd
         // gotten to choose anything. Rolling for everyone (same as BeginLevelUpScreen) makes the
         // screen wait for every connected player to confirm, exactly like a real level-up.
-        public static void BeginChestScreen(Frame f, EntityRef player, LevelUpCategory forcedCategory)
+        // minWeaponPerks: a ChooseWeapon chest's per-option perk floor (Chest.MinWeaponPerks).
+        public static void BeginChestScreen(Frame f, EntityRef player, LevelUpCategory forcedCategory, int minWeaponPerks = 0)
         {
             if (f.RuntimeConfig.LevelUpConfig.IsValid == false)
             {
@@ -56,7 +57,7 @@ namespace Quantum
             }
 
             LevelUpConfig config = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
-            OpenUpgradeScreen(f, GetConnectedPlayers(f), config, forcedCategory);
+            OpenUpgradeScreen(f, GetConnectedPlayers(f), config, forcedCategory, minWeaponPerks);
         }
 
         // internal, not private - reused by RunPhaseUtility.BeginBossEncounter to teleport every
@@ -82,7 +83,8 @@ namespace Quantum
         // same flag alongside CurrencyOrbSystem/ExperienceUtility.Grant (see ChestSystem's own comment on
         // why it must stay outside GameplaySystemGroup), so re-entrancy is no longer prevented purely
         // by one caller being paused.
-        private static void OpenUpgradeScreen(Frame f, List<EntityRef> recipients, LevelUpConfig config, LevelUpCategory? forcedCategory)
+        private static void OpenUpgradeScreen(Frame f, List<EntityRef> recipients, LevelUpConfig config, LevelUpCategory? forcedCategory,
+            int minWeaponPerks = 0)
         {
             if (f.Global->LevelUpScreenOpen == true)
                 return; // still blocked - PendingLevelUpScreen (if this is a plain level-up) stays set for LevelUpSystem to retry
@@ -99,7 +101,7 @@ namespace Quantum
 
             for (int i = 0; i < recipients.Count; i++)
             {
-                if (RollOptionsFor(f, recipients[i], config, forcedCategory, level) == true)
+                if (RollOptionsFor(f, recipients[i], config, forcedCategory, level, minWeaponPerks) == true)
                     anyRolled = true;
             }
 
@@ -139,7 +141,8 @@ namespace Quantum
         // WeaponGenerator.DrawDistinctPerks (draw, subtract the drawn candidate's weight, remove it,
         // repeat), stopping early if the combined pool holds fewer candidates than ChoiceCount asks
         // for.
-        private static bool RollOptionsFor(Frame f, EntityRef entity, LevelUpConfig config, LevelUpCategory? forcedCategory, int level)
+        private static bool RollOptionsFor(Frame f, EntityRef entity, LevelUpConfig config, LevelUpCategory? forcedCategory, int level,
+            int minWeaponPerks = 0)
         {
             LevelUpCategory? category = forcedCategory ?? GetCategoryForLevel(config, level);
 
@@ -153,7 +156,7 @@ namespace Quantum
             // not a single Rarity-weighted UpgradeData pick) - bypasses the weighted-Candidate
             // machinery below entirely rather than trying to force a shared weight onto it.
             if (category == LevelUpCategory.ChooseWeapon)
-                return RollChooseWeaponOptionsFor(f, entity, config, fromChest);
+                return RollChooseWeaponOptionsFor(f, entity, config, fromChest, minWeaponPerks);
 
             List<Candidate> candidates = new List<Candidate>();
             int totalWeight = 0;
@@ -526,7 +529,7 @@ namespace Quantum
         // fundamentally different shape from the weighted-Candidate-list draw every other category
         // uses (see RollOptionsFor), so this bypasses that machinery entirely instead of forcing a
         // shared weight onto a whole weapon+perks combo.
-        private static bool RollChooseWeaponOptionsFor(Frame f, EntityRef entity, LevelUpConfig config, bool fromChest)
+        private static bool RollChooseWeaponOptionsFor(Frame f, EntityRef entity, LevelUpConfig config, bool fromChest, int minWeaponPerks = 0)
         {
             if (config.WeaponChoicePool.IsValid == false)
             {
@@ -563,7 +566,7 @@ namespace Quantum
                 }
 
                 taken[roll] = true;
-                rolled[slot] = RollWeaponOption(f, config, pool.Weapons[roll]);
+                rolled[slot] = RollWeaponOption(f, config, pool.Weapons[roll], entity, minWeaponPerks);
             }
 
             f.AddOrGet<LevelUpChoice>(entity, out var choice);
@@ -591,20 +594,31 @@ namespace Quantum
         // draw from the exact same random configuration. internal (not private) so StoreUtility could
         // call this directly too if it ever wants the exact LevelUpOption shape rather than its own
         // StoreWeaponOffer - see docs/store-blacksmith.md.
-        internal static LevelUpOption RollWeaponOption(Frame f, LevelUpConfig config, AssetRef<WeaponDataAsset> weaponRef)
+        //
+        // recipient is the player the option is rolled FOR - the ONE weapon roll for every source (Choose
+        // Weapon level-up, chests, Store offers via StoreUtility.RollWeaponOffers): same minute + same player
+        // = same level, perk count and perk rarity. Their Weapons line (meta progression) picks the rarity
+        // weights (TalentUtility.ResolveWeaponPerkRarity); its extra weapon LEVELS are added at equip
+        // (WeaponSystem.Equip), not here. minPerks is a chest's own perk floor (Chest.MinWeaponPerks).
+        internal static LevelUpOption RollWeaponOption(Frame f, LevelUpConfig config, AssetRef<WeaponDataAsset> weaponRef,
+            EntityRef recipient = default, int minPerks = 0)
         {
             FP survivalSeconds = f.Global->SurvivalTime;
             int perkCount = config.RollWeaponOfferPerkCount(f, survivalSeconds);
+            if (perkCount < minPerks)
+                perkCount = minPerks;
 
             LevelUpOption option = default;
             option.Kind = LevelUpPoolKind.ChooseWeapon;
             option.WeaponData = weaponRef;
             option.RolledWeaponLevel = config.ResolveWeaponOfferLevel(survivalSeconds);
 
+            WeaponTalentRarityTuning? rarityOverride = TalentUtility.ResolveWeaponPerkRarity(f, recipient);
+
             if (perkCount > 0 && config.WeaponPerkPool.IsValid == true)
             {
                 int drawn = WeaponGenerator.DrawDistinctPerks(f, config.WeaponPerkPool, perkCount, option.RolledPerks,
-                    WeaponPerkTarget.Resolve(f, weaponRef));
+                    WeaponPerkTarget.Resolve(f, weaponRef), rarityOverride);
                 option.RolledPerkCount = (byte)drawn;
             }
 

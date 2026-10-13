@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/FinalRound
     Guid:
       Value: 375097789155564651
-  Icon: {fileID: 21300000, guid: 8a3bb0defd744beba95e87c12fa007d1, type: 3}
+  Icon: {fileID: 886746186, guid: 624ad7d047fd5482799e44bb2e6ad8de, type: 3}
   DisplayName: Final Round
   Rarity: 1
   Description: 'Last bullet: <color=#FD3971><b>{0:+0;-0}%</b></color> Damage'

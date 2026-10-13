@@ -179,6 +179,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: RR_Dummy
+      rect:
+        serializedVersion: 2
+        x: 937
+        y: 101
+        width: 259
+        height: 370
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3739e90d85e1a4e22b7204a4d7b3d2a4
+      internalID: -203633216
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -195,6 +217,7 @@ TextureImporter:
     nameFileIdTable:
       GrasslandOutpostProps_0: -1164270624
       GrasslandOutpostProps_1: 1628367305
+      RR_Dummy: -203633216
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

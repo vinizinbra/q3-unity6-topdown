@@ -30,6 +30,10 @@ component CursedRiftInteraction
     // BuildCardData (internal, see docs/choice-window-refactor.md) can render this completely
     // unchanged, no separate mutation-card-building logic needed.
     LevelUpOption Mutation;
+
+    // Sacrifice Rift L2 "Sacrifice Choice" (meta progression): a second sacrifice the player may pay
+    // INSTEAD for the same Mutation - shown as a second card. Invalid = the normal single offer.
+    AssetRef<SacrificeDefinition> AltSacrifice;
 }
 
 // One already-rolled sacrifice+mutation pair a player hasn't taken yet, keyed by which Rift it
@@ -43,6 +47,7 @@ struct CursedRiftOfferEntry
     EntityRef Rift;
     AssetRef<SacrificeDefinition> Sacrifice;
     LevelUpOption Mutation;
+    AssetRef<SacrificeDefinition> AltSacrifice; // see CursedRiftInteraction.AltSacrifice
 }
 
 // Per-player, same fixed-array-of-keyed-entries convention PoiUsage/RiftMutationPicks/

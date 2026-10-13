@@ -71,6 +71,13 @@ public class FocusOutlineWidget : MonoBehaviour, ISelectHandler, IDeselectHandle
     {
         focused = true;
 
+        // Mouse / touch users don't see focus cues (see UiInputMode); LateUpdate shows it once they navigate.
+        if (UiInputMode.Navigating)
+            Show();
+    }
+
+    private void Show()
+    {
         if (!EnsureOutline())
             return;
 
@@ -104,7 +111,21 @@ public class FocusOutlineWidget : MonoBehaviour, ISelectHandler, IDeselectHandle
 
     private void LateUpdate()
     {
-        if (!focused || outline == null)
+        if (!focused)
+            return;
+
+        // Follows the input mode while focused: hidden as soon as the mouse / a finger takes over, shown again on
+        // the first navigation input.
+        if (!UiInputMode.Navigating)
+        {
+            if (outline != null && outline.gameObject.activeSelf)
+                outline.gameObject.SetActive(false);
+            return;
+        }
+
+        if (outline == null || !outline.gameObject.activeSelf)
+            Show();
+        if (outline == null || !outline.gameObject.activeSelf)
             return;
 
         Sync();

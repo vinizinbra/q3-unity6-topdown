@@ -57,6 +57,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -138,6 +141,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -219,6 +225,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 3
     BodySprite: {fileID: -584508516, guid: 800e2eaa8630f4be8b1da18dc3e5c964, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 0.9, y: 1.1, z: 1}
     AlignBodyToDirection: 0
@@ -300,6 +309,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -467,6 +479,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.4
     BodySprite: {fileID: -454652287, guid: df32790e9645844e78a5aeffd21a1ffe, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -548,6 +563,9 @@ MonoBehaviour:
     AnimationType: 8
     Duration: 0.1
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -629,6 +647,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -710,6 +731,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -910,6 +934,9 @@ MonoBehaviour:
     AnimationType: 1
     Duration: 0.5
     BodySprite: {fileID: -1975788359, guid: df32790e9645844e78a5aeffd21a1ffe, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0.5, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -991,6 +1018,9 @@ MonoBehaviour:
     AnimationType: 3
     Duration: 0.3
     BodySprite: {fileID: -1171294404, guid: df32790e9645844e78a5aeffd21a1ffe, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1072,6 +1102,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1153,6 +1186,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1291,6 +1327,9 @@ MonoBehaviour:
     AnimationType: 1
     Duration: 1
     BodySprite: {fileID: -1171294404, guid: df32790e9645844e78a5aeffd21a1ffe, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1372,6 +1411,9 @@ MonoBehaviour:
     AnimationType: 17
     Duration: 0.3
     BodySprite: {fileID: -1781487487, guid: df32790e9645844e78a5aeffd21a1ffe, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 1, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1453,6 +1495,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1534,6 +1579,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1726,6 +1774,9 @@ MonoBehaviour:
     AnimationType: 16
     Duration: 0.45
     BodySprite: {fileID: 794935709, guid: 800e2eaa8630f4be8b1da18dc3e5c964, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1.1, y: 1.1, z: 1}
     AlignBodyToDirection: 0
@@ -1807,6 +1858,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 794935709, guid: 800e2eaa8630f4be8b1da18dc3e5c964, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: -2, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1888,6 +1942,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1969,6 +2026,9 @@ MonoBehaviour:
     AnimationType: 1
     Duration: 0.7
     BodySprite: {fileID: -239246660, guid: 800e2eaa8630f4be8b1da18dc3e5c964, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1.2, y: 1.2, z: 1.2}
     AlignBodyToDirection: 0
@@ -2544,7 +2604,7 @@ MonoBehaviour:
     RawValue: 6554
   Title: Dune Leviathan
   Subtitle: It hears you walking.
-  UiSprite: {fileID: 21300000, guid: de10b170c93814767ace187f6349b2ff, type: 3}
+  UiSprite: {fileID: 21300000, guid: 33607464054fa4bc18aa87934621b940, type: 3}
 --- !u!114 &787348281162663925
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2606,6 +2666,9 @@ MonoBehaviour:
     AnimationType: 16
     Duration: 0.45
     BodySprite: {fileID: 794935709, guid: 800e2eaa8630f4be8b1da18dc3e5c964, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1.1, y: 1.1, z: 1}
     AlignBodyToDirection: 0
@@ -2687,6 +2750,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 794935709, guid: 800e2eaa8630f4be8b1da18dc3e5c964, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: -2, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -2768,6 +2834,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -2849,6 +2918,9 @@ MonoBehaviour:
     AnimationType: 1
     Duration: 0.7
     BodySprite: {fileID: -239246660, guid: 800e2eaa8630f4be8b1da18dc3e5c964, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1.2, y: 1.2, z: 1.2}
     AlignBodyToDirection: 0

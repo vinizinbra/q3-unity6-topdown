@@ -376,6 +376,7 @@ namespace Quantum.Prototypes {
     [ArrayLengthAttribute(3)]
     public AssetRef<WeaponPerkData>[] PerkChoices = new AssetRef<WeaponPerkData>[3];
     public Byte PerkChoiceCount;
+    public Int32 RerolledAtBreathingIndexPlusOne;
     partial void MaterializeUser(Frame frame, ref Quantum.BlacksmithOffer result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.BlacksmithOffer component = default;
@@ -388,6 +389,7 @@ namespace Quantum.Prototypes {
           *result.PerkChoices.GetPointer(i) = this.PerkChoices[i];
         }
         result.PerkChoiceCount = this.PerkChoiceCount;
+        result.RerolledAtBreathingIndexPlusOne = this.RerolledAtBreathingIndexPlusOne;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -610,6 +612,30 @@ namespace Quantum.Prototypes {
     public void Materialize(Frame frame, ref Quantum.BreathingSkipVote result, in PrototypeMaterializationContext context = default) {
         result.VotedAtBreathingIndex = this.VotedAtBreathingIndex;
         MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.BurrowChargeState))]
+  public unsafe class BurrowChargeStatePrototype : ComponentPrototype<Quantum.BurrowChargeState> {
+    public Byte Stage;
+    public FP StageElapsed;
+    public FPVector3 LineStart;
+    public FPVector3 LineEnd;
+    [ArrayLengthAttribute(4)]
+    public MapEntityId[] HitTargets = new MapEntityId[4];
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.BurrowChargeState component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.BurrowChargeState result, in PrototypeMaterializationContext context = default) {
+        result.Stage = this.Stage;
+        result.StageElapsed = this.StageElapsed;
+        result.LineStart = this.LineStart;
+        result.LineEnd = this.LineEnd;
+        for (int i = 0, count = PrototypeValidator.CheckLength(HitTargets, 4, in context); i < count; ++i) {
+          PrototypeValidator.FindMapEntity(this.HitTargets[i], in context, out *result.HitTargets.GetPointer(i));
+        }
     }
   }
   [System.SerializableAttribute()]
@@ -906,6 +932,7 @@ namespace Quantum.Prototypes {
     public Quantum.QEnum8<LevelUpCategory> Kind;
     public FP PickupRadius;
     public QBoolean Opened;
+    public Byte MinWeaponPerks;
     partial void MaterializeUser(Frame frame, ref Quantum.Chest result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.Chest component = default;
@@ -916,6 +943,7 @@ namespace Quantum.Prototypes {
         result.Kind = this.Kind;
         result.PickupRadius = this.PickupRadius;
         result.Opened = this.Opened;
+        result.MinWeaponPerks = this.MinWeaponPerks;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -1103,6 +1131,7 @@ namespace Quantum.Prototypes {
     public MapEntityId Rift;
     public AssetRef<SacrificeDefinition> Sacrifice;
     public Quantum.Prototypes.LevelUpOptionPrototype Mutation;
+    public AssetRef<SacrificeDefinition> AltSacrifice;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.CursedRiftInteraction component = default;
         Materialize((Frame)f, ref component, in context);
@@ -1112,6 +1141,7 @@ namespace Quantum.Prototypes {
         PrototypeValidator.FindMapEntity(this.Rift, in context, out result.Rift);
         result.Sacrifice = this.Sacrifice;
         this.Mutation.Materialize(frame, ref result.Mutation, in context);
+        result.AltSacrifice = this.AltSacrifice;
     }
   }
   [System.SerializableAttribute()]
@@ -1120,10 +1150,12 @@ namespace Quantum.Prototypes {
     public MapEntityId Rift;
     public AssetRef<SacrificeDefinition> Sacrifice;
     public Quantum.Prototypes.LevelUpOptionPrototype Mutation;
+    public AssetRef<SacrificeDefinition> AltSacrifice;
     public void Materialize(Frame frame, ref Quantum.CursedRiftOfferEntry result, in PrototypeMaterializationContext context = default) {
         PrototypeValidator.FindMapEntity(this.Rift, in context, out result.Rift);
         result.Sacrifice = this.Sacrifice;
         this.Mutation.Materialize(frame, ref result.Mutation, in context);
+        result.AltSacrifice = this.AltSacrifice;
     }
   }
   [System.SerializableAttribute()]
@@ -3234,6 +3266,38 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.RepairStation))]
+  public unsafe partial class RepairStationPrototype : ComponentPrototype<Quantum.RepairStation> {
+    public Quantum.Prototypes.PoiAvailabilityPrototype Availability;
+    public Int32 RepairPoints;
+    partial void MaterializeUser(Frame frame, ref Quantum.RepairStation result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.RepairStation component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.RepairStation result, in PrototypeMaterializationContext context = default) {
+        this.Availability.Materialize(frame, ref result.Availability, in context);
+        result.RepairPoints = this.RepairPoints;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.RepairStationUsage))]
+  public unsafe partial class RepairStationUsagePrototype : ComponentPrototype<Quantum.RepairStationUsage> {
+    public Int32 UsedAtBreaksStarted;
+    partial void MaterializeUser(Frame frame, ref Quantum.RepairStationUsage result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.RepairStationUsage component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.RepairStationUsage result, in PrototypeMaterializationContext context = default) {
+        result.UsedAtBreaksStarted = this.UsedAtBreaksStarted;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.RevengeConfig))]
   public unsafe partial class RevengeConfigPrototype : ComponentPrototype<Quantum.RevengeConfig> {
     public FP HealMultiplier;
@@ -4119,6 +4183,55 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.TeamChallengeSpawn result, in PrototypeMaterializationContext context = default) {
         PrototypeValidator.FindMapEntity(this.Poi, in context, out result.Poi);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TrainingDummy))]
+  public unsafe class TrainingDummyPrototype : ComponentPrototype<Quantum.TrainingDummy> {
+    public MapEntityId Spawner;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TrainingDummy component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TrainingDummy result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Spawner, in context, out result.Spawner);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TrainingDummySpawner))]
+  public unsafe class TrainingDummySpawnerPrototype : ComponentPrototype<Quantum.TrainingDummySpawner> {
+    public AssetRef<EntityPrototype> Prototype;
+    public AssetRef<EnemyDataAsset> EnemyData;
+    public FP RespawnDelay;
+    public MapEntityId Current;
+    public FP RespawnTimer;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TrainingDummySpawner component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TrainingDummySpawner result, in PrototypeMaterializationContext context = default) {
+        result.Prototype = this.Prototype;
+        result.EnemyData = this.EnemyData;
+        result.RespawnDelay = this.RespawnDelay;
+        PrototypeValidator.FindMapEntity(this.Current, in context, out result.Current);
+        result.RespawnTimer = this.RespawnTimer;
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TrainingFinish))]
+  public unsafe partial class TrainingFinishPrototype : ComponentPrototype<Quantum.TrainingFinish> {
+    public FP LeaveDelay;
+    partial void MaterializeUser(Frame frame, ref Quantum.TrainingFinish result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TrainingFinish component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TrainingFinish result, in PrototypeMaterializationContext context = default) {
+        result.LeaveDelay = this.LeaveDelay;
+        MaterializeUser(frame, ref result, in context);
     }
   }
   [System.SerializableAttribute()]

@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PermanentUpgradeData
   displayName: Co-op
   kindLabel: SURVIVAL UPGRADE
-  description: Rescue downed teammates and keep fighting together. Ally revives stay
-    unlimited, but Downed time shrinks with each one.
+  description: Rescue downed teammates faster and keep fighting together. Ally revives
+    stay unlimited.
   icon: {fileID: 8102566695856649518, guid: 17d8416a8743b4409ad9bf6300ede405, type: 3}
-  accentColor: {r: 0.003921569, g: 0.84313726, b: 0.6156863, a: 1}
+  accentColor: {r: 0.004, g: 0.843, b: 0.616, a: 1}
   category: 1
   group: 3
   maxLevel: 3
@@ -33,5 +33,8 @@ MonoBehaviour:
     description: Stay Downed 20% longer before being eliminated.
   - title: Rescue Recovery
     description: Allies you revive recover 20% additional max HP.
-  talentKey: 
-  mockLevel: 0
+  levelZeroText: 
+  requiredUpgrade: 100
+  requiredUpgradeLevel: 1
+  requiredCategoryLevels: 0
+  id: 204

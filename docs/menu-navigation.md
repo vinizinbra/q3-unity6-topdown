@@ -12,6 +12,7 @@ focused element is shown. Input plumbing itself (bindings, `GamepadControls`) li
 | `TabStripWidget` | `UI/Menu/Heroes/` | A row of tab buttons showing one page each (`Step(dir)`, `Changed`). Shared by Heroes/Loadout/Upgrades/Catalog. |
 | `TabContent.SubTabs` / `DefaultFocus` | `UI/Menu/Tabs/` | What L1/R1 act on / where focus lands when the tab is entered. |
 | `FocusOutlineWidget` + `FocusOutlineSet` | `UI/Common/` | The focus glow (see below). |
+| `UiInputMode` | `UI/Common/` | Pointer vs navigation mode: focus cues only show while navigating (see below). |
 | `CanvasInputGateWidget` | `UI/Common/` | Makes a `Canvas.enabled = false` canvas also stop taking input (see "Menu behind a match"). |
 | `UiSelectionUtility` | `UI/Common/` | Default focus, "wait until the intro animation settled". |
 
@@ -99,6 +100,14 @@ shader; follows chamfered corners exactly.
   elsewhere, then runs the generator. Idempotent. Save the scene afterwards.
 - A focusable whose background sprite has no glow only logs a warning (`[FocusOutline]`): re-run the generator.
 - Pair with `SelectableScaleWidget` for the pop; the glow mirrors the element's scale/offset every frame.
+
+## Focus cues only while navigating
+
+`UiInputMode` (self-installed, no scene setup) tracks whether the UI is driven by navigation (Navigate / Submit /
+Cancel / L1-R1 through `Quantum.GamepadControls`) or by a pointer (mouse move / click / scroll, touch). The
+`FocusOutlineWidget` glow and the `SelectableScaleWidget` grow only show while `UiInputMode.Navigating`: a mouse or
+touch player still has an EventSystem selection (clicks select, screens pre-focus their default item) but it isn't
+drawn. The mode flips on the first input of the other kind, and a focused item's glow/scale follow it live.
 
 ## Selectables inside a mask
 Glow and scale both extend past the element's rect, so a `RectMask2D`/`Mask` always clips them (dropdown lists, tight scroll views).

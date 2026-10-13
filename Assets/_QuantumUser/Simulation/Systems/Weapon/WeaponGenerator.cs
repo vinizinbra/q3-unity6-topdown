@@ -37,8 +37,10 @@ namespace Quantum
         // equipped weapon's own perk roster, above) and LevelUpUtility.RollWeaponOption (a
         // not-yet-equipped Choose-Weapon candidate's rolled perks) - same shape, different
         // destination buffer.
+        // rarityOverride (optional) replaces the pool's own per-rarity weights - e.g. a chest weapon rolled
+        // for a player with the Weapons line's Chest Quality (meta progression, see RollWeaponOption).
         public static int DrawDistinctPerks(Frame f, AssetRef<WeaponPerkPoolData> poolRef, int perkCount,
-            FixedArray<AssetRef<WeaponPerkData>> perks, WeaponPerkTarget target)
+            FixedArray<AssetRef<WeaponPerkData>> perks, WeaponPerkTarget target, WeaponTalentRarityTuning? rarityOverride = null)
         {
             if (poolRef.IsValid == false)
                 return 0;
@@ -66,7 +68,7 @@ namespace Quantum
                 for (int i = 0; i < pool.Perks.Count; i++)
                 {
                     if (taken[i] == false)
-                        totalWeight += GetWeight(f, pool, i, target, perks);
+                        totalWeight += GetWeight(f, pool, i, target, perks, rarityOverride);
                 }
 
                 if (totalWeight <= 0)
@@ -80,7 +82,7 @@ namespace Quantum
                     if (taken[i])
                         continue;
 
-                    int weight = GetWeight(f, pool, i, target, perks);
+                    int weight = GetWeight(f, pool, i, target, perks, rarityOverride);
 
                     if (weight <= 0)
                         continue;
@@ -104,12 +106,13 @@ namespace Quantum
         // Weight 0 is already the pool's own "not drawable" signal, so an ineligible perk reuses it
         // rather than needing its own skip at every loop that reads this.
         private static int GetWeight(Frame f, WeaponPerkPoolData pool, int index, in WeaponPerkTarget target,
-            FixedArray<AssetRef<WeaponPerkData>> perks)
+            FixedArray<AssetRef<WeaponPerkData>> perks, WeaponTalentRarityTuning? rarityOverride)
         {
             if (WeaponPerkEligibility.IsEligible(f, pool.Perks[index], target, perks) == false)
                 return 0;
 
-            return pool.GetWeight(f.FindAsset(pool.Perks[index]).Rarity);
+            UpgradeRarity rarity = f.FindAsset(pool.Perks[index]).Rarity;
+            return rarityOverride.HasValue ? rarityOverride.Value.GetWeight(rarity) : pool.GetWeight(rarity);
         }
     }
 }

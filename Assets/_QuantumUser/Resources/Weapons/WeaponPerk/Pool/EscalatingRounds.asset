@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/Pool/EscalatingRounds
     Guid:
       Value: 311199697939096361
-  Icon: {fileID: 21300000, guid: 5b161abd4797457293ebff0eff3d79dd, type: 3}
+  Icon: {fileID: -918281793, guid: 624ad7d047fd5482799e44bb2e6ad8de, type: 3}
   DisplayName: Escalating Rounds
   Rarity: 1
   Description: Damage rises up to <color=#FD3971><b>{0:+0;-0}%</b></color> per mag

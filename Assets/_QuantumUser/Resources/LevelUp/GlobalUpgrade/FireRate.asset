@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/LevelUp/GlobalUpgrade/FireRate
     Guid:
       Value: 348464417275673341
-  Icon: {fileID: 421420180, guid: f84ce79583fb14332abb138fcbc0fff8, type: 3}
+  Icon: {fileID: -1470605165, guid: 1a4ad0db4ca3b49008dfcaa2b6819f70, type: 3}
   DisplayName: Fire Rate
   MaxPicks: 3
   Description: +{0}% Fire Rate
