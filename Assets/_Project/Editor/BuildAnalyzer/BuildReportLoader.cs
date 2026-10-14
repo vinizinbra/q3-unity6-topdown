@@ -27,6 +27,9 @@ namespace Project.EditorTools.BuildAnalyzer
         public static DateTime ReportFileTime =>
             HasReportFile ? File.GetLastWriteTime(LibraryReportPath) : DateTime.MinValue;
 
+        public static DateTime ReportFileTimeUtc =>
+            HasReportFile ? File.GetLastWriteTimeUtc(LibraryReportPath) : DateTime.MinValue;
+
         public static BuildReport LoadLatest(out string error)
         {
             error = null;

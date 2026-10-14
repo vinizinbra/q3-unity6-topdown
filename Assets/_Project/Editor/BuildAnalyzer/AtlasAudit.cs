@@ -118,8 +118,9 @@ namespace Project.EditorTools.BuildAnalyzer
                     report.PlatformSettings.format.ToString(), report.PlatformSettings.textureCompression, a.TexturePlatform);
             }
 
-            AssetEntry entry = a.EntryFor(path);
-            report.PackedSizeInBuild = entry?.TotalPackedSize ?? 0;
+            if (a.AtlasPagesByName.TryGetValue(report.Name, out List<AtlasBuildPage> buildPages))
+                report.BuildPages.AddRange(buildPages.OrderBy(p => p.Index));
+            report.ChangedSinceBuild = a.ChangedSinceBuild(path);
 
             Texture2D[] pages = GetPreviewTextures(atlas);
             if (pages != null && pages.Length > 0)
@@ -189,7 +190,7 @@ namespace Project.EditorTools.BuildAnalyzer
                     {
                         a.Add(Severity.Warning, FindingKind.AtlasUncompressed, report.Path,
                             $"Atlas is uncompressed for {a.TexturePlatform} ({format}, {report.PlatformSettings.textureCompression}).",
-                            report.PackedSizeInBuild - report.PackedSizeInBuild / 6);
+                            report.BuildSize - report.BuildSize / 6);
                     }
                 }
 
@@ -236,7 +237,7 @@ namespace Project.EditorTools.BuildAnalyzer
                 long area = any?.Area ?? 0;
                 long savings = 0;
                 for (int i = 1; i < atlases.Count; i++)
-                    savings += (long)(area * atlases[i].EstimatedBytesPerPixel);
+                    savings += (long)(area * atlases[i].CostPerPixel);
 
                 Finding f = a.Add(Severity.Error, FindingKind.InMultipleAtlases, texturePath,
                     $"Packed in {atlases.Count} atlases ({string.Join(", ", atlases.Select(r => r.Name))}) — its pixels ship once per atlas. Keep it in one.",
@@ -319,7 +320,7 @@ namespace Project.EditorTools.BuildAnalyzer
                 if (!list.Contains(report)) list.Add(report);
             }
 
-            a.Resolve(info.Path, FindingKind.NotInAtlas);
+            a.Resolve(info.Path, FindingKind.AtlasCandidate);
 
             string atlasName = report?.Name ?? System.IO.Path.GetFileNameWithoutExtension(atlasPath);
             LogHelper.Log(BuildAnalysis.LogTag, added == 0

@@ -9,14 +9,29 @@ using UnityEngine;
 namespace Project.EditorTools.BuildAnalyzer
 {
     /// <summary>
-    /// Per-texture checks over every texture the build actually shipped: NPOT, uncompressed, mipmaps on
-    /// sprites, Read/Write, wasted alpha channel, oversized, shipped beside its atlas, and not atlased.
+    /// One size plan per texture the build shipped. The decision tree, in order:
+    /// <list type="number">
+    /// <item>Only its Sprites shipped (pixels came from an atlas) → nothing to do.</item>
+    /// <item>Packed in an atlas but the Texture2D still shipped → <see cref="FindingKind.PendingRebuild"/> when the
+    /// texture/atlas was edited after the build, else <see cref="FindingKind.DirectTextureReference"/> (who references
+    /// the texture itself), then the standalone checks (it keeps shipping as a texture).</item>
+    /// <item>A sprite that fits an atlas (UI or Gameplay by usage) → <see cref="FindingKind.AtlasCandidate"/>. The
+    /// atlas page is already POT and compressed, so POT/×4 on the source would be pointless.</item>
+    /// <item>Everything else ships as a plain texture → standalone checks: not a multiple of 4 (block compression
+    /// impossible: <b>Pad to ×4</b> for sprites, <b>NPOT → ToNearest</b> for material textures), uncompressed,
+    /// mipmaps on sprites, wasted alpha, and the quality tradeoffs Crunch / lower Max Size.</item>
+    /// </list>
     /// Import settings are read for the platform the report was built for.
     /// </summary>
     internal static class TextureAudit
     {
-        public const int AtlasFriendlyMaxDim = 1024;
         public const int LargeTextureDim = 2048;
+        private const long CrunchMinSize = 256 * 1024;
+        private const long OversizedSpriteMinSize = 512 * 1024;
+        /// <summary>A sprite fits an atlas when its largest rect is ≤ page/4 …</summary>
+        private const int AtlasDimDivisor = 4;
+        /// <summary>… and all its sprites cover ≤ page²/8.</summary>
+        private const int AtlasAreaDivisor = 8;
 
         private static readonly HashSet<string> UncompressedFormats = new HashSet<string>
         {
@@ -30,20 +45,25 @@ namespace Project.EditorTools.BuildAnalyzer
             "RGBA32", "ARGB32", "RGBA16", "ARGB16",
         };
 
+        private static readonly HashSet<string> RewritableExtensions = new HashSet<string> { ".png", ".jpg", ".jpeg" };
+
+        private static readonly string[] UiPathMarkers =
+            { "/UI/", "Widget", "Window", "Canvas", "/HUD", "Menu", "Popup", "/Icons/", "UpgradeIcons", "/GUI", "Splash", "Loading" };
+
+        private static readonly string[] GameplayPathMarkers =
+            { "/Entities/", "/Enemy/", "/Enemies/", "Projectile", "/Weapons/", "LevelChunk", "/Props/", "/Characters/", "/Character/", "/Environment/", "/Guns/" };
+
         public static void Run(BuildAnalysis a, ProgressCallback progress)
         {
             List<AssetEntry> entries = a.Assets
                 .Where(e => e.Category == AssetCategory.Texture && e.IsUnderAssets)
                 .ToList();
 
-            progress("Mapping material → texture references…", 0.24f);
-            Dictionary<string, List<string>> materialsByTexture = CollectMaterialTextureReferences(a);
-
             for (int i = 0; i < entries.Count; i++)
             {
                 AssetEntry entry = entries[i];
                 if (i % 10 == 0)
-                    progress($"Auditing textures ({i + 1}/{entries.Count})…", 0.25f + 0.3f * i / Math.Max(1, entries.Count));
+                    progress($"Planning textures ({i + 1}/{entries.Count})…", 0.3f + 0.3f * i / Math.Max(1, entries.Count));
 
                 var importer = AssetImporter.GetAtPath(entry.Path) as TextureImporter;
                 if (importer == null) continue;
@@ -52,46 +72,15 @@ namespace Project.EditorTools.BuildAnalyzer
                 if (texture == null) continue;
 
                 TextureInfo info = Describe(a, entry, importer, texture);
-                if (materialsByTexture.TryGetValue(entry.Path, out List<string> materials))
-                    info.ReferencingMaterials.AddRange(materials);
                 a.Textures.Add(info);
                 a.TextureByPath[entry.Path] = info;
-                Emit(a, info, importer);
+                Plan(a, info, importer);
             }
 
             a.Textures.Sort((x, y) => y.Entry.TotalPackedSize.CompareTo(x.Entry.TotalPackedSize));
         }
 
-        /// <summary>
-        /// Which materials in the build reference which textures. A material can only hold a Texture
-        /// reference (never a Sprite), so this is the one direct-reference source that can be named with
-        /// certainty — it is the usual reason an atlased sprite's source texture still ships.
-        /// </summary>
-        private static Dictionary<string, List<string>> CollectMaterialTextureReferences(BuildAnalysis a)
-        {
-            var result = new Dictionary<string, List<string>>();
-            foreach (AssetEntry material in a.Assets.Where(e => e.Category == AssetCategory.Material && e.IsUnderAssets))
-            {
-                string[] dependencies;
-                try { dependencies = AssetDatabase.GetDependencies(material.Path, false); }
-                catch { continue; }
-
-                foreach (string dependency in dependencies)
-                {
-                    if (dependency == material.Path) continue;
-                    if (!a.ByPath.TryGetValue(dependency, out AssetEntry dep) || dep.Category != AssetCategory.Texture) continue;
-
-                    if (!result.TryGetValue(dependency, out List<string> list))
-                    {
-                        list = new List<string>();
-                        result.Add(dependency, list);
-                    }
-                    list.Add(material.Path);
-                }
-            }
-
-            return result;
-        }
+        // ------------------------------------------------------------------ describe
 
         private static TextureInfo Describe(BuildAnalysis a, AssetEntry entry, TextureImporter importer, Texture2D texture)
         {
@@ -101,6 +90,7 @@ namespace Project.EditorTools.BuildAnalyzer
                 platform = importer.GetDefaultPlatformTextureSettings();
 
             TextureImporterFormat format = platform.format;
+            bool automatic = format == TextureImporterFormat.Automatic;
             if (format == TextureImporterFormat.Automatic)
             {
                 try { format = importer.GetAutomaticFormat(a.TexturePlatform); }
@@ -125,6 +115,9 @@ namespace Project.EditorTools.BuildAnalyzer
                 Path = entry.Path,
                 Width = width,
                 Height = height,
+                SourceWidth = width,
+                FormatIsAutomatic = automatic,
+                SourceHeight = height,
                 Format = format.ToString(),
                 TextureType = importer.textureType,
                 Compression = platform.textureCompression,
@@ -134,308 +127,518 @@ namespace Project.EditorTools.BuildAnalyzer
                 Npot = !Mathf.IsPowerOfTwo(width) || !Mathf.IsPowerOfTwo(height),
                 PlatformOverridden = overridden,
                 IsSprite = importer.textureType == TextureImporterType.Sprite,
+                Crunched = platform.crunchedCompression || format.ToString().EndsWith("Crunched", StringComparison.Ordinal),
                 BytesPerPixel = textureObjectSize > 0 ? textureObjectSize / pixels / mipFactor : 0,
                 TextureObjectSize = textureObjectSize,
             };
 
+            try
+            {
+                importer.GetSourceTextureWidthAndHeight(out int sw, out int sh);
+                info.SourceWidth = sw;
+                info.SourceHeight = sh;
+            }
+            catch { /* keep imported dims */ }
+
             try { info.HasAlpha = importer.DoesSourceTextureHaveAlpha(); }
             catch { info.HasAlpha = true; }
+
+            foreach (Sprite sprite in AssetDatabase.LoadAllAssetRepresentationsAtPath(entry.Path).OfType<Sprite>())
+            {
+                Rect r = sprite.rect;
+                info.SpriteCount++;
+                info.SpriteArea += (long)(r.width * r.height);
+                info.LargestSpriteDim = Math.Max(info.LargestSpriteDim, (int)Math.Max(r.width, r.height));
+            }
+
+            if (info.SpriteCount == 0)
+            {
+                info.SpriteArea = (long)width * height;
+                info.LargestSpriteDim = Math.Max(width, height);
+            }
 
             if (a.AtlasMembership.TryGetValue(entry.Path, out List<AtlasReport> atlases))
                 info.InAtlases.AddRange(atlases);
 
+            if (a.References != null)
+            {
+                info.TextureReferencers.AddRange(TextureReferenceIndex.Of(a.References.TextureRefs, entry.Path));
+                info.SpriteReferencers.AddRange(TextureReferenceIndex.Of(a.References.SpriteRefs, entry.Path));
+            }
+
+            bool tex = info.TextureReferencers.Count > 0, spr = info.SpriteReferencers.Count > 0;
+            info.Use = tex && spr ? TextureUse.SpriteAndTexture : tex ? TextureUse.Texture : spr ? TextureUse.Sprite : TextureUse.Unknown;
+
+            ResolveContext(a, info);
+            info.ChangedSinceBuild = a.ChangedSinceBuild(entry.Path) || info.InAtlases.Any(r => r.ChangedSinceBuild);
             return info;
         }
 
-        private static void Emit(BuildAnalysis a, TextureInfo info, TextureImporter importer)
+        /// <summary>UI vs Gameplay: Sprite Optimizer usage scan if one was run, else who references it, else its path.</summary>
+        private static void ResolveContext(BuildAnalysis a, TextureInfo info)
         {
-            string path = info.Path;
-            long size = info.Entry.TotalPackedSize;
-            long texSize = info.TextureObjectSize;
-
-            // Uncompressed (explicit setting, explicit format, or measured from what the build wrote)
-            bool explicitlyUncompressed = info.Compression == TextureImporterCompression.Uncompressed
-                                          || UncompressedFormats.Contains(info.Format);
-            bool measuredUncompressed = texSize > 0 && info.BytesPerPixel >= 3.5;
-            if (texSize > 0 && (explicitlyUncompressed || measuredUncompressed))
+            if (BuildAnalysis.ScannedContexts.TryGetValue(info.Path, out UsageContext scanned) && scanned != UsageContext.Unknown)
             {
-                info.Uncompressed = true;
-                long savings = texSize - texSize / 6;
-                string why = explicitlyUncompressed
-                    ? $"format {info.Format}, compression {info.Compression}"
-                    : $"{info.BytesPerPixel:0.00} B/px measured in the build although the setting is {info.Compression} / {info.Format}" +
-                      (info.Npot ? " — NPOT textures cannot use block compression on some formats" : "");
+                info.Context = scanned;
+                info.ContextSource = "usage scan";
+                return;
+            }
 
-                Finding f = a.Add(size >= 2 * 1024 * 1024 ? Severity.Error : Severity.Warning,
-                    FindingKind.Uncompressed, path,
-                    $"Uncompressed in the build ({why}). {info.Width}×{info.Height}, {Fmt.Bytes(texSize)}.", savings);
+            // Votes from the references themselves (component type, then field name).
+            int ui = a.References != null && a.References.UiVotes.TryGetValue(info.Path, out int u) ? u : 0;
+            int gameplay = a.References != null && a.References.GameplayVotes.TryGetValue(info.Path, out int g) ? g : 0;
+            if (ui > 0 || gameplay > 0)
+            {
+                info.Context = ui > 0 && gameplay > 0 ? UsageContext.Both : ui > 0 ? UsageContext.UI : UsageContext.Gameplay;
+                info.ContextSource = $"from its references ({ui} UI, {gameplay} gameplay)";
+                return;
+            }
 
-                if (info.Compression == TextureImporterCompression.Uncompressed)
+            // Then who references it, by path.
+            int uiPaths = 0, gameplayPaths = 0;
+            foreach (string referencer in info.SpriteReferencers)
+            {
+                bool isUi = HasMarker(referencer, UiPathMarkers), isGameplay = HasMarker(referencer, GameplayPathMarkers);
+                if (isUi && !isGameplay) uiPaths++;
+                else if (isGameplay && !isUi) gameplayPaths++;
+            }
+
+            if (SuggestUiAtlas(info.Path) && gameplayPaths == 0)
+            {
+                info.Context = UsageContext.UI;
+                info.ContextSource = "guessed from path";
+                return;
+            }
+
+            if (uiPaths > 0 && gameplayPaths == 0)
+            {
+                info.Context = UsageContext.UI;
+                info.ContextSource = "referenced by UI assets";
+                return;
+            }
+
+            if (gameplayPaths > 0 && uiPaths == 0)
+            {
+                info.Context = UsageContext.Gameplay;
+                info.ContextSource = "referenced by gameplay assets";
+                return;
+            }
+
+            if (SuggestUiAtlas(info.Path))
+            {
+                info.Context = UsageContext.UI;
+                info.ContextSource = "guessed from path";
+            }
+            else if (HasMarker(info.Path, GameplayPathMarkers))
+            {
+                info.Context = UsageContext.Gameplay;
+                info.ContextSource = "guessed from path";
+            }
+            else
+            {
+                info.Context = UsageContext.Unknown;
+                info.ContextSource = "unknown — run Scan sprite usage";
+            }
+        }
+
+        private static bool HasMarker(string path, string[] markers)
+        {
+            foreach (string marker in markers)
+                if (path.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            return false;
+        }
+
+        public static bool SuggestUiAtlas(string path) => HasMarker(path, UiPathMarkers);
+
+        // ------------------------------------------------------------------ plan
+
+        private static void Plan(BuildAnalysis a, TextureInfo info, TextureImporter importer)
+        {
+            if (!info.ShipsAsTexture)
+                return; // only its Sprites shipped — the pixels came from an atlas
+
+            if (info.InAtlas)
+            {
+                if (info.ChangedSinceBuild)
                 {
-                    f.AddFix("Set Compressed", () => SetCompressed(a, info),
-                        $"Sets texture compression to Compressed / Automatic format for {a.TexturePlatform} and reimports.");
+                    PendingRebuild(a, info);
+                    return;
+                }
+
+                DirectReference(a, info);
+                Standalone(a, info, importer, "it is packed but also referenced as a Texture2D");
+                PickPlan(a, info);
+                return;
+            }
+
+            string whyNotAtlas = AtlasFit(a, info, out AtlasReport target, out AtlasReport other);
+            if (whyNotAtlas == null)
+                AtlasCandidate(a, info, target, other);
+            else
+                Standalone(a, info, importer, whyNotAtlas);
+
+            PickPlan(a, info);
+        }
+
+        private static void PickPlan(BuildAnalysis a, TextureInfo info)
+        {
+            List<Finding> own = a.Findings.Where(f => f.AssetPath == info.Path && f.PotentialSavings > 0).ToList();
+            info.Plan = own.Where(f => !f.IsTradeoff).OrderByDescending(f => f.PotentialSavings).FirstOrDefault()
+                        ?? own.OrderByDescending(f => f.PotentialSavings).FirstOrDefault();
+        }
+
+        /// <summary>Null when the texture should go into <paramref name="target"/>; otherwise why it shouldn't.</summary>
+        private static string AtlasFit(BuildAnalysis a, TextureInfo info, out AtlasReport target, out AtlasReport other)
+        {
+            AtlasReport ui = a.Atlases.FirstOrDefault(r => r.IsUiAtlas);
+            AtlasReport gameplay = a.Atlases.FirstOrDefault(r => r.IsGameplayAtlas);
+            bool wantsUi = info.Context == UsageContext.UI
+                           || (info.Context != UsageContext.Gameplay && SuggestUiAtlas(info.Path));
+            target = wantsUi ? ui : gameplay;
+            other = wantsUi ? gameplay : ui;
+
+            if (!info.IsSprite)
+                return $"its Texture Type is {info.TextureType} (atlases only pack Sprites) — it's a material/texture asset";
+            if (info.Use == TextureUse.Texture)
+                return $"it's only used as a Texture2D (by {Names(info.TextureReferencers)}) — an atlas can't serve materials/RawImages";
+            if (info.Use == TextureUse.SpriteAndTexture)
+                return $"it's also used as a Texture2D (by {Names(info.TextureReferencers)}), so packing it would ship its pixels twice";
+            if (!info.Entry.IsUnderAssets || info.Entry.IsSuspiciousSource)
+                return "it's outside the project art folders (package / demo / reference folder)";
+            if (target == null)
+                return $"there's no {(wantsUi ? "UI" : "Gameplay")} atlas at {(wantsUi ? AddTextureToAtlasContextMenu.UiAtlasPath : AddTextureToAtlasContextMenu.GameplayAtlasPath)}";
+
+            int page = target.MaxPageSize;
+            if (info.LargestSpriteDim > page / AtlasDimDivisor)
+                return $"its largest sprite is {info.LargestSpriteDim}px, more than ¼ of a {page}px {target.Name} page — it would eat a page and break batching";
+            if (info.SpriteArea > (long)page * page / AtlasAreaDivisor)
+                return $"its sprites cover {info.SpriteArea:N0} px, more than ⅛ of a {page}² {target.Name} page";
+
+            return null;
+        }
+
+        private static void AtlasCandidate(BuildAnalysis a, TextureInfo info, AtlasReport target, AtlasReport other)
+        {
+            long tex = info.TextureObjectSize;
+            double cost = target.CostPerPixel;
+            long atlasCost = (long)(info.SpriteArea * cost);
+            long savings = tex - atlasCost;
+            string context = info.Context == UsageContext.Unknown ? "context unknown" : $"{info.Context}, {info.ContextSource}";
+
+            string message =
+                $"{info.Width}×{info.Height} sprite texture ({info.SpriteCount} sprite(s), {info.SpriteArea:N0} px) ships on its own as " +
+                $"{info.Format} at {info.BytesPerPixel:0.00} B/px = {Fmt.Bytes(tex)}. Packed in {target.Name} its sprites cost ≈{Fmt.Bytes(atlasCost)} " +
+                $"({cost:0.###} B/px, measured from this build's {target.Name} pages) and batch with the other sprites there. " +
+                "No POT / ×4 needed: the atlas page already is one.";
+            if (info.Context == UsageContext.Both)
+                message += " ⚠ The usage scan found it in BOTH UI and gameplay — one side will sample the other atlas; " +
+                           "Sprite Optimizer ▸ Conflicts ▸ Duplicate splits it.";
+            if (info.Use == TextureUse.Unknown)
+                message += " No scene/prefab/asset references it in YAML, so it's probably loaded from code (Resources.Load / Addressables) — " +
+                           "sprites loaded that way are served from the atlas too.";
+
+            Finding f = a.Add(BuildAnalysis.SeverityFor(savings), FindingKind.AtlasCandidate, info.Path,
+                $"Sprite in no atlas → {target.Name} ({context})", message, savings);
+            f.RelatedPaths = info.SpriteReferencers.ToArray();
+            f.AddFix($"→ {target.Name}", () => AtlasActions.AddToAtlas(a, info, target.Path),
+                $"Adds the texture to {target.Path}. Its sprites are then drawn from the atlas page.");
+            if (other != null)
+                f.AddFix($"→ {other.Name}", () => AtlasActions.AddToAtlas(a, info, other.Path), $"Adds the texture to {other.Path} instead.");
+        }
+
+        private static void PendingRebuild(BuildAnalysis a, TextureInfo info)
+        {
+            Finding f = a.Add(Severity.Info, FindingKind.PendingRebuild, info.Path,
+                $"Now in {info.AtlasNames} — rebuild to confirm",
+                $"This build still wrote the {Fmt.Bytes(info.TextureObjectSize)} Texture2D, but the texture or {info.AtlasNames} was edited " +
+                "after the build (most likely it was added to the atlas since). Make a new build and re-analyze: if it still ships " +
+                "as a texture, something references the Texture2D directly.",
+                info.TextureObjectSize);
+            f.RelatedPaths = info.InAtlases.Select(r => r.Path).ToArray();
+        }
+
+        /// <summary>
+        /// An atlased texture whose Texture2D still ships. Rule: atlas batching is never traded for size — a texture
+        /// whose sprites are used is never offered "Remove from atlas". Only a texture with no sprite usage at all
+        /// (nothing to batch) gets that option.
+        /// </summary>
+        private static void DirectReference(BuildAnalysis a, TextureInfo info)
+        {
+            long tex = info.TextureObjectSize;
+            long atlasCopy = (long)info.InAtlases.Sum(r => info.SpriteArea * r.CostPerPixel);
+            List<string> refs = info.TextureReferencers;
+            string who = refs.Count > 0
+                ? $"referenced as a Texture2D by {Names(refs)}"
+                : "loaded as a Texture2D by something with no YAML reference (code: Resources.Load<Texture2D>, a binary asset, or a TMP sprite asset)";
+            bool spritesUsed = info.Use == TextureUse.Sprite || info.Use == TextureUse.SpriteAndTexture
+                               || BuildAnalysis.ScannedContexts.TryGetValue(info.Path, out UsageContext scanned) && scanned != UsageContext.Unknown;
+
+            Finding f;
+            if (spritesUsed && refs.Count > 0)
+            {
+                // Sprites batch from the atlas, materials need a real texture: shipping both is the price of batching.
+                f = a.Add(Severity.Info, FindingKind.DirectTextureReference, info.Path,
+                    $"Atlas sprite + material texture — give the material(s) their own copy",
+                    $"Its sprites batch from {info.AtlasNames} (≈{Fmt.Bytes(atlasCopy)} there) and it is also {who}, so the {Fmt.Bytes(tex)} " +
+                    "texture ships as well. That double cost is what keeping atlas batching costs — a material can't sample the atlas page. " +
+                    "Copy for material(s) makes it explicit: the materials get their own Default-type copy you can shrink on its own " +
+                    "(Max Size, Crunch — a particle rarely needs full resolution) without touching the atlas sprites.",
+                    0);
+                f.AddFix("Copy for material(s)", () => CopyForTextureUsers(a, info),
+                    $"Duplicates the texture as a Default-type '…_Tex' copy and repoints {Names(refs)} to it. Sprites stay in {info.AtlasNames}.");
+                f.AddFix("Select referencers", () => SelectAll(refs), "Selects the assets that reference the Texture2D.", resolves: false);
+            }
+            else if (spritesUsed)
+            {
+                f = a.Add(BuildAnalysis.SeverityFor(tex), FindingKind.DirectTextureReference, info.Path,
+                    $"Packed in {info.AtlasNames} but the texture still ships",
+                    $"Its sprites batch from {info.AtlasNames}, but the {Fmt.Bytes(tex)} Texture2D was written into the build too: it is {who}. " +
+                    "Find what loads the texture itself (\"Why is this in the build?\" shows the chain) and switch it to the sprite. " +
+                    "Keep it in the atlas — its sprites are in use.",
+                    tex);
+                f.AddFix("Select referencers", () => SelectAll(refs), "Selects the assets that reference the Texture2D.", resolves: false);
+            }
+            else
+            {
+                f = a.Add(BuildAnalysis.SeverityFor(atlasCopy), FindingKind.DirectTextureReference, info.Path,
+                    $"No sprite of it is used — its {info.AtlasNames} copy is wasted",
+                    $"It is {who} and no shipped asset uses its sprites, so the {Fmt.Bytes(tex)} texture has to ship anyway and the " +
+                    $"≈{Fmt.Bytes(atlasCopy)} it takes in {info.AtlasNames} batches nothing. Remove it from the atlas." +
+                    (BuildAnalysis.ScannedContexts.Count == 0 ? " (If code loads its sprites, run Scan sprite usage first — a used sprite keeps it in the atlas.)" : ""),
+                    atlasCopy);
+                foreach (AtlasReport atlas in info.InAtlases.ToList())
+                {
+                    AtlasReport atlasLocal = atlas;
+                    f.AddFix($"Remove from {atlas.Name}", () => AtlasActions.RemoveFromAtlas(a, atlasLocal, info.Path),
+                        "Stops packing it — the texture then ships once, as a plain texture. No sprite of it is used, so no batching is lost.");
                 }
             }
 
-            // NPOT — irrelevant for a sprite that only ships through an atlas (the atlas page is POT).
-            bool atlasedOnly = info.IsSprite && info.InAtlas && texSize == 0;
-            if (info.Npot && importer.npotScale == TextureImporterNPOTScale.None && !atlasedOnly)
+            f.RelatedPaths = refs.ToArray();
+        }
+
+        /// <summary>
+        /// Keeps the texture's sprites in the atlas and gives everything that uses the Texture2D itself (materials,
+        /// RawImages, Texture fields, TMP sprite assets) its own Default-type copy next to the original
+        /// ("Shadow_Tex.png"). Same importer settings otherwise, so it looks identical. References in scenes are listed,
+        /// not edited (open the scene and repoint them by hand).
+        /// </summary>
+        public static void CopyForTextureUsers(BuildAnalysis a, TextureInfo info)
+        {
+            var original = AssetDatabase.LoadAssetAtPath<Texture2D>(info.Path);
+            if (original == null) return;
+
+            string dir = Path.GetDirectoryName(info.Path)?.Replace('\\', '/');
+            string copyPath = AssetDatabase.GenerateUniqueAssetPath(
+                $"{dir}/{Path.GetFileNameWithoutExtension(info.Path)}_Tex{Path.GetExtension(info.Path)}");
+            if (!AssetDatabase.CopyAsset(info.Path, copyPath))
             {
-                bool costly = texSize > 0 && info.BytesPerPixel >= 2.0;
-                a.Add(costly ? Severity.Warning : Severity.Info, FindingKind.Npot, path,
-                    $"Non-power-of-two {info.Width}×{info.Height}" +
-                    (costly
-                        ? $" and {info.BytesPerPixel:0.00} B/px in the build — compression is not applied."
-                        : $" ({info.BytesPerPixel:0.00} B/px in the build — compression is fine; only relevant if you switch format or need mipmaps).") +
-                    $" {MakePotDescription(info)}")
-                    .AddFix("Make POT", () => MakePowerOfTwo(a, info), MakePotDescription(info));
+                LogHelper.Error(BuildAnalysis.LogTag, $"Could not copy '{info.Path}' to '{copyPath}'.");
+                return;
             }
 
-            // Mipmaps on sprites / UI
+            TextureImporter importer = ImporterFor(copyPath);
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Default;
+                importer.SaveAndReimport();
+            }
+
+            var copy = AssetDatabase.LoadAssetAtPath<Texture2D>(copyPath);
+            int swapped = 0;
+            var scenes = new List<string>();
+            foreach (string referencer in info.TextureReferencers)
+            {
+                if (referencer.EndsWith(".unity", StringComparison.OrdinalIgnoreCase))
+                {
+                    scenes.Add(referencer);
+                    continue;
+                }
+
+                foreach (UnityEngine.Object obj in AssetDatabase.LoadAllAssetsAtPath(referencer))
+                {
+                    if (obj == null) continue;
+                    var so = new SerializedObject(obj);
+                    SerializedProperty it = so.GetIterator();
+                    bool changed = false;
+                    while (it.Next(true))
+                    {
+                        if (it.propertyType != SerializedPropertyType.ObjectReference || it.objectReferenceValue != original) continue;
+                        it.objectReferenceValue = copy;
+                        changed = true;
+                        swapped++;
+                    }
+
+                    if (!changed) continue;
+                    so.ApplyModifiedPropertiesWithoutUndo();
+                    EditorUtility.SetDirty(obj);
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            a.Resolve(info.Path, FindingKind.DirectTextureReference);
+            LogHelper.Log(BuildAnalysis.LogTag,
+                $"'{info.Name}': created '{copyPath}' (Default type) and repointed {swapped} texture reference(s). Its sprites stay in {info.AtlasNames}." +
+                (scenes.Count > 0 ? $" Repoint these scene references by hand: {string.Join(", ", scenes)}." : ""));
+        }
+
+        /// <summary>Checks for a texture that ships as a plain texture.</summary>
+        private static void Standalone(BuildAnalysis a, TextureInfo info, TextureImporter importer, string whyNotAtlas)
+        {
+            string path = info.Path;
+            long tex = info.TextureObjectSize;
+            double mip = info.Mipmaps ? 4.0 / 3.0 : 1.0;
+            double target = TargetBytesPerPixel(a, info);
+            // An uncompressed format Automatic picked on its own (R8 for a single-channel texture on WebGL) is not a setting
+            // "Set Compressed" can change — only an explicit Uncompressed setting or an explicit format counts.
+            bool explicitUncompressed = info.Compression == TextureImporterCompression.Uncompressed
+                                        || (UncompressedFormats.Contains(info.Format) && !info.FormatIsAutomatic && info.BytesPerPixel >= 2.0);
+            bool fellBack = info.BytesPerPixel >= 2.0;
+            bool notBlockCompressible = !info.MultipleOf4 && (fellBack || explicitUncompressed);
+            string notAtlas = whyNotAtlas != null ? $" Not an atlas candidate: {whyNotAtlas}." : "";
+            bool canNpotScale = !info.IsSprite;
+
+            if (notBlockCompressible)
+            {
+                int padW = Ceil4(info.Width), padH = Ceil4(info.Height);
+                long padSaved = tex - (long)(padW * (double)padH * target * mip);
+                int potW = Mathf.ClosestPowerOfTwo(info.Width), potH = Mathf.ClosestPowerOfTwo(info.Height);
+                long potSaved = tex - (long)(potW * (double)potH * target * mip);
+                long savings = canNpotScale ? potSaved : padSaved;
+
+                string head = $"{info.Width}×{info.Height} isn't a multiple of 4, so {a.TexturePlatform} can't block-compress it " +
+                              $"(DXT/ETC2/ASTC work on 4×4 blocks) — it ships as {info.Format} at {info.BytesPerPixel:0.0} B/px: {Fmt.Bytes(tex)}.";
+                string fix = canNpotScale
+                    ? $" Non-Power-of-2 → ToNearest makes the importer rescale it to {potW}×{potH} (importer setting only; UVs stay 0–1 so " +
+                      $"materials look the same) and it compresses to ≈{Fmt.Bytes(tex - potSaved)}."
+                    : $" Pad to ×4 adds {padW - info.Width}×{padH - info.Height} transparent px (no rescale: sprite rects, pivots and borders are " +
+                      $"kept) and it compresses to ≈{Fmt.Bytes(tex - padSaved)}.";
+
+                Finding f = a.Add(BuildAnalysis.SeverityFor(savings), FindingKind.NotBlockCompressible, path,
+                    canNpotScale ? $"NPOT {info.Width}×{info.Height} ships uncompressed → POT {potW}×{potH}" : $"{info.Width}×{info.Height} not ×4 → ships uncompressed; pad to {padW}×{padH}",
+                    head + fix + notAtlas, savings);
+
+                if (canNpotScale)
+                {
+                    f.AddFix("POT (NPOT → ToNearest)", () => SetNpotToNearest(a, info), $"Importer Non-Power-of-2 → ToNearest ({potW}×{potH}). Non-destructive.");
+                    if (IsRewritable(path)) f.AddFix("Pad to ×4", () => PadToMultipleOf4(a, info), $"Rewrites the file to {padW}×{padH} with transparent padding.");
+                }
+                else
+                {
+                    f.AddFix("Pad to ×4", () => PadToMultipleOf4(a, info),
+                        IsRewritable(path)
+                            ? $"Rewrites the file to {padW}×{padH} with transparent padding (bottom-left anchored for sheets, pivot kept for single sprites). Revert with git."
+                            : "Only PNG/JPG sources can be padded — re-export it as PNG.");
+                    if (IsRewritable(path))
+                        f.AddFix("Make POT (keeps slices)", () => MakePowerOfTwoKeepingSlices(a, info), MakePotDescription(info));
+                }
+            }
+            else if (explicitUncompressed || (info.BytesPerPixel >= 3.5 && !info.FormatIsAutomatic))
+            {
+                long savings = tex - (long)((double)info.Width * info.Height * target * mip);
+                Finding f = a.Add(BuildAnalysis.SeverityFor(savings), FindingKind.Uncompressed, path,
+                    $"Uncompressed ({info.Format}) — compress",
+                    $"Ships as {info.Format} ({info.Compression}) at {info.BytesPerPixel:0.0} B/px: {Fmt.Bytes(tex)}. Compressed it would be " +
+                    $"≈{Fmt.Bytes(tex - savings)}.{notAtlas}", savings);
+                f.AddFix("Set Compressed", () => SetCompressed(a, info),
+                    $"Compression → Compressed, format → Automatic for {a.TexturePlatform}, then reimports.");
+            }
+            else if (!info.IsSprite && info.Npot && importer.npotScale == TextureImporterNPOTScale.None)
+            {
+                int potW = Mathf.ClosestPowerOfTwo(info.Width), potH = Mathf.ClosestPowerOfTwo(info.Height);
+                a.Add(Severity.Info, FindingKind.NpotMaterialTexture, path,
+                    $"NPOT material texture {info.Width}×{info.Height}",
+                    $"Compresses fine (dims are ×4), but mipmaps and Repeat wrap on non-power-of-two textures are unsupported on WebGL 1 " +
+                    $"and slower on some mobile GPUs. NPOT → ToNearest ({potW}×{potH}) is an importer setting only — UVs don't change.", 0)
+                    .AddFix("POT (NPOT → ToNearest)", () => SetNpotToNearest(a, info));
+            }
+
             if (info.Mipmaps && (info.TextureType == TextureImporterType.Sprite || info.TextureType == TextureImporterType.GUI))
             {
-                a.Add(Severity.Warning, FindingKind.MipmapsOnSprite, path,
-                    $"Mipmaps enabled on a {info.TextureType} texture — 33% extra size and blurrier UI.", texSize / 4)
+                a.Add(BuildAnalysis.SeverityFor(tex / 4), FindingKind.MipmapsOnSprite, path, "Mipmaps on a sprite/UI texture",
+                    $"Mipmaps enabled on a {info.TextureType} texture — 33% extra size and blurrier UI.", tex / 4)
                     .AddFix("Disable mipmaps", () => DisableMipmaps(a, info));
             }
 
-            // Read/Write
-            if (info.Readable)
-            {
-                a.Add(Severity.Info, FindingKind.ReadWrite, path,
-                    "Read/Write enabled — a CPU copy is kept in memory at runtime (no build-size cost). Disable unless code reads its pixels.");
-            }
-
-            // Alpha channel wasted
             if (!info.HasAlpha && AlphaFormatsWithRgbAlternative.Contains(info.Format))
             {
-                a.Add(Severity.Info, FindingKind.NoAlphaButAlphaFormat, path,
-                    $"Source has no alpha but the build format is {info.Format}. An RGB format would halve it.", texSize / 2)
+                a.Add(BuildAnalysis.SeverityFor(tex / 2), FindingKind.NoAlphaButAlphaFormat, path, $"No alpha but {info.Format}",
+                    $"Source has no alpha but the build format is {info.Format}. An RGB format would halve it.", tex / 2)
                     .AddFix("Alpha Source → None", () => SetAlphaSourceNone(a, info),
                         "Sets Alpha Source to None so Automatic picks an RGB format, then reimports.");
             }
 
-            // Very large
-            if (info.MaxDim > LargeTextureDim)
+            bool crunchableFormat = info.Format.StartsWith("DXT", StringComparison.Ordinal) || info.Format.StartsWith("ETC", StringComparison.Ordinal);
+            if (!info.Crunched && !notBlockCompressible && !explicitUncompressed && crunchableFormat
+                && tex >= CrunchMinSize && info.TextureType != TextureImporterType.NormalMap)
             {
-                a.Add(Severity.Info, FindingKind.LargeTexture, path,
-                    $"Very large texture {info.Width}×{info.Height} ({Fmt.Bytes(texSize)}). Check Max Size for {a.TexturePlatform}.");
+                long savings = tex / 2;
+                Finding f = a.Add(Severity.Info, FindingKind.CrunchCandidate, path, "Crunch compression (≈ half the size)",
+                    $"{Fmt.Bytes(tex)} as {info.Format}. Crunch (lossy, on top of {info.Format}) usually halves it or better — the project's " +
+                    "atlases already use it. Costs a little CPU to decompress at load and some quality on gradients.", savings);
+                f.IsTradeoff = true;
+                f.AddFix("Enable Crunch (50)", () => EnableCrunch(a, info), "Crunch compression on, quality 50, then reimports.");
             }
 
-            // Packed in an atlas but the source texture is still written into the build
-            if (info.InAtlas && texSize > 0)
+            bool oversized = info.MaxDim > LargeTextureDim || (info.IsSprite && info.MaxDim > 1024 && tex >= OversizedSpriteMinSize);
+            if (oversized)
             {
-                info.SourceShippedBesideAtlas = true;
-                string why = info.ReferencingMaterials.Count > 0
-                    ? $"Referenced as a texture by material(s): {string.Join(", ", info.ReferencingMaterials.Select(System.IO.Path.GetFileName))}. " +
-                      "If the material is only used on a SpriteRenderer/Image (the sprite supplies the texture at runtime), clear the " +
-                      "material's texture slot; if it really needs the texture (particles, mesh), remove the texture from the atlas instead."
-                    : "Something references the Texture2D directly (an Image.texture / RawImage, a ScriptableObject field of type " +
-                      "Texture, a mesh material, or a sprite from this texture that the atlas does not cover).";
-
-                Finding f = a.Add(Severity.Warning, FindingKind.SourceShippedBesideAtlas, path,
-                    $"Packed in {info.AtlasNames} but the source texture is also written into the build ({Fmt.Bytes(texSize)}) — " +
-                    $"its pixels ship twice. {why}", texSize);
-                f.RelatedPaths = info.ReferencingMaterials.ToArray();
-                if (info.ReferencingMaterials.Count > 0)
-                    f.AddFix("Select material(s)", () => SelectAll(info.ReferencingMaterials), "Selects the referencing materials in the Project window.");
-                foreach (AtlasReport atlas in info.InAtlases.ToList())
-                {
-                    AtlasReport atlasLocal = atlas;
-                    f.AddFix($"Remove from {atlas.Name}", () => AtlasActions.RemoveFromAtlas(a, atlasLocal, path),
-                        "Stops packing it (the texture then ships once, as a plain texture).");
-                }
+                int newMax = FloorPowerOfTwo(info.MaxDim);
+                if (newMax == info.MaxDim) newMax /= 2;
+                double ratio = (double)newMax / info.MaxDim;
+                long savings = (long)(tex * (1 - ratio * ratio));
+                Finding f = a.Add(Severity.Info, FindingKind.OversizedTexture, path, $"{info.MaxDim}px — Max Size {newMax}",
+                    $"{info.Width}×{info.Height} ({Fmt.Bytes(tex)}). Max Size {newMax} for {a.TexturePlatform} imports it at " +
+                    $"{(int)(info.Width * ratio)}×{(int)(info.Height * ratio)} (≈{Fmt.Bytes(tex - savings)}). Sprites keep their on-screen size " +
+                    "(Unity rescales Pixels Per Unit), they just get softer — check it at the gameplay camera / on the device.", savings);
+                f.IsTradeoff = true;
+                f.AddFix($"Max Size → {newMax}", () => SetMaxSize(a, info, newMax), $"Sets Max Size to {newMax} and reimports.");
             }
 
-            // Sprite that is not atlased
-            if (info.IsSprite && !info.InAtlas && info.Entry.IsProjectAsset && info.MaxDim <= AtlasFriendlyMaxDim)
+            if (info.Readable)
             {
-                bool suggestUi = SuggestUiAtlas(path);
-                Finding f = a.Add(Severity.Info, FindingKind.NotInAtlas, path,
-                    $"Sprite texture {info.Width}×{info.Height} not in any atlas. Suggested: {(suggestUi ? "UI" : "Gameplay")} atlas.");
-
-                if (suggestUi)
-                {
-                    f.AddFix("→ UI Atlas (suggested)", () => AtlasActions.AddToAtlas(a, info, AddTextureToAtlasContextMenu.UiAtlasPath));
-                    f.AddFix("→ Game Atlas", () => AtlasActions.AddToAtlas(a, info, AddTextureToAtlasContextMenu.GameplayAtlasPath));
-                }
-                else
-                {
-                    f.AddFix("→ Game Atlas (suggested)", () => AtlasActions.AddToAtlas(a, info, AddTextureToAtlasContextMenu.GameplayAtlasPath));
-                    f.AddFix("→ UI Atlas", () => AtlasActions.AddToAtlas(a, info, AddTextureToAtlasContextMenu.UiAtlasPath));
-                }
+                a.Add(Severity.Info, FindingKind.ReadWrite, path, "Read/Write enabled",
+                    "Read/Write enabled — a CPU copy is kept in memory at runtime (no build-size cost). Disable unless code reads its pixels.", 0);
             }
         }
 
-        public static bool SuggestUiAtlas(string path)
+        // ------------------------------------------------------------------ helpers
+
+        /// <summary>Bytes per pixel the texture would have once it compresses on this platform.</summary>
+        private static double TargetBytesPerPixel(BuildAnalysis a, TextureInfo info)
         {
-            return path.IndexOf("/UI/", StringComparison.OrdinalIgnoreCase) >= 0
-                   || path.IndexOf("/Icons/", StringComparison.OrdinalIgnoreCase) >= 0
-                   || path.IndexOf("UpgradeIcons", StringComparison.OrdinalIgnoreCase) >= 0
-                   || path.IndexOf("/GUI", StringComparison.OrdinalIgnoreCase) >= 0
-                   || path.IndexOf("/HUD/", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (!UncompressedFormats.Contains(info.Format) && info.Format != "Automatic")
+                return BytesPerPixelFor(info.Format, TextureImporterCompression.Compressed, a.TexturePlatform);
+
+            if (a.TexturePlatform == "Android" || a.TexturePlatform == "iPhone") return 0.45; // ASTC 6×6
+            return info.HasAlpha ? 1.0 : 0.5; // DXT5 / DXT1
         }
+
+        private static int Ceil4(int v) => (v + 3) / 4 * 4;
+
+        private static int FloorPowerOfTwo(int v)
+        {
+            int p = 1;
+            while (p * 2 <= v) p *= 2;
+            return p;
+        }
+
+        private static string Names(List<string> paths)
+        {
+            if (paths.Count == 0) return "nothing found";
+            string names = string.Join(", ", paths.Take(3).Select(Path.GetFileName));
+            return paths.Count > 3 ? $"{names} +{paths.Count - 3} more" : names;
+        }
+
+        private static bool IsRewritable(string path) => RewritableExtensions.Contains(Path.GetExtension(path).ToLowerInvariant());
 
         private static TextureImporter ImporterFor(string path) => AssetImporter.GetAtPath(path) as TextureImporter;
 
-        private static void SelectAll(List<string> paths)
+        public static void SelectAll(IEnumerable<string> paths)
         {
             UnityEngine.Object[] objects = paths.Select(AssetDatabase.LoadMainAssetAtPath).Where(o => o != null).ToArray();
             Selection.objects = objects;
             if (objects.Length > 0) EditorGUIUtility.PingObject(objects[0]);
-        }
-
-        private static readonly HashSet<string> PaddableExtensions = new HashSet<string> { ".png", ".jpg", ".jpeg" };
-
-        /// <summary>What <see cref="MakePowerOfTwo"/> would do to this texture, for tooltips and messages.</summary>
-        public static string MakePotDescription(TextureInfo info)
-        {
-            string ext = System.IO.Path.GetExtension(info.Path).ToLowerInvariant();
-            if (!PaddableExtensions.Contains(ext))
-            {
-                return info.IsSprite
-                    ? $"Make POT cannot rewrite a {ext} sprite source — export it as PNG first."
-                    : $"Make POT sets the importer's Non-Power-of-2 scale to ToNearest ({ext} sources are not rewritten).";
-            }
-
-            int sw = Mathf.ClosestPowerOfTwo(Mathf.Max(1, info.Width)), sh = Mathf.ClosestPowerOfTwo(Mathf.Max(1, info.Height));
-            int square = Mathf.Max(sw, sh);
-            bool single = info.IsSprite && IsSingleSprite(info.Path);
-            return $"Make POT rewrites the file: scales {info.Width}×{info.Height} → {sw}×{sh} (closest POT per axis), then pads " +
-                   $"with transparent pixels to a {square}×{square} square" +
-                   (info.IsSprite
-                       ? single
-                           ? " (single sprite: centered, so a Center pivot still lands on the art)."
-                           : " (sprite sheet: anchored bottom-left, sprite rects are scaled to match)."
-                       : " (anchored bottom-left).");
-        }
-
-        private static bool IsSingleSprite(string path) =>
-            AssetImporter.GetAtPath(path) is TextureImporter importer && importer.spriteImportMode == SpriteImportMode.Single;
-
-        /// <summary>
-        /// Rewrites the source file: (1) resample each axis to its closest power of two, (2) pad with
-        /// transparent pixels to a square. Sprite-sheet rects and borders are scaled by the same factors
-        /// (bottom-left anchored, so the padding never touches them); single sprites are centered in the
-        /// square. Non-image sources (PSD/TGA…) fall back to the importer's NPOT scale when not sprites.
-        /// </summary>
-        public static void MakePowerOfTwo(BuildAnalysis a, TextureInfo info)
-        {
-            TextureImporter importer = ImporterFor(info.Path);
-            if (importer == null) return;
-
-            string ext = System.IO.Path.GetExtension(info.Path).ToLowerInvariant();
-            if (!PaddableExtensions.Contains(ext))
-            {
-                if (info.IsSprite)
-                {
-                    LogHelper.Error(BuildAnalysis.LogTag, $"'{info.Name}': cannot rewrite a {ext} sprite source. Export it as PNG first.");
-                    return;
-                }
-
-                importer.npotScale = TextureImporterNPOTScale.ToNearest;
-                importer.SaveAndReimport();
-                RefreshDims(info);
-                a.Resolve(info.Path, FindingKind.Npot);
-                LogHelper.Log(BuildAnalysis.LogTag, $"'{info.Name}': NPOT scale set to ToNearest → imports as {info.Width}×{info.Height}.");
-                return;
-            }
-
-            var source = new Texture2D(2, 2, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
-            Texture2D result = null;
-            try
-            {
-                byte[] bytes = File.ReadAllBytes(info.Path);
-                if (!source.LoadImage(bytes, false))
-                {
-                    LogHelper.Error(BuildAnalysis.LogTag, $"'{info.Name}': could not decode the source file.");
-                    return;
-                }
-
-                int w = source.width, h = source.height;
-                int sw = Mathf.ClosestPowerOfTwo(w), sh = Mathf.ClosestPowerOfTwo(h);
-                int square = Mathf.Max(sw, sh);
-                if (sw == w && sh == h && w == h)
-                {
-                    LogHelper.Log(BuildAnalysis.LogTag, $"'{info.Name}': source file is already a {w}×{h} POT square; the imported {info.Width}×{info.Height} comes from Max Size / platform settings.");
-                    a.Resolve(info.Path, FindingKind.Npot);
-                    return;
-                }
-
-                float scaleX = (float)sw / w, scaleY = (float)sh / h;
-                bool centered = info.IsSprite && importer.spriteImportMode == SpriteImportMode.Single;
-                int ox = centered ? (square - sw) / 2 : 0;
-                int oy = centered ? (square - sh) / 2 : 0;
-
-                // 1) scale to the closest POT per axis, 2) pad to a square.
-                Color32[] scaled = ImageResampler.Resample(source.GetPixels32(), w, h, sw, sh);
-                var dst = new Color32[square * square]; // transparent black
-                for (int y = 0; y < sh; y++)
-                    Array.Copy(scaled, y * sw, dst, (y + oy) * square + ox, sw);
-
-                result = new Texture2D(square, square, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
-                result.SetPixels32(dst);
-                result.Apply(false, false);
-
-                byte[] output = ext == ".png" ? result.EncodeToPNG() : result.EncodeToJPG(95);
-                File.WriteAllBytes(info.Path, output);
-
-                string rectNote = "";
-                if (info.IsSprite && importer.spriteImportMode == SpriteImportMode.Multiple)
-                    rectNote = ScaleSpriteRects(importer, scaleX, scaleY);
-
-                AssetDatabase.ImportAsset(info.Path, ImportAssetOptions.ForceUpdate);
-                RefreshDims(info);
-                a.Resolve(info.Path, FindingKind.Npot);
-
-                LogHelper.Log(BuildAnalysis.LogTag,
-                    $"'{info.Name}': {w}×{h} → scaled {sw}×{sh} (×{scaleX:0.###}, ×{scaleY:0.###}) → padded to {square}×{square} " +
-                    $"({(centered ? "centered" : "bottom-left anchored")}, {(ext == ".png" ? "transparent" : "black — JPG has no alpha")} padding).{rectNote} " +
-                    "The file was rewritten; revert with git if unwanted." +
-                    (info.IsSprite && (Mathf.Abs(scaleX - 1f) > 0.01f || Mathf.Abs(scaleY - 1f) > 0.01f)
-                        ? $" Sprites now render at {scaleX:P0} × {scaleY:P0} of their previous size unless Pixels Per Unit ({importer.spritePixelsPerUnit}) is adjusted."
-                        : ""));
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(source);
-                if (result != null) UnityEngine.Object.DestroyImmediate(result);
-            }
-        }
-
-        /// <summary>Scales every sprite rect/border of a Multiple-mode sheet so they keep pointing at the same art.</summary>
-        private static string ScaleSpriteRects(TextureImporter importer, float scaleX, float scaleY)
-        {
-            try
-            {
-                var factory = new UnityEditor.U2D.Sprites.SpriteDataProviderFactories();
-                factory.Init();
-                UnityEditor.U2D.Sprites.ISpriteEditorDataProvider provider = factory.GetSpriteEditorDataProviderFromObject(importer);
-                if (provider == null) return " (sprite rects NOT scaled: no data provider)";
-
-                provider.InitSpriteEditorDataProvider();
-                SpriteRect[] rects = provider.GetSpriteRects();
-                foreach (SpriteRect sprite in rects)
-                {
-                    Rect r = sprite.rect;
-                    sprite.rect = new Rect(
-                        Mathf.Round(r.x * scaleX), Mathf.Round(r.y * scaleY),
-                        Mathf.Max(1f, Mathf.Round(r.width * scaleX)), Mathf.Max(1f, Mathf.Round(r.height * scaleY)));
-                    Vector4 b = sprite.border;
-                    sprite.border = new Vector4(Mathf.Round(b.x * scaleX), Mathf.Round(b.y * scaleY), Mathf.Round(b.z * scaleX), Mathf.Round(b.w * scaleY));
-                }
-
-                provider.SetSpriteRects(rects);
-                provider.Apply();
-                EditorUtility.SetDirty(importer);
-                importer.SaveAndReimport();
-                return $" {rects.Length} sprite rect(s) scaled.";
-            }
-            catch (Exception e)
-            {
-                LogHelper.Warn(BuildAnalysis.LogTag, $"Could not scale sprite rects of '{importer.assetPath}': {e.Message}. Fix them in the Sprite Editor.");
-                return " (sprite rects NOT scaled — see warning)";
-            }
         }
 
         private static void RefreshDims(TextureInfo info)
@@ -445,6 +648,265 @@ namespace Project.EditorTools.BuildAnalyzer
             info.Width = texture.width;
             info.Height = texture.height;
             info.Npot = !Mathf.IsPowerOfTwo(info.Width) || !Mathf.IsPowerOfTwo(info.Height);
+        }
+
+        /// <summary>Applies <paramref name="change"/> to the platform override when the texture has one for this platform, else to the defaults.</summary>
+        private static void EditPlatformSettings(BuildAnalysis a, TextureImporter importer, Action<TextureImporterPlatformSettings> change)
+        {
+            TextureImporterPlatformSettings platform = importer.GetPlatformTextureSettings(a.TexturePlatform);
+            if (platform != null && platform.overridden)
+            {
+                change(platform);
+                importer.SetPlatformTextureSettings(platform);
+                return;
+            }
+
+            TextureImporterPlatformSettings defaults = importer.GetDefaultPlatformTextureSettings();
+            change(defaults);
+            importer.SetPlatformTextureSettings(defaults);
+        }
+
+        // ------------------------------------------------------------------ fixes
+
+        /// <summary>
+        /// Rewrites a PNG/JPG so both sides are multiples of 4 (block compression needs 4×4 blocks) — padding only,
+        /// never a rescale. Sprite sheets are padded on the right/top: Unity's sprite rects are measured from the
+        /// bottom-left, so they keep pointing at the same pixels. Single sprites are padded around the center and get
+        /// a Custom pivot so the pivot stays on the same pixel; 9-slice borders grow by the padding.
+        /// </summary>
+        public static void PadToMultipleOf4(BuildAnalysis a, TextureInfo info)
+        {
+            TextureImporter importer = ImporterFor(info.Path);
+            if (importer == null) return;
+            if (!IsRewritable(info.Path))
+            {
+                LogHelper.Error(BuildAnalysis.LogTag, $"'{info.Name}': only PNG/JPG sources can be padded. Re-export it as PNG.");
+                return;
+            }
+
+            var source = new Texture2D(2, 2, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+            Texture2D result = null;
+            try
+            {
+                if (!source.LoadImage(File.ReadAllBytes(info.Path), false))
+                {
+                    LogHelper.Error(BuildAnalysis.LogTag, $"'{info.Name}': could not decode the source file.");
+                    return;
+                }
+
+                int w = source.width, h = source.height;
+                int pw = Ceil4(w), ph = Ceil4(h);
+                if (pw == w && ph == h)
+                {
+                    LogHelper.Log(BuildAnalysis.LogTag, $"'{info.Name}': the source is already {w}×{h} (×4). The imported {info.Width}×{info.Height} comes from Max Size — " +
+                                                        "pick a Max Size that keeps it a multiple of 4.");
+                    return;
+                }
+
+                bool single = info.IsSprite && importer.spriteImportMode == SpriteImportMode.Single;
+                int ox = single ? (pw - w) / 2 : 0;
+                int oy = single ? (ph - h) / 2 : 0;
+
+                Vector2 pivotPx = new Vector2(w * 0.5f, h * 0.5f);
+                if (single)
+                {
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(info.Path);
+                    if (sprite != null && sprite.rect.width > 0 && sprite.rect.height > 0)
+                        pivotPx = new Vector2(sprite.pivot.x * w / sprite.rect.width, sprite.pivot.y * h / sprite.rect.height);
+                }
+
+                Color32[] src = source.GetPixels32();
+                var dst = new Color32[pw * ph]; // transparent black
+                for (int y = 0; y < h; y++)
+                    Array.Copy(src, y * w, dst, (y + oy) * pw + ox, w);
+
+                result = new Texture2D(pw, ph, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+                result.SetPixels32(dst);
+                result.Apply(false, false);
+
+                string ext = Path.GetExtension(info.Path).ToLowerInvariant();
+                File.WriteAllBytes(info.Path, ext == ".png" ? result.EncodeToPNG() : result.EncodeToJPG(95));
+
+                if (single)
+                {
+                    var settings = new TextureImporterSettings();
+                    importer.ReadTextureSettings(settings);
+                    settings.spriteAlignment = (int)SpriteAlignment.Custom;
+                    settings.spritePivot = new Vector2((pivotPx.x + ox) / pw, (pivotPx.y + oy) / ph);
+                    Vector4 b = settings.spriteBorder;
+                    if (b != Vector4.zero)
+                        settings.spriteBorder = new Vector4(b.x + ox, b.y + oy, b.z + (pw - w - ox), b.w + (ph - h - oy));
+                    importer.SetTextureSettings(settings);
+                }
+
+                if (info.Compression == TextureImporterCompression.Uncompressed)
+                    EditPlatformSettings(a, importer, p => p.textureCompression = TextureImporterCompression.Compressed);
+
+                EditorUtility.SetDirty(importer);
+                importer.SaveAndReimport();
+                AssetDatabase.ImportAsset(info.Path, ImportAssetOptions.ForceUpdate);
+                RefreshDims(info);
+                a.Resolve(info.Path, FindingKind.NotBlockCompressible, FindingKind.Uncompressed);
+
+                LogHelper.Log(BuildAnalysis.LogTag,
+                    $"'{info.Name}': padded {w}×{h} → {pw}×{ph} ({(single ? "centered, pivot kept" : "bottom-left anchored, sprite rects unchanged")}, " +
+                    $"{(ext == ".png" ? "transparent" : "black — JPG has no alpha")} padding). The file was rewritten; revert with git if unwanted.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(source);
+                if (result != null) UnityEngine.Object.DestroyImmediate(result);
+            }
+        }
+
+        /// <summary>Importer Non-Power-of-2 → ToNearest: non-destructive, UVs unchanged. For material/texture assets only (ignored on sprites).</summary>
+        public static void SetNpotToNearest(BuildAnalysis a, TextureInfo info)
+        {
+            TextureImporter importer = ImporterFor(info.Path);
+            if (importer == null) return;
+
+            importer.npotScale = TextureImporterNPOTScale.ToNearest;
+            if (info.Compression == TextureImporterCompression.Uncompressed)
+                EditPlatformSettings(a, importer, p => p.textureCompression = TextureImporterCompression.Compressed);
+            importer.SaveAndReimport();
+            RefreshDims(info);
+            a.Resolve(info.Path, FindingKind.NotBlockCompressible, FindingKind.NpotMaterialTexture, FindingKind.Uncompressed);
+            LogHelper.Log(BuildAnalysis.LogTag, $"'{info.Name}': Non-Power-of-2 → ToNearest, now imports as {info.Width}×{info.Height}.");
+        }
+
+        /// <summary>What <see cref="MakePowerOfTwoKeepingSlices"/> would do, for tooltips.</summary>
+        public static string MakePotDescription(TextureInfo info)
+        {
+            PotPlan(info.Width, info.Height, out float scale, out int sw, out int sh, out int pw, out int ph);
+            return $"Scales {info.Width}×{info.Height} uniformly ×{scale:0.###} to {sw}×{sh}, pads to {pw}×{ph} (POT), scales every slice rect / " +
+                   "9-slice border by the same factor and Pixels Per Unit too — sprites keep their shape and world size. Bigger than Pad to ×4; " +
+                   "only worth it when something really needs POT. Rewrites the file (revert with git).";
+        }
+
+        /// <summary>Uniform scale so the larger side lands on its closest power of two, then pad each side up to a power of two.</summary>
+        private static void PotPlan(int w, int h, out float scale, out int sw, out int sh, out int pw, out int ph)
+        {
+            int max = Math.Max(1, Math.Max(w, h));
+            scale = (float)Mathf.ClosestPowerOfTwo(max) / max;
+            sw = Math.Max(1, Mathf.RoundToInt(w * scale));
+            sh = Math.Max(1, Mathf.RoundToInt(h * scale));
+            pw = Mathf.NextPowerOfTwo(sw);
+            ph = Mathf.NextPowerOfTwo(sh);
+        }
+
+        /// <summary>
+        /// Makes a sprite texture power-of-two without breaking its slices: the art is scaled UNIFORMLY (never a
+        /// different factor per axis, so nothing gets squashed) so the larger side lands on its closest POT, then
+        /// padded with transparent pixels on the right/top up to POT. Every sprite rect and 9-slice border is scaled by
+        /// the same factor (rects are bottom-left based, so the padding never moves them; pivots are normalized and stay
+        /// valid) and Pixels Per Unit is multiplied by it, so every sprite keeps its exact world size.
+        /// </summary>
+        public static void MakePowerOfTwoKeepingSlices(BuildAnalysis a, TextureInfo info)
+        {
+            TextureImporter importer = ImporterFor(info.Path);
+            if (importer == null) return;
+            if (!IsRewritable(info.Path))
+            {
+                LogHelper.Error(BuildAnalysis.LogTag, $"'{info.Name}': only PNG/JPG sources can be rewritten. Re-export it as PNG.");
+                return;
+            }
+
+            var source = new Texture2D(2, 2, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+            Texture2D result = null;
+            try
+            {
+                if (!source.LoadImage(File.ReadAllBytes(info.Path), false))
+                {
+                    LogHelper.Error(BuildAnalysis.LogTag, $"'{info.Name}': could not decode the source file.");
+                    return;
+                }
+
+                int w = source.width, h = source.height;
+                PotPlan(w, h, out float scale, out int sw, out int sh, out int pw, out int ph);
+                if (pw == w && ph == h)
+                {
+                    LogHelper.Log(BuildAnalysis.LogTag, $"'{info.Name}': the source is already {w}×{h} (POT).");
+                    return;
+                }
+
+                // Rects are read before the file changes; the sprite provider works in source pixels.
+                var factory = new UnityEditor.U2D.Sprites.SpriteDataProviderFactories();
+                factory.Init();
+                UnityEditor.U2D.Sprites.ISpriteEditorDataProvider provider = factory.GetSpriteEditorDataProviderFromObject(importer);
+                provider?.InitSpriteEditorDataProvider();
+                SpriteRect[] rects = provider?.GetSpriteRects() ?? Array.Empty<SpriteRect>();
+                bool single = importer.spriteImportMode == SpriteImportMode.Single;
+
+                Color32[] scaled = Mathf.Approximately(scale, 1f)
+                    ? source.GetPixels32()
+                    : ImageResampler.Resample(source.GetPixels32(), w, h, sw, sh);
+                var dst = new Color32[pw * ph]; // transparent black
+                for (int y = 0; y < sh; y++)
+                    Array.Copy(scaled, y * sw, dst, y * pw, sw);
+
+                result = new Texture2D(pw, ph, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+                result.SetPixels32(dst);
+                result.Apply(false, false);
+
+                string ext = Path.GetExtension(info.Path).ToLowerInvariant();
+                File.WriteAllBytes(info.Path, ext == ".png" ? result.EncodeToPNG() : result.EncodeToJPG(95));
+
+                if (single)
+                {
+                    // The single sprite now covers the padded texture: pin its pivot to the same art pixel and grow the
+                    // 9-slice borders by the padding so the stretchable area is unchanged.
+                    var settings = new TextureImporterSettings();
+                    importer.ReadTextureSettings(settings);
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(info.Path);
+                    Vector2 pivotPx = sprite != null && sprite.rect.width > 0
+                        ? new Vector2(sprite.pivot.x * w / sprite.rect.width, sprite.pivot.y * h / sprite.rect.height)
+                        : new Vector2(w * 0.5f, h * 0.5f);
+                    settings.spriteAlignment = (int)SpriteAlignment.Custom;
+                    settings.spritePivot = new Vector2(pivotPx.x * scale / pw, pivotPx.y * scale / ph);
+                    Vector4 b = settings.spriteBorder;
+                    if (b != Vector4.zero)
+                        settings.spriteBorder = new Vector4(Mathf.Round(b.x * scale), Mathf.Round(b.y * scale),
+                            Mathf.Round(b.z * scale) + (pw - sw), Mathf.Round(b.w * scale) + (ph - sh));
+                    settings.spritePixelsPerUnit *= scale;
+                    importer.SetTextureSettings(settings);
+                }
+                else if (provider != null && rects.Length > 0)
+                {
+                    foreach (SpriteRect rect in rects)
+                    {
+                        Rect r = rect.rect;
+                        rect.rect = new Rect(Mathf.Round(r.x * scale), Mathf.Round(r.y * scale),
+                            Mathf.Max(1f, Mathf.Round(r.width * scale)), Mathf.Max(1f, Mathf.Round(r.height * scale)));
+                        Vector4 b = rect.border;
+                        rect.border = new Vector4(Mathf.Round(b.x * scale), Mathf.Round(b.y * scale), Mathf.Round(b.z * scale), Mathf.Round(b.w * scale));
+                        // rect.pivot is normalized to the rect — unchanged by a uniform scale.
+                    }
+
+                    provider.SetSpriteRects(rects);
+                    provider.Apply();
+                    importer.spritePixelsPerUnit *= scale;
+                }
+                else
+                {
+                    importer.spritePixelsPerUnit *= scale;
+                }
+
+                EditorUtility.SetDirty(importer);
+                importer.SaveAndReimport();
+                AssetDatabase.ImportAsset(info.Path, ImportAssetOptions.ForceUpdate);
+                RefreshDims(info);
+                a.Resolve(info.Path, FindingKind.NotBlockCompressible, FindingKind.Uncompressed);
+
+                LogHelper.Log(BuildAnalysis.LogTag,
+                    $"'{info.Name}': {w}×{h} → scaled ×{scale:0.###} to {sw}×{sh} → padded to {pw}×{ph}. " +
+                    $"{(single ? "Pivot pinned, borders kept" : $"{rects.Length} slice rect(s) scaled")}, Pixels Per Unit ×{scale:0.###} " +
+                    $"(now {importer.spritePixelsPerUnit:0.##}) so world size is unchanged. The file was rewritten; revert with git if unwanted.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(source);
+                if (result != null) UnityEngine.Object.DestroyImmediate(result);
+            }
         }
 
         private static void DisableMipmaps(BuildAnalysis a, TextureInfo info)
@@ -474,7 +936,6 @@ namespace Project.EditorTools.BuildAnalyzer
 
             importer.SaveAndReimport();
             info.Compression = TextureImporterCompression.Compressed;
-            info.Uncompressed = false;
             a.Resolve(info.Path, FindingKind.Uncompressed);
             LogHelper.Log(BuildAnalysis.LogTag, $"Set compression to Compressed on '{info.Path}'. Re-analyze after the next build to confirm the packed size.");
         }
@@ -495,6 +956,35 @@ namespace Project.EditorTools.BuildAnalyzer
             importer.SaveAndReimport();
             a.Resolve(info.Path, FindingKind.NoAlphaButAlphaFormat);
             LogHelper.Log(BuildAnalysis.LogTag, $"Set Alpha Source to None on '{info.Path}'.");
+        }
+
+        private static void EnableCrunch(BuildAnalysis a, TextureInfo info)
+        {
+            TextureImporter importer = ImporterFor(info.Path);
+            if (importer == null) return;
+
+            EditPlatformSettings(a, importer, p =>
+            {
+                p.crunchedCompression = true;
+                p.compressionQuality = 50;
+            });
+            importer.SaveAndReimport();
+            info.Crunched = true;
+            a.Resolve(info.Path, FindingKind.CrunchCandidate);
+            LogHelper.Log(BuildAnalysis.LogTag, $"Enabled Crunch (quality 50) on '{info.Path}'.");
+        }
+
+        private static void SetMaxSize(BuildAnalysis a, TextureInfo info, int maxSize)
+        {
+            TextureImporter importer = ImporterFor(info.Path);
+            if (importer == null) return;
+
+            EditPlatformSettings(a, importer, p => p.maxTextureSize = maxSize);
+            importer.SaveAndReimport();
+            info.MaxSize = maxSize;
+            RefreshDims(info);
+            a.Resolve(info.Path, FindingKind.OversizedTexture);
+            LogHelper.Log(BuildAnalysis.LogTag, $"Max Size → {maxSize} on '{info.Path}' (now {info.Width}×{info.Height}).");
         }
 
         /// <summary>Rough bytes-per-pixel of an importer format, used to estimate atlas duplication cost.</summary>

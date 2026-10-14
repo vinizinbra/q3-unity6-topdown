@@ -29,6 +29,7 @@ namespace Project.EditorTools.BuildAnalyzer
         private const float MusicQuality = 0.7f;
         private const float MediumQuality = 0.5f;
         private const uint SfxSampleRate = 22050;
+        private const uint WebGlSampleRate = 44100;
         private const float MaxReasonableQuality = MusicQuality;
 
         /// <summary>Load type + codec a tier should use on a given platform.</summary>
@@ -62,7 +63,8 @@ namespace Project.EditorTools.BuildAnalyzer
                         ? new TierTarget(AudioClipLoadType.CompressedInMemory, codec)
                         : new TierTarget(AudioClipLoadType.Streaming, codec);
                 case AudioImportOptimizer.Tier.ShortSfx:
-                    return new TierTarget(AudioClipLoadType.DecompressOnLoad, AudioCompressionFormat.ADPCM);
+                    // WebGL only plays AAC (every existing WebGL override in the project is AAC); ADPCM elsewhere.
+                    return new TierTarget(AudioClipLoadType.DecompressOnLoad, webgl ? AudioCompressionFormat.AAC : AudioCompressionFormat.ADPCM);
                 default:
                     return new TierTarget(AudioClipLoadType.CompressedInMemory, codec);
             }
@@ -207,7 +209,9 @@ namespace Project.EditorTools.BuildAnalyzer
                 if (canApply) f.AddFix("Apply optimizer tier", () => ApplyOptimizer(a, info));
             }
 
-            if (info.Frequency > SfxSampleRate && info.SampleRateSetting == AudioSampleRateSetting.PreserveSampleRate && !info.IsMusic)
+            // WebGL pins the sample rate (Override / 44100) and resets the whole override if you change it — not a lever there.
+            if (!IsWebGl(a.AudioPlatform)
+                && info.Frequency > SfxSampleRate && info.SampleRateSetting == AudioSampleRateSetting.PreserveSampleRate && !info.IsMusic)
             {
                 Finding f = a.Add(Severity.Info, FindingKind.AudioHighSampleRate, path,
                     $"{info.Frequency} Hz preserved on a non-music clip{platformNote} — {SfxSampleRate} Hz is inaudible for layered SFX and halves the data.",
@@ -322,17 +326,77 @@ namespace Project.EditorTools.BuildAnalyzer
                     break;
             }
 
+            if (IsWebGl(platform))
+            {
+                // Unity 6.3 WebGL forces Override / 44100 and silently resets every other field of the override when the
+                // sample rate fields are written with anything else.
+                settings.sampleRateSetting = AudioSampleRateSetting.OverrideSampleRate;
+                settings.sampleRateOverride = WebGlSampleRate;
+            }
+
             bool changed = !Same(before, settings)
                            || !importer.ContainsSampleSettingsOverride(platform)
                            || forceToMono != importer.forceToMono
                            || loadInBackground != importer.loadInBackground;
             if (!changed) return false;
 
-            importer.SetOverrideSampleSettings(platform, settings);
             importer.forceToMono = forceToMono;
             importer.loadInBackground = loadInBackground;
+            if (!importer.SetOverrideSampleSettings(platform, settings))
+            {
+                // Unity 6.3 rejects SetOverrideSampleSettings("WebGL", …) for every settings combination (it returns
+                // false and stores nothing), so the fix silently never stuck. Write the override the way the
+                // Inspector stores it instead.
+                WriteSerializedOverride(importer, platform, settings);
+            }
+
             importer.SaveAndReimport();
+
+            if (!importer.ContainsSampleSettingsOverride(platform))
+                throw new InvalidOperationException($"Unity did not keep the {platform} audio override on '{info.Path}'. Set it by hand in the Inspector.");
+            AudioImporterSampleSettings stored = importer.GetOverrideSampleSettings(platform);
+            if (stored.loadType != settings.loadType || stored.compressionFormat != settings.compressionFormat
+                || !Mathf.Approximately(stored.quality, settings.quality))
+                throw new InvalidOperationException(
+                    $"Unity rewrote the {platform} audio override on '{info.Path}' to {stored.loadType} / {stored.compressionFormat} / q {stored.quality:0.##} " +
+                    $"(asked {settings.loadType} / {settings.compressionFormat} / q {settings.quality:0.##}). Set it by hand in the Inspector.");
             return true;
+        }
+
+        /// <summary>Adds/updates the entry for <paramref name="platform"/> in the importer's serialized m_PlatformSettingOverrides map.</summary>
+        private static void WriteSerializedOverride(AudioImporter importer, string platform, AudioImporterSampleSettings settings)
+        {
+            var so = new SerializedObject(importer);
+            SerializedProperty list = so.FindProperty("m_PlatformSettingOverrides");
+            if (list == null || !list.isArray)
+                throw new InvalidOperationException("AudioImporter has no m_PlatformSettingOverrides property in this Unity version.");
+
+            SerializedProperty entry = null;
+            for (int i = 0; i < list.arraySize; i++)
+            {
+                SerializedProperty candidate = list.GetArrayElementAtIndex(i);
+                if (candidate.FindPropertyRelative("first")?.stringValue == platform)
+                {
+                    entry = candidate;
+                    break;
+                }
+            }
+
+            if (entry == null)
+            {
+                list.arraySize++;
+                entry = list.GetArrayElementAtIndex(list.arraySize - 1);
+                entry.FindPropertyRelative("first").stringValue = platform;
+            }
+
+            SerializedProperty second = entry.FindPropertyRelative("second");
+            second.FindPropertyRelative("loadType").intValue = (int)settings.loadType;
+            second.FindPropertyRelative("sampleRateSetting").intValue = (int)settings.sampleRateSetting;
+            second.FindPropertyRelative("sampleRateOverride").intValue = (int)settings.sampleRateOverride;
+            second.FindPropertyRelative("compressionFormat").intValue = (int)settings.compressionFormat;
+            second.FindPropertyRelative("quality").floatValue = settings.quality;
+            second.FindPropertyRelative("preloadAudioData").boolValue = settings.preloadAudioData;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static bool Same(AudioImporterSampleSettings x, AudioImporterSampleSettings y) =>

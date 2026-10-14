@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Project.Audio.EditorTools;
@@ -22,9 +23,10 @@ namespace Project.EditorTools.BuildAnalyzer
 
     internal enum FindingKind
     {
-        // Textures
-        Npot, Uncompressed, MipmapsOnSprite, ReadWrite, NoAlphaButAlphaFormat, LargeTexture,
-        SourceShippedBesideAtlas, NotInAtlas,
+        // Textures — one size plan per shipped texture (see TextureAudit for the decision tree)
+        AtlasCandidate, NotBlockCompressible, Uncompressed, CrunchCandidate, OversizedTexture,
+        MipmapsOnSprite, NoAlphaButAlphaFormat, DirectTextureReference, PendingRebuild,
+        NpotMaterialTexture, ReadWrite,
         // Atlases
         InMultipleAtlases, DuplicateAtlasEntries, SuspiciousAtlasPackable, NonSpritePackable,
         AtlasNotInBuild, AtlasUncompressed, AtlasPoorlyFilled,
@@ -35,6 +37,15 @@ namespace Project.EditorTools.BuildAnalyzer
         DuplicateContent, MultiArchive
     }
 
+    /// <summary>Coarse buckets the Fix Plan filters by.</summary>
+    internal enum PlanGroup { Atlas, Compression, Tradeoff, DirectReference, AtlasHygiene, Audio, Duplicates, Notes }
+
+    /// <summary>How the shipped assets reference a texture: through its Sprites, as a Texture2D (materials,
+    /// RawImages, TMP sprite assets, Texture fields), both, or not at all (code / binary assets).</summary>
+    internal enum TextureUse { Unknown, Sprite, Texture, SpriteAndTexture }
+
+    internal enum UsageContext { Unknown, UI, Gameplay, Both }
+
     /// <summary>Reports progress; implementations may throw <see cref="OperationCanceledException"/>.</summary>
     internal delegate void ProgressCallback(string message, float fraction);
 
@@ -43,12 +54,15 @@ namespace Project.EditorTools.BuildAnalyzer
         public readonly string Label;
         public readonly string Tooltip;
         public readonly Action Action;
+        /// <summary>False for helpers that only select/ping things (the problem is still there afterwards).</summary>
+        public readonly bool Resolves;
 
-        public FixOption(string label, Action action, string tooltip = null)
+        public FixOption(string label, Action action, string tooltip = null, bool resolves = true)
         {
             Label = label;
             Action = action;
             Tooltip = tooltip ?? label;
+            Resolves = resolves;
         }
     }
 
@@ -57,21 +71,73 @@ namespace Project.EditorTools.BuildAnalyzer
         public Severity Severity;
         public FindingKind Kind;
         public string AssetPath;
+        /// <summary>One line for the plan row.</summary>
+        public string Short;
+        /// <summary>Full explanation shown when the row is expanded.</summary>
         public string Message;
         public long PotentialSavings;
+        /// <summary>Saves size at a quality cost (lower Max Size, Crunch) — counted apart from the safe savings.</summary>
+        public bool IsTradeoff;
+        /// <summary>The asset (or an atlas packing it) was edited after the analyzed build: the numbers are stale.</summary>
+        public bool ChangedSinceBuild;
         public string[] RelatedPaths;
         public bool Resolved;
+        /// <summary>Fixes[0] is the recommended one.</summary>
         public readonly List<FixOption> Fixes = new List<FixOption>();
 
         public string KindLabel => LabelFor(Kind);
+        public string ActionLabel => Fixes.Count > 0 ? Fixes[0].Label : KindLabel;
+        public string Name => Path.GetFileName(AssetPath);
+        public PlanGroup Group => GroupFor(this);
 
         public static string LabelFor(FindingKind kind) =>
             Regex.Replace(kind.ToString(), "(?<=[a-z])([A-Z])", " $1");
 
-        public Finding AddFix(string label, Action action, string tooltip = null)
+        public Finding AddFix(string label, Action action, string tooltip = null, bool resolves = true)
         {
-            Fixes.Add(new FixOption(label, action, tooltip));
+            Fixes.Add(new FixOption(label, action, tooltip, resolves));
             return this;
+        }
+
+        private static PlanGroup GroupFor(Finding f)
+        {
+            if (f.PotentialSavings <= 0 && f.Kind != FindingKind.PendingRebuild && f.Kind != FindingKind.DirectTextureReference) return PlanGroup.Notes;
+            if (f.IsTradeoff) return PlanGroup.Tradeoff;
+            switch (f.Kind)
+            {
+                case FindingKind.AtlasCandidate:
+                case FindingKind.PendingRebuild:
+                    return PlanGroup.Atlas;
+                case FindingKind.NotBlockCompressible:
+                case FindingKind.Uncompressed:
+                case FindingKind.MipmapsOnSprite:
+                case FindingKind.NoAlphaButAlphaFormat:
+                case FindingKind.NpotMaterialTexture:
+                    return PlanGroup.Compression;
+                case FindingKind.DirectTextureReference:
+                    return PlanGroup.DirectReference;
+                case FindingKind.InMultipleAtlases:
+                case FindingKind.DuplicateAtlasEntries:
+                case FindingKind.SuspiciousAtlasPackable:
+                case FindingKind.NonSpritePackable:
+                case FindingKind.AtlasNotInBuild:
+                case FindingKind.AtlasUncompressed:
+                case FindingKind.AtlasPoorlyFilled:
+                    return PlanGroup.AtlasHygiene;
+                case FindingKind.AudioPcm:
+                case FindingKind.AudioQualityHigh:
+                case FindingKind.AudioWrongTier:
+                case FindingKind.AudioStereoSfx:
+                case FindingKind.AudioStereoMusic:
+                case FindingKind.AudioHighSampleRate:
+                case FindingKind.AudioOutsideProjectFolder:
+                    return PlanGroup.Audio;
+                case FindingKind.DuplicateContent:
+                case FindingKind.MultiArchive:
+                    return PlanGroup.Duplicates;
+            }
+
+            return PlanGroup.Notes;
         }
     }
 
@@ -85,6 +151,9 @@ namespace Project.EditorTools.BuildAnalyzer
         public int ObjectCount;
         public readonly Dictionary<string, long> SizeByType = new Dictionary<string, long>();
         public readonly HashSet<string> PackedFiles = new HashSet<string>();
+
+        /// <summary>Size of this asset in the previous build of the same platform; -1 = it wasn't in it, null snapshot = unknown.</summary>
+        public long PreviousSize = -2;
 
         public readonly bool IsUnderAssets;
         public readonly bool IsProjectAsset;
@@ -109,6 +178,9 @@ namespace Project.EditorTools.BuildAnalyzer
 
         public string DominantType =>
             SizeByType.Count == 0 ? "Unknown" : SizeByType.OrderByDescending(kv => kv.Value).First().Key;
+
+        public bool HasPrevious => PreviousSize >= -1;
+        public long Delta => PreviousSize >= 0 ? TotalPackedSize - PreviousSize : TotalPackedSize;
     }
 
     internal sealed class TextureInfo
@@ -116,24 +188,51 @@ namespace Project.EditorTools.BuildAnalyzer
         public AssetEntry Entry;
         public string Path;
         public int Width, Height;
+        public int SourceWidth, SourceHeight;
         public string Format;
         public TextureImporterType TextureType;
         public TextureImporterCompression Compression;
         public int MaxSize;
-        public bool Mipmaps, Readable, Npot, HasAlpha, PlatformOverridden, IsSprite;
+        public bool Mipmaps, Readable, Npot, HasAlpha, PlatformOverridden, IsSprite, Crunched, FormatIsAutomatic;
         public double BytesPerPixel;
+        /// <summary>Bytes of the Texture2D object itself in the build (0 = only its Sprites shipped, pixels came from an atlas).</summary>
         public long TextureObjectSize;
+        public long SpriteArea;
+        public int SpriteCount;
+        public int LargestSpriteDim;
         public readonly List<AtlasReport> InAtlases = new List<AtlasReport>();
-        /// <summary>Materials in the build that reference this texture directly (the usual atlas double-ship cause).</summary>
-        public readonly List<string> ReferencingMaterials = new List<string>();
 
-        // Flags set by the audit so the Textures tab can filter without re-deriving them.
-        public bool Uncompressed, SourceShippedBesideAtlas;
+        // Who references it, from the shipped assets' YAML (TextureReferenceIndex).
+        public readonly List<string> TextureReferencers = new List<string>();
+        public readonly List<string> SpriteReferencers = new List<string>();
+        public TextureUse Use;
+        public UsageContext Context;
+        public string ContextSource = "";
+
+        public bool ChangedSinceBuild;
+        /// <summary>The recommended size action for this texture (null = nothing to do).</summary>
+        public Finding Plan;
 
         public bool InAtlas => InAtlases.Count > 0;
+        public bool ShipsAsTexture => TextureObjectSize > 0;
+        public bool MultipleOf4 => Width % 4 == 0 && Height % 4 == 0;
         public int MaxDim => Math.Max(Width, Height);
         public string Name => System.IO.Path.GetFileName(Path);
         public string AtlasNames => InAtlas ? string.Join(", ", InAtlases.Select(a => a.Name)) : "—";
+
+        public string UseLabel
+        {
+            get
+            {
+                switch (Use)
+                {
+                    case TextureUse.Sprite: return Context == UsageContext.Unknown ? "Sprite" : $"Sprite · {Context}";
+                    case TextureUse.Texture: return "Material/Texture";
+                    case TextureUse.SpriteAndTexture: return "Sprite + Material";
+                    default: return IsSprite ? "Sprite? (code)" : "Texture? (code)";
+                }
+            }
+        }
     }
 
     internal sealed class AudioInfo
@@ -178,6 +277,14 @@ namespace Project.EditorTools.BuildAnalyzer
         public long Area => (long)Width * Height;
     }
 
+    /// <summary>One atlas page Unity wrote into the build ("sactx-0-4096x8192-Crunch-GameplaySprites-b631387d").</summary>
+    internal struct AtlasBuildPage
+    {
+        public int Index, Width, Height;
+        public string Format;
+        public long Size;
+    }
+
     internal sealed class AtlasReport
     {
         public string Path;
@@ -190,12 +297,13 @@ namespace Project.EditorTools.BuildAnalyzer
         public SpriteAtlasTextureSettings TextureSettings;
         public TextureImporterPlatformSettings PlatformSettings;
         public bool PlatformOverridden;
-        public long PackedSizeInBuild;
         public int PageCount;
         public string PageDims = "not packed in Editor";
         public long PageArea;
         public long PackableArea;
         public double EstimatedBytesPerPixel = 1.0;
+        public bool ChangedSinceBuild;
+        public readonly List<AtlasBuildPage> BuildPages = new List<AtlasBuildPage>();
         public readonly List<string> UniqueTexturePaths = new List<string>();
         public readonly List<AtlasPackableInfo> Packables = new List<AtlasPackableInfo>();
 
@@ -203,6 +311,28 @@ namespace Project.EditorTools.BuildAnalyzer
         public double FillRatio => PageArea > 0 ? (double)PackableArea / PageArea : -1;
         public bool IsUiAtlas => Path == AddTextureToAtlasContextMenu.UiAtlasPath;
         public bool IsGameplayAtlas => Path == AddTextureToAtlasContextMenu.GameplayAtlasPath;
+        public int MaxPageSize => PlatformSettings != null && PlatformSettings.maxTextureSize > 0 ? PlatformSettings.maxTextureSize : 2048;
+
+        /// <summary>What the atlas pages cost in this build.</summary>
+        public long BuildSize => BuildPages.Sum(p => p.Size);
+
+        /// <summary>
+        /// Bytes per sprite pixel measured from the pages in the build (Crunch makes this ~0.1), falling back
+        /// to the format estimate when the atlas wasn't in the build.
+        /// </summary>
+        public double CostPerPixel
+        {
+            get
+            {
+                long pixels = BuildPages.Sum(p => (long)p.Width * p.Height);
+                return pixels > 0 ? (double)BuildSize / pixels : EstimatedBytesPerPixel;
+            }
+        }
+
+        public string BuildPagesLabel => BuildPages.Count == 0
+            ? "not in this build"
+            : $"{BuildPages.Count} page(s): {string.Join(", ", BuildPages.OrderBy(p => p.Index).Select(p => $"{p.Width}×{p.Height}"))} " +
+              $"{BuildPages[0].Format} = {Fmt.Bytes(BuildSize)} ({CostPerPixel:0.###} B/px)";
     }
 
     internal struct CategoryStat
@@ -217,6 +347,8 @@ namespace Project.EditorTools.BuildAnalyzer
 
         public static string Bytes(double bytes)
         {
+            bool negative = bytes < 0;
+            bytes = Math.Abs(bytes);
             int unit = 0;
             while (bytes >= 1024 && unit < Units.Length - 1)
             {
@@ -224,8 +356,11 @@ namespace Project.EditorTools.BuildAnalyzer
                 unit++;
             }
 
-            return unit == 0 ? $"{bytes:0} B" : $"{bytes:0.##} {Units[unit]}";
+            string s = unit == 0 ? $"{bytes:0} B" : $"{bytes:0.##} {Units[unit]}";
+            return negative ? "-" + s : s;
         }
+
+        public static string SignedBytes(long bytes) => bytes > 0 ? "+" + Bytes(bytes) : bytes < 0 ? "−" + Bytes(-bytes) : "±0";
 
         public static string Percent(long part, long total) =>
             total <= 0 ? "0%" : $"{100.0 * part / total:0.##}%";
@@ -239,6 +374,13 @@ namespace Project.EditorTools.BuildAnalyzer
     {
         public const string LogTag = BuildReportLoader.LogTag;
 
+        private static readonly Regex AtlasPageRegex =
+            new Regex(@"sactx-(\d+)-(\d+)x(\d+)-([^-]+)-(.+)-[0-9a-f]{8}$", RegexOptions.Compiled);
+
+        /// <summary>Result of the last Sprite Optimizer usage scan (texture path → context). Survives re-analysis, not domain reloads.</summary>
+        public static readonly Dictionary<string, UsageContext> ScannedContexts = new Dictionary<string, UsageContext>();
+        public static DateTime ScannedContextsAt;
+
         // Report meta
         public BuildTarget Platform;
         public string TexturePlatform;
@@ -248,7 +390,11 @@ namespace Project.EditorTools.BuildAnalyzer
         public BuildResult Result;
         public ulong TotalBuildSize;
         public string OutputPath;
+        public string BuildGuid;
         public DateTime AnalyzedAt;
+        /// <summary>When the report file was written (≈ build end). Anything edited after this is "changed since build".</summary>
+        public DateTime ReportTimeUtc;
+        public BuildSnapshot Previous;
 
         // Aggregation
         public long PackedTotal;
@@ -256,6 +402,8 @@ namespace Project.EditorTools.BuildAnalyzer
         public readonly List<AssetEntry> Assets = new List<AssetEntry>();
         public readonly Dictionary<string, AssetEntry> ByPath = new Dictionary<string, AssetEntry>();
         public readonly Dictionary<AssetCategory, CategoryStat> ByCategory = new Dictionary<AssetCategory, CategoryStat>();
+        /// <summary>Atlas name → pages written into this build.</summary>
+        public readonly Dictionary<string, List<AtlasBuildPage>> AtlasPagesByName = new Dictionary<string, List<AtlasBuildPage>>();
 
         // Audits
         public readonly List<Finding> Findings = new List<Finding>();
@@ -264,11 +412,58 @@ namespace Project.EditorTools.BuildAnalyzer
         public readonly List<AtlasReport> Atlases = new List<AtlasReport>();
         public readonly Dictionary<string, List<AtlasReport>> AtlasMembership = new Dictionary<string, List<AtlasReport>>();
         public readonly Dictionary<string, TextureInfo> TextureByPath = new Dictionary<string, TextureInfo>();
+        public TextureReferenceIndex References;
 
-        public int ErrorCount => Findings.Count(f => !f.Resolved && f.Severity == Severity.Error);
-        public int WarningCount => Findings.Count(f => !f.Resolved && f.Severity == Severity.Warning);
-        public int InfoCount => Findings.Count(f => !f.Resolved && f.Severity == Severity.Info);
-        public long EstimatedSavings => Findings.Where(f => !f.Resolved).Sum(f => f.PotentialSavings);
+        private ShipReasonIndex _shipReasons;
+        private readonly Dictionary<string, bool> _changedCache = new Dictionary<string, bool>();
+
+        public IEnumerable<Finding> Open => Findings.Where(f => !f.Resolved);
+
+        /// <summary>
+        /// Bytes the given fixes would save together, without double counting: per asset the estimates are applied one
+        /// after the other on what is left (pad ×4 saves 75%, then Crunch halves the remaining 25% → 87.5%, not 125%).
+        /// </summary>
+        public long CombinedSavings(IEnumerable<Finding> findings)
+        {
+            long total = 0;
+            foreach (IGrouping<string, Finding> group in findings.Where(f => f.PotentialSavings > 0).GroupBy(f => f.AssetPath ?? ""))
+            {
+                AssetEntry entry = EntryFor(group.Key);
+                long size = entry?.TotalPackedSize ?? 0;
+                if (size <= 0 || group.Key.EndsWith(".spriteatlas", StringComparison.OrdinalIgnoreCase))
+                {
+                    total += group.Sum(f => f.PotentialSavings);
+                    continue;
+                }
+
+                double remaining = 1.0;
+                foreach (Finding f in group.OrderByDescending(f => f.PotentialSavings))
+                    remaining *= 1.0 - Math.Min(1.0, (double)f.PotentialSavings / size);
+                total += (long)(size * (1.0 - remaining));
+            }
+
+            return total;
+        }
+
+        /// <summary>
+        /// Rough effect of saving <paramref name="packedSavings"/> serialized bytes on the build output: scaled by how
+        /// much this build's output compressed its packed assets (Brotli/LZ4 shrink uncompressed pixels a lot, block-compressed ones little).
+        /// </summary>
+        public long EstimatedBuildSizeAfter(long packedSavings)
+        {
+            double ratio = PackedTotal > 0 ? Math.Max(0.2, Math.Min(1.0, (double)TotalBuildSize / PackedTotal)) : 1.0;
+            return Math.Max(0, (long)TotalBuildSize - (long)(packedSavings * ratio));
+        }
+        public long SafeSavings => CombinedSavings(Open.Where(f => !f.IsTradeoff && f.Kind != FindingKind.PendingRebuild));
+        public long TradeoffSavings => CombinedSavings(Open.Where(f => f.Kind != FindingKind.PendingRebuild)) - SafeSavings;
+        public long PendingSavings => Open.Where(f => f.Kind == FindingKind.PendingRebuild).Sum(f => f.PotentialSavings);
+        public int ActionCount => Open.Count(f => f.PotentialSavings > 0 && f.Fixes.Count > 0);
+        public int ChangedSinceBuildCount =>
+            Findings.Where(f => f.ChangedSinceBuild).Select(f => f.AssetPath).Distinct().Count() + Atlases.Count(r => r.ChangedSinceBuild);
+
+        /// <summary>Lazily built (a few seconds): reverse dependency graph of the shipped assets.</summary>
+        public ShipReasonIndex ShipReasons => _shipReasons ?? (_shipReasons = ShipReasonIndex.Build(this));
+        public bool HasShipReasons => _shipReasons != null;
 
         public static bool IsSuspiciousSourcePath(string path)
         {
@@ -295,7 +490,11 @@ namespace Project.EditorTools.BuildAnalyzer
             analysis.Result = summary.result;
             analysis.TotalBuildSize = summary.totalSize;
             analysis.OutputPath = summary.outputPath;
+            analysis.BuildGuid = summary.guid.ToString();
             analysis.AnalyzedAt = DateTime.Now;
+            analysis.ReportTimeUtc = BuildReportLoader.HasReportFile
+                ? BuildReportLoader.ReportFileTimeUtc
+                : DateTime.SpecifyKind(summary.buildEndedAt, DateTimeKind.Utc);
 
             void Progress(string message, float fraction)
             {
@@ -307,15 +506,19 @@ namespace Project.EditorTools.BuildAnalyzer
             {
                 Progress("Reading packed assets from the report…", 0.02f);
                 analysis.Aggregate(report);
+                analysis.Previous = BuildSnapshot.Rotate(analysis);
 
-                Progress("Scanning sprite atlases…", 0.15f);
+                Progress("Scanning sprite atlases…", 0.1f);
                 AtlasAudit.Collect(analysis, Progress);
+
+                analysis.References = TextureReferenceIndex.Build(analysis, Progress);
 
                 TextureAudit.Run(analysis, Progress);
                 AtlasAudit.Emit(analysis);
                 AudioAudit.Run(analysis, Progress);
                 DuplicateContentAudit.Run(analysis, Progress);
 
+                analysis.MarkChangedSinceBuild();
                 analysis.SortFindings();
             }
             catch (OperationCanceledException)
@@ -329,9 +532,8 @@ namespace Project.EditorTools.BuildAnalyzer
             }
 
             LogHelper.Log(LogTag,
-                $"Analyzed {analysis.Assets.Count} assets ({Fmt.Bytes(analysis.PackedTotal)} packed) for " +
-                $"{analysis.Platform}: {analysis.ErrorCount} errors, {analysis.WarningCount} warnings, " +
-                $"{analysis.InfoCount} infos, ~{Fmt.Bytes(analysis.EstimatedSavings)} estimated savings.");
+                $"Analyzed {analysis.Assets.Count} assets ({Fmt.Bytes(analysis.PackedTotal)} packed) for {analysis.Platform}: " +
+                $"{analysis.ActionCount} size actions, ~{Fmt.Bytes(analysis.SafeSavings)} safe + ~{Fmt.Bytes(analysis.TradeoffSavings)} with quality tradeoffs.");
             return analysis;
         }
 
@@ -364,6 +566,9 @@ namespace Project.EditorTools.BuildAnalyzer
                     entry.SizeByType[typeName] = typeSize + size;
                     entry.PackedFiles.Add(archive);
                     PackedTotal += size;
+
+                    if (typeName == "Texture2D" && entry.IsBuiltIn)
+                        RecordAtlasPage(path, size);
                 }
             }
 
@@ -379,20 +584,39 @@ namespace Project.EditorTools.BuildAnalyzer
                 {
                     int copies = entry.PackedFiles.Count;
                     long savings = entry.TotalPackedSize - entry.TotalPackedSize / copies;
-                    Findings.Add(new Finding
-                    {
-                        Kind = FindingKind.MultiArchive,
-                        Severity = savings >= 1024 * 1024 ? Severity.Warning : Severity.Info,
-                        AssetPath = entry.Path,
-                        PotentialSavings = savings,
-                        Message = $"Written into {copies} archives ({string.Join(", ", entry.PackedFiles.OrderBy(p => p))}). " +
-                                  "Unity copies an asset into every scene archive that references it unless a shared " +
-                                  "reference (Resources, a preloaded/always-loaded asset, or a bundle) holds it.",
-                    });
+                    Add(Severity.Info, FindingKind.MultiArchive, entry.Path,
+                        $"Copied into {copies} archives",
+                        $"Written into {copies} archives ({string.Join(", ", entry.PackedFiles.OrderBy(p => p))}). " +
+                        "Unity copies an asset into every scene archive that references it unless a shared " +
+                        "reference (Resources, a preloaded/always-loaded asset, or a bundle) holds it. " +
+                        "Use \"Why is this in the build?\" to see which scenes pull it in.",
+                        savings);
                 }
             }
 
             Assets.Sort((a, b) => b.TotalPackedSize.CompareTo(a.TotalPackedSize));
+        }
+
+        private void RecordAtlasPage(string path, long size)
+        {
+            Match m = AtlasPageRegex.Match(path);
+            if (!m.Success) return;
+
+            string atlasName = m.Groups[5].Value;
+            if (!AtlasPagesByName.TryGetValue(atlasName, out List<AtlasBuildPage> pages))
+            {
+                pages = new List<AtlasBuildPage>();
+                AtlasPagesByName.Add(atlasName, pages);
+            }
+
+            pages.Add(new AtlasBuildPage
+            {
+                Index = int.Parse(m.Groups[1].Value),
+                Width = int.Parse(m.Groups[2].Value),
+                Height = int.Parse(m.Groups[3].Value),
+                Format = m.Groups[4].Value,
+                Size = size,
+            });
         }
 
         private static AssetCategory Classify(AssetEntry entry)
@@ -473,30 +697,76 @@ namespace Project.EditorTools.BuildAnalyzer
             return AssetCategory.Other;
         }
 
+        /// <summary>True when the asset or its .meta (import settings) was written after the analyzed build.</summary>
+        public bool ChangedSinceBuild(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !path.StartsWith("Assets/", StringComparison.Ordinal)) return false;
+            if (_changedCache.TryGetValue(path, out bool changed)) return changed;
+
+            changed = false;
+            try
+            {
+                if (File.Exists(path) && File.GetLastWriteTimeUtc(path) > ReportTimeUtc) changed = true;
+                else if (File.Exists(path + ".meta") && File.GetLastWriteTimeUtc(path + ".meta") > ReportTimeUtc) changed = true;
+            }
+            catch
+            {
+                // unreadable → treat as unchanged
+            }
+
+            _changedCache[path] = changed;
+            return changed;
+        }
+
+        private void MarkChangedSinceBuild()
+        {
+            foreach (Finding f in Findings)
+            {
+                if (f.ChangedSinceBuild) continue;
+                if (ChangedSinceBuild(f.AssetPath)) f.ChangedSinceBuild = true;
+                else if (TextureByPath.TryGetValue(f.AssetPath ?? "", out TextureInfo t) && t.ChangedSinceBuild) f.ChangedSinceBuild = true;
+            }
+        }
+
         public void SortFindings()
         {
             Findings.Sort((a, b) =>
             {
-                int c = b.Severity.CompareTo(a.Severity);
+                int c = b.PotentialSavings.CompareTo(a.PotentialSavings);
                 if (c != 0) return c;
-                c = b.PotentialSavings.CompareTo(a.PotentialSavings);
+                c = b.Severity.CompareTo(a.Severity);
                 if (c != 0) return c;
                 return string.CompareOrdinal(a.AssetPath, b.AssetPath);
             });
         }
 
-        public Finding Add(Severity severity, FindingKind kind, string assetPath, string message, long savings = 0)
+        /// <summary>Severity from the bytes at stake: ≥1 MB Error, ≥128 KB Warning, else Info.</summary>
+        public static Severity SeverityFor(long savings) =>
+            savings >= 1024 * 1024 ? Severity.Error : savings >= 128 * 1024 ? Severity.Warning : Severity.Info;
+
+        public Finding Add(Severity severity, FindingKind kind, string assetPath, string message, long savings = 0) =>
+            Add(severity, kind, assetPath, null, message, savings);
+
+        public Finding Add(Severity severity, FindingKind kind, string assetPath, string shortText, string message, long savings)
         {
             var finding = new Finding
             {
                 Severity = severity,
                 Kind = kind,
                 AssetPath = assetPath,
+                Short = shortText ?? FirstSentence(message),
                 Message = message,
-                PotentialSavings = Math.Max(0, savings),
+                PotentialSavings = savings >= 1024 ? savings : 0, // sub-KB "savings" are noise — they go to Notes
             };
             Findings.Add(finding);
             return finding;
+        }
+
+        private static string FirstSentence(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return "";
+            int dot = message.IndexOf(". ", StringComparison.Ordinal);
+            return dot > 0 && dot < 140 ? message.Substring(0, dot + 1) : message.Length > 140 ? message.Substring(0, 137) + "…" : message;
         }
 
         public void Resolve(string assetPath, params FindingKind[] kinds)
