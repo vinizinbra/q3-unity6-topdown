@@ -1942,6 +1942,28 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct AccessoryDropHint : Quantum.IComponent {
+    public const Int32 SIZE = 24;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(8)]
+    public FPVector2 Direction;
+    [FieldOffset(0)]
+    public FP SpreadDegrees;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 9497;
+        hash = hash * 31 + Direction.GetHashCode();
+        hash = hash * 31 + SpreadDegrees.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (AccessoryDropHint*)ptr;
+        FP.Serialize(&p->SpreadDegrees, serializer);
+        FPVector2.Serialize(&p->Direction, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct AccessoryEmergencyReserve : Quantum.IComponent {
     public const Int32 SIZE = 4;
     public const Int32 ALIGNMENT = 1;
@@ -7082,35 +7104,39 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct SpikeTrap : Quantum.IComponent {
-    public const Int32 SIZE = 104;
+    public const Int32 SIZE = 128;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(2)]
     public SpikeTrapTrigger Trigger;
     [FieldOffset(0)]
     public DamageTargetMask TargetMask;
-    [FieldOffset(88)]
+    [FieldOffset(112)]
     public FPVector2 HalfExtents;
-    [FieldOffset(24)]
-    public FP Damage;
-    [FieldOffset(80)]
-    public FP WarningTime;
     [FieldOffset(32)]
-    public FP ExtendedTime;
+    public FP Damage;
+    [FieldOffset(88)]
+    public FP WarningTime;
     [FieldOffset(40)]
+    public FP ExtendedTime;
+    [FieldOffset(48)]
     public FP HitInterval;
-    [FieldOffset(16)]
+    [FieldOffset(24)]
     public FP CooldownTime;
-    [FieldOffset(64)]
-    public FP TimerArmedTime;
     [FieldOffset(72)]
+    public FP TimerArmedTime;
+    [FieldOffset(80)]
     public FP TimerOffset;
     [FieldOffset(8)]
     public QBoolean TeachingHit;
+    [FieldOffset(96)]
+    public FPVector2 AccessoryDropDirection;
+    [FieldOffset(16)]
+    public FP AccessoryDropSpread;
     [FieldOffset(1)]
     public SpikeTrapPhase Phase;
-    [FieldOffset(56)]
+    [FieldOffset(64)]
     public FP PhaseTimer;
-    [FieldOffset(48)]
+    [FieldOffset(56)]
     public FP HitTimer;
     [FieldOffset(4)]
     public QBoolean Initialized;
@@ -7128,6 +7154,8 @@ namespace Quantum {
         hash = hash * 31 + TimerArmedTime.GetHashCode();
         hash = hash * 31 + TimerOffset.GetHashCode();
         hash = hash * 31 + TeachingHit.GetHashCode();
+        hash = hash * 31 + AccessoryDropDirection.GetHashCode();
+        hash = hash * 31 + AccessoryDropSpread.GetHashCode();
         hash = hash * 31 + (Byte)Phase;
         hash = hash * 31 + PhaseTimer.GetHashCode();
         hash = hash * 31 + HitTimer.GetHashCode();
@@ -7142,6 +7170,7 @@ namespace Quantum {
         serializer.Stream.Serialize((Byte*)&p->Trigger);
         QBoolean.Serialize(&p->Initialized, serializer);
         QBoolean.Serialize(&p->TeachingHit, serializer);
+        FP.Serialize(&p->AccessoryDropSpread, serializer);
         FP.Serialize(&p->CooldownTime, serializer);
         FP.Serialize(&p->Damage, serializer);
         FP.Serialize(&p->ExtendedTime, serializer);
@@ -7151,6 +7180,7 @@ namespace Quantum {
         FP.Serialize(&p->TimerArmedTime, serializer);
         FP.Serialize(&p->TimerOffset, serializer);
         FP.Serialize(&p->WarningTime, serializer);
+        FPVector2.Serialize(&p->AccessoryDropDirection, serializer);
         FPVector2.Serialize(&p->HalfExtents, serializer);
     }
   }
@@ -9247,6 +9277,8 @@ namespace Quantum {
       _ISignalOnShieldBrokenSystems = BuildSignalsArray<ISignalOnShieldBroken>();
       _ComponentSignalsOnAdded = new ComponentReactiveCallbackInvoker[ComponentTypeId.Type.Length];
       _ComponentSignalsOnRemoved = new ComponentReactiveCallbackInvoker[ComponentTypeId.Type.Length];
+      BuildSignalsArrayOnComponentAdded<Quantum.AccessoryDropHint>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.AccessoryDropHint>();
       BuildSignalsArrayOnComponentAdded<Quantum.AccessoryEmergencyReserve>();
       BuildSignalsArrayOnComponentRemoved<Quantum.AccessoryEmergencyReserve>();
       BuildSignalsArrayOnComponentAdded<Quantum.AccessoryGuard>();
@@ -9917,6 +9949,7 @@ namespace Quantum {
       SerializeInput = Quantum.Input.Serialize;
     }
     static partial void RegisterSimulationTypesGen(TypeRegistry typeRegistry) {
+      typeRegistry.Register(typeof(Quantum.AccessoryDropHint), Quantum.AccessoryDropHint.SIZE);
       typeRegistry.Register(typeof(Quantum.AccessoryEmergencyReserve), Quantum.AccessoryEmergencyReserve.SIZE);
       typeRegistry.Register(typeof(Quantum.AccessoryGuard), Quantum.AccessoryGuard.SIZE);
       typeRegistry.Register(typeof(Quantum.AccessoryGuardState), 1);
@@ -10253,8 +10286,9 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 197)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 198)
         .AddBuiltInComponents()
+        .Add<Quantum.AccessoryDropHint>(Quantum.AccessoryDropHint.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AftershockUpgrade>(Quantum.AftershockUpgrade.Serialize, null, null, ComponentFlags.None)

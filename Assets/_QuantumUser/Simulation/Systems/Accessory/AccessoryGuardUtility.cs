@@ -309,7 +309,7 @@ namespace Quantum
 
             EntityRef collectible = f.Create(f.RuntimeConfig.Prefabs.DroppedAccessoryPrototype);
 
-            FPVector3 landing = ResolveLandingPosition(f, position, config);
+            FPVector3 landing = ResolveLandingPosition(f, owner, position, config);
 
             // The angle - not the velocity - is what varies per drop. Randomising velocity would
             // break the solved arc and land the accessory somewhere other than the spot just
@@ -337,7 +337,7 @@ namespace Quantum
         // Falling back to the owner's own position is a genuine guarantee rather than a guess: they
         // are standing there, so it is solid, reachable ground by definition. Worst case the
         // accessory lands at their feet - undramatic, but never lost and never teleported.
-        private static FPVector3 ResolveLandingPosition(Frame f, FPVector3 anchor, AccessoryGuardConfig config)
+        private static FPVector3 ResolveLandingPosition(Frame f, EntityRef owner, FPVector3 anchor, AccessoryGuardConfig config)
         {
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
             int attempts = config.LandingSampleAttempts > 0 ? config.LandingSampleAttempts : 1;
@@ -353,6 +353,26 @@ namespace Quantum
             EntityRef bossArenaChunk = EntityRef.None;
             bool constrainToBossArena = f.Global->CurrentState == GameState.Boss
                 && LevelGenerationSystem.TryFindBossArenaChunk(f, out bossArenaChunk);
+
+            // A steered drop (AccessoryDropHint) samples a cone first; if none of those spots is standable
+            // the normal ring below still gets its full set of attempts.
+            if (f.TryGet(owner, out AccessoryDropHint hint) && hint.Direction != FPVector2.Zero)
+            {
+                FP baseAngle = FPMath.Atan2(hint.Direction.Y, hint.Direction.X);
+
+                for (int i = 0; i < attempts; i++)
+                {
+                    FP angle = baseAngle + f.RNG->Next(-hint.SpreadDegrees, hint.SpreadDegrees) * FP.Deg2Rad;
+                    FP distance = f.RNG->Next(config.MinDropOffset, config.MaxDropOffset);
+                    FPVector3 candidate = anchor + new FPVector3(FPMath.Cos(angle), FP._0, FPMath.Sin(angle)) * distance;
+
+                    if (constrainToBossArena == true && FallRespawnUtility.IsInsideChunkBounds(f, bossArenaChunk, candidate) == false)
+                        continue;
+
+                    if (EnemyMovementUtility.TryFindGroundHeight(f, candidate, groundLayerMask, out FP hintedGroundY) == true)
+                        return new FPVector3(candidate.X, hintedGroundY, candidate.Z);
+                }
+            }
 
             for (int i = 0; i < attempts; i++)
             {

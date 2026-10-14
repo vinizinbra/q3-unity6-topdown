@@ -127,7 +127,7 @@ namespace Quantum
                 while (players.Next(out EntityRef player, out PlayerLink _, out Transform3D transform))
                 {
                     if (IsOnPlate(transform.Position, center, trap) && IsValidPlayer(f, player, trap))
-                        DamageUtility.ApplyDamage(f, player, trap->Damage, trapEntity);
+                        HitPlayer(f, trapEntity, player, trap);
                 }
             }
 
@@ -141,6 +141,20 @@ namespace Quantum
                         DamageUtility.ApplyDamage(f, enemy, trap->Damage, trapEntity);
                 }
             }
+        }
+
+        // A steered accessory drop (AccessoryDropHint) lives only for the duration of this one hit.
+        private static void HitPlayer(Frame f, EntityRef trapEntity, EntityRef player, SpikeTrap* trap)
+        {
+            bool steer = trap->AccessoryDropDirection != FPVector2.Zero && f.Has<AccessoryDropHint>(player) == false;
+
+            if (steer)
+                f.Add(player, new AccessoryDropHint { Direction = trap->AccessoryDropDirection, SpreadDegrees = trap->AccessoryDropSpread });
+
+            DamageUtility.ApplyDamage(f, player, trap->Damage, trapEntity);
+
+            if (steer)
+                f.Remove<AccessoryDropHint>(player);
         }
 
         private static bool IsOnPlate(FPVector3 position, FPVector3 center, SpikeTrap* trap)

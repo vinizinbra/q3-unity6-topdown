@@ -17,9 +17,9 @@ public class SpikeTrapView : CustomQuantumEntityViewComponent
     [SerializeField, Tooltip("Distance between sockets (one spike each).")]
     private float socketSpacing = 1f;
     [SerializeField, Range(0.3f, 1f), Tooltip("Socket base width as a fraction of the spacing - 1 = bases touch (no ground between them).")]
-    private float socketSize = 1f;
+    private float socketSize = 0.8f;
     [SerializeField] private float socketHeight = 0.14f;
-    [SerializeField] private float spikeHeight = 0.8f;
+    [SerializeField] private float spikeHeight = 1f;
     [SerializeField, Tooltip("Spike base width in metres - independent of the socket size.")]
     private float spikeWidth = 0.25f;
     [SerializeField, Tooltip("Dark hole size relative to the spike's base - bigger = more contrast on the socket.")]
@@ -28,8 +28,8 @@ public class SpikeTrapView : CustomQuantumEntityViewComponent
     [Header("Motion")]
     [SerializeField, Range(0f, 1f), Tooltip("How much of the spike shows during Warning.")]
     private float warningPeek = 0.3f;
-    [SerializeField] private float extendSpeed = 14f;
-    [SerializeField] private float retractSpeed = 2.5f;
+    [SerializeField] private float extendSpeed = 10f;
+    [SerializeField] private float retractSpeed = 0.1f;
 
     [Header("Feedback")]
     [SerializeField, Tooltip("Optional - pulsed while the trap is in Warning.")]

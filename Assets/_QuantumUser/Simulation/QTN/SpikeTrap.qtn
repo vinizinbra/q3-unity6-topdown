@@ -45,6 +45,12 @@ component SpikeTrap
     // pops the accessory off and never costs Health or breaks it.
     Boolean TeachingHit;
 
+    // Non-zero = a player hit by this trap whose accessory blocks it throws the accessory this way (X/Z,
+    // +-AccessoryDropSpread degrees) instead of a random direction - see AccessoryDropHint. The Training
+    // Zone uses (1, 0): forward, past the trap, where the "pick it back up" text is.
+    FPVector2 AccessoryDropDirection;
+    FP AccessoryDropSpread;
+
     // Runtime.
     SpikeTrapPhase Phase;
     FP PhaseTimer;

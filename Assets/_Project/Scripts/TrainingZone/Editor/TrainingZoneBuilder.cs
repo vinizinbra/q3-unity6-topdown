@@ -167,7 +167,7 @@ public static class TrainingZoneBuilder
         GameObject s = Station(zone, "2_TooHigh", ChunkType.Enemy, ref x, 22);
         Box(s, "Floor", 0, 0, 22, Depth, Floor, false);
         Box(s, "TallWall", 11, 3, 6, 7, Floor + 2, true);
-        Box(s, "SideStep", 14, 0, 3, 3, Floor + 1, true);
+        Box(s, "SideStep", 14, 1, 3, 2, Floor + 1, true);
         // Second 2-unit wall right of the step (user layout) - no walking around on the floor, the
         // only way on is step -> wall.
         Box(s, "TallWall (1)", 17, 0, 3, 10, Floor + 2, true);
@@ -215,7 +215,7 @@ public static class TrainingZoneBuilder
     {
         GameObject s = Station(zone, "5_HighGround", ChunkType.Enemy, ref x, 18);
         Box(s, "Floor_A", 0, 0, 4, Depth, Floor, false);
-        Box(s, "Stair1", 4, 4, 3, 4, Floor + 1, true);
+        Box(s, "Stair1", 3, 4, 4, 4, Floor + 1, true);
         // 1-unit gaps between the stairs (user layout).
         Box(s, "Stair2", 8, 4, 3, 4, Floor + 2, true);
         Box(s, "Lookout", 12, 3, 3, 6, Floor + 3, true);
@@ -279,8 +279,6 @@ public static class TrainingZoneBuilder
         Label(s, "AIM", 4, 10, Floor, TitleSize, TitleColor);
         Label(s, "Get in range -", 4, 8.7f, Floor, HintSize, HintColor);
         Label(s, "you fire on your own", 4, 7.7f, Floor, HintSize, HintColor);
-        Label(s, "SWITCH TARGET", 4, 3.6f, Floor, TitleSize * 0.7f, TitleColor);
-        Label(s, "Tab  /  R1", 4, 2.4f, Floor, HintSize, HintColor);
         Label(s, "Targets respawn", 16, 0.8f, Floor, HintSize * 0.8f, HintColor);
         return s;
     }
@@ -416,6 +414,9 @@ public static class TrainingZoneBuilder
             HitInterval = FP.FromFloat_UNSAFE(0.2f),
             CooldownTime = FP.FromFloat_UNSAFE(1.2f),
             TeachingHit = true,
+            // Throw the accessory forward (screen right), past the trap toward "PICK IT BACK UP".
+            AccessoryDropDirection = new FPVector2(FP._1, FP._0),
+            AccessoryDropSpread = FP.FromFloat_UNSAFE(20f),
         };
         go.AddComponent<QuantumEntityView>();
 
@@ -442,44 +443,42 @@ public static class TrainingZoneBuilder
             stripeRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
-        // Warning signs (view only) on the approach side, flanking the path: the Rift POI sign board the
-        // Finish POI uses, with the caution symbol on its face.
-        foreach (float side in new[] { -1f, 1f })
+        // One warning sign (view only) on the approach side, before the trap (user layout): the Rift POI sign
+        // board the Finish POI uses, with the caution symbol on its face and the POI's warm glow on top.
+        var sign = new GameObject("WarningSignNear");
+        sign.transform.SetParent(go.transform, false);
+        sign.transform.localPosition = new Vector3(-2.3f, 0f, -5.43f);
+        sign.transform.localScale = Vector3.one * 0.5f;
+        sign.AddComponent<Billboard>();
+
+        var board = sign.AddComponent<SpriteRenderer>();
+        board.sprite = LoadSubSprite(PoiSignSheetPath, PoiSignSpriteName);
+
+        // The POI's warm warning glow (TraversalActivator's "Available" particles), on the sign's lamp.
+        var glowSource = AssetDatabase.LoadAssetAtPath<GameObject>(TraversalActivatorPath).transform.Find("Available");
+        if (glowSource != null)
         {
-            var sign = new GameObject(side < 0 ? "WarningSignNear" : "WarningSignFar");
-            sign.transform.SetParent(go.transform, false);
-            sign.transform.localPosition = new Vector3(-(width * 0.5f + StripeWidth + 0.9f), 0.75f, side * depth * 0.22f);
-            sign.transform.localScale = Vector3.one * 0.5f;
-            sign.AddComponent<Billboard>();
+            GameObject glow = Object.Instantiate(glowSource.gameObject, sign.transform, false);
+            glow.name = "WarningGlow";
+            glow.transform.localPosition = new Vector3(0f, 2.723f, -0.01f);
+            glow.transform.localRotation = Quaternion.identity;
+            glow.transform.localScale = Vector3.one * 2f;
+        }
 
-            var board = sign.AddComponent<SpriteRenderer>();
-            board.sprite = LoadSubSprite(PoiSignSheetPath, PoiSignSpriteName);
+        var icon = new GameObject("CautionIcon");
+        icon.transform.SetParent(sign.transform, false);
+        var iconSprite = icon.AddComponent<SpriteRenderer>();
+        iconSprite.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(CautionSpritePath);
+        iconSprite.sortingOrder = board.sortingOrder + 1;
+        // The icon is white - tinted alert red so it reads on the board's white face.
+        iconSprite.color = new Color32(0xD9, 0x38, 0x1E, 0xFF);
 
-            var icon = new GameObject("CautionIcon");
-            icon.transform.SetParent(sign.transform, false);
-            var iconSprite = icon.AddComponent<SpriteRenderer>();
-            iconSprite.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(CautionSpritePath);
-            iconSprite.sortingOrder = board.sortingOrder + 1;
-            // The icon is white - tinted alert red so it reads on the board's white face.
-            iconSprite.color = new Color32(0xD9, 0x38, 0x1E, 0xFF);
-
-            // The POI's warm warning glow (TraversalActivator's "Available" particles), at the same offset
-            // from the sign it has on the POI. Not under the sign root - that one is scaled + billboarded.
-            var glowSource = AssetDatabase.LoadAssetAtPath<GameObject>(TraversalActivatorPath).transform.Find("Available");
-            if (glowSource != null)
-            {
-                GameObject glow = Object.Instantiate(glowSource.gameObject, go.transform, false);
-                glow.name = "WarningGlow";
-                glow.transform.localPosition = sign.transform.localPosition + glowSource.localPosition;
-            }
-
-            // Centre the icon on the board face, ~55% of the board's width.
-            if (board.sprite != null && iconSprite.sprite != null)
-            {
-                Bounds face = board.sprite.bounds;
-                icon.transform.localPosition = new Vector3(face.center.x, face.center.y, -0.01f);
-                icon.transform.localScale = Vector3.one * (face.size.x * 0.55f / iconSprite.sprite.bounds.size.x);
-            }
+        // On the board face (y set by eye), ~55% of the board's width.
+        if (board.sprite != null && iconSprite.sprite != null)
+        {
+            Bounds face = board.sprite.bounds;
+            icon.transform.localPosition = new Vector3(face.center.x, 1.67f, -0.01f);
+            icon.transform.localScale = Vector3.one * (face.size.x * 0.55f / iconSprite.sprite.bounds.size.x);
         }
     }
 

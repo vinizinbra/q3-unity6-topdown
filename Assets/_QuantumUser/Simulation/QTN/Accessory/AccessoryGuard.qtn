@@ -121,3 +121,15 @@ component DroppedAccessory
     // visual disappears immediately while this is still in the air.
     Boolean Broken;
 }
+
+// Optional, TRANSIENT steer for where the next blocked hit throws the accessory - set on the player right
+// before the hit and removed right after by whatever wants a predictable drop (the Training Zone spike
+// trap throws it forward, past the trap, so the "pick it back up" lesson always lands in view). While
+// present, ResolveLandingPosition samples its candidates in a cone of +-SpreadDegrees around Direction
+// (X/Z plane) instead of the full ring - same distance band, same solid-ground validation, and it still
+// falls back to the normal ring when nothing in the cone is standable.
+component AccessoryDropHint
+{
+    FPVector2 Direction;
+    FP SpreadDegrees;
+}

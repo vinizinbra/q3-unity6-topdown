@@ -50,6 +50,23 @@ namespace Quantum.Prototypes {
   #endif //;
   
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.AccessoryDropHint))]
+  public unsafe partial class AccessoryDropHintPrototype : ComponentPrototype<Quantum.AccessoryDropHint> {
+    public FPVector2 Direction;
+    public FP SpreadDegrees;
+    partial void MaterializeUser(Frame frame, ref Quantum.AccessoryDropHint result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.AccessoryDropHint component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.AccessoryDropHint result, in PrototypeMaterializationContext context = default) {
+        result.Direction = this.Direction;
+        result.SpreadDegrees = this.SpreadDegrees;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.AccessoryEmergencyReserve))]
   public unsafe partial class AccessoryEmergencyReservePrototype : ComponentPrototype<Quantum.AccessoryEmergencyReserve> {
     public Byte Charges;
@@ -3792,6 +3809,8 @@ namespace Quantum.Prototypes {
     public FP TimerArmedTime;
     public FP TimerOffset;
     public QBoolean TeachingHit;
+    public FPVector2 AccessoryDropDirection;
+    public FP AccessoryDropSpread;
     public Quantum.QEnum8<SpikeTrapPhase> Phase;
     public FP PhaseTimer;
     public FP HitTimer;
@@ -3814,6 +3833,8 @@ namespace Quantum.Prototypes {
         result.TimerArmedTime = this.TimerArmedTime;
         result.TimerOffset = this.TimerOffset;
         result.TeachingHit = this.TeachingHit;
+        result.AccessoryDropDirection = this.AccessoryDropDirection;
+        result.AccessoryDropSpread = this.AccessoryDropSpread;
         result.Phase = this.Phase;
         result.PhaseTimer = this.PhaseTimer;
         result.HitTimer = this.HitTimer;

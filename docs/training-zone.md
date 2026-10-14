@@ -46,6 +46,11 @@ so the Director never spawns enemies.
     (downed, burrowed) all behave normally.
   - The system itself skips airborne players (a jump clears it), burrowed and non-grounded enemies,
     and `EnemyTrait.GroundHazardImmunity`.
+- **`AccessoryDropDirection` / `AccessoryDropSpread`**: when non-zero, a player the trap hits gets a
+  transient `AccessoryDropHint` (`QTN/Accessory/AccessoryGuard.qtn`) for that hit only. The blocked
+  accessory then lands in that cone instead of a random direction, with the same distance band and
+  the same solid-ground check, falling back to the normal ring. The Training Zone uses (1, 0) ±20°:
+  forward, past the trap.
 - **`TeachingHit`** (the Training Zone): only a player whose accessory can block (Equipped,
   durability above 1) counts, both for triggering and for being hit. The trap always pops the
   accessory off, and never costs Health or breaks it.
@@ -71,7 +76,7 @@ so the Director never spawns enemies.
 - One 2 × 12 trap (exactly 2 socket columns) across the whole station, so there's no way around it.
 - Settings: Step trigger, Players only, TeachingHit, `WarningTime` 0 (it can't be outrun or dashed
   past), Extended 0.8 s, `HitInterval` 0.2, Cooldown 1.2, Damage 10.
-- Yellow/black hazard-stripe borders, and two view-only warning signs on the approach side (the
+- Yellow/black hazard-stripe borders, and one view-only warning sign on the approach side (the
   Rift POI sign board, `RR_TrainingFinishSign`, with the `PictoIcon_Caution` symbol tinted alert red on its face, and the TraversalActivator's warm
   "Available" glow particles behind it).
 
@@ -135,7 +140,7 @@ Then save the scene.
 | 5 | High Ground (18) | Heights | Narrow stair over water: +1, +2, then a +3 lookout, each separated by a 1-unit gap; drop down |
 | 6 | Platforms (20) | Chained hops | 4 stepping stones at +0 / +1 |
 | 7 | Accessory (20) | Accessory Guard | A `SpikeTrap` across the whole station hits the player once: the guard blocks it and the accessory pops off. Past the strip: "PICK IT BACK UP / Walk over your accessory" |
-| 8 | Range (24) | Auto-aim, Switch Target | 3 respawning dummies, 2 cover blocks |
+| 8 | Range (24) | Auto-aim | 3 respawning dummies, 2 cover blocks |
 | 9 | Skill (18) | Hero skill (E / X) | 5 dummies packed together, since most hero skills hit an area; generic text (the zone doesn't know the hero) |
 | 10 | Finish (12) | Interact | The Finish POI (`TrainingFinishPoi` prefab, a TraversalActivator look-alike placeholder) + "INTERACT / E / X next to the sign"; pressing interact returns to the menu |
 
