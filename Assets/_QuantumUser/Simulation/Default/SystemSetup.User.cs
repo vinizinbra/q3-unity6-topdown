@@ -402,6 +402,8 @@
                 new EnemyLifecycleSystem(),
                 // Training Zone target dummies - see TrainingZone.qtn.
                 new TrainingDummySpawnerSystem(),
+                // Floor spike traps (players and/or enemies) - see SpikeTrap.qtn.
+                new SpikeTrapSystem(),
                 // After every system that can flip an enemy's IsKinematic or write its velocity this
                 // tick - re-pins Anchored enemies before the next physics step.
                 new AnchoredSystem(),

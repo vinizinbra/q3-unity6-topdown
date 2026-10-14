@@ -1,0 +1,53 @@
+// Spike Trap - a reusable floor hazard (Training Zone accessory lesson first; meant for levels,
+// Traversal Challenges, trap rooms later). A rectangular plate (center = the entity, +-HalfExtents on
+// X/Z) whose spikes cycle Armed -> Warning (spikes peek out, telegraph) -> Extended (hits every
+// HitInterval) -> Cooldown -> Armed. Hits go through DamageUtility.ApplyDamage, so Accessory Guard,
+// shields, Invulnerable, downed and dead all behave as for any other hit. Driven by SpikeTrapSystem,
+// presented by SpikeTrapView. See docs/training-zone.md ("Spike Trap").
+
+enum SpikeTrapTrigger : Byte
+{
+    // Fires when a valid target walks onto the plate.
+    Step,
+    // Cycles on its own: Armed for TimerArmedTime, then fires (TimerOffset staggers several traps).
+    Timer
+}
+
+enum SpikeTrapPhase : Byte
+{
+    Armed,
+    Warning,
+    Extended,
+    Cooldown
+}
+
+component SpikeTrap
+{
+    SpikeTrapTrigger Trigger;
+    // Both / Players / Enemies (see DamageTargetMask.qtn).
+    DamageTargetMask TargetMask;
+    FPVector2 HalfExtents;
+    FP Damage;
+
+    FP WarningTime;
+    FP ExtendedTime;
+    // While Extended, everything valid on the plate is hit every HitInterval (first hit the instant the
+    // spikes come up) - no per-entity bookkeeping needed.
+    FP HitInterval;
+    FP CooldownTime;
+
+    // Timer trigger only.
+    FP TimerArmedTime;
+    FP TimerOffset;
+
+    // Training Zone accessory lesson: only a player whose Accessory Guard can block the hit (Equipped,
+    // durability > 1) counts as a target - both for triggering and for being hit - so the trap always
+    // pops the accessory off and never costs Health or breaks it.
+    Boolean TeachingHit;
+
+    // Runtime.
+    SpikeTrapPhase Phase;
+    FP PhaseTimer;
+    FP HitTimer;
+    Boolean Initialized;
+}

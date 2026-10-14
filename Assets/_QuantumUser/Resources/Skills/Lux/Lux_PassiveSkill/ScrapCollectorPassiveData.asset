@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 305265041979885090
   Description: Tougher kills drop Scrap. Collect enough to earn a free Sentry.
-  Icon: {fileID: 21300000, guid: 6fd734352c694c24a5aea4a21e224deb, type: 3}
+  Icon: {fileID: -4427322408991482148, guid: ea5b28679b8534674abdd82e8ebb615b, type: 3}
   DisplayName: Scrap Collector
   DropChance:
     RawValue: 16384

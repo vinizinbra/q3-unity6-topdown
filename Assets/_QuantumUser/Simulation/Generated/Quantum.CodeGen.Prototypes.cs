@@ -3779,6 +3779,49 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.SpikeTrap))]
+  public unsafe partial class SpikeTrapPrototype : ComponentPrototype<Quantum.SpikeTrap> {
+    public Quantum.QEnum8<SpikeTrapTrigger> Trigger;
+    public Quantum.QEnum8<DamageTargetMask> TargetMask;
+    public FPVector2 HalfExtents;
+    public FP Damage;
+    public FP WarningTime;
+    public FP ExtendedTime;
+    public FP HitInterval;
+    public FP CooldownTime;
+    public FP TimerArmedTime;
+    public FP TimerOffset;
+    public QBoolean TeachingHit;
+    public Quantum.QEnum8<SpikeTrapPhase> Phase;
+    public FP PhaseTimer;
+    public FP HitTimer;
+    public QBoolean Initialized;
+    partial void MaterializeUser(Frame frame, ref Quantum.SpikeTrap result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.SpikeTrap component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.SpikeTrap result, in PrototypeMaterializationContext context = default) {
+        result.Trigger = this.Trigger;
+        result.TargetMask = this.TargetMask;
+        result.HalfExtents = this.HalfExtents;
+        result.Damage = this.Damage;
+        result.WarningTime = this.WarningTime;
+        result.ExtendedTime = this.ExtendedTime;
+        result.HitInterval = this.HitInterval;
+        result.CooldownTime = this.CooldownTime;
+        result.TimerArmedTime = this.TimerArmedTime;
+        result.TimerOffset = this.TimerOffset;
+        result.TeachingHit = this.TeachingHit;
+        result.Phase = this.Phase;
+        result.PhaseTimer = this.PhaseTimer;
+        result.HitTimer = this.HitTimer;
+        result.Initialized = this.Initialized;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.StatusEffects))]
   public unsafe class StatusEffectsPrototype : ComponentPrototype<Quantum.StatusEffects> {
     public Quantum.QEnum8<ElementType> FirstElementApplied;

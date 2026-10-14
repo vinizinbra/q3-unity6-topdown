@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/MaxLightMastery
     Guid:
       Value: 305859220348714846
-  Icon: {fileID: 21300000, guid: c086aadc08004618a5f05bc08ccdc0d1, type: 3}
+  Icon: {fileID: -4941316670687804337, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Light Weapon Mastery
   Description: Max's Light weapons hit harder, and at rank 3, punish whoever he's
     marked for Vendetta.

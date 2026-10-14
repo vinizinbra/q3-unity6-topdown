@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_PassiveUpgrades/Kai_PassiveSkillUpgrades/EventHorizon
     Guid:
       Value: 469056453639286897
-  Icon: {fileID: 21300000, guid: 12b28b0d8da04fe2a48f574158230e7d, type: 3}
+  Icon: {fileID: -691422234123049038, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
   DisplayName: Event Horizon
   Description: "Grows Kai's Void Field, slowing enemy projectiles inside it and eventually the enemies themselves."
   <MaxRank>k__BackingField: 3

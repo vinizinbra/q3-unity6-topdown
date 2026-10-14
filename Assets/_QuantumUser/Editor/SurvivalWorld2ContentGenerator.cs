@@ -29,8 +29,9 @@ namespace QuantumUser.Editor
     // Scarab Nest's hatched swarms don't count toward MaxAliveEnemies (SpawnPack adds no EnemyLifecycle),
     // so its phases run a lower alive cap.
     //
-    // BOSS: the Dune Leviathan (W2-DuneLeviathanPrefab). PLACEHOLDERS: the 4 Elite beats still reuse
-    // World 1's elites until World 2 gets its own.
+    // ELITES (one per Run): Mole Brute (boss cone punch) -> Rift Scarab Matriarch -> Rift Bulwark ->
+    // Rift Drillbreaker (drill charge).
+    // BOSS: the Dune Leviathan (W2-DuneLeviathanPrefab).
     public static class SurvivalWorld2ContentGenerator
     {
         private const string EnemyRoot = "Assets/_QuantumUser/Resources/Enemy";
@@ -52,11 +53,11 @@ namespace QuantumUser.Editor
             { "SandwormLarva", $"{EnemyRoot}/World2/Wildlife/SandwormLarva/W2-SandwormLarva.asset" },
             { "ScarabNest",    $"{EnemyRoot}/World2/Wildlife/ScarabNest/W2-ScarabNest.asset" },
             { "DuneCrusher",   $"{EnemyRoot}/World2/Wildlife/DuneCrusher/W2-DuneCrusher.asset" },
-            // Placeholder elites (World 1).
-            { "EliteFleeEnemy",    $"{EnemyRoot}/BaseEnemies/W1-EliteFleeEnemy.asset" },
-            { "EliteBruteChest",   $"{EnemyRoot}/BaseEnemies/W1-EliteBruteChest.asset" },
-            { "EliteMortarEnemy",  $"{EnemyRoot}/BaseEnemies/W1-EliteMortarEnemy.asset" },
-            { "EliteHeavySlammer", $"{EnemyRoot}/BaseEnemies/W1-EliteHeavySlammer.asset" },
+            // Elites, in Run order.
+            { "MoleBruteElite",             $"{EnemyRoot}/World2/BlackMoles/MoleBruteElite/W2-MoleBruteElite.asset" },
+            { "RiftScarabMatriarchElite",   $"{EnemyRoot}/World2/Wildlife/RiftScarabMatriarchElite/W2-RiftScarabMatriarchElite.asset" },
+            { "RiftBulwarkElite",           $"{EnemyRoot}/World2/BlackMoles/RiftBulwarkElite/W2-RiftBulwarkElite.asset" },
+            { "RiftDrillbreakerElite",      $"{EnemyRoot}/World2/BlackMoles/RiftDrillbreakerElite/W2-RiftDrillbreakerElite.asset" },
         };
 
         private static readonly Dictionary<string, EnemyFaction> Factions = new()
@@ -66,8 +67,8 @@ namespace QuantumUser.Editor
             { "SecurityBot", EnemyFaction.RobotFaction }, { "TarLauncher", EnemyFaction.RobotFaction }, { "ShieldBot", EnemyFaction.RobotFaction },
             { "ScarabSwarm", EnemyFaction.WildLifeFaction }, { "SandwormLarva", EnemyFaction.WildLifeFaction },
             { "ScarabNest", EnemyFaction.WildLifeFaction }, { "DuneCrusher", EnemyFaction.WildLifeFaction },
-            { "EliteFleeEnemy", EnemyFaction.MainFaction }, { "EliteBruteChest", EnemyFaction.MainFaction },
-            { "EliteMortarEnemy", EnemyFaction.MainFaction }, { "EliteHeavySlammer", EnemyFaction.MainFaction },
+            { "MoleBruteElite", EnemyFaction.MainFaction }, { "RiftScarabMatriarchElite", EnemyFaction.WildLifeFaction },
+            { "RiftBulwarkElite", EnemyFaction.MainFaction }, { "RiftDrillbreakerElite", EnemyFaction.MainFaction },
         };
 
         private class SegEntry
@@ -155,8 +156,8 @@ namespace QuantumUser.Editor
                 new() { E("MoleGrunt", 3), E("SandwormLarva", F("1.5"), 2), E("SecurityBot", 2) }),
             Combat("R1-E PreElite (95-105s)", 10, 5, 3, 9, 7,
                 new() { E("MoleGrunt", 3), E("ScarabSwarm", 2) }),
-            Combat("R1-F Elite (105-130s) [W1 placeholder]", 25, 3, F("3.5"), 6, 6,
-                new() { E("MoleGrunt", 2), E("ScarabSwarm", 1) }, elite: "EliteFleeEnemy"),
+            Combat("R1-F Elite (105-130s)", 25, 3, F("3.5"), 6, 6,
+                new() { E("MoleGrunt", 2), E("ScarabSwarm", 1) }, elite: "MoleBruteElite"),
             Combat("R1-G Desert Pressure (130-180s)", 50, 13, F("1.8"), 22, 15,
                 new() { E("MoleGrunt", 3), E("SandwormLarva", 2, 2), E("SecurityBot", 2), E("ScarabSwarm", 1) }),
             new PhaseSpec { Name = "Breathing 1", Kind = SurvivalPhaseKind.Breathing, Duration = 60, GracePeriodDuration = 30 },
@@ -172,8 +173,8 @@ namespace QuantumUser.Editor
                 new() { E("MoleGrunt", 2), E("SecurityBot", 2), E("SandwormLarva", 1, 2), E("TarLauncher", F("1.5"), 1) }),
             Combat("R2-E PreElite (95-105s)", 10, 6, F("2.8"), 11, 9,
                 new() { E("MoleGrunt", 3), E("ScarabSwarm", 2) }),
-            Combat("R2-F Elite (105-130s) [W1 placeholder]", 25, 5, F("2.5"), 9, 10,
-                new() { E("MoleGrunt", 3), E("SecurityBot", 1) }, elite: "EliteBruteChest"),
+            Combat("R2-F Elite (105-130s)", 25, 5, F("2.5"), 9, 10,
+                new() { E("MoleGrunt", 3), E("SecurityBot", 1) }, elite: "RiftScarabMatriarchElite"),
             Combat("R2-G Security Combinations (130-180s)", 50, 18, F("1.5"), 27, 17,
                 new() { E("MoleGrunt", 3), E("SandwormLarva", F("1.5"), 2), E("MoleRusher", 1, 1) },
                 new[] { "ShieldGunlinePack", "TarGruntPack" }),
@@ -190,8 +191,8 @@ namespace QuantumUser.Editor
                 new() { E("MoleGrunt", 3), E("MoleSniper", 1, 2), E("FuelRunner", F("1.5"), 2), E("MoleEnforcer", 1, 1) }),
             Combat("R3-E PreElite (95-105s)", 10, 6, F("2.8"), 11, 9,
                 new() { E("MoleGrunt", 3), E("ScarabSwarm", 2) }),
-            Combat("R3-F Elite (105-130s) [W1 placeholder]", 25, 6, F("2.5"), 10, 11,
-                new() { E("MoleGrunt", 3), E("SecurityBot", 2) }, elite: "EliteMortarEnemy"),
+            Combat("R3-F Elite (105-130s)", 25, 6, F("2.5"), 10, 11,
+                new() { E("MoleGrunt", 3), E("SecurityBot", 2) }, elite: "RiftBulwarkElite"),
             Combat("R3-G Arsenal Combinations (130-180s)", 50, 24, F("1.3"), 36, 21,
                 new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("MoleSniper", 1, 1), E("FuelRunner", 1, 1) },
                 new[] { "EnforcerScarabPack", "TarGruntPack" }),
@@ -209,8 +210,8 @@ namespace QuantumUser.Editor
                 new() { E("MoleGrunt", 3), E("SecurityBot", 2), E("ScarabNest", 2, 1) }),
             Combat("R4-D PreElite (95-105s)", 10, 7, F("2.8"), 12, 10,
                 new() { E("MoleGrunt", 3), E("ScarabSwarm", 2) }),
-            Combat("R4-E Elite (105-130s) [W1 placeholder]", 25, 7, F("2.5"), 12, 11,
-                new() { E("MoleGrunt", 3), E("SecurityBot", 2) }, elite: "EliteHeavySlammer"),
+            Combat("R4-E Elite (105-130s)", 25, 7, F("2.5"), 12, 11,
+                new() { E("MoleGrunt", 3), E("SecurityBot", 2) }, elite: "RiftDrillbreakerElite"),
             Combat("R4-F Final Exam (130-180s)", 50, 34, 1, 55, 32,
                 new() { E("MoleGrunt", 2), E("SecurityBot", 2), E("ScarabSwarm", 2), E("MoleSniper", 1, 1),
                         E("FuelRunner", 1, 1), E("ScarabNest", F("0.5"), 1) },

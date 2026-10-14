@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/BruteHeavyMastery
     Guid:
       Value: 426348791454513788
-  Icon: {fileID: 21300000, guid: ab379178b5cb4d1b8fd027cefc1a6126, type: 3}
+  Icon: {fileID: -3077145439790945434, guid: 07442008a909a4b8c844b43a87d69372, type: 3}
   DisplayName: Heavy Weapon Mastery
   Description: Heavy weapons hit harder, even more up close - and stop slowing Brute
     down.

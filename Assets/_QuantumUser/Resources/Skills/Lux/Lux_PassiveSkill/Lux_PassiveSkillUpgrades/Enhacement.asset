@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/Enhacement
     Guid:
       Value: 461752073218338127
-  Icon: {fileID: 0}
+  Icon: {fileID: 9081492642150880903, guid: ea5b28679b8534674abdd82e8ebb615b, type: 3}
   DisplayName: Enhacement
   Rarity: 1
   Description: Scrap also increases your machine's max health.

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/LastStandSkillAction
     Guid:
       Value: 329573136349118667
-  Icon: {fileID: 21300000, guid: b95336e36c4f483aa29d82ca184bd194, type: 3}
+  Icon: {fileID: 3215950611905850445, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Last Stand
   RankDescriptions:
   - When Overdrive ends, unused Rage is saved and restored the next time you activate

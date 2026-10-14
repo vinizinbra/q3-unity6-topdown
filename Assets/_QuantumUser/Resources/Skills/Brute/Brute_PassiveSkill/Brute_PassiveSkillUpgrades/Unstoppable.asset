@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades/Unstoppable
     Guid:
       Value: 338659376148529605
-  Icon: {fileID: 971092801, guid: d2dcbd9d9445e4fcea6f26c1fc83a4ce, type: 3}
+  Icon: {fileID: 1712204238916084359, guid: 07442008a909a4b8c844b43a87d69372, type: 3}
   DisplayName: Unstoppable
   Description: Being hit stops slowing you down and starts feeding you - until, at
     full Momentum, nothing can stop you at all.

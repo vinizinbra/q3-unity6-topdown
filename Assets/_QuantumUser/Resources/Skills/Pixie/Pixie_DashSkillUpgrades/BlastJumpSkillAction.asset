@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_DashSkillUpgrades/BlastJumpSkillAction
     Guid:
       Value: 359663036923996402
-  Icon: {fileID: 21300000, guid: 4476c401af64433dacf8ac076ce3c3ad, type: 3}
+  Icon: {fileID: 3535778807039204313, guid: fa959022da4dd4afa8c7f67644a87e15, type: 3}
   DisplayName: Blast Jump
   RankDescriptions:
   - "After Dashing, your next Bunny Bomb thrown within <color=#FD3971>2s</color> flies <color=#FD3971>25%</color> faster with <color=#FD3971>+25%</color> explosion radius."

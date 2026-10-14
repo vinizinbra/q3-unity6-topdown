@@ -287,7 +287,7 @@ MonoBehaviour:
     GuaranteedEnemyData:
       Id:
         Value: 0
-  - Name: R1-F Elite - Rift Drillbreaker (105-130s)
+  - Name: R1-F Elite - Mole Brute (105-130s)
     Kind: 0
     Duration:
       RawValue: 1638400
@@ -332,7 +332,7 @@ MonoBehaviour:
         Value: 0
     GuaranteedEnemyData:
       Id:
-        Value: 526367186686226105
+        Value: 290840902221774002
   - Name: R1-G Desert Pressure (130-180s)
     Kind: 0
     Duration:
@@ -717,7 +717,7 @@ MonoBehaviour:
     GuaranteedEnemyData:
       Id:
         Value: 0
-  - Name: R2-F Elite - Rift Bulwark (105-130s)
+  - Name: R2-F Elite - Rift Scarab Matriarch (105-130s)
     Kind: 0
     Duration:
       RawValue: 1638400
@@ -762,7 +762,7 @@ MonoBehaviour:
         Value: 0
     GuaranteedEnemyData:
       Id:
-        Value: 428129779048339984
+        Value: 372468727468665457
   - Name: R2-G Security Combinations (130-180s)
     Kind: 0
     Duration:
@@ -1159,7 +1159,7 @@ MonoBehaviour:
     GuaranteedEnemyData:
       Id:
         Value: 0
-  - Name: R3-F Elite - Mole Brute (105-130s)
+  - Name: R3-F Elite - Rift Bulwark (105-130s)
     Kind: 0
     Duration:
       RawValue: 1638400
@@ -1204,7 +1204,7 @@ MonoBehaviour:
         Value: 0
     GuaranteedEnemyData:
       Id:
-        Value: 290840902221774002
+        Value: 428129779048339984
   - Name: R3-G Arsenal Combinations (130-180s)
     Kind: 0
     Duration:
@@ -1581,7 +1581,7 @@ MonoBehaviour:
     GuaranteedEnemyData:
       Id:
         Value: 0
-  - Name: R4-E Elite - Rift Scarab Matriarch (105-130s)
+  - Name: R4-E Elite - Rift Drillbreaker (105-130s)
     Kind: 0
     Duration:
       RawValue: 1638400
@@ -1626,7 +1626,7 @@ MonoBehaviour:
         Value: 0
     GuaranteedEnemyData:
       Id:
-        Value: 372468727468665457
+        Value: 526367186686226105
   - Name: R4-F Final Exam (130-180s)
     Kind: 0
     Duration:

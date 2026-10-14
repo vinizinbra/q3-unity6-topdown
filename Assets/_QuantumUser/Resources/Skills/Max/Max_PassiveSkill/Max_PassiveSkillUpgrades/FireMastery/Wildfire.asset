@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/FireMastery/Wildfire
     Guid:
       Value: 532309429254581296
-  Icon: {fileID: 21300000, guid: d321c8571122497b8808b5861d79fffa, type: 3}
+  Icon: {fileID: -3882510093866057655, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Wildfire
   Description: Killing a Burning enemy spreads the fire to nearby enemies.
   <MaxRank>k__BackingField: 3

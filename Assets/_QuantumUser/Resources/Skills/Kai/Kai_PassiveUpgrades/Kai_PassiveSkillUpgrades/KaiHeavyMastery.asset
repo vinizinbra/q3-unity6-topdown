@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_PassiveUpgrades/Kai_PassiveSkillUpgrades/KaiHeavyMastery
     Guid:
       Value: 449995147557023149
-  Icon: {fileID: 21300000, guid: 6c6a72d535aa4cbd9ab71aebbb8eeb85, type: 3}
+  Icon: {fileID: 1167470226167368734, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
   DisplayName: Heavy Weapon Mastery
   Description: Heavy weapons hit harder, the first shot on each enemy hardest - and
     stop slowing Kai down.

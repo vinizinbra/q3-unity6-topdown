@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_HeroSkill/Zara_HeroSkillUpgrades/HealingChorusSkillAction
     Guid:
       Value: 401519153522005829
-  Icon: {fileID: 0}
+  Icon: {fileID: -7272697356707927939, guid: 3caff7f2c8d1849e3835680f916c2385, type: 3}
   DisplayName: Healing Chorus
   Rarity: 1
   RankDescriptions:

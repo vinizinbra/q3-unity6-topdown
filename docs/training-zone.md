@@ -29,6 +29,52 @@ so the Director never spawns enemies.
 - **Aim lesson.** Weapons fire automatically at `Aim.Target` once in range; SwitchTarget (Tab / R1)
   cycles targets. The range has 3 dummies at different distances behind two low cover blocks. The Skill station after it has 5 dummies packed together for the hero skill.
 
+## Spike Trap (accessory lesson, reusable hazard)
+
+`SpikeTrap` is generic and meant to be reused in levels, Traversal Challenges and trap rooms later.
+
+**Simulation** (`QTN/SpikeTrap.qtn`, `Systems/Combat/SpikeTrapSystem.cs`)
+- The plate is a box: the entity is the centre, ±`HalfExtents` on X/Z.
+- It cycles **Armed → Warning → Extended → Cooldown**:
+  - In **Warning** the spikes peek out (telegraph).
+  - While **Extended**, everything valid on the plate is hit every `HitInterval`, starting the instant
+    the spikes come up.
+- **Trigger** is `Step` (a valid target walks onto it) or `Timer` (`TimerArmedTime`, staggered with
+  `TimerOffset`).
+- **Targets** follow `DamageTargetMask` (Both / Players / Enemies).
+  - Hits go through `DamageUtility.ApplyDamage`, so the Accessory Guard, shields and Invulnerable
+    (downed, burrowed) all behave normally.
+  - The system itself skips airborne players (a jump clears it), burrowed and non-grounded enemies,
+    and `EnemyTrait.GroundHazardImmunity`.
+- **`TeachingHit`** (the Training Zone): only a player whose accessory can block (Equipped,
+  durability above 1) counts, both for triggering and for being hit. The trap always pops the
+  accessory off, and never costs Health or breaks it.
+
+**View** (`View/Entities/Hazards/SpikeTrapView.cs`)
+- It builds its own visual at runtime from `HalfExtents`: a grid of **sockets** (`socketSpacing`
+  1.0), one low bevelled stone base per spike, edge to edge (`socketSize` 1), and one tall slim
+  charcoal pyramid spike each, with a lit steel face toward the camera.
+- The spikes are hidden in their sockets (only a dark hole shows) while Armed, peek out during Warning, snap up when Extended and
+  sink back during Cooldown.
+- **Tuning buttons** on `SpikeTrapView`:
+  - **Regenerate Spikes** rebuilds the visual with the current Inspector values. In Play mode it does
+    it right away and keeps the spike state. In edit mode it builds a preview with the spikes up,
+    sized from the object's `QPrototypeSpikeTrap` and flagged DontSave, so it never gets saved into
+    the scene.
+  - **Toggle Preview Up/Down** and **Clear Preview** control the edit-mode preview.
+- An optional red telegraph pulses during Warning. There's also an optional `extendSound` and a
+  `FollowCamera.ShakeAtPosition` when the spikes extend.
+- The meshes are vertex-coloured with alpha 1 (the ToonTerrain "prop" convention), so they render
+  with the active tileset's material. `fallbackMaterial` is used otherwise.
+
+**Training Zone use** (Accessory station)
+- One 2 × 12 trap (exactly 2 socket columns) across the whole station, so there's no way around it.
+- Settings: Step trigger, Players only, TeachingHit, `WarningTime` 0 (it can't be outrun or dashed
+  past), Extended 0.8 s, `HitInterval` 0.2, Cooldown 1.2, Damage 10.
+- Yellow/black hazard-stripe borders, and two view-only warning signs on the approach side (the
+  Rift POI sign board, `RR_TrainingFinishSign`, with the `PictoIcon_Caution` symbol tinted alert red on its face, and the TraversalActivator's warm
+  "Available" glow particles behind it).
+
 ## Target dummies
 
 - `TrainingDummySpawner` (`QTN/TrainingZone.qtn`) is a map entity per dummy.
@@ -88,9 +134,10 @@ Then save the scene.
 | 4 | Dash (16) | Dash | One 4-unit gap |
 | 5 | High Ground (18) | Heights | Narrow stair over water: +1, +2, then a +3 lookout, each separated by a 1-unit gap; drop down |
 | 6 | Platforms (20) | Chained hops | 4 stepping stones at +0 / +1 |
-| 7 | Range (24) | Auto-aim, Switch Target | 3 respawning dummies, 2 cover blocks |
-| 8 | Skill (18) | Hero skill (E / X) | 5 dummies packed together, since most hero skills hit an area; generic text (the zone doesn't know the hero) |
-| 9 | Finish (12) | Interact | The Finish POI (`TrainingFinishPoi` prefab, a TraversalActivator look-alike placeholder) + "INTERACT / E / X next to the sign"; pressing interact returns to the menu |
+| 7 | Accessory (20) | Accessory Guard | A `SpikeTrap` across the whole station hits the player once: the guard blocks it and the accessory pops off. Past the strip: "PICK IT BACK UP / Walk over your accessory" |
+| 8 | Range (24) | Auto-aim, Switch Target | 3 respawning dummies, 2 cover blocks |
+| 9 | Skill (18) | Hero skill (E / X) | 5 dummies packed together, since most hero skills hit an area; generic text (the zone doesn't know the hero) |
+| 10 | Finish (12) | Interact | The Finish POI (`TrainingFinishPoi` prefab, a TraversalActivator look-alike placeholder) + "INTERACT / E / X next to the sign"; pressing interact returns to the menu |
 
 ## Entry point
 

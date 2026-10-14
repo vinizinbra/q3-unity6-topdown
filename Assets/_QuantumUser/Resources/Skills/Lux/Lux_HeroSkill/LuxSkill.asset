@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_HeroSkill/LuxSkill|SentryIncreaseRangeSkillAction
     Guid:
       Value: 2744247192482565106
-  Icon: {fileID: 0}
+  Icon: {fileID: -4182323401483522132, guid: ea5b28679b8534674abdd82e8ebb615b, type: 3}
   DisplayName: Extended Range
   Rarity: 0
   Priority: 0

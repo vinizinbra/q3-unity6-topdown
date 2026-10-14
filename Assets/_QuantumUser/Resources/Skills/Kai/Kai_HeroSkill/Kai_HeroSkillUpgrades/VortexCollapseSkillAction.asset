@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_HeroSkill/Kai_HeroSkillUpgrades/VortexCollapseSkillAction
     Guid:
       Value: 502058709761426382
-  Icon: {fileID: 21300000, guid: 0d01ce740a2d432a9c5b64c03a0a7f5e, type: 3}
+  Icon: {fileID: -4980142451050370124, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
   DisplayName: Vortex Collapse
   RankDescriptions:
   - "When Vortex ends, it explodes for <color=#FD3971>150%</color> Skill Damage."

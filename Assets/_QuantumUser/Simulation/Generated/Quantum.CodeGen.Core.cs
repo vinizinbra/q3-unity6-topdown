@@ -250,6 +250,16 @@ namespace Quantum {
     Ready = 0,
     Active = 1,
   }
+  public enum SpikeTrapPhase : byte {
+    Armed,
+    Warning,
+    Extended,
+    Cooldown,
+  }
+  public enum SpikeTrapTrigger : byte {
+    Step,
+    Timer,
+  }
   public enum SurvivalPhaseKind : byte {
     Combat,
     Breathing,
@@ -7071,6 +7081,80 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct SpikeTrap : Quantum.IComponent {
+    public const Int32 SIZE = 104;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(2)]
+    public SpikeTrapTrigger Trigger;
+    [FieldOffset(0)]
+    public DamageTargetMask TargetMask;
+    [FieldOffset(88)]
+    public FPVector2 HalfExtents;
+    [FieldOffset(24)]
+    public FP Damage;
+    [FieldOffset(80)]
+    public FP WarningTime;
+    [FieldOffset(32)]
+    public FP ExtendedTime;
+    [FieldOffset(40)]
+    public FP HitInterval;
+    [FieldOffset(16)]
+    public FP CooldownTime;
+    [FieldOffset(64)]
+    public FP TimerArmedTime;
+    [FieldOffset(72)]
+    public FP TimerOffset;
+    [FieldOffset(8)]
+    public QBoolean TeachingHit;
+    [FieldOffset(1)]
+    public SpikeTrapPhase Phase;
+    [FieldOffset(56)]
+    public FP PhaseTimer;
+    [FieldOffset(48)]
+    public FP HitTimer;
+    [FieldOffset(4)]
+    public QBoolean Initialized;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 2339;
+        hash = hash * 31 + (Byte)Trigger;
+        hash = hash * 31 + (Byte)TargetMask;
+        hash = hash * 31 + HalfExtents.GetHashCode();
+        hash = hash * 31 + Damage.GetHashCode();
+        hash = hash * 31 + WarningTime.GetHashCode();
+        hash = hash * 31 + ExtendedTime.GetHashCode();
+        hash = hash * 31 + HitInterval.GetHashCode();
+        hash = hash * 31 + CooldownTime.GetHashCode();
+        hash = hash * 31 + TimerArmedTime.GetHashCode();
+        hash = hash * 31 + TimerOffset.GetHashCode();
+        hash = hash * 31 + TeachingHit.GetHashCode();
+        hash = hash * 31 + (Byte)Phase;
+        hash = hash * 31 + PhaseTimer.GetHashCode();
+        hash = hash * 31 + HitTimer.GetHashCode();
+        hash = hash * 31 + Initialized.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (SpikeTrap*)ptr;
+        serializer.Stream.Serialize((Byte*)&p->TargetMask);
+        serializer.Stream.Serialize((Byte*)&p->Phase);
+        serializer.Stream.Serialize((Byte*)&p->Trigger);
+        QBoolean.Serialize(&p->Initialized, serializer);
+        QBoolean.Serialize(&p->TeachingHit, serializer);
+        FP.Serialize(&p->CooldownTime, serializer);
+        FP.Serialize(&p->Damage, serializer);
+        FP.Serialize(&p->ExtendedTime, serializer);
+        FP.Serialize(&p->HitInterval, serializer);
+        FP.Serialize(&p->HitTimer, serializer);
+        FP.Serialize(&p->PhaseTimer, serializer);
+        FP.Serialize(&p->TimerArmedTime, serializer);
+        FP.Serialize(&p->TimerOffset, serializer);
+        FP.Serialize(&p->WarningTime, serializer);
+        FPVector2.Serialize(&p->HalfExtents, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct StatusEffects : Quantum.IComponent {
     public const Int32 SIZE = 560;
     public const Int32 ALIGNMENT = 8;
@@ -9491,6 +9575,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.SpawnOnBreak>();
       BuildSignalsArrayOnComponentAdded<Quantum.SpawnRadiusUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.SpawnRadiusUpgrade>();
+      BuildSignalsArrayOnComponentAdded<Quantum.SpikeTrap>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.SpikeTrap>();
       BuildSignalsArrayOnComponentAdded<Quantum.StatusEffects>();
       BuildSignalsArrayOnComponentRemoved<Quantum.StatusEffects>();
       BuildSignalsArrayOnComponentAdded<Quantum.StatusSpreadOnDeath>();
@@ -10098,6 +10184,9 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.SoundBoostUpgrade), Quantum.SoundBoostUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.SpawnOnBreak), Quantum.SpawnOnBreak.SIZE);
       typeRegistry.Register(typeof(Quantum.SpawnRadiusUpgrade), Quantum.SpawnRadiusUpgrade.SIZE);
+      typeRegistry.Register(typeof(Quantum.SpikeTrap), Quantum.SpikeTrap.SIZE);
+      typeRegistry.Register(typeof(Quantum.SpikeTrapPhase), 1);
+      typeRegistry.Register(typeof(Quantum.SpikeTrapTrigger), 1);
       typeRegistry.Register(typeof(SpringJoint), SpringJoint.SIZE);
       typeRegistry.Register(typeof(SpringJoint3D), SpringJoint3D.SIZE);
       typeRegistry.Register(typeof(Quantum.StatusEffects), Quantum.StatusEffects.SIZE);
@@ -10164,7 +10253,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 196)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 197)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryGuard>(Quantum.AccessoryGuard.Serialize, null, null, ComponentFlags.None)
@@ -10315,6 +10404,7 @@ namespace Quantum {
         .Add<Quantum.SoundBoostUpgrade>(Quantum.SoundBoostUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.SpawnOnBreak>(Quantum.SpawnOnBreak.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.SpawnRadiusUpgrade>(Quantum.SpawnRadiusUpgrade.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.SpikeTrap>(Quantum.SpikeTrap.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.StatusEffects>(Quantum.StatusEffects.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.StatusSpreadOnDeath>(Quantum.StatusSpreadOnDeath.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Store>(Quantum.Store.Serialize, null, null, ComponentFlags.None)
@@ -10400,6 +10490,8 @@ namespace Quantum {
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SharedTalentRequirement>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SkillSlotId>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SkillState>();
+      FramePrinter.EnsurePrimitiveNotStripped<Quantum.SpikeTrapPhase>();
+      FramePrinter.EnsurePrimitiveNotStripped<Quantum.SpikeTrapTrigger>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SurvivalPhaseKind>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.TeamChallengeState>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.TraversalChallengeState>();

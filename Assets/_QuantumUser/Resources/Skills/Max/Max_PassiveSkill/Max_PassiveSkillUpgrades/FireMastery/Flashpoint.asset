@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades/FireMastery/Flashpoint
     Guid:
       Value: 317035501367371776
-  Icon: {fileID: 21300000, guid: 1b4d51c6468347cead527f99f9748f40, type: 3}
+  Icon: {fileID: 4524988460830918004, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Flashpoint
   Description: Burning enemies take extra crits, explode on crit, and can be executed.
   <MaxRank>k__BackingField: 3

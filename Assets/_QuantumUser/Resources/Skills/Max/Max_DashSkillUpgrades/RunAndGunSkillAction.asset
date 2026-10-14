@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_DashSkillUpgrades/RunAndGunSkillAction
     Guid:
       Value: 377700293714812557
-  Icon: {fileID: 21300000, guid: f8aa74d6370941c48165df0d337d06b6, type: 3}
+  Icon: {fileID: -4187893061647925747, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Run & Gun
   RankDescriptions:
   - Dashing restores <color=#FD3971>50%</color> of your magazine and grants <color=#FD3971>+20%</color>

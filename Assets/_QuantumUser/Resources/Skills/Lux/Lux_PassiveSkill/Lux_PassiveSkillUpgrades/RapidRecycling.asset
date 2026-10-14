@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/RapidRecycling
     Guid:
       Value: 487893626376381545
-  Icon: {fileID: 21300000, guid: ead84fe558294d6085e459fbbcfb2c4e, type: 3}
+  Icon: {fileID: -6426474614715203157, guid: ea5b28679b8534674abdd82e8ebb615b, type: 3}
   DisplayName: Rapid Recycling
   Description: "Collected Scrap shortens your Sentry's cooldown."
   <MaxRank>k__BackingField: 3

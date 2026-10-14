@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/PixieFireMastery
     Guid:
       Value: 338055753729455957
-  Icon: {fileID: 21300000, guid: a400189b855d4fb38ea4d5ebd3ae8456, type: 3}
+  Icon: {fileID: -8793433163573045875, guid: fa959022da4dd4afa8c7f67644a87e15, type: 3}
   DisplayName: Fire Mastery
   Description: Fire weapons hit harder, and at rank 3, every Fire-weapon hit also
     detonates a small area explosion.

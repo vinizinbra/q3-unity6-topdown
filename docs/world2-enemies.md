@@ -1,6 +1,6 @@
 # World 2 Enemy Roster (Desert / oil biome)
 
-12 normal enemies (+ 4 Elites: Rift Drillbreaker, Mole Brute, Rift Bulwark, Rift Scarab Matriarch) in three folder groups (BlackMoles / DesertSecurity / Wildlife - organizational only; the old per-spawn `EnemyFaction`/`FactionSkins` skin system was removed, each enemy has one `ViewPrefab`). Every asset is a clone with its OWN Quantum guids (tuning never
+12 normal enemies (+ 4 Elites: Mole Brute, Rift Scarab Matriarch, Rift Bulwark, Rift Drillbreaker) in three folder groups (BlackMoles / DesertSecurity / Wildlife - organizational only; the old per-spawn `EnemyFaction`/`FactionSkins` skin system was removed, each enemy has one `ViewPrefab`). Every asset is a clone with its OWN Quantum guids (tuning never
 touches World 1) under `Resources/Enemy/World2/<Group>/<Name>/W2-<Name>.asset`; placeholder views are
 Prefab Variants of the W1 view under `_Project/Prefabs/View/EnemyView/World2/<Group>/`. None are in a
 `SurvivalConfig`/group yet - spawn with `EnemyDataAsset`'s "Spawn Near Local Player" Inspector button.
@@ -40,8 +40,9 @@ Naming: W1 enemy files are `W1-*`, W2 are `W2-*`; `_Hazards/` and `_Passives/` a
   Final Exam is ~15% over W1's (budget 34 vs 30, max alive 32 vs 28). 6 packs in `World2/Groups/`:
   ScarabRush, ShieldGunline, EnforcerScarab, TarGrunt, SniperShield, CrusherLarva. Tier C (Rusher, Enforcer,
   Tar Launcher, Fuel Runner, Dune Crusher, Scarab Nest) is capped and loose-OR-packed per phase. **Elites (4,
-  one per run's Elite phase, 2026-10-13): R1 Rift Drillbreaker, R2 Rift Bulwark, R3 Mole Brute, R4 Rift Scarab
-  Matriarch** (each phase's `GuaranteedEnemyData`; they replaced World 1's placeholders); **the Boss is the Dune
+  one per run's Elite phase, 2026-10-13): R1 Mole Brute, R2 Rift Scarab Matriarch, R3 Rift Bulwark, R4 Rift
+  Drillbreaker** (each phase's `GuaranteedEnemyData`; they replaced World 1's placeholders; set directly in the
+  asset - it carries hand edits the generator lacks, so re-running the generator would wipe them); **the Boss is the Dune
   Leviathan** (see below).
   Not wired to any scene/RuntimeConfig yet; not playtested.
 - Older drafts (`SurvivalConfig`, `_MVP`, `SurvivalWorld1Config`, `_Iteration2`, `TestConfig`) and their 78

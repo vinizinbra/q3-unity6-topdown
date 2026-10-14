@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Zara/Zara_DashSkillUpgrades/AfterbeatSkillAction
     Guid:
       Value: 408176212789416036
-  Icon: {fileID: 21300000, guid: d03dc5faedab4214a4b44dcaaa62cd4d, type: 3}
+  Icon: {fileID: -7544225130203765877, guid: 3caff7f2c8d1849e3835680f916c2385, type: 3}
   DisplayName: Afterbeat
   RankDescriptions:
   - "Dashing restores <color=#FD3971>35%</color> Flow, plus more for each enemy you Dash through."

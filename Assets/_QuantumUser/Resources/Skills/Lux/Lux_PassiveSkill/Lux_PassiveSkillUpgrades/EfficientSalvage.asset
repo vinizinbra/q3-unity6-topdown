@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades/EfficientSalvage
     Guid:
       Value: 279385305130049783
-  Icon: {fileID: 0}
+  Icon: {fileID: -7788930124118556694, guid: ea5b28679b8534674abdd82e8ebb615b, type: 3}
   DisplayName: Efficient Salvage
   Rarity: 1
   Description: Increases Scrap drop chance.

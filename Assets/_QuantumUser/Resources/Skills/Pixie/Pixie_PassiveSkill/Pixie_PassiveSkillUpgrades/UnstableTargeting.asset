@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades/UnstableTargeting
     Guid:
       Value: 369929941063600227
-  Icon: {fileID: -1669506346, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  Icon: {fileID: 2914930937788431785, guid: fa959022da4dd4afa8c7f67644a87e15, type: 3}
   DisplayName: Unstable Targeting
   Rarity: 1
   Description: Deal bonus damage against any enemy currently marked to explode on

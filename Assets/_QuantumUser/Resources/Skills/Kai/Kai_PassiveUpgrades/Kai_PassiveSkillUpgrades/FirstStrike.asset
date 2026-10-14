@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_PassiveUpgrades/Kai_PassiveSkillUpgrades/FirstStrike
     Guid:
       Value: 318677384688188296
-  Icon: {fileID: 21300000, guid: 8621c8291935432aa19e41710ad3651a, type: 3}
+  Icon: {fileID: -511273144502678810, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
   DisplayName: First Strike
   Description: "Your first hit against an enemy deals bonus damage."
   <MaxRank>k__BackingField: 3

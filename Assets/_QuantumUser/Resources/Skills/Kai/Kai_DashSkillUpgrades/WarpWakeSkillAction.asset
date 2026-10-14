@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Kai/Kai_DashSkillUpgrades/WarpWakeSkillAction
     Guid:
       Value: 470554201058115475
-  Icon: {fileID: 0}
+  Icon: {fileID: 1747211660493458985, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
   DisplayName: Warp Wake
   Rarity: 2
   RankDescriptions:

@@ -16,7 +16,7 @@ MonoBehaviour:
     Path: _QuantumUser/Resources/Skills/Max/Max_HeroSkill/Max_HeroSkillUpgrades/Overdrive/UncontrolledFurySkillAction
     Guid:
       Value: 337766368886409189
-  Icon: {fileID: 21300000, guid: 9f104aaf3fcd4335b9621bf8f978e07c, type: 3}
+  Icon: {fileID: -5491723214939618750, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Uncontrolled Fury
   RankDescriptions:
   - During Overdrive, every <color=#FD3971>3</color> kills extend it by <color=#FD3971>1s</color>,
