@@ -39,6 +39,18 @@ public class HeroesTab : TabContent
     private HeroRowWidget rowTemplate;
     [SerializeField] private Transform listRoot;
 
+    [Header("Mastery page")]
+    [SerializeField, Tooltip("The MASTERY page's reward track (mock until hero progression exists).")]
+    private HeroMasteryViewWidget masteryView;
+    [SerializeField, Tooltip("The hero showcase (character + stage): shown on every info tab except the ones listed below.")]
+    private GameObject heroArea;
+    [SerializeField, Tooltip("Info tab indices that hide the hero showcase (the Ascensions codex needs the whole width).")]
+    private int[] tabsWithoutHero = { 1 };
+
+    [Header("Ascensions page")]
+    [SerializeField, Tooltip("The ASCENSIONS info page: the viewed hero's Ascension codex, rebuilt whenever the viewed hero changes.")]
+    private HeroAscensionsViewWidget ascensionsView;
+
     [Header("Glitch")]
     [Tooltip("Plays a short glitch burst on the info panel whenever the viewed item changes.")]
     [SerializeField] private GlitchWidget infoGlitch;
@@ -91,6 +103,8 @@ public class HeroesTab : TabContent
     {
         base.Awake();
         selectButton.onClick.AddListener(OnSelectPressed);
+        if (infoTabs != null)
+            infoTabs.Changed += OnInfoTabChanged;
     }
 
     private void OnEnable()
@@ -116,6 +130,12 @@ public class HeroesTab : TabContent
 
         if (!built)
             BuildList();
+    }
+
+    private void OnInfoTabChanged(int index)
+    {
+        if (heroArea != null)
+            heroArea.SetActive(System.Array.IndexOf(tabsWithoutHero, index) < 0);
     }
 
     // The row of the hero being viewed (the equipped one on first open).
@@ -246,6 +266,10 @@ public class HeroesTab : TabContent
             return;
 
         bool changed = viewedIndex >= 0 && viewedIndex != index;
+
+        // A different hero always opens on its OVERVIEW page.
+        if (changed && infoTabs != null)
+            infoTabs.Select(0);
         viewedIndex = index;
         string id = ids[index];
         CharacterCatalog.Entry entry = catalog.characters[index];
@@ -273,10 +297,16 @@ public class HeroesTab : TabContent
 
         FillSkill(data);
         FillPassive(data);
+        if (ascensionsView != null)
+            ascensionsView.Show(id, data);
+        if (masteryView != null)
+            masteryView.Show(HeroName(entry, data), data != null && data.UIHead != null ? data.UIHead : catalog.ResolveIconSprite(id), placeholderLevel);
 
-        masteryLabel.text = "MASTERY  LV " + placeholderLevel;
+        masteryLabel.text = "<size=55%>LV </size>" + placeholderLevel;
         masteryCount.text = placeholderMasteryCurrent + " / " + placeholderMasteryMax;
-        masteryPageText.text = "Mastery tree for " + heroNameText.text + " (placeholder)";
+        // The Mastery page is "coming soon" for now; this optional text names the hero once the tree exists.
+        if (masteryPageText != null)
+            masteryPageText.text = "Mastery tree for " + heroNameText.text + " (placeholder)";
         float fill = placeholderMasteryMax > 0 ? Mathf.Clamp01((float)placeholderMasteryCurrent / placeholderMasteryMax) : 0f;
         masteryFill.anchorMax = new Vector2(fill, 1f);
 

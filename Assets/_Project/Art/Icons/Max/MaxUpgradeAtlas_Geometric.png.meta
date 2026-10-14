@@ -139,8 +139,8 @@ TextureImporter:
       name: Max_Vendetta
       rect:
         serializedVersion: 2
-        x: 0
-        y: 960
+        x: 2
+        y: 952
         width: 320
         height: 320
       alignment: 0
@@ -162,7 +162,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 320
-        y: 960
+        y: 954
         width: 320
         height: 320
       alignment: 0
@@ -183,8 +183,8 @@ TextureImporter:
       name: Max_LastStand
       rect:
         serializedVersion: 2
-        x: 640
-        y: 960
+        x: 638
+        y: 952
         width: 320
         height: 320
       alignment: 0
@@ -205,8 +205,8 @@ TextureImporter:
       name: Max_FullThrottle
       rect:
         serializedVersion: 2
-        x: 960
-        y: 960
+        x: 956
+        y: 943
         width: 320
         height: 320
       alignment: 0
@@ -227,8 +227,8 @@ TextureImporter:
       name: Max_UncontrolledFury
       rect:
         serializedVersion: 2
-        x: 0
-        y: 640
+        x: 2
+        y: 644
         width: 320
         height: 320
       alignment: 0
@@ -250,7 +250,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 320
-        y: 640
+        y: 641
         width: 320
         height: 320
       alignment: 0
@@ -271,8 +271,8 @@ TextureImporter:
       name: Max_BloodDebt
       rect:
         serializedVersion: 2
-        x: 640
-        y: 640
+        x: 637
+        y: 638
         width: 320
         height: 320
       alignment: 0
@@ -293,8 +293,8 @@ TextureImporter:
       name: Max_Wildfire
       rect:
         serializedVersion: 2
-        x: 960
-        y: 640
+        x: 951
+        y: 643
         width: 320
         height: 320
       alignment: 0
@@ -315,8 +315,8 @@ TextureImporter:
       name: Max_Flashpoint
       rect:
         serializedVersion: 2
-        x: 0
-        y: 326
+        x: 10
+        y: 337
         width: 320
         height: 320
       alignment: 0
@@ -337,8 +337,8 @@ TextureImporter:
       name: Max_LightMastery
       rect:
         serializedVersion: 2
-        x: 320
-        y: 323
+        x: 325
+        y: 333
         width: 320
         height: 320
       alignment: 0
@@ -360,7 +360,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 637
-        y: 320
+        y: 332
         width: 320
         height: 320
       alignment: 0
@@ -381,8 +381,8 @@ TextureImporter:
       name: Max_RunAndGun
       rect:
         serializedVersion: 2
-        x: 954
-        y: 320
+        x: 951
+        y: 329
         width: 320
         height: 320
       alignment: 0
@@ -403,8 +403,8 @@ TextureImporter:
       name: Max_VendettaStrike
       rect:
         serializedVersion: 2
-        x: 7
-        y: 9
+        x: 14
+        y: 24
         width: 320
         height: 320
       alignment: 0
@@ -425,8 +425,8 @@ TextureImporter:
       name: Max_BurningVengeance
       rect:
         serializedVersion: 2
-        x: 324
-        y: 6
+        x: 320
+        y: 32
         width: 320
         height: 320
       alignment: 0

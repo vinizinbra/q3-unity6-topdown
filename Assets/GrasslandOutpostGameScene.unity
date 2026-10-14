@@ -39821,7 +39821,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: facc66ec05e8246dcbc1674b9f900c4b, type: 3}
+  m_Sprite: {fileID: 1573605090, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -40630,7 +40630,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: facc66ec05e8246dcbc1674b9f900c4b, type: 3}
+  m_Sprite: {fileID: 1573605090, guid: e96a2976d9cdd40e091a76f237966887, type: 3}
   m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -76700,7 +76700,6 @@ GameObject:
   - component: {fileID: 1025208721}
   - component: {fileID: 1025208724}
   - component: {fileID: 1025208723}
-  - component: {fileID: 1025208725}
   m_Layer: 0
   m_Name: Dash-Sprite
   m_TagString: Untagged
@@ -76766,19 +76765,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1025208720}
   m_CullTransparentMesh: 1
---- !u!114 &1025208725
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1025208720}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Mask
-  m_ShowMaskGraphic: 1
 --- !u!1 &1026190735
 GameObject:
   m_ObjectHideFlags: 0
@@ -113387,6 +113373,7 @@ GameObject:
   - component: {fileID: 1369665690}
   - component: {fileID: 1369665689}
   - component: {fileID: 1369665688}
+  - component: {fileID: 1369665691}
   m_Layer: 0
   m_Name: Dash-Sprite-Icon (1)
   m_TagString: Untagged
@@ -113476,6 +113463,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1369665686}
   m_CullTransparentMesh: 1
+--- !u!114 &1369665691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1369665686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39033f73041a8456d945cc4549f3ff32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CircularImageMeshWidget
+  segments: 48
 --- !u!1 &1370969934
 GameObject:
   m_ObjectHideFlags: 0
@@ -144430,7 +144430,6 @@ MonoBehaviour:
       CanFindStones: 0
       HasEvent: 0
       PlayerCoinGainLevel: 0
-      WeaponsLevel: 0
       StartingGoldLevel: 0
       RerollsLevel: 0
       ReviveLevel: 0
@@ -169518,6 +169517,7 @@ GameObject:
   - component: {fileID: 1963115208}
   - component: {fileID: 1963115207}
   - component: {fileID: 1963115206}
+  - component: {fileID: 1963115209}
   m_Layer: 0
   m_Name: Dash-Sprite-Icon (1)
   m_TagString: Untagged
@@ -169607,6 +169607,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1963115204}
   m_CullTransparentMesh: 1
+--- !u!114 &1963115209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1963115204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39033f73041a8456d945cc4549f3ff32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CircularImageMeshWidget
+  segments: 48
 --- !u!1 &1964533446
 GameObject:
   m_ObjectHideFlags: 0
@@ -173939,7 +173952,6 @@ GameObject:
   - component: {fileID: 2107093074}
   - component: {fileID: 2107093077}
   - component: {fileID: 2107093076}
-  - component: {fileID: 2107093078}
   m_Layer: 0
   m_Name: Dash-Sprite
   m_TagString: Untagged
@@ -174005,19 +174017,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2107093073}
   m_CullTransparentMesh: 1
---- !u!114 &2107093078
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2107093073}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Mask
-  m_ShowMaskGraphic: 1
 --- !u!1 &2110475888
 GameObject:
   m_ObjectHideFlags: 0

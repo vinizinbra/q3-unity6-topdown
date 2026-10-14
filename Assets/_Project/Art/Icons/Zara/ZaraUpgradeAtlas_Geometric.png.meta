@@ -139,8 +139,8 @@ TextureImporter:
       name: Zara_FlowState
       rect:
         serializedVersion: 2
-        x: 0
-        y: 960
+        x: 12
+        y: 937
         width: 320
         height: 320
       alignment: 0
@@ -161,8 +161,8 @@ TextureImporter:
       name: Zara_Totem
       rect:
         serializedVersion: 2
-        x: 320
-        y: 960
+        x: 324
+        y: 934
         width: 320
         height: 320
       alignment: 0
@@ -183,8 +183,8 @@ TextureImporter:
       name: Zara_Amplifier
       rect:
         serializedVersion: 2
-        x: 640
-        y: 960
+        x: 639
+        y: 944
         width: 320
         height: 320
       alignment: 0
@@ -205,8 +205,8 @@ TextureImporter:
       name: Zara_SoundBoost
       rect:
         serializedVersion: 2
-        x: 960
-        y: 960
+        x: 952
+        y: 939
         width: 320
         height: 320
       alignment: 0
@@ -227,7 +227,7 @@ TextureImporter:
       name: Zara_DoubleTime
       rect:
         serializedVersion: 2
-        x: 0
+        x: 6
         y: 640
         width: 320
         height: 320
@@ -249,8 +249,8 @@ TextureImporter:
       name: Zara_MainStage
       rect:
         serializedVersion: 2
-        x: 320
-        y: 640
+        x: 321
+        y: 636
         width: 320
         height: 320
       alignment: 0
@@ -271,8 +271,8 @@ TextureImporter:
       name: Zara_FasterTempo
       rect:
         serializedVersion: 2
-        x: 640
-        y: 640
+        x: 636
+        y: 626
         width: 320
         height: 320
       alignment: 0
@@ -293,8 +293,8 @@ TextureImporter:
       name: Zara_SecondWind
       rect:
         serializedVersion: 2
-        x: 960
-        y: 640
+        x: 955
+        y: 617
         width: 320
         height: 320
       alignment: 0
@@ -315,10 +315,10 @@ TextureImporter:
       name: Zara_Headliner
       rect:
         serializedVersion: 2
-        x: 0
-        y: 325
-        width: 318
-        height: 318
+        x: 2
+        y: 340
+        width: 320
+        height: 320
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -337,8 +337,8 @@ TextureImporter:
       name: Zara_Afterbeat
       rect:
         serializedVersion: 2
-        x: 315
-        y: 323
+        x: 312
+        y: 326
         width: 320
         height: 320
       alignment: 0
@@ -359,8 +359,8 @@ TextureImporter:
       name: Zara_PortableSpeaker
       rect:
         serializedVersion: 2
-        x: 637
-        y: 320
+        x: 632
+        y: 322
         width: 320
         height: 320
       alignment: 0
@@ -381,8 +381,8 @@ TextureImporter:
       name: Zara_ElectricMastery
       rect:
         serializedVersion: 2
-        x: 956
-        y: 320
+        x: 952
+        y: 314
         width: 320
         height: 320
       alignment: 0
@@ -403,8 +403,8 @@ TextureImporter:
       name: Zara_LightMastery
       rect:
         serializedVersion: 2
-        x: 0
-        y: 4
+        x: 6
+        y: 26
         width: 320
         height: 320
       alignment: 0
@@ -425,8 +425,8 @@ TextureImporter:
       name: Zara_HealingChorus
       rect:
         serializedVersion: 2
-        x: 320
-        y: 6
+        x: 321
+        y: 28
         width: 320
         height: 320
       alignment: 0

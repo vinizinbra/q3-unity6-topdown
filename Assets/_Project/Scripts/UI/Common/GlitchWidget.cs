@@ -115,9 +115,26 @@ public class GlitchWidget : MonoBehaviour
     // specifically so it carries no scripts, GlitchWidget included; duplicating this component onto a
     // ghost would spawn its own ghosts recursively. Inserted at target's current sibling index so it
     // ends up directly behind it (Unity UI renders later siblings on top).
+    // A layout-driven target's rect is only final once its layout has run, so ghosts re-copy it at each burst.
+    private static void MatchRect(Image ghost, Image target)
+    {
+        if (ghost == null)
+            return;
+
+        RectTransform rect = ghost.rectTransform, targetRect = target.rectTransform;
+        rect.anchorMin = targetRect.anchorMin;
+        rect.anchorMax = targetRect.anchorMax;
+        rect.pivot = targetRect.pivot;
+        rect.sizeDelta = targetRect.sizeDelta;
+        rect.anchoredPosition = targetRect.anchoredPosition;
+    }
+
     private static Image SpawnGhost(Image target, string ghostName)
     {
-        var go = new GameObject(ghostName, typeof(RectTransform), typeof(Image));
+        // Ignores layout: a target inside a Layout Group must not get its ghosts counted as extra children (they'd
+        // take space and squash the real ones). Their rect is copied from the target instead (see MatchRect).
+        var go = new GameObject(ghostName, typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        go.GetComponent<LayoutElement>().ignoreLayout = true;
         var rect = (RectTransform)go.transform;
         var targetRect = target.rectTransform;
         rect.SetParent(targetRect.parent, false);
@@ -247,6 +264,15 @@ public class GlitchWidget : MonoBehaviour
 
     private void ApplyGlitchFrame(GlitchState state, bool dropout)
     {
+        // A target whose Image is switched off (or whose object is inactive) isn't on screen - glitching it would
+        // only show its ghosts on their own.
+        if (state.Target == null || !state.Target.isActiveAndEnabled)
+        {
+            SetGhostVisible(state.RedGhost, false);
+            SetGhostVisible(state.CyanGhost, false);
+            return;
+        }
+
         if (dropout)
         {
             state.Target.color = new Color(state.BaseColor.r, state.BaseColor.g, state.BaseColor.b, state.BaseColor.a * dropoutAlpha);
@@ -299,6 +325,8 @@ public class GlitchWidget : MonoBehaviour
             state.BaseColor = state.Target.color;
             state.BaseAnchoredPosition = state.Target.rectTransform.anchoredPosition;
             state.BaseScale = state.Target.rectTransform.localScale;
+            MatchRect(state.RedGhost, state.Target);
+            MatchRect(state.CyanGhost, state.Target);
             state.RedGhost.sprite = state.Target.sprite;
             state.CyanGhost.sprite = state.Target.sprite;
             state.RedGhost.preserveAspect = state.Target.preserveAspect;

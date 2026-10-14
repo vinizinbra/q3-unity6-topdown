@@ -139,8 +139,8 @@ TextureImporter:
       name: Pixie_ChainReaction
       rect:
         serializedVersion: 2
-        x: 5
-        y: 957
+        x: 12
+        y: 946
         width: 320
         height: 320
       alignment: 0
@@ -161,8 +161,8 @@ TextureImporter:
       name: Pixie_BunnyBomb
       rect:
         serializedVersion: 2
-        x: 322
-        y: 959
+        x: 328
+        y: 952
         width: 320
         height: 320
       alignment: 0
@@ -183,8 +183,8 @@ TextureImporter:
       name: Pixie_PocketBombs
       rect:
         serializedVersion: 2
-        x: 640
-        y: 960
+        x: 632
+        y: 941
         width: 320
         height: 320
       alignment: 0
@@ -205,8 +205,8 @@ TextureImporter:
       name: Pixie_UnstableMixture
       rect:
         serializedVersion: 2
-        x: 960
-        y: 957
+        x: 946
+        y: 940
         width: 320
         height: 320
       alignment: 0
@@ -227,7 +227,7 @@ TextureImporter:
       name: Pixie_ExplosiveRounds
       rect:
         serializedVersion: 2
-        x: 5
+        x: 18
         y: 640
         width: 320
         height: 320
@@ -249,8 +249,8 @@ TextureImporter:
       name: Pixie_HeavyMastery
       rect:
         serializedVersion: 2
-        x: 323
-        y: 640
+        x: 330
+        y: 616
         width: 320
         height: 320
       alignment: 0
@@ -271,8 +271,8 @@ TextureImporter:
       name: Pixie_FireMastery
       rect:
         serializedVersion: 2
-        x: 640
-        y: 640
+        x: 630
+        y: 634
         width: 320
         height: 320
       alignment: 0
@@ -293,8 +293,8 @@ TextureImporter:
       name: Pixie_ClusterBomb
       rect:
         serializedVersion: 2
-        x: 957
-        y: 632
+        x: 950
+        y: 628
         width: 320
         height: 320
       alignment: 0
@@ -315,8 +315,8 @@ TextureImporter:
       name: Pixie_BirthdayCake
       rect:
         serializedVersion: 2
-        x: 0
-        y: 330
+        x: 6
+        y: 326
         width: 320
         height: 320
       alignment: 0
@@ -337,8 +337,8 @@ TextureImporter:
       name: Pixie_DirectHit
       rect:
         serializedVersion: 2
-        x: 320
-        y: 327
+        x: 322
+        y: 332
         width: 320
         height: 320
       alignment: 0
@@ -359,8 +359,8 @@ TextureImporter:
       name: Pixie_Backblast
       rect:
         serializedVersion: 2
-        x: 640
-        y: 320
+        x: 634
+        y: 312
         width: 320
         height: 320
       alignment: 0
@@ -381,8 +381,8 @@ TextureImporter:
       name: Pixie_HotFuse
       rect:
         serializedVersion: 2
-        x: 960
-        y: 315
+        x: 956
+        y: 324
         width: 320
         height: 320
       alignment: 0
@@ -403,8 +403,8 @@ TextureImporter:
       name: Pixie_BlastJump
       rect:
         serializedVersion: 2
-        x: 0
-        y: 13
+        x: 10
+        y: 30
         width: 320
         height: 320
       alignment: 0
@@ -425,8 +425,8 @@ TextureImporter:
       name: Pixie_UnstableTargeting
       rect:
         serializedVersion: 2
-        x: 320
-        y: 10
+        x: 322
+        y: 30
         width: 320
         height: 320
       alignment: 0
