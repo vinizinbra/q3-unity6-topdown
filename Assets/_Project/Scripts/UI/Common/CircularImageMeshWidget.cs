@@ -15,11 +15,14 @@ public class CircularImageMeshWidget : BaseMeshEffect
     [SerializeField, Range(12, 128), Tooltip("Ring segments. 48 stays within ~0.2 px of a true circle at 180 px; raise it for much larger icons.")]
     private int segments = 48;
 
+#if UNITY_EDITOR
+    // BaseMeshEffect only declares OnValidate in the Editor - an unguarded override breaks player builds.
     protected override void OnValidate()
     {
         base.OnValidate();
         segments = Mathf.Clamp(segments, 12, 128);
     }
+#endif
 
     public override void ModifyMesh(VertexHelper vh)
     {
