@@ -140,7 +140,7 @@ namespace Project.EditorTools.BuildAnalyzer
             }
             catch { /* keep imported dims */ }
 
-            try { info.HasAlpha = importer.DoesSourceTextureHaveAlpha(); }
+            try { info.HasAlpha = importer.DoesSourceTextureHaveAlpha() || importer.alphaSource == TextureImporterAlphaSource.FromGrayScale; } // grayscale-derived alpha counts: the alpha channel is real, just not in the file
             catch { info.HasAlpha = true; }
 
             foreach (Sprite sprite in AssetDatabase.LoadAllAssetRepresentationsAtPath(entry.Path).OfType<Sprite>())
