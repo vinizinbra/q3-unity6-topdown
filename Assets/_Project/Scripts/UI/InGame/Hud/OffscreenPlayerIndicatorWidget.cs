@@ -9,7 +9,7 @@ using UnityEngine.UI;
 // a hex frame holding the hero's live in-game head (the rig's BlobAnimationView.Head sprite, NOT the
 // CharacterData.UIHead portrait; the torso sprite - the whole body - for a headless rig like Lux), a border + arrow tinted with the hero's RingColor (DownedColor while
 // Downed), and an optional distance label. The manager owns all placement; this only paints and pops.
-// When that teammate pings while off-screen, hex rings ripple out from behind the frame in their ping
+// When that teammate pings while off-screen, hex rings ripple out from behind the frame in the border's
 // colour (PlayPingRipple) - the edge-of-screen counterpart of PingWorldRippleWidget.
 //
 // The head stays upright - only `arrowPivot` turns. The distance label sits on the
@@ -54,7 +54,6 @@ public class OffscreenPlayerIndicatorWidget : MonoBehaviour
     private bool _shown;
     private int _lastDistance = -1;
     private Tween _popTween;
-    private Color _pingColor;
     private float _pingStartTime = float.NegativeInfinity;
 
     public void Setup(OffscreenPlayerIndicatorManager manager, EntityRef entityRef, Transform followTarget)
@@ -75,9 +74,8 @@ public class OffscreenPlayerIndicatorWidget : MonoBehaviour
 
     public bool IsShown => _shown;
 
-    public void PlayPingRipple(Color color)
+    public void PlayPingRipple()
     {
-        _pingColor = color;
         _pingStartTime = Time.unscaledTime;
         SetRingsVisible(true);
     }
@@ -104,7 +102,8 @@ public class OffscreenPlayerIndicatorWidget : MonoBehaviour
             float eased = 1f - (1f - t) * (1f - t);
             pingRings[i].rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, pingMaxScale, eased);
 
-            Color c = _pingColor;
+            // Read live from the border so the rings follow it (RingColor, or DownedColor mid-ripple).
+            Color c = borderImage.color;
             c.a = (1f - t) * tailFade;
             pingRings[i].color = c;
         }

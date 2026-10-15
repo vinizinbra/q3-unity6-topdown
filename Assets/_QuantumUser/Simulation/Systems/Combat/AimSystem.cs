@@ -38,6 +38,9 @@ namespace Quantum
         private static readonly FP FallbackTargetRange = 12;
         private static readonly FP TargetLockDuration = 1;
 
+        // Spawn-time aim/facing: right (+X). Angle is Atan2(x, z) in degrees, so 0 = up, 90 = right.
+        private static readonly FP InitialAngle = 90;
+
         // Breakable props are only auto-targeted when the player is right next to one (well inside
         // weapon range) - a deliberate "walk up to a barrel to shoot it" range, not "auto-fire at any
         // barrel anywhere on screen". See FindClosestTarget's fallback pass.
@@ -49,6 +52,13 @@ namespace Quantum
 
         public override void Update(Frame f, ref Filter filter)
         {
+            // Fresh Aim (FacingSign is only ever 0 before the first UpdateFacingSign) - start facing
+            // right (+X, 90 deg) instead of the default Angle 0, which points straight up (+Z).
+            if (filter.Aim->FacingSign == FP._0)
+            {
+                filter.Aim->Angle = InitialAngle;
+            }
+
             FPVector3 velocity = filter.KCC->Data.KinematicVelocity;
             FPVector3 horizontalVelocity = new FPVector3(velocity.X, FP._0, velocity.Z);
 

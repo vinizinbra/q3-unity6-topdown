@@ -19,8 +19,8 @@ no commands. Each client projects the other heroes' views itself.
 - **Ping ripple:** when that teammate pings (`PingPlaced`, matched on `Owner`) while their indicator is
   showing, hex outline rings (`PingRipple/Ring0..1`, `RR_HexagonOutline`) expand from behind the frame
   (1→`pingMaxScale` 2.2) and fade, staggered half a `pingPulsePeriod` (1s) apart, for `pingRippleDuration`
-  (3s, unscaled). The whole ripple fades over its last pulse. They use the ping colour
-  (`PingPresentation.GetPlayerColor`), the same colour as the feed and `PingWorldRippleWidget`. An on-screen
+  (3s, unscaled). The whole ripple fades over its last pulse. They use the **border's**
+  colour, read live, so they're the hero's `RingColor`, or `downedColor` if that teammate is Downed. An on-screen
   pinger gets nothing here, because the world ripple already marks them.
 - Pinned inside `Screen.safeArea` (intersected with the canvas rect), inset by `edgePadding`.
 - A point behind the camera is mirrored back through the screen centre, so the arrow still points the right way.

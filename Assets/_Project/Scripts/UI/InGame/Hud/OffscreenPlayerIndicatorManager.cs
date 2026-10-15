@@ -65,13 +65,12 @@ public class OffscreenPlayerIndicatorManager : MonoBehaviour
         QuantumEvent.Subscribe<EventPingPlaced>(this, OnPingPlaced);
     }
 
-    // A teammate pinging while their indicator is on the edge ripples it in their ping colour (the same
-    // colour PingFeedWidget/PingWorldRippleWidget use). On-screen pingers are skipped - the world ripple
-    // already shows where they are.
+    // A teammate pinging while their indicator is on the edge ripples it (in the border's colour). On-screen
+    // pingers are skipped - the world ripple already shows where they are.
     private void OnPingPlaced(EventPingPlaced e)
     {
         if (_widgets.TryGetValue(e.Owner, out var widget) && widget != null && widget.IsShown)
-            widget.PlayPingRipple(PingPresentation.GetPlayerColor(e.Player));
+            widget.PlayPingRipple();
     }
 
     private void OnDestroy()
