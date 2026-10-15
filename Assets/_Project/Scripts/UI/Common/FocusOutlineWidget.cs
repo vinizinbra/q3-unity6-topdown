@@ -42,6 +42,16 @@ public class FocusOutlineWidget : MonoBehaviour, ISelectHandler, IDeselectHandle
     private bool focused;
     private bool missingLogged;
 
+    /// <summary>Overrides the glow colour at runtime (e.g. a hero row glowing in its hero's ring colour). The authored alpha is kept.</summary>
+    public void SetColor(Color newColor)
+    {
+        newColor.a = color.a;
+        color = newColor;
+
+        if (outlineImage != null)
+            outlineImage.color = color;
+    }
+
     private RectTransform Shape => shape != null ? shape : (RectTransform)transform;
 
     private void Awake()

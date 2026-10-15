@@ -17015,8 +17015,8 @@ MonoBehaviour:
       PlayerPickupRangeLevel: 0
       PlayerExperienceLevel: 0
       HasWeaponChest: 1
-      HasHeroChest: 1
-      HasGlobalUpgradeChest: 1
+      HasHeroChest: 0
+      HasGlobalUpgradeChest: 0
       HasUnlockedRift: 0
       CanFindStones: 0
       HasEvent: 0

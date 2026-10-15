@@ -224,8 +224,30 @@ public class HeroesTab : TabContent
             ids.Add(entry.id);
         }
 
+        LinkRowNavigation();
+
         built = true;
         View(Mathf.Max(0, ids.IndexOf(EquippedId)));
+    }
+
+    // Explicit up/down chain between the rows, nothing past either end. With automatic navigation, Down on
+    // the last row (Lux) found some other selectable below/beside the list and left focus stranded there;
+    // now it just stays on the row. Left/Right stay unlinked on purpose - Submit is what enters the detail panel.
+    private void LinkRowNavigation()
+    {
+        for (int i = 0; i < rows.Count; i++)
+        {
+            Selectable selectable = rows[i].GetComponent<Selectable>();
+            if (selectable == null)
+                continue;
+
+            selectable.navigation = new UnityEngine.UI.Navigation
+            {
+                mode = UnityEngine.UI.Navigation.Mode.Explicit,
+                selectOnUp = i > 0 ? rows[i - 1].GetComponent<Selectable>() : null,
+                selectOnDown = i < rows.Count - 1 ? rows[i + 1].GetComponent<Selectable>() : null,
+            };
+        }
     }
 
     private static string HeroName(CharacterCatalog.Entry entry, CharacterData data)

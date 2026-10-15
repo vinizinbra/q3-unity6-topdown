@@ -50,6 +50,10 @@ public class HeroRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler
         Index = index;
         bool locked = state != HeroListState.Unlocked;
 
+        // The focus glow takes the hero's ring colour too (the fill below is a darker version of it).
+        if (TryGetComponent(out FocusOutlineWidget focusOutline))
+            focusOutline.SetColor(color);
+
         heroFill = HeroAccent.Fill(color);
         hasHeroFill = true;
 
