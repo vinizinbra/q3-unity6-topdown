@@ -69,20 +69,6 @@ namespace QuantumUser.View
         private const KeyCode HideKey = KeyCode.F1;
         private bool _hidden;
 
-        // On a player build the "Cheats" toggle button stays hidden until this tap code is entered
-        // (screen corners: top-left, top-right, bottom-right, bottom-left, each tap within
-        // CodeTapTimeout of the last; any wrong tap restarts). The Editor always shows the button.
-        // Input.mousePosition/GetMouseButtonDown also cover touch (simulateMouseWithTouches).
-#if UNITY_EDITOR
-        private bool _unlocked = true;
-#else
-        private bool _unlocked;
-#endif
-        private int _codeStep;
-        private float _lastCodeTapTime;
-        private const float CodeCornerSize = 0.15f;
-        private const float CodeTapTimeout = 2f;
-
         private bool _open;
         private bool _overrideTimeScale;
         private float _timeScale = 1f;
@@ -147,11 +133,21 @@ namespace QuantumUser.View
             // EnemyDataAsset's own "Spawn Near Local Player" Inspector button (see
             // EnemyDataAsset.Debug.cs) - routed through here since this host always exists.
             EnemyDataAssetDebug.OnSpawnRequested += SendSpawnEnemy;
+            CheatUnlock.Changed += OnUnlockChanged;
+        }
+
+        private void OnUnlockChanged()
+        {
+            if (CheatUnlock.Unlocked == false)
+                _open = false;
+
+            UpdateOpenState();
         }
 
         private void OnDestroy()
         {
             EnemyDataAssetDebug.OnSpawnRequested -= SendSpawnEnemy;
+            CheatUnlock.Changed -= OnUnlockChanged;
         }
 
         private void SendSpawnEnemy(AssetRef<EnemyDataAsset> enemy, int count)
@@ -169,50 +165,6 @@ namespace QuantumUser.View
                 _hidden = !_hidden;
                 _canvas.enabled = !_hidden;
             }
-
-            if (_unlocked == false)
-                PollUnlockCode();
-        }
-
-        // Corner index: 0 = top-left, 1 = top-right, 2 = bottom-right, 3 = bottom-left; -1 = no corner.
-        private static int CornerAt(Vector2 pos)
-        {
-            float x = pos.x / Screen.width;
-            float y = pos.y / Screen.height;
-            bool left = x <= CodeCornerSize;
-            bool right = x >= 1f - CodeCornerSize;
-            bool bottom = y <= CodeCornerSize;
-            bool top = y >= 1f - CodeCornerSize;
-
-            if (top && left) return 0;
-            if (top && right) return 1;
-            if (bottom && right) return 2;
-            if (bottom && left) return 3;
-            return -1;
-        }
-
-        private void PollUnlockCode()
-        {
-            if (UnityEngine.Input.GetMouseButtonDown(0) == false)
-                return;
-
-            if (_codeStep > 0 && Time.unscaledTime - _lastCodeTapTime > CodeTapTimeout)
-                _codeStep = 0;
-
-            int corner = CornerAt(UnityEngine.Input.mousePosition);
-            _lastCodeTapTime = Time.unscaledTime;
-
-            if (corner == _codeStep)
-                _codeStep++;
-            else
-                _codeStep = corner == 0 ? 1 : 0;
-
-            if (_codeStep < 4)
-                return;
-
-            _codeStep = 0;
-            _unlocked = true;
-            UpdateOpenState();
         }
 
         private static void EnsureEventSystem()
@@ -532,6 +484,11 @@ namespace QuantumUser.View
         }
 
         // Network stats, input diagnostics and every render / GPU-profiling control (docs/performance.md).
+        private static string PartyHeroText(int bot)
+        {
+            return bot < OfflineTestParty.BotCount ? $"Bot {bot + 1}: {OfflineTestParty.HeroLabel(bot)}" : $"Bot {bot + 1}: -";
+        }
+
         private void BuildDebugTab(Transform rt)
         {
             CreateSectionLabel(rt, "Network");
@@ -540,6 +497,34 @@ namespace QuantumUser.View
             // every rollback resimulates), input offset, simulate time - view-only, no command sent.
             CreateButton(network.Next(), "Quantum Stats", ToggleQuantumStats);
             network.Close();
+
+            // Offline-only local-testing bots (OfflineTestParty): picked here, applied by restarting the
+            // offline session - bots are only created at session start. Online it just toasts nothing.
+            CreateSectionLabel(rt, "Offline Test Party");
+            ButtonGrid party = new ButtonGrid(rt, GridColumns);
+            TMP_Text partyLabel = null;
+            TMP_Text[] heroLabels = new TMP_Text[OfflineTestParty.MaxBots];
+            System.Action refreshParty = () =>
+            {
+                partyLabel.text = $"Bots: {OfflineTestParty.BotCount}";
+                for (int i = 0; i < heroLabels.Length; i++)
+                    heroLabels[i].text = PartyHeroText(i);
+            };
+            partyLabel = CreateButton(party.Next(), "", () => { OfflineTestParty.CycleBotCount(); refreshParty(); })
+                .GetComponentInChildren<TMP_Text>();
+            for (int i = 0; i < OfflineTestParty.MaxBots; i++)
+            {
+                int bot = i;
+                heroLabels[i] = CreateButton(party.Next(), "", () => { OfflineTestParty.CycleHero(bot); refreshParty(); })
+                    .GetComponentInChildren<TMP_Text>();
+            }
+            refreshParty();
+            CreateButton(party.Next(), "Restart Offline", () =>
+            {
+                if (GameManager.Instance != null && GameManager.Instance.isPlayingOffline)
+                    MatchMakingConfig.Instance.RestartOfflineMatch();
+            });
+            party.Close();
 
             CreateSectionLabel(rt, "Input");
 
@@ -564,38 +549,6 @@ namespace QuantumUser.View
                 _gamepadTester.gameObject.SetActive(v);
             });
             inputToggles.Close();
-
-            CreateSectionLabel(rt, "Rendering");
-            // Swaps every ToonTerrain material (tiles AND V2 props) for a per-vertex-lit debug shader whose
-            // fragment is a single colour - the ceiling of what optimizing ToonTerrain could win.
-            ToggleGrid renderToggles = new ToggleGrid(rt, ToggleColumns);
-            CreateGridToggle(renderToggles, "Simple Terrain Shader", false, v => SwapToonTerrain(v ? GetSimpleTerrainReplacement : null));
-            renderToggles.Close();
-
-            // Per-feature cost of the terrain shader (ToonTerrainMobile): each toggle skips one feature
-            // through a global uniform, to see on device which one is worth cheapening.
-            CreateSectionLabel(rt, "Terrain Cost");
-            ToggleGrid costToggles = new ToggleGrid(rt, ToggleColumns);
-            CreateGridToggle(costToggles, "No Albedo Texture", false, v => Shader.SetGlobalFloat("_TTDebugNoAlbedo", v ? 1f : 0f));
-            CreateGridToggle(costToggles, "No Hatching", false, v => Shader.SetGlobalFloat("_TTDebugNoHatch", v ? 1f : 0f));
-            CreateGridToggle(costToggles, "No Terrain Outlines", false, v => Shader.SetGlobalFloat("_TTDebugNoOutlines", v ? 1f : 0f));
-            CreateGridToggle(costToggles, "No Prop Edge Lines", false, v => Shader.SetGlobalFloat("_TTDebugNoPropLines", v ? 1f : 0f));
-            CreateGridToggle(costToggles, "No Water Ramp/Line", false, v => Shader.SetGlobalFloat("_TTDebugNoWater", v ? 1f : 0f));
-            costToggles.Close();
-
-            // Fewer pixels overall - the other lever for a pixel-bound GPU.
-            ButtonGrid renderScale = new ButtonGrid(rt, GridColumns);
-            foreach (float scale in new[] { 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 1f })
-                CreateButton(renderScale.Next(), $"Scale {scale:0.0}", () => SetRenderScale(scale));
-            renderScale.Close();
-
-            // How the lower-res image is stretched back to the screen - the whole 3D camera (hero
-            // included) is affected by render scale, not just the terrain. FSR sharpens.
-            ButtonGrid upscale = new ButtonGrid(rt, GridColumns);
-            CreateButton(upscale.Next(), "Up: Linear", () => SetUpscalingFilter(UnityEngine.Rendering.Universal.UpscalingFilterSelection.Linear));
-            CreateButton(upscale.Next(), "Up: Point", () => SetUpscalingFilter(UnityEngine.Rendering.Universal.UpscalingFilterSelection.Point));
-            CreateButton(upscale.Next(), "Up: FSR", () => SetUpscalingFilter(UnityEngine.Rendering.Universal.UpscalingFilterSelection.FSR));
-            upscale.Close();
         }
 
         private void BuildHeader(Transform parent)
@@ -612,6 +565,10 @@ namespace QuantumUser.View
             TMP_Text title = CreateStretchedLabel(CreateRect(row, "Title"), "Cheats", 19, Color.white, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
             title.rectTransform.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
 
+            // Hides the whole cheat UI (this window, the toggle button, the menu's test-party panel)
+            // until the corner-tap code is entered again (see CheatUnlock).
+            CreateButton(row, "Hide", CheatUnlock.Lock, 72f);
+
             CreateButton(row, "Close", () =>
             {
                 _open = false;
@@ -621,7 +578,7 @@ namespace QuantumUser.View
 
         private void UpdateOpenState()
         {
-            _toggleButtonGo.SetActive(_open == false && _unlocked);
+            _toggleButtonGo.SetActive(_open == false && CheatUnlock.Unlocked);
             _windowGo.SetActive(_open);
 
             // Closing the window should also drop whatever picker was open, so reopening never shows
@@ -1053,106 +1010,6 @@ namespace QuantumUser.View
                     : upgradeRef.Id.Value.ToString();
                 into.Add(new AssetEntry { Name = name, Id = upgradeRef.Id.Value, Icon = upgrade?.Icon, Description = upgrade?.GetDescription(), Action = action });
             }
-        }
-
-        // Every biome material uses the mobile terrain shader since 2026-09-28 (see docs/tileset-builder.md).
-        private const string ToonTerrainShaderName = "RiftRaiders/Mobile/ToonTerrainMobile";
-        private static readonly Dictionary<Renderer, Material[]> ToonTerrainOriginals = new Dictionary<Renderer, Material[]>();
-        private static readonly Dictionary<Material, Material> SimpleTerrainReplacements = new Dictionary<Material, Material>();
-
-        // Swaps every ToonTerrain material in the scene for replacementFor(original); null just restores the
-        // originals. Any previous swap is undone first, so toggling never stacks swaps.
-        private static void SwapToonTerrain(System.Func<Material, Material> replacementFor)
-        {
-            foreach (KeyValuePair<Renderer, Material[]> original in ToonTerrainOriginals)
-            {
-                if (original.Key != null)
-                    original.Key.sharedMaterials = original.Value;
-            }
-
-            ToonTerrainOriginals.Clear();
-
-            if (replacementFor == null)
-            {
-                LogHelper.Log("CheatMenu", "restored ToonTerrain materials");
-                return;
-            }
-
-            int count = 0;
-
-            foreach (Renderer renderer in FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                Material[] materials = renderer.sharedMaterials;
-                Material[] swapped = null;
-
-                for (int i = 0; i < materials.Length; i++)
-                {
-                    Material material = materials[i];
-                    if (material == null || material.shader == null || material.shader.name != ToonTerrainShaderName)
-                        continue;
-
-                    Material replacement = replacementFor(material);
-                    if (replacement == null)
-                        continue;
-
-                    swapped ??= (Material[])materials.Clone();
-                    swapped[i] = replacement;
-                }
-
-                if (swapped == null)
-                    continue;
-
-                ToonTerrainOriginals[renderer] = materials;
-                renderer.sharedMaterials = swapped;
-                count++;
-            }
-
-            LogHelper.Log("CheatMenu", $"swapped ToonTerrain on {count} renderers");
-        }
-
-        // One debug material per original, tinted with the biome's grass colour (what dominates a
-        // top-down view) so the level stays readable; props keep their vertex colours (see the shader).
-        private static Material GetSimpleTerrainReplacement(Material original)
-        {
-            if (SimpleTerrainReplacements.TryGetValue(original, out Material replacement) == true && replacement != null)
-                return replacement;
-
-            Material template = Resources.Load<Material>("Debug/DebugSimpleVertexLit");
-            if (template == null)
-            {
-                LogHelper.Warn("CheatMenu", "Resources/Debug/DebugSimpleVertexLit.mat missing - can't swap the terrain shader");
-                return null;
-            }
-
-            replacement = new Material(template) { name = $"{original.name} (debug simple)" };
-
-            if (original.HasProperty("_SurfaceLightColor") == true)
-                replacement.SetColor("_BaseColor", original.GetColor("_SurfaceLightColor"));
-
-            SimpleTerrainReplacements[original] = replacement;
-            return replacement;
-        }
-
-        // Device only: in the Editor this would write into the URP asset itself (it's a shared asset,
-        // not a runtime copy), so it just logs there.
-        private static void SetRenderScale(float scale)
-        {
-#if UNITY_EDITOR
-            LogHelper.Warn("CheatMenu", $"render scale {scale} ignored in the Editor (would modify the URP asset) - use it on device");
-#else
-            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset urp)
-                urp.renderScale = scale;
-#endif
-        }
-
-        private static void SetUpscalingFilter(UnityEngine.Rendering.Universal.UpscalingFilterSelection filter)
-        {
-#if UNITY_EDITOR
-            LogHelper.Warn("CheatMenu", $"upscaling filter {filter} ignored in the Editor (would modify the URP asset) - use it on device");
-#else
-            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset urp)
-                urp.upscalingFilter = filter;
-#endif
         }
 
         private bool _quantumStatsShown;

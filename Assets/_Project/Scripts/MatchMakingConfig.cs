@@ -980,6 +980,29 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
          LogHelper.Log("CharacterSelect", $"AddPlayer(local slot {i}) - PlayerAvatar={RuntimePlayers[i].PlayerAvatar.Id.Value}");
          runner.Game.AddPlayer(i, RuntimePlayers[i]);
       }
+
+      AddTestPartyBots(runner, RuntimePlayers.Count);
+   }
+
+   // Offline-only local-testing bots picked in the menu/CheatMenu (see OfflineTestParty): one extra
+   // bot slot per chosen hero, after the authored RuntimePlayers. Skipped online, in the Training
+   // Zone, and past the session's player cap. Same talent/avatar setup as an authored bot entry.
+   private void AddTestPartyBots(QuantumRunner runner, int firstSlot)
+   {
+      if (GameManager.Instance.isPlayingOffline == false || _trainingZoneSession)
+         return;
+
+      CharacterCatalog catalog = PartyManager.Instance.characterCatalog;
+      IReadOnlyList<string> heroIds = OfflineTestParty.BotHeroIds;
+      int cap = OverwritePlayerCount > 0 ? Math.Min(OverwritePlayerCount, Quantum.Input.MAX_COUNT) : Quantum.Input.MAX_COUNT;
+
+      for (int i = 0; i < heroIds.Count && firstSlot + i < cap; i++)
+      {
+         var bot = new RuntimePlayer { IsBot = true, PlayerAvatar = catalog.Resolve(heroIds[i]) };
+         TalentSaveMapper.ApplyPlayer(ref bot.Talents);
+         LogHelper.Log("CharacterSelect", $"AddPlayer(test bot slot {firstSlot + i}) - hero='{heroIds[i]}'");
+         runner.Game.AddPlayer(firstSlot + i, bot);
+      }
    }
 
    // Offline counterpart to StartRunner - starts a purely local Quantum simulation

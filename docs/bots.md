@@ -279,3 +279,18 @@ the distances/thresholds in `BotInputSystem`'s defaults.
   1-human/2-bot run is scaled as a 3-player run.
 - **Never uses Traversal Challenges, Team Challenge rewards or Rerolls.**
 - **`MyLocalPlayer` is still capped at 2 local slots** - only humans count toward it.
+
+## Offline test party (pick bots + heroes)
+
+Offline mode can start with 1-3 extra bots, each on a hero you choose - no scene authoring.
+
+- `OfflineTestParty` (`_Project/Scripts/`) holds the picks (bot count + a `CharacterCatalog` hero id per
+  bot), persisted in PlayerPrefs. Empty by default = no change to normal offline play.
+- `MatchMakingConfig.AddTestPartyBots` (called at the end of `AddLocalPlayers`) adds one `IsBot`
+  `RuntimePlayer` per pick after the authored `RuntimePlayers`. Offline only, never in the Training
+  Zone, capped at the session player count. `RestartOfflineMatch` reuses it, so a restart keeps the party.
+- **Menu:** `OfflineTestPartyPanel` (`CHEATS_ENABLED` only, self-instantiating uGUI, bottom-left of the
+  main menu) - "Offline bots: N" cycles 0-3, each "Bot n: Hero" button cycles the hero.
+- **In match:** CheatMenu ▸ Debug ▸ *Offline Test Party* - same pickers plus **Restart Offline** (bots
+  only exist from session start, so a change needs a restart).
+

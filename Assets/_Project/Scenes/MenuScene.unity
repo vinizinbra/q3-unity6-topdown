@@ -17025,7 +17025,7 @@ MonoBehaviour:
       RerollsLevel: 0
       ReviveLevel: 0
       CoopLevel: 0
-  OverwritePlayerCount: 0
+  OverwritePlayerCount: 4
   DisableChecksumsForRelease: 0
   TrainingZoneMap:
     Id:
