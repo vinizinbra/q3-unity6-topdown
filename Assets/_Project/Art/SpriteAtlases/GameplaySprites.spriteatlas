@@ -112,6 +112,7 @@ SpriteAtlas:
     - {fileID: 2800000, guid: 800e2eaa8630f4be8b1da18dc3e5c964, type: 3}
     - {fileID: 2800000, guid: 934d9047300684655a9ea6150a989d3b, type: 3}
     - {fileID: 2800000, guid: c3f3c3c5a44474dec9a7faa717fbf41d, type: 3}
+    - {fileID: 2800000, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -141,6 +142,34 @@ SpriteAtlas:
     - 57e85e7087b3c45e7bb2695a453e0739: -312753833
     - 57e85e7087b3c45e7bb2695a453e0739: -1073922619
     - e7a641611c1e34b8c94669f1d2b0719d: 21300000
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 589618574
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -271987269
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -1978841605
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -504120045
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 2014755138
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 880230563
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -37750594
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 120513277
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 1012241744
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 1528191717
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -1506394464
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 578162401
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -2084744274
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 789416252
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 1065319340
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -369734157
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 131512506
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -1347471790
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 1050206852
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -2090426092
+    - 6acdef52bcd4b462f992b7a3a203dfe5: 1154076087
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -2106944063
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -1009890737
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -2141115950
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -574832074
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -1361276074
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -376141620
+    - 6acdef52bcd4b462f992b7a3a203dfe5: -172273104
     - 88a2b3728ffc2417a840df84c7e12928: 4389953
     - 88a2b3728ffc2417a840df84c7e12928: 629668979
     - 88a2b3728ffc2417a840df84c7e12928: -1658742672
@@ -454,6 +483,34 @@ SpriteAtlas:
   - {fileID: -312753833, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
   - {fileID: -1073922619, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
   - {fileID: 21300000, guid: e7a641611c1e34b8c94669f1d2b0719d, type: 3}
+  - {fileID: 589618574, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -271987269, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1978841605, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -504120045, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 2014755138, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 880230563, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -37750594, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 120513277, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 1012241744, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 1528191717, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1506394464, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 578162401, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -2084744274, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 789416252, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 1065319340, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -369734157, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 131512506, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1347471790, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 1050206852, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -2090426092, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 1154076087, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -2106944063, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1009890737, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -2141115950, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -574832074, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1361276074, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -376141620, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -172273104, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
   - {fileID: 4389953, guid: 88a2b3728ffc2417a840df84c7e12928, type: 3}
   - {fileID: 629668979, guid: 88a2b3728ffc2417a840df84c7e12928, type: 3}
   - {fileID: -1658742672, guid: 88a2b3728ffc2417a840df84c7e12928, type: 3}
@@ -766,6 +823,34 @@ SpriteAtlas:
   - EliteFlee_5
   - EliteFlee_4
   - ShadowSquare
+  - Emoji_Robot_Cry
+  - Emoji_Zara_Happy
+  - Emoji_Brute_Happy
+  - Emoji_Lux_Happy
+  - Emoji_Max_Angry
+  - Emoji_Max_Happy
+  - Emoji_Brute_Angry
+  - Emoji_Brute_Cry
+  - Emoji_Brute_Shock
+  - Emoji_Zara_Angry
+  - Emoji_Lux_Shock
+  - Emoji_Lux_Angry
+  - Emoji_Pixie_Happy
+  - Emoji_Robot_Happy
+  - Emoji_Robot_Angry
+  - Emoji_Kai_Happy
+  - Emoji_Pixie_Shock
+  - Emoji_Kai_Cry
+  - Emoji_Kai_Shock
+  - Emoji_Max_Cry
+  - Emoji_Robot_Shock
+  - Emoji_Zara_Shock
+  - Emoji_Pixie_Angry
+  - Emoji_Zara_Cry
+  - Emoji_Pixie_Cry
+  - Emoji_Kai_Angry
+  - Emoji_Lux_Cry
+  - Emoji_Max_Shock
   - LuxLantern
   - LuxAccessory
   - LuxGeometric_0

@@ -32,9 +32,8 @@ namespace Quantum
             fullThrottle->ReloadSpeedBonus = ReloadSpeedBonus[index];
             fullThrottle->HasInstantReload = rank >= 3;
 
-            // Last Stand rank 1 can start an activation already at max Rage, in which case there is
-            // no later threshold crossing for RageOverdriveUtility to hook - so react to the state
-            // we're actually in. ApplyFullThrottle latches on Applied, so this can't double-apply.
+            // Overdrive starts at max Rage, so there is no later threshold crossing for
+            // RageOverdriveUtility to hook - react to the state we're actually in. ApplyFullThrottle latches on Applied, so this can't double-apply.
             if (RageOverdriveUtility.IsAtMaxRage(f, filter.Entity) == true)
             {
                 MaxAscensionUtility.ApplyFullThrottle(f, filter.Entity, fullThrottle);

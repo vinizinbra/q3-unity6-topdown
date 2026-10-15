@@ -133,8 +133,16 @@ MonoBehaviour:
       Value: 280063126688807644
   - Id:
       Value: 327452508261145297
+  Title: 
   Accessory:
     DisplayName: 
     CollectibleSprite: {fileID: -1306266345, guid: f664891c957894bd1ba05f39cf427393, type: 3}
     CollectibleScale: 1.5
     BrokenEffectPrefab: {fileID: 3501008743596093556, guid: 9300a2826f3984209acba7c2da992151, type: 3}
+  Emojis:
+  - {fileID: -271987269, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 1528191717, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -2141115950, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -2106944063, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  EmojiOffset: {x: 0, y: 1.8, z: 0}
+  EmojiScale: 0.75

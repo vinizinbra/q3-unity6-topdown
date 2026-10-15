@@ -9,6 +9,10 @@ so the Director never spawns enemies.
 
 - **Its own scene and map.** `Assets/_Project/Scenes/TrainingZoneScene.unity` is a copy of
   GrasslandOutpostGameScene (camera, HUD, managers, water) without the Boss Arena and test entities.
+  The HUD `Canvas`, `Managers`, `DEBUGGER` and `FlyingCurrencyManager` are shared prefabs
+  (`Assets/_Project/Prefabs/GameplayScene/`) used by both scenes - edit the prefab, not the scene copy.
+  Training-only overrides: the `TrainingZoneSkip` button (added object on the Canvas instance),
+  `EnvironmentManager.sceneThemeOnly`, and the per-scene references (camera, input, debug menu).
   It has its own Map, `Resources/Maps/TrainingZoneMap` (WorldSize 512, so the 122-unit course fits).
 - **Fixed biome.** TrainingZoneScene's `EnvironmentManager` has `initialTheme = GrasslandOutpostTheme`
   and `sceneThemeOnly` on, so the Training Zone always uses the Grassland Outpost look. The world picked
@@ -156,7 +160,8 @@ Then save the scene.
   starts the session. `GameManager.Start` starts the Training Zone one frame later. The cover's
   `holdUntil` (`GameManager.IsInMatchWindowShown`) keeps it up until the Training Zone's InMatchWindow
   is showing, so the menu is never seen in between. There is no "seen" save for now.
-- **Skip:** a "SKIP TRAINING" button at the top centre of TrainingZoneScene's HUD Canvas (a clone of
+- **Skip:** a "SKIP TRAINING" button at the top centre of TrainingZoneScene's HUD Canvas (an added object on the
+  shared Canvas prefab instance - a clone of
   the Breathing Skip button). `TrainingZoneSkipWidget` calls `MatchMakingConfig.LeaveMatch()`, the same
   path as the settings Disconnect, which returns to the menu.
 - `RestartOfflineMatch` keeps the session type. Players leave via the in-match settings Disconnect.

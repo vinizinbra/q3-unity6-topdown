@@ -6,8 +6,9 @@ namespace Quantum
     // out of BerserkSkillData/MaxOverdriveReactionSystem because TryAdvanceStack/ResetStacks are
     // called from DamageUtility/combat reactions on every landed hit or hit taken, not from the skill
     // lifecycle itself. Rage's own baseline has zero stat effect - reaching max Rage is purely a
-    // condition (IsAtMaxRage) that Ascensions react to on their own. Full Throttle's stat toggle and
-    // Ignition's Burn-on-hit toggle both hook the entering/leaving-max-Rage transition detected here
+    // condition (IsAtMaxRage) that Ascensions react to on their own. Full Throttle's stat toggle,
+    // Ignition's Burn-on-hit toggle and Last Stand's Damage Reduction all hook the entering/leaving-
+    // max-Rage transition detected here
     // directly (same "read optional upgrade components inline, no dispatcher" idiom
     // JuggernautSkillData.Discharge already established for Brute) rather than each polling every
     // tick.
@@ -36,12 +37,12 @@ namespace Quantum
             EnterMaxRage(f, owner);
         }
 
-        // Also called directly from FullThrottleSkillAction/IgnitionSkillAction's own Begin-phase
-        // Execute - with Last Stand rank 1 parking Rage between activations, an Overdrive can now
-        // START already at max, in which case there is no TryAdvanceStack crossing to hook. Both
-        // halves are idempotent (Full Throttle latches on Applied, Ignition on Applied/
-        // InfernoTriggeredThisActivation), so calling this on a Rage total that is already max is
-        // safe regardless of which path got there.
+        // Also called directly from FullThrottleSkillAction/IgnitionSkillAction/LastStandSkillAction's
+        // own Begin-phase Execute - every Overdrive STARTS at max Rage, so there is no TryAdvanceStack
+        // crossing to hook for the opening window. Every half is idempotent (Full Throttle latches on
+        // Applied, Ignition on Applied/InfernoTriggeredThisActivation, Last Stand on
+        // AppliedDamageReduction), so calling this on a Rage total that is already max is safe
+        // regardless of which path got there.
         public static void EnterMaxRage(Frame f, EntityRef owner)
         {
             if (f.Unsafe.TryGetPointer<FullThrottleUpgrade>(owner, out var fullThrottle) == true)
@@ -54,13 +55,17 @@ namespace Quantum
                 MaxAscensionUtility.OnEnteredMaxRage(f, owner, ignition);
             }
 
+            if (f.Unsafe.TryGetPointer<LastStandUpgrade>(owner, out var lastStand) == true)
+            {
+                MaxAscensionUtility.ApplyLastStand(f, owner, lastStand);
+            }
+
             Log.Debug($"[Skill] {owner} is at max Rage");
         }
 
         // Called from MaxOverdriveReactionSystem when the owner takes damage while Overdrive is
-        // active. Removes LastStandUpgrade.RageLossFraction of the CURRENT Rage rather than always
-        // wiping it - the fraction is 1 (a full reset, the unchanged baseline) for anyone without
-        // Last Stand, and for Last Stand rank 1, since only rank 2 authors a softer value.
+        // active. Removes RageOverdrive.LossFraction (BerserkSkillData's baseline) of the CURRENT
+        // Rage, or Last Stand's softer RageLossFraction when that's lower - a drain, not a cliff.
         // CeilToInt so a partial loss always costs at least one stack - a fraction that rounds to 0
         // would make getting hit entirely free, which is the opposite of Max's intended weakness.
         public static void ResetStacks(Frame f, EntityRef owner)
@@ -68,11 +73,11 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<RageOverdrive>(owner, out var rage) == false || rage->Stacks == 0)
                 return;
 
-            FP lossFraction = FP._1;
+            FP lossFraction = FPMath.Clamp(rage->LossFraction, FP._0, FP._1);
 
             if (f.Unsafe.TryGetPointer<LastStandUpgrade>(owner, out var lastStand) == true && lastStand->RageLossFraction > FP._0)
             {
-                lossFraction = FPMath.Clamp(lastStand->RageLossFraction, FP._0, FP._1);
+                lossFraction = FPMath.Min(lossFraction, FPMath.Clamp(lastStand->RageLossFraction, FP._0, FP._1));
             }
 
             int lost = FPMath.CeilToInt(rage->Stacks * lossFraction);
@@ -112,6 +117,11 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<IgnitionUpgrade>(owner, out var ignition) == true)
             {
                 MaxAscensionUtility.RevertIgnition(f, owner, ignition);
+            }
+
+            if (f.Unsafe.TryGetPointer<LastStandUpgrade>(owner, out var lastStand) == true)
+            {
+                MaxAscensionUtility.RevertLastStand(f, owner, lastStand);
             }
         }
     }

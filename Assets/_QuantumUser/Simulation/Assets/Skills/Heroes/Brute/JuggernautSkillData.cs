@@ -4,10 +4,11 @@ namespace Quantum
     using Quantum.Physics3D;
 
     // Brutus's Hero Skill - a damage-reduction channel (same Begin/End stat shape as Max's
-    // BerserkSkillData: Begin adds DamageReductionBonus, End subtracts it back out) on top of which
-    // he also builds ChargePoints from ground covered while active (one point every
-    // DistancePerCharge units, held at MaxCharge rather than continuing to accumulate once reached -
-    // see JuggernautCharge). Once Charged, the moment he physically touches an enemy (an overlap
+    // BerserkSkillData: Begin adds DamageReductionBonus, End subtracts it back out) that STARTS fully
+    // Charged - the first Discharge is available the moment the skill is pressed - and rebuilds
+    // ChargePoints from ground covered while active (one point every DistancePerCharge units, held
+    // at MaxCharge rather than continuing to accumulate once reached - see JuggernautCharge). Once
+    // Charged, the moment he physically touches an enemy (an overlap
     // check against his own KCC radius - Brutus uses KCC, not PhysicsBody3D like enemies) fires a
     // radial area knockback (dealing Damage, see JuggernautAscensions.qtn's own comment on why this is
     // no longer a bare knockback) and resets ChargePoints - by default fully to 0, unless the Momentum
@@ -115,7 +116,9 @@ namespace Quantum
             }
 
             f.AddOrGet<JuggernautCharge>(filter.Entity, out var charge);
-            charge->ChargePoints = 0;
+            // Starts Charged - the first ram pays off immediately; only later Discharges are earned
+            // by running. Tick's UpdateSpeedBoost swaps to the Charged speed tier on the first tick.
+            charge->ChargePoints = MaxCharge;
             charge->DistanceSinceLastPoint = FP._0;
             charge->UnitsHit = 0;
 

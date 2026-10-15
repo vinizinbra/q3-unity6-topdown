@@ -8190,7 +8190,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.0000038146973}
+  m_AnchoredPosition: {x: 0, y: 0.000011444092}
   m_SizeDelta: {x: 0, y: 50}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &217239117
@@ -15989,7 +15989,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 663306052}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.82222223
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -28940,26 +28940,46 @@ MonoBehaviour:
   descriptionFormat: Hero mastery is unlocked by playing runs only. Gain Hero XP
     to unlock rewards for {0}.
   rewards:
-  - text: Hero Available
+  - text: "Happy Emote <color=#33BF59>\xB7 FREE</color>"
     icon: {fileID: 0}
-  - text: New Ascension Unlocked
+    isEmote: 1
+    emote: 0
+  - text: Ascension #1
     icon: {fileID: -1451549089158663006, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
+    isEmote: 0
+    emote: 0
   - text: +5 Shards
     icon: {fileID: -2056722183, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
-  - text: +2% Fire Rate
-    icon: {fileID: 6367285959947718212, guid: 540e2ba2a8ab94c92bde01a964437bf7, type: 3}
-  - text: New Ascension Unlocked
+    isEmote: 0
+    emote: 0
+  - text: Shocked Emote
+    icon: {fileID: 0}
+    isEmote: 1
+    emote: 3
+  - text: Ascension #2
     icon: {fileID: -1451549089158663006, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
-  - text: +3% Reload Speed
-    icon: {fileID: 4743293046657885061, guid: 540e2ba2a8ab94c92bde01a964437bf7, type: 3}
+    isEmote: 0
+    emote: 0
   - text: +10 Shards
     icon: {fileID: -2056722183, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
-  - text: -2% Skill Cooldown
-    icon: {fileID: 3111483654346241993, guid: 540e2ba2a8ab94c92bde01a964437bf7, type: 3}
-  - text: '{0} Portrait Border'
+    isEmote: 0
+    emote: 0
+  - text: Crying Emote
     icon: {fileID: 0}
-  - text: +15 Shards + Mastery Badge
-    icon: {fileID: -8083431432237053755, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
+    isEmote: 1
+    emote: 2
+  - text: +10 Shards
+    icon: {fileID: -2056722183, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
+    isEmote: 0
+    emote: 0
+  - text: +15 Shards
+    icon: {fileID: -2056722183, guid: 77c2f44268eb44de198d4a86b48556ea, type: 3}
+    isEmote: 0
+    emote: 0
+  - text: Angry Emote
+    icon: {fileID: 0}
+    isEmote: 1
+    emote: 1
 --- !u!1 &780086861
 GameObject:
   m_ObjectHideFlags: 0

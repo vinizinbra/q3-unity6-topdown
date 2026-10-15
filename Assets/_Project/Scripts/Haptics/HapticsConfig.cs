@@ -30,7 +30,6 @@ public class HapticsConfig : ScriptableObject
 
     [Header("Dealt (local player)")]
     public HapticCue skillUsed = new(HapticPreset.Soft, 0.1f);
-    public HapticCue criticalHit = new(HapticPreset.Light, 0.12f);
     public HapticCue eliteKilled = new(HapticPreset.Heavy, 0.2f);
     [Tooltip("Groundbreaker landing / wall slam - the moments that already shake the camera.")]
     public HapticCue impactSlam = new(HapticPreset.Rigid, 0.15f);

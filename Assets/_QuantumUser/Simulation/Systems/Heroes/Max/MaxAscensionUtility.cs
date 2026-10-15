@@ -50,6 +50,36 @@ namespace Quantum
             fullThrottle->Applied = false;
         }
 
+        // Last Stand (Overdrive line 1) - flat Damage Reduction while at max Rage, toggled on the same
+        // threshold crossing as Full Throttle. Latched on AppliedDamageReduction (the amount actually
+        // added) so the revert subtracts exactly what went on, even across a rank-up re-tune.
+        public static void ApplyLastStand(Frame f, EntityRef owner, LastStandUpgrade* lastStand)
+        {
+            if (lastStand->AppliedDamageReduction > FP._0 || lastStand->MaxRageDamageReduction <= FP._0)
+                return;
+
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+                return;
+
+            stats->DamageReduction += lastStand->MaxRageDamageReduction;
+            lastStand->AppliedDamageReduction = lastStand->MaxRageDamageReduction;
+
+            Log.Debug($"[Skill] {owner} Last Stand engaged (+{lastStand->MaxRageDamageReduction} Damage Reduction)");
+        }
+
+        public static void RevertLastStand(Frame f, EntityRef owner, LastStandUpgrade* lastStand)
+        {
+            if (lastStand->AppliedDamageReduction <= FP._0)
+                return;
+
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == true)
+            {
+                stats->DamageReduction -= lastStand->AppliedDamageReduction;
+            }
+
+            lastStand->AppliedDamageReduction = FP._0;
+        }
+
         // Ignition - reacts to the SAME max-Rage threshold crossing Full Throttle does, so both are
         // driven from the one RageOverdriveUtility.TryAdvanceStack/ResetStacks pair rather than each
         // polling every tick. Rank 1's BurnOnHitStacks toggle reuses the existing, already-generic

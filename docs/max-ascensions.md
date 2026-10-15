@@ -288,3 +288,35 @@ lines unchanged in shape; the Passive half loses one line to a merge.
 **Playtest first:** total Overdrive uptime with Last Stand R1 + Uncontrolled Fury R3 (carried Rage +
 10s extension is the intended ceiling); Wildfire chain length now that `RetainedFraction < 1` is the
 only decay; Cremation's Elite/Boss damage window against a real boss.
+
+# 2026-10-15 — Overdrive starts at max Rage; Last Stand rebuilt as a defensive line
+
+**Why.** Rage had no baseline effect, so a Max without Full Throttle/Ignition filled a bar that paid
+nothing, and filling it was a second clock inside Overdrive's own duration. Overdrive now pays off
+the moment it's cast; the skill expression is *keeping* max Rage, not earning it.
+
+- **Starts full.** `BerserkSkillData.Begin` seeds `RageOverdrive.Stacks = MaxStacks`. Full Throttle,
+  Ignition and Last Stand each re-check `IsAtMaxRage` in their own Begin, so their effects are live
+  from the first tick (Ignition R3's Inferno now fires **on cast**).
+- **A drain, not a cliff.** New `BerserkSkillData.RageLossFraction` (0.5), copied to
+  `RageOverdrive.LossFraction` at Begin: a hit removes 50% of *current* Rage (CeilToInt, min 1).
+  `RageOverdriveUtility.ResetStacks` takes the **lower** of that and `LastStandUpgrade.RageLossFraction`.
+  Landed weapon hits still rebuild 1 stack each.
+- **Last Stand** (`LastStandUpgrade.qtn` reshaped; `PersistsRage`/`StoredRageStacks` deleted — carrying
+  Rage between activations is meaningless now):
+  - R1: hits cost 25% of Rage; **+15% Damage Reduction while at max Rage**
+    (`MaxRageDamageReduction`, toggled by `MaxAscensionUtility.ApplyLastStand`/`RevertLastStand` from
+    the same `EnterMaxRage`/`RevertMaxRageEffects` hook Full Throttle uses; latched on
+    `AppliedDamageReduction` so the revert subtracts exactly what was added).
+  - R2: DR rises to 25%; **the first hit each Overdrive is blocked** — a self-granted Free Hit Guard
+    (`StatusEffectUtility.ApplyFreeHitGuard`, duration = the activation's base Duration). It negates
+    before any damage signal fires, so it costs no Rage. `BerserkSkillData.End` clears it only if Max
+    is still the guard's source (a teammate's Bodyguard/Covering Fire guard survives).
+  - R3: Too Angry to Die, unchanged.
+- Blood Debt's +2 Rage and Uncontrolled Fury are unchanged; +2 Rage is now a recovery tool.
+- Balance Simulator already assumed max Rage for the whole Overdrive — now accurate. It doesn't model
+  Last Stand's defensive value.
+
+**Playtest:** how often Max actually holds max Rage under real horde pressure at 50% loss (if he
+almost never does, lower the baseline loss rather than buffing the picks); Last Stand R2's blocked hit
+reads clearly (the Free Hit Guard radial on `CharacterUiWidget`).

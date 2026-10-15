@@ -72,11 +72,18 @@ namespace Quantum
                 isLocalPlayer = true;
                 MyLocalPlayer.Instance.Register(_entityRef, _playerRef, this);
             }
+            else
+            {
+                // Remote teammates (online + bots) get a screen-edge pointer while off camera - local
+                // slots are always framed by the camera, so they never need one.
+                OffscreenPlayerIndicatorManager.Instance?.Register(_entityRef, transform);
+            }
         }
 
         public override void DeInitialize(QuantumGame game)
         {
             CharacterUiWidgetManager.Instance?.DespawnWidget(_entityRef);
+            OffscreenPlayerIndicatorManager.Instance?.Unregister(_entityRef);
             HeroSpawnIntroManager.Instance?.UnregisterHero(_entityRef);
             MyLocalPlayer.Instance.Deinitialize(_entityRef);
             base.DeInitialize(game);

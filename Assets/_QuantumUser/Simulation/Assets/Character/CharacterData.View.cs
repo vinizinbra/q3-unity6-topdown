@@ -45,5 +45,15 @@ namespace Quantum
         [Header("Signature Accessory")]
         [Tooltip("Presentation for this hero's Signature Accessory (Recoverable Accessory Guard - see docs/accessory-guard.md). Purely cosmetic: durability, blocking, dropping, recovery and Merchant pricing are all hero-agnostic and live in AccessoryGuardConfig instead.")]
         public HeroAccessoryPresentation Accessory;
+
+        [Header("Emojis")]
+        [Tooltip("Emoji reaction sprites (see docs/emoji.md), indexed by EmojiKind: 0 Happy, 1 Angry, 2 Cry, 3 Shock. Sliced from Art/Sprites/Emoji/HeroEmojis.png. A missing entry just shows nothing for that emoji.")]
+        public Sprite[] Emojis = new Sprite[4];
+
+        [Tooltip("Extra world offset for the emoji bubble, added on top of the automatic position (just above the top of this hero's sprites). Y = up.")]
+        public Vector3 EmojiOffset = new Vector3(-1f, 1f, 0f);
+
+        [Tooltip("Emoji bubble size multiplier (1 = the shared default size; 0/unset also reads as 1).")]
+        public float EmojiScale = 0.75f;
     }
 }

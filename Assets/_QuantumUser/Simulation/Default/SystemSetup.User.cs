@@ -81,6 +81,10 @@
             // live inside it). See TutorialSystem.
             systems.Add(new TutorialSystem());
 
+            // Emoji reactions (see docs/emoji.md) - handles PlayEmojiCommand. Always-on and OUTSIDE
+            // GameplaySystemGroup so players can still react during a level-up/chest pause.
+            systems.Add(new EmojiSystem());
+
             // Lobby Start (see docs/talents.md) - transitions Global.CurrentState from Lobby to
             // Survival once every connected, spawned player has walked outside the LobbyStart
             // chunk's own footprint (no separate boundary entity - the chunk IS the boundary).

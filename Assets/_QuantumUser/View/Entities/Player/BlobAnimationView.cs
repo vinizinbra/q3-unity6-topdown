@@ -27,6 +27,10 @@ namespace Quantum
         // without being able to reassign the rig transform this component itself animates.
         public Transform Head => head;
 
+        // Read-only for the same reason - OffscreenPlayerIndicatorWidget falls back to the torso's sprite
+        // for a rig with no separate head (Lux: the whole capybara is one LuxBody sprite on the torso).
+        public Transform Torso => torso;
+
         // The rig's own top transform - everything this component poses hangs off it. Read-only,
         // same reasoning as Head above. Exposed for CharacterPreviewWidget, which shows a hero in
         // the menu by keeping ONLY this branch of the instantiated prefab and discarding the rest

@@ -140,6 +140,12 @@ namespace QuantumUser.View.Managers
         private ParticleSystem accessoryBrokenEffectPrefab;
         [SerializeField, Tooltip("Uniform scale for accessoryBrokenEffectPrefab - this event carries no radius of its own to derive one from, same as selfHitEffectScale.")]
         private float accessoryBrokenEffectScale = 1f;
+        [SerializeField, Tooltip("First toast shown to the local owner when their accessory breaks (EventAccessoryBroken).")]
+        private string accessoryBrokenToast = "ACCESSORY DESTROYED";
+        [SerializeField, Tooltip("Second toast, shown accessoryBrokenHintDelay real seconds after the first - tells the player how to get it back.")]
+        private string accessoryBrokenHintToast = "Buy a new one at the Store";
+        [SerializeField, Tooltip("Real seconds between the two accessory-broken toasts. 0 shows both at once.")]
+        private float accessoryBrokenHintDelay = 1.5f;
 
         [SerializeField, Tooltip("Played where a dropped accessory is picked back up by its owner (EventAccessoryRecovered) - the \"got it back\" payoff that closes the go-and-fetch loop. Leave empty to skip; no fallback, since a combat blast reads wrong for a pickup.")]
         private ParticleSystem accessoryRecoveredEffectPrefab;
@@ -541,7 +547,7 @@ namespace QuantumUser.View.Managers
             // is theirs to act on. Raised before the prefab lookup below, which early-returns when no
             // shatter effect is authored.
             if (MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.IsLocalEntity(e.Owner))
-                ToastManager.Instance?.Show("ACCESSORY DESTROYED\nBuy a new one at the Store");
+                StartCoroutine(ShowAccessoryBrokenToasts());
 
             // Per-hero override first, generic fallback second - so authoring nothing per hero still
             // gives every accessory a break effect, and a hero only needs its own when a shared puff
@@ -554,6 +560,20 @@ namespace QuantumUser.View.Managers
 
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity,
                 Vector3.one * accessoryBrokenEffectScale);
+        }
+
+        // Two separate toasts rather than one two-line one: the break itself lands first, then the
+        // "what now" hint follows once the first has had a moment to be read. Realtime wait, so a
+        // level-up/chest pause right after the break doesn't hold the hint back. Instance is
+        // re-resolved after the wait - the gameplay HUD's manager may have unloaded in between.
+        private IEnumerator ShowAccessoryBrokenToasts()
+        {
+            ToastManager.Instance?.Show(accessoryBrokenToast);
+
+            if (accessoryBrokenHintDelay > 0f)
+                yield return new WaitForSecondsRealtime(accessoryBrokenHintDelay);
+
+            ToastManager.Instance?.Show(accessoryBrokenHintToast);
         }
 
         // A hit the accessory ate outright never reaches EventEntityDamaged (DamageUtility returns

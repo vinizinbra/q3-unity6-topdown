@@ -161,6 +161,13 @@ namespace Quantum
 
         private Vector3 baseScale = Vector3.one;
         private Vector3 restLocalPosition;
+        // Set by whichever runs first, Awake or ApplyAim. WeaponViewController instantiates this
+        // under weaponSocket, which it deactivates while the hero is hidden (spawn intro, Downed/KO,
+        // fall-respawn pending). Instantiating under an inactive parent defers Awake until the
+        // socket is re-activated, but PlayerGunAimView keeps calling ApplyAim meanwhile. Without
+        // this, ApplyAim stamped the default baseScale (1,1,1) onto the transform, and the late
+        // Awake then cached that wrong scale for good (0.25-scale roots came out 4x too big).
+        private bool restPoseCached;
         private Vector2 currentOffset;
 
         private Vector2 lastAimDir = Vector2.right;
@@ -228,6 +235,8 @@ namespace Quantum
 
         private void CacheRestPose()
         {
+            if (restPoseCached) return;
+            restPoseCached = true;
             baseScale = transform.localScale;
             restLocalPosition = transform.localPosition;
         }
@@ -544,6 +553,7 @@ namespace Quantum
 
         public void ApplyAim(in AimPose pose, float smoothT)
         {
+            CacheRestPose();
             lastAimDir = pose.AimDirection;
             lastFlipped = pose.Flipped;
 

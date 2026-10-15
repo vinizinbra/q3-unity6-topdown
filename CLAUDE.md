@@ -89,7 +89,11 @@ which one to open.
 
 - **Haptics** — Nice Vibrations behind one `Haptics.Play` entry point + Settings on/off toggle; triggered by `SoundData.haptic` (fires with the sound) or `HapticsDirector` (self-installed: any UI press + local-player Quantum events, tuned in `Resources/HapticsConfig`). Never call Nice Vibrations directly. → `docs/haptics.md`
 
+- **Off-screen Teammate Indicators** — local-only Mario-style hex heads (live rig head, RingColor border, red while Downed, hidden on KO, distance label, hex ping ripple) pinned to the safe-area screen edge for remote players/bots off camera; `OffscreenPlayerIndicatorManager` + template prefab nested in the gameplay `Canvas.prefab`, registered from `CharView`. → `docs/offscreen-indicators.md`
+
 - **Smart Ping** — one Ping button (Y / middle mouse), `PingSystem` resolves Elite/POI/Team Challenge/ground from context → `PingPlaced` event → HUD chat feed + minimap radar. → `docs/ping.md`
+
+- **Emoji Reactions** — Happy/Angry/Cry/Shock per-hero emojis (right stick flick / keys 1-4 / touch "..." picker) → `PlayEmojiCommand` → `EmojiSystem` (outside the pausable group, 1s cooldown) → synced `EmojiPlayed` → world bubble above the hero; sprites on `CharacterData.Emojis`. → `docs/emoji.md`
 
 ## Tooling & testing
 

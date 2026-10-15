@@ -170,6 +170,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     {
         UpdateDifficultyLabel(game);
         PingFeedWidget.Ensure(this);
+        EmojiWidget.Ensure(this);
     }
 
     // Read off RuntimeConfig rather than the Global.Difficulty snapshot - the snapshot stays all-zero

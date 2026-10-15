@@ -925,3 +925,14 @@ Play Mode. `BruteBaseSkill-Juggernaut.asset` still carries its pre-refactor stal
 both are the same pre-existing "generator hasn't been run yet" gap the 2026-08-20 sections above
 already track, untouched by this pass; `Tools > RiftRaiders > Brute > Generate Ascension Assets`
 regenerating that asset will drop the stale key on its own.
+
+# 2026-10-15 — Juggernaut starts Charged
+
+`JuggernautSkillData.Begin` seeds `ChargePoints = MaxCharge` (was 0): the first Discharge is available
+the moment the skill is pressed, and Tick's `UpdateSpeedBoost` swaps to the Charged speed tier on the
+first tick. Every later Discharge still has to be rebuilt by running, so the run-and-ram loop and the
+whole Momentum line (faster build, retention, R3 hold-until-discharge) are untouched. Base skill
+description updated ("Starts Charged: ram enemies to launch them, run to recharge.").
+
+**Watch:** Momentum R3 (100% retention) + starting full = Charged for the entire channel, so R3's
+"builds 40% faster" is dead weight at that rank — candidate for a swap if R3 feels flat.

@@ -305,9 +305,11 @@ debris that destroys itself on landing - so the accessory just stops existing, a
 (paying the Merchant at the Store, see `docs/store-blacksmith.md`) is communicated nowhere.
 
 So `EffectsManager.OnAccessoryBroken` - which already handles this event for the shatter VFX - also
-pops a `ToastManager` message, "ACCESSORY DESTROYED / Buy a new one at the Store". Deliberately no
-component of its own: it is one line on an existing subscriber, and the persistent "you have none
-left" state is already `CharacterUiWidget`'s pips going dark.
+pops two `ToastManager` messages, "ACCESSORY DESTROYED" then, `accessoryBrokenHintDelay` (1.5s,
+realtime) later, "Buy a new one at the Store" (`ShowAccessoryBrokenToasts` coroutine; both strings and
+the delay are serialized on `EffectsManager`). Deliberately no component of its own: it rides an
+existing subscriber, and the persistent "you have none left" state is already `CharacterUiWidget`'s
+pips going dark.
 
 It is filtered to this client's own local player(s) (`MyLocalPlayer.IsLocalEntity`, the same
 membership check `HurtOverlayUiWidget` uses for the block flash, so couch co-op's second local player

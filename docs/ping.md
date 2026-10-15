@@ -41,3 +41,6 @@ Cooldowns (per player): 0.5s general, 10s on StickTogether. `PlayerPing` is adde
 - Per-hero colour is a placeholder palette indexed by player slot.
 - Tuning values are constants at the top of `PingSystem`; Elite "in view" is a flat radius, not the camera.
 - Keyboard P2 / touch have no ping binding.
+
+Off-screen pingers also ripple their edge indicator with hex rings in the same colour. See
+`docs/offscreen-indicators.md`.

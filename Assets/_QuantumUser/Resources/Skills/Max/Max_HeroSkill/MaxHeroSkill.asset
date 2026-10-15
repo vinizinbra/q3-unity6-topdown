@@ -54,7 +54,8 @@ MonoBehaviour:
   - Id:
       Value: 287946968249638524
   Icon: {fileID: 1263592270, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  Description: Boosts Fire Rate, Move Speed and Reload. Full Rage doubles it.
+  Description: Boosts Fire Rate, Move Speed and Reload. Starts at full Rage - getting
+    hit drains it, landing hits refills it.
   Duration:
     RawValue: 655360
   FireRateBonus:
@@ -64,5 +65,7 @@ MonoBehaviour:
   ReloadSpeedBonus:
     RawValue: 19661
   MaxRageStacks: 10
+  RageLossFraction:
+    RawValue: 32768
   BaseMaxExtension:
     RawValue: 262144

@@ -25,6 +25,8 @@ namespace Quantum {
     public static bool SwitchTargetHeld => Map.FindAction("SwitchTarget").IsPressed();
     /// <summary>Y - held; the sim edge-detects it into a ping.</summary>
     public static bool PingHeld => Map.FindAction("Ping").IsPressed();
+    /// <summary>Right stick - flicked up/down/left/right to send an emoji (see EmojiWidget).</summary>
+    public static Vector2 Emoji => Map.FindAction("Emoji").ReadValue<Vector2>();
 
     /// <summary>Start - toggles the in-match settings popup.</summary>
     public static bool OpenSettingsPressed => Map.FindAction("OpenSettings").WasPressedThisFrame();
@@ -62,6 +64,9 @@ namespace Quantum {
       InputAction move = _map.AddAction("Move", InputActionType.Value);
       move.AddBinding("<Gamepad>/leftStick");
       move.AddBinding("<Gamepad>/dpad");
+
+      InputAction emoji = _map.AddAction("Emoji", InputActionType.Value);
+      emoji.AddBinding("<Gamepad>/rightStick");
 
       InputAction navigate = _map.AddAction("Navigate", InputActionType.Value);
       navigate.AddBinding("<Gamepad>/leftStick");

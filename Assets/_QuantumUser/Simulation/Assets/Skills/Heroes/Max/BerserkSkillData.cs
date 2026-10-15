@@ -17,13 +17,11 @@ namespace Quantum
     // "replace instead of stack" logic needed - this is just correct algebra on the existing
     // multiplicative Begin/End composition.
     //
-    // Also grants a fresh RageOverdrive every activation (baseline behavior) - landing weapon hits
-    // builds stacks that give NO bonus on their own; Ascensions (Full Throttle, Ignition) react to
-    // reaching max Rage on their own terms, not a baked-in correction here (see
-    // RageOverdriveUtility). Getting hit removes Rage - all of it by default, or only Last Stand rank
-    // 2's authored RageLossFraction once that's equipped (see MaxOverdriveReactionSystem). Last Stand
-    // rank 1 additionally parks whatever Rage survives an activation and hands it back at the next
-    // Begin, so Overdrive can start already spun up.
+    // Also grants a fresh RageOverdrive every activation, STARTING AT MAX - Overdrive pays off the
+    // moment it's cast, and the skill expression is staying there. Rage gives NO bonus on its own;
+    // Ascensions (Full Throttle, Ignition, Last Stand) react to being at max Rage on their own terms
+    // (see RageOverdriveUtility). Getting hit removes RageLossFraction of the current Rage (Last
+    // Stand can soften it - see MaxOverdriveReactionSystem), and landed weapon hits build it back.
     public unsafe partial class BerserkSkillData : SkillData
     {
         public FP Duration = 10;
@@ -40,6 +38,9 @@ namespace Quantum
         [Header("Rage")]
         public byte MaxRageStacks = 10;
 
+        [Tooltip("Fraction of CURRENT Rage removed when Max takes damage during Overdrive. Last Stand can only lower it.")]
+        public FP RageLossFraction = FP._0_50;
+
         [Header("Extension")]
         [Tooltip("Baseline ceiling on how many extra seconds ANY combination of Ascensions may add to a single Overdrive activation. Uncontrolled Fury raises it to its own ranked value; nothing can exceed whichever is higher. See OverdriveExtension.")]
         public FP BaseMaxExtension = 4;
@@ -55,23 +56,14 @@ namespace Quantum
                 stats->ReloadSpeedMultiplier *= FP._1 + ReloadSpeedBonus;
             }
 
+            // Starts full. The Ascension actions that react to being at max Rage (Full Throttle,
+            // Ignition, Last Stand) run LATER in this same Begin phase and each re-check IsAtMaxRage
+            // themselves, which is what applies their effects immediately instead of waiting for a
+            // threshold crossing that never happens.
             f.AddOrGet<RageOverdrive>(filter.Entity, out var rage);
             rage->MaxStacks = MaxRageStacks;
-
-            // Last Stand rank 1 - Rage parked at the end of the previous activation is handed back
-            // here rather than always starting from 0 (see LastStandUpgrade.StoredRageStacks). The
-            // Ascension actions that react to being at max Rage (Full Throttle, Ignition) run LATER
-            // in this same Begin phase and each re-check IsAtMaxRage themselves, which is what makes
-            // an Overdrive that starts already maxed apply its effects immediately instead of waiting
-            // for a threshold crossing that already happened.
-            byte carried = 0;
-
-            if (f.Unsafe.TryGetPointer<LastStandUpgrade>(filter.Entity, out var lastStand) == true && lastStand->PersistsRage == true)
-            {
-                carried = lastStand->StoredRageStacks;
-            }
-
-            rage->Stacks = carried > MaxRageStacks ? MaxRageStacks : carried;
+            rage->Stacks = MaxRageStacks;
+            rage->LossFraction = RageLossFraction;
 
             // The per-activation extension ledger every Overdrive-lengthening effect books against
             // (see OverdriveExtension/OverdriveUtility.TryExtend). Added here, zeroed here, so
@@ -85,7 +77,7 @@ namespace Quantum
             extension->KillCount = 0;
             extension->KillsPerExtension = 0;
 
-            Log.Debug($"[Skill] {filter.Entity} began Overdrive for {Duration}s (carried Rage {rage->Stacks}/{MaxRageStacks})");
+            Log.Debug($"[Skill] {filter.Entity} began Overdrive for {Duration}s at max Rage {MaxRageStacks}");
             return false; // runs for its full Duration, never resolves on the same tick
         }
 
@@ -103,17 +95,14 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<RageOverdrive>(filter.Entity, out var rage) == true)
             {
                 RageOverdriveUtility.Revert(f, filter.Entity, rage);
-
-                // Last Stand rank 1 - park whatever Rage survived, for the next activation to pick
-                // back up. Read BEFORE the component is removed; parked as a plain number on the
-                // persistent upgrade component rather than by keeping RageOverdrive alive, since its
-                // presence is what everything else reads as "Overdrive is running".
-                if (f.Unsafe.TryGetPointer<LastStandUpgrade>(filter.Entity, out var lastStand) == true && lastStand->PersistsRage == true)
-                {
-                    lastStand->StoredRageStacks = rage->Stacks;
-                }
-
                 f.Remove<RageOverdrive>(filter.Entity);
+            }
+
+            // Last Stand rank 2 - its first-hit block belongs to this activation only. Cleared only
+            // when Max granted it himself, so a teammate's guard (Bodyguard, Covering Fire) survives.
+            if (StatusEffectUtility.GetFreeHitGuardSource(f, filter.Entity) == filter.Entity)
+            {
+                StatusEffectUtility.TryConsumeFreeHitGuard(f, filter.Entity, out _);
             }
 
             // Removed rather than zeroed, so a dormant Overdrive carries no stale headroom and

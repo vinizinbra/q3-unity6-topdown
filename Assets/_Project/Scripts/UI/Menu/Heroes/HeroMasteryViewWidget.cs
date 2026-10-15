@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Quantum;
 
 /// <summary>
 /// The MASTERY page of the Heroes tab: the hero's level-by-level reward track (LV 1..N), each row showing its reward and
@@ -19,6 +20,9 @@ public class HeroMasteryViewWidget : MonoBehaviour
         public string text;
         [Tooltip("Empty = the hero's own portrait.")]
         public Sprite icon;
+        [Tooltip("An emote reward: the icon is the viewed hero's own emoji of this kind (CharacterData.Emojis).")]
+        public bool isEmote;
+        public EmojiKind emote;
     }
 
     [SerializeField] private MasteryRowWidget rowTemplate;
@@ -34,7 +38,7 @@ public class HeroMasteryViewWidget : MonoBehaviour
 
     private readonly List<MasteryRowWidget> rows = new List<MasteryRowWidget>();
 
-    public void Show(string heroName, Sprite heroPortrait, int heroLevel)
+    public void Show(string heroName, Sprite heroPortrait, int heroLevel, CharacterData hero)
     {
         if (heroNameText != null)
             heroNameText.text = heroName;
@@ -62,8 +66,21 @@ public class HeroMasteryViewWidget : MonoBehaviour
             int level = i + 1;
             MasteryRowState state = level < heroLevel ? MasteryRowState.Claimed : level == heroLevel ? MasteryRowState.Current : MasteryRowState.Locked;
             Reward reward = rewards[i];
-            rows[i].Bind(level, string.Format(reward.text ?? string.Empty, heroName), reward.icon != null ? reward.icon : heroPortrait, state,
+            rows[i].Bind(level, string.Format(reward.text ?? string.Empty, heroName), IconOf(reward, hero, heroPortrait), state,
                 i == 0, i == rows.Count - 1);
         }
+    }
+
+    // An emote is the viewed hero's own emoji (same lookup as EmojiPresentation.GetSprite); then the authored icon; then the portrait.
+    private static Sprite IconOf(Reward reward, CharacterData hero, Sprite heroPortrait)
+    {
+        if (reward.isEmote && hero != null && hero.Emojis != null)
+        {
+            int index = (int)reward.emote;
+            if (index >= 0 && index < hero.Emojis.Length && hero.Emojis[index] != null)
+                return hero.Emojis[index];
+        }
+
+        return reward.icon != null ? reward.icon : heroPortrait;
     }
 }

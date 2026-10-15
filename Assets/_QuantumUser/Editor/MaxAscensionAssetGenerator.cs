@@ -72,14 +72,15 @@ namespace QuantumUser.Editor
                 asset.DisplayName = "Last Stand";
                 asset.Activated = false;
                 asset.MaxRank = 3;
-                asset.Description = "Rage stops being fragile - it survives Overdrive ending, damage, and death.";
+                asset.Description = "Max refuses to go down - full Rage hardens him, and hits barely dent it.";
                 asset.RankDescriptions = new[]
                 {
-                    "When Overdrive ends, unused Rage is saved and restored the next time you activate it.",
-                    "Unused Rage is saved between Overdrives. Taking damage during Overdrive costs only <color=#FD3971>50%</color> of your Rage.",
-                    "Unused Rage is saved between Overdrives. Taking damage during Overdrive costs only <color=#FD3971>50%</color> of your Rage. Lethal damage ends Overdrive instead, leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>.",
+                    "Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+15%</color> Damage Reduction.",
+                    "Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+25%</color> Damage Reduction. The first hit each Overdrive is blocked.",
+                    "Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+25%</color> Damage Reduction. The first hit each Overdrive is blocked. Lethal damage ends Overdrive instead, leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>.",
                 };
-                asset.RageLossFraction = new[] { FP._1, FP._0_50, FP._0_50 };
+                asset.RageLossFraction = new[] { FP._0_25, FP._0_25, FP._0_25 };
+                asset.MaxRageDamageReduction = new[] { FP.FromString("0.15"), FP._0_25, FP._0_25 };
                 asset.CheatDeathImmunityDuration = 2;
             });
 
@@ -127,7 +128,7 @@ namespace QuantumUser.Editor
                 {
                     "At maximum Rage, weapon hits always apply Burn.",
                     "At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves Burning Ground.",
-                    "At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves Burning Ground. Reaching max Rage in Overdrive releases a <color=#FD3971>4m</color> Burn pulse (once per Overdrive).",
+                    "At maximum Rage, weapon hits always apply Burn. Killing a Burning enemy leaves Burning Ground. Activating Overdrive releases a <color=#FD3971>4m</color> Burn pulse.",
                 };
                 asset.BurnOnHitStacks = new byte[] { 1, 1, 1 };
                 asset.HasBurningGround = new[] { false, true, true };

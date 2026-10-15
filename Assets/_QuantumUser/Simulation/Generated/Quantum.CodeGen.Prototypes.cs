@@ -2422,9 +2422,10 @@ namespace Quantum.Prototypes {
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.LastStandUpgrade))]
   public unsafe partial class LastStandUpgradePrototype : ComponentPrototype<Quantum.LastStandUpgrade> {
-    public QBoolean PersistsRage;
     public FP RageLossFraction;
-    public Byte StoredRageStacks;
+    public FP MaxRageDamageReduction;
+    public QBoolean BlocksFirstHit;
+    public FP AppliedDamageReduction;
     partial void MaterializeUser(Frame frame, ref Quantum.LastStandUpgrade result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.LastStandUpgrade component = default;
@@ -2432,9 +2433,10 @@ namespace Quantum.Prototypes {
         return f.Set(entity, component) == SetResult.ComponentAdded;
     }
     public void Materialize(Frame frame, ref Quantum.LastStandUpgrade result, in PrototypeMaterializationContext context = default) {
-        result.PersistsRage = this.PersistsRage;
         result.RageLossFraction = this.RageLossFraction;
-        result.StoredRageStacks = this.StoredRageStacks;
+        result.MaxRageDamageReduction = this.MaxRageDamageReduction;
+        result.BlocksFirstHit = this.BlocksFirstHit;
+        result.AppliedDamageReduction = this.AppliedDamageReduction;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -2874,6 +2876,21 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.PlayerEmoji))]
+  public unsafe partial class PlayerEmojiPrototype : ComponentPrototype<Quantum.PlayerEmoji> {
+    public Int32 NextAllowedTick;
+    partial void MaterializeUser(Frame frame, ref Quantum.PlayerEmoji result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.PlayerEmoji component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.PlayerEmoji result, in PrototypeMaterializationContext context = default) {
+        result.NextAllowedTick = this.NextAllowedTick;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.PlayerLifeState))]
   public unsafe class PlayerLifeStatePrototype : ComponentPrototype<Quantum.PlayerLifeState> {
     public Quantum.QEnum8<PlayerLifeStateKind> State;
@@ -3270,6 +3287,7 @@ namespace Quantum.Prototypes {
   public unsafe partial class RageOverdrivePrototype : ComponentPrototype<Quantum.RageOverdrive> {
     public Byte Stacks;
     public Byte MaxStacks;
+    public FP LossFraction;
     partial void MaterializeUser(Frame frame, ref Quantum.RageOverdrive result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.RageOverdrive component = default;
@@ -3279,6 +3297,7 @@ namespace Quantum.Prototypes {
     public void Materialize(Frame frame, ref Quantum.RageOverdrive result, in PrototypeMaterializationContext context = default) {
         result.Stacks = this.Stacks;
         result.MaxStacks = this.MaxStacks;
+        result.LossFraction = this.LossFraction;
         MaterializeUser(frame, ref result, in context);
     }
   }

@@ -33,6 +33,7 @@
             factories.Add(new BuyAccessoryServiceCommand());
             factories.Add(new SelfReviveCommand());
             factories.Add(new SetTutorialPauseCommand());
+            factories.Add(new PlayEmojiCommand());
 
             // Generic cheat/debug command (View/Managers/CheatMenu.cs) - always registered so its
             // factory index matches on every client, even builds without the CHEATS_ENABLED overlay.

@@ -300,7 +300,7 @@ public class HeroesTab : TabContent
         if (ascensionsView != null)
             ascensionsView.Show(id, data);
         if (masteryView != null)
-            masteryView.Show(HeroName(entry, data), data != null && data.UIHead != null ? data.UIHead : catalog.ResolveIconSprite(id), placeholderLevel);
+            masteryView.Show(HeroName(entry, data), data != null && data.UIHead != null ? data.UIHead : catalog.ResolveIconSprite(id), placeholderLevel, data);
 
         masteryLabel.text = "<size=55%>LV </size>" + placeholderLevel;
         masteryCount.text = placeholderMasteryCurrent + " / " + placeholderMasteryMax;

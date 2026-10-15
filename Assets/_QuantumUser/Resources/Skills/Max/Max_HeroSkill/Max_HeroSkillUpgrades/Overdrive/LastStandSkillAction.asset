@@ -19,21 +19,17 @@ MonoBehaviour:
   Icon: {fileID: 3215950611905850445, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Last Stand
   RankDescriptions:
-  - When Overdrive ends, unused Rage is saved and restored the next time you activate
-    it.
-  - Unused Rage is saved between Overdrives. Taking damage during Overdrive costs
-    only <color=#FD3971>50%</color> of your Rage.
-  - Unused Rage is saved between Overdrives. Taking damage during Overdrive costs
-    only <color=#FD3971>50%</color> of your Rage. Lethal damage ends Overdrive instead,
-    leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>.
+  - 'Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+15%</color> Damage Reduction.'
+  - 'Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+25%</color> Damage Reduction. The first hit each Overdrive is blocked.'
+  - 'Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+25%</color> Damage Reduction. The first hit each Overdrive is blocked. Lethal damage ends Overdrive instead, leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>.'
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: Rage stops being fragile - it survives Overdrive ending, damage, and
-    death.
+  Description: Max refuses to go down - full Rage hardens him, and hits barely dent
+    it.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -59,8 +55,12 @@ MonoBehaviour:
     Scale: 1
     Alignment: 0
   RageLossFraction:
-  - RawValue: 65536
-  - RawValue: 32768
-  - RawValue: 32768
+  - RawValue: 16384
+  - RawValue: 16384
+  - RawValue: 16384
+  MaxRageDamageReduction:
+  - RawValue: 9830
+  - RawValue: 16384
+  - RawValue: 16384
   CheatDeathImmunityDuration:
     RawValue: 131072

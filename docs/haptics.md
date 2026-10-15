@@ -36,7 +36,6 @@ folders. Nothing outside `Scripts/Haptics/` references Lofelt.
 | `PlayerDowned` / `PlayerKO` | local | Heavy / Failure |
 | `PlayerRevived` | target or reviver local | Success |
 | `SkillActionBeginExecuted` (incl. Dash) | local | Soft (0.1s cd) |
-| `EntityDamaged` IsCritical | owner local | Light (0.12s cd) |
 | `EntityDied` Elite | owner local | Heavy |
 | `EntityDied` Boss | everyone | Heavy |
 | `GroundbreakerSlammed` / `WallSlammed` | owner local | Rigid |
@@ -53,7 +52,7 @@ down/up, so the gameplay joystick/buttons never trigger it. Every touch is check
 
 - iOS: native Taptic presets (`PlayPreset`).
 - Android / gamepad: Nice Vibrations' single-impact presets are too short/weak to feel there (Selection = 40 ms
-  at 47 %, Light = 20 ms at 1 %; a pad motor doesn't spin up), which made every UI tap and crit silent. So
+  at 47 %, Light = 20 ms at 1 %; a pad motor doesn't spin up), which made every UI tap silent. So
   Selection/Light/Soft/Medium/Rigid/Heavy play a tuned `PlayConstant` pulse instead (the `*Pulse` fields on `HapticsConfig`,
   ~50 ms minimum); Success/Failure/Warning keep their presets (`clipLevel` is reset to 1 first, since
   `PlayConstant` leaves its amplitude there).

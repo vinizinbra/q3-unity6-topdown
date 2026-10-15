@@ -101,7 +101,7 @@ Everything below is hero-agnostic by construction; heroes are consumers, never s
 Every number in the brief is exposed on its own asset. The ones most likely to need a first pass:
 
 - Max: `BerserkSkillData.BaseMaxExtension` (baseline Overdrive extension ceiling), Last Stand
-  `RageLossFraction`, Blood Debt `MaxHealFractionPerKill`, Cremation's three thresholds.
+  `RageLossFraction`/`MaxRageDamageReduction` (plus `BerserkSkillData.RageLossFraction`, the baseline), Blood Debt `MaxHealFractionPerKill`, Cremation's three thresholds.
 - Pixie: Explosive Rounds `ProcChance` **and** its optional `ProcCooldown` (shipped off), Unstable
   Mixture per-stack bonuses + secondary blast, Blast Jump `TriggerRadius`.
 - Kai: `EnemyTierResistanceConfig` interrupt windows (these govern Singularity's whole feel),

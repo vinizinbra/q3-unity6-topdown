@@ -1,0 +1,24 @@
+// Emoji reactions (see docs/emoji.md) - purely cosmetic. Sent as a PlayEmojiCommand (never Input, so it
+// costs nothing per tick and still works while GameplaySystemGroup is paused), validated by EmojiSystem.
+// Value order = index into CharacterData.Emojis.
+enum EmojiKind : Byte
+{
+    Happy,
+    Angry,
+    Cry,
+    Shock
+}
+
+// Per-player emoji spam guard, added lazily by EmojiSystem (f.AddOrGet) - no prototype authoring.
+component PlayerEmoji
+{
+    Int32 NextAllowedTick;
+}
+
+// synced: the bubble must pop once per real emoji, not once per predicted re-sim.
+synced event EmojiPlayed
+{
+    PlayerRef Player;
+    EntityRef Owner;
+    EmojiKind Kind;
+}

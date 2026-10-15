@@ -67,8 +67,6 @@ public class HapticsDirector : MonoBehaviour
 
         if (IsLocal(e.Target))
             Haptics.Play(config.damageTaken);
-        else if (e.IsCritical && IsLocal(e.Owner))
-            Haptics.Play(config.criticalHit);
     }
 
     private void OnPlayerRevived(EventPlayerRevived e)

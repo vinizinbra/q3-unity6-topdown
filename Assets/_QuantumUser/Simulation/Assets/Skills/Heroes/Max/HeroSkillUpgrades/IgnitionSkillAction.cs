@@ -11,8 +11,8 @@ namespace Quantum
     //  - Rank 2: a Burning enemy KILLED while at max Rage leaves a burning-ground patch where it died
     //    (MaxOverdriveReactionSystem.OnEntityKilled). No OnGoing phase at all any more - this line is
     //    entirely reactive now.
-    //  - Rank 3 ("Inferno"): a radial Burn pulse (MaxAscensionUtility.ApplyRadialBurn) the FIRST time
-    //    max Rage is reached each Overdrive activation - also driven from OnEnteredMaxRage, latched by
+    //  - Rank 3 ("Inferno"): a radial Burn pulse (MaxAscensionUtility.ApplyRadialBurn) once per
+    //    Overdrive activation, on cast (Overdrive starts at max Rage) - also driven from OnEnteredMaxRage, latched by
     //    IgnitionUpgrade.InfernoTriggeredThisActivation, reset by this class's own Begin below.
     //
     // Fires on every Berserk Begin, same "refresh fresh off the live rank each cast" idiom Brute's
@@ -62,8 +62,8 @@ namespace Quantum
 
             f.AddOrGet<CanApplyBurn>(filter.Entity, out _);
 
-            // Last Stand rank 1 can start an activation already at max Rage, in which case there is no
-            // later threshold crossing to hook - so react to the state we're actually in, right here.
+            // Overdrive starts at max Rage, so there is no later threshold crossing to hook - react to
+            // the state we're actually in, right here (this is what fires Inferno on cast).
             // OnEnteredMaxRage is idempotent (latches on Applied/InfernoTriggeredThisActivation).
             if (RageOverdriveUtility.IsAtMaxRage(f, filter.Entity) == true)
             {

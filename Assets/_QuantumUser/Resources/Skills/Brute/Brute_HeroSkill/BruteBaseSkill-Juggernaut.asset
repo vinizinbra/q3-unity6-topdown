@@ -292,7 +292,8 @@ MonoBehaviour:
   - Id:
       Value: 291462109882006022
   Icon: {fileID: 99700747, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  Description: Channel {0}s at {1}% Damage Reduction, launching enemies you touch.
+  Description: 'Channel {0}s at {1}% Damage Reduction. Starts Charged: ram enemies
+    to launch them, run to recharge.'
   Duration:
     RawValue: 524288
   DamageReductionBonus:

@@ -139,3 +139,10 @@ MonoBehaviour:
     CollectibleSprite: {fileID: 629668979, guid: 88a2b3728ffc2417a840df84c7e12928, type: 3}
     CollectibleScale: 0.12
     BrokenEffectPrefab: {fileID: 0}
+  Emojis:
+  - {fileID: -504120045, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 578162401, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -376141620, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1506394464, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  EmojiOffset: {x: -1, y: 1, z: 0}
+  EmojiScale: 0.75

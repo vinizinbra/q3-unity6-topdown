@@ -1,26 +1,23 @@
-// Overdrive line 1 ("Last Stand") - granted once by LastStandSkillAction.Execute, which SETs every
-// field below to the picked rank's cumulative tuned values. Persistent: granted on every Overdrive
-// Begin and never revoked, so StoredRageStacks survives between activations (which is the entire
-// point of rank 1).
+// Overdrive line 1 ("Last Stand") - granted by LastStandSkillAction.Execute on every Overdrive
+// Begin, which SETs every tuned field below to the picked rank's cumulative values. Persistent
+// (never revoked) - every reaction that reads it already gates on Overdrive actually running.
 //
-//  - Rank 1: PersistsRage - Rage is no longer wiped when an Overdrive activation ends. Whatever
-//    Stacks were live at End are parked in StoredRageStacks and handed straight back at the next
-//    Begin (see BerserkSkillData.Begin/End). Without this, every activation always starts at 0.
-//  - Rank 2: RageLossFraction - how much of the CURRENT Rage a hit taken during Overdrive removes.
-//    1 (rank 1's value) is a full reset, i.e. the unchanged baseline; rank 2+ authors a fraction, so
-//    getting hit costs momentum instead of erasing it. See RageOverdriveUtility.ResetStacks.
+//  - Rank 1+: RageLossFraction - a softer fraction of CURRENT Rage lost per hit than Overdrive's own
+//    baseline (RageOverdriveUtility.ResetStacks takes the lower of the two). MaxRageDamageReduction -
+//    flat CharacterStats.DamageReduction toggled on/off exactly at the max-Rage threshold, the same
+//    enter/exit hook Full Throttle and Ignition use (MaxAscensionUtility.ApplyLastStand/
+//    RevertLastStand).
+//  - Rank 2+: BlocksFirstHit - a self-granted Free Hit Guard at Overdrive Begin, so the first hit of
+//    each activation is negated outright (and therefore costs no Rage either). Cleared at End.
 //  - Rank 3 ("Too Angry to Die"): needs no field here - it just grants the existing CheatDeathGuard
 //    component directly.
 component LastStandUpgrade
 {
-    Boolean PersistsRage;
     FP RageLossFraction;
+    FP MaxRageDamageReduction;
+    Boolean BlocksFirstHit;
 
-    // Written only by BerserkSkillData.End (and only while PersistsRage) - the parked Rage count
-    // carried into the next activation. Lives here rather than on RageOverdrive itself because that
-    // component is deliberately removed at End: its PRESENCE is what every other Ascension reads as
-    // "an Overdrive activation is running right now" (see MaxOverdriveReactionSystem/
-    // VendettaStrikeSkillAction), so keeping it alive between activations to hold a number would
-    // silently break all of them.
-    Byte StoredRageStacks;
+    // The DamageReduction actually added by ApplyLastStand, so RevertLastStand subtracts exactly that
+    // even if a rank-up re-tuned MaxRageDamageReduction in between. Zero = not currently applied.
+    FP AppliedDamageReduction;
 }
