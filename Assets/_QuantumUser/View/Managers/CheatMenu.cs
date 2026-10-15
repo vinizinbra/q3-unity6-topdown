@@ -69,6 +69,20 @@ namespace QuantumUser.View
         private const KeyCode HideKey = KeyCode.F1;
         private bool _hidden;
 
+        // On a player build the "Cheats" toggle button stays hidden until this tap code is entered
+        // (screen corners: top-left, top-right, bottom-right, bottom-left, each tap within
+        // CodeTapTimeout of the last; any wrong tap restarts). The Editor always shows the button.
+        // Input.mousePosition/GetMouseButtonDown also cover touch (simulateMouseWithTouches).
+#if UNITY_EDITOR
+        private bool _unlocked = true;
+#else
+        private bool _unlocked;
+#endif
+        private int _codeStep;
+        private float _lastCodeTapTime;
+        private const float CodeCornerSize = 0.15f;
+        private const float CodeTapTimeout = 2f;
+
         private bool _open;
         private bool _overrideTimeScale;
         private float _timeScale = 1f;
@@ -155,6 +169,50 @@ namespace QuantumUser.View
                 _hidden = !_hidden;
                 _canvas.enabled = !_hidden;
             }
+
+            if (_unlocked == false)
+                PollUnlockCode();
+        }
+
+        // Corner index: 0 = top-left, 1 = top-right, 2 = bottom-right, 3 = bottom-left; -1 = no corner.
+        private static int CornerAt(Vector2 pos)
+        {
+            float x = pos.x / Screen.width;
+            float y = pos.y / Screen.height;
+            bool left = x <= CodeCornerSize;
+            bool right = x >= 1f - CodeCornerSize;
+            bool bottom = y <= CodeCornerSize;
+            bool top = y >= 1f - CodeCornerSize;
+
+            if (top && left) return 0;
+            if (top && right) return 1;
+            if (bottom && right) return 2;
+            if (bottom && left) return 3;
+            return -1;
+        }
+
+        private void PollUnlockCode()
+        {
+            if (UnityEngine.Input.GetMouseButtonDown(0) == false)
+                return;
+
+            if (_codeStep > 0 && Time.unscaledTime - _lastCodeTapTime > CodeTapTimeout)
+                _codeStep = 0;
+
+            int corner = CornerAt(UnityEngine.Input.mousePosition);
+            _lastCodeTapTime = Time.unscaledTime;
+
+            if (corner == _codeStep)
+                _codeStep++;
+            else
+                _codeStep = corner == 0 ? 1 : 0;
+
+            if (_codeStep < 4)
+                return;
+
+            _codeStep = 0;
+            _unlocked = true;
+            UpdateOpenState();
         }
 
         private static void EnsureEventSystem()
@@ -563,7 +621,7 @@ namespace QuantumUser.View
 
         private void UpdateOpenState()
         {
-            _toggleButtonGo.SetActive(_open == false);
+            _toggleButtonGo.SetActive(_open == false && _unlocked);
             _windowGo.SetActive(_open);
 
             // Closing the window should also drop whatever picker was open, so reopening never shows
