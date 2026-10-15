@@ -149,12 +149,17 @@ not a duplicate of anything:
 
 | Tier | P1 / P2 / P3 / P4 |
 |---|---|
-| Filler | 1.00 / 1.25 / 1.40 / 1.50 |
-| Normal | 1.00 / 1.30 / 1.45 / 1.55 |
-| Specialist | 1.00 / 1.40 / 1.60 / 1.75 |
-| Heavy | 1.00 / 1.55 / 1.80 / 2.05 |
-| Elite | 1.00 / 1.70 / 2.05 / 2.35 |
-| Boss | 1.00 / 1.80 / 2.40 / 2.80 |
+| Filler | 1.00 / 1.35 / 1.55 / 1.85 |
+| Normal | 1.00 / 1.40 / 1.60 / 1.95 |
+| Specialist | 1.00 / 1.50 / 1.70 / 2.05 |
+| Heavy | 1.00 / 1.65 / 2.05 / 2.55 |
+| Elite | 1.00 / 1.90 / 2.35 / 2.90 |
+| Boss | 1.00 / 2.00 / 2.75 / 3.40 |
+
+**Co-op HP raise (2026-10-15).** 4-player playtest: enemies died too fast. Whole table raised
+(P4 ~+25%, P3 ~+15%, P2 ~+10%, rounded to 0.05; Filler/Normal/Specialist 2P nudged so the column
+ordering holds) - placeholder, verify with the Balance Simulator. The earlier asset had drifted
+below the tables in this doc; this one matches the asset.
 
 ### Consolidation
 

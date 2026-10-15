@@ -154,53 +154,53 @@ MonoBehaviour:
     P1:
       RawValue: 65536
     P2:
-      RawValue: 81920
+      RawValue: 88474
     P3:
-      RawValue: 91750
+      RawValue: 101581
     P4:
-      RawValue: 98304
+      RawValue: 121242
   - Tier: 1
     P1:
       RawValue: 65536
     P2:
-      RawValue: 78643
-    P3:
       RawValue: 91750
+    P3:
+      RawValue: 104858
     P4:
-      RawValue: 101581
+      RawValue: 127795
   - Tier: 2
     P1:
       RawValue: 65536
     P2:
-      RawValue: 85197
-    P3:
       RawValue: 98304
+    P3:
+      RawValue: 111411
     P4:
-      RawValue: 108134
+      RawValue: 134349
   - Tier: 3
     P1:
       RawValue: 65536
     P2:
-      RawValue: 98304
+      RawValue: 108134
     P3:
-      RawValue: 117965
-    P4:
       RawValue: 134349
+    P4:
+      RawValue: 167117
   - Tier: 4
     P1:
       RawValue: 65536
     P2:
-      RawValue: 111411
+      RawValue: 124518
     P3:
-      RawValue: 134349
-    P4:
       RawValue: 154010
+    P4:
+      RawValue: 190054
   - Tier: 5
     P1:
       RawValue: 65536
     P2:
-      RawValue: 117965
+      RawValue: 131072
     P3:
-      RawValue: 157286
+      RawValue: 180224
     P4:
-      RawValue: 183501
+      RawValue: 222822
