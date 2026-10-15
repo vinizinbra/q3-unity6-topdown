@@ -215,10 +215,13 @@ public static class TrainingZoneBuilder
     {
         GameObject s = Station(zone, "5_HighGround", ChunkType.Enemy, ref x, 18);
         Box(s, "Floor_A", 0, 0, 4, Depth, Floor, false);
-        Box(s, "Stair1", 3, 4, 4, 4, Floor + 1, true);
+        GameObject stair1 = Box(s, "Stair1", 3, 4, 4, 4, Floor + 1, true);
         // 1-unit gaps between the stairs (user layout).
         Box(s, "Stair2", 8, 4, 3, 4, Floor + 2, true);
-        Box(s, "Lookout", 12, 3, 3, 6, Floor + 3, true);
+        GameObject lookout = Box(s, "Lookout", 12, 3, 3, 6, Floor + 3, true);
+        // Hand-tuned baked shadows on the water under the walkway (user layout).
+        BakedShadow(stair1, new Vector3(0.36f, Floor + 0.03f, 2f), new Vector2(1.5f, 5f));
+        BakedShadow(lookout, new Vector3(2.49f, Floor + 0.039f, 3f), new Vector2(2f, 7f));
         Box(s, "Floor_B", 14, 0, 4, Depth, Floor, false);
         Respawn(s, 2, 6, Floor);
 
@@ -315,7 +318,12 @@ public static class TrainingZoneBuilder
 
         var poiPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FinishPoiPath);
         var poi = (GameObject)PrefabUtility.InstantiatePrefab(poiPrefab, s.transform);
-        poi.transform.localPosition = new Vector3(8, Floor + 0.5f, 7);
+        poi.transform.localPosition = new Vector3(8, Floor, 7);
+
+        // Sign's blob shadow, tuned by hand (user layout).
+        Transform poiSign = poi.transform.Find("challengeSigns_4");
+        if (poiSign != null)
+            SetBlobShadow(poiSign.GetComponent<HasShadow>(), 2f, new Vector2(0f, 0.1f));
 
         Label(s, "INTERACT", 4, 4.2f, Floor, TitleSize, TitleColor);
         Label(s, "E  /  X  next to the sign", 4, 3.0f, Floor, HintSize, HintColor);
@@ -372,7 +380,7 @@ public static class TrainingZoneBuilder
     }
 
     // Min-corner box in station-local coords: x/z/width/depth on the floor plan, top = walkable height.
-    private static void Box(GameObject station, string name, float x, float z, float width, float depth, float top, bool raised)
+    private static GameObject Box(GameObject station, string name, float x, float z, float width, float depth, float top, bool raised)
     {
         GameObject cube = Object.Instantiate(raised ? _blockTemplate : _floorTemplate, station.transform, false);
         cube.name = name;
@@ -381,6 +389,45 @@ public static class TrainingZoneBuilder
         cube.transform.localPosition = new Vector3(x, Bottom, z);
         cube.transform.localRotation = Quaternion.identity;
         cube.transform.localScale = new Vector3(width, top - Bottom, depth);
+        return cube;
+    }
+
+    // A HasBuildingShadow "Bake Shadow Into Prefab" result, recreated: a BuildingShadowPrefab child at
+    // `offset` (x/z from the block's min corner, y = station-local height), world scale 1, sprite
+    // `size` in world units. Linked as the block's bakedShadow so no pooled shadow is requested.
+    private static void BakedShadow(GameObject block, Vector3 offset, Vector2 size)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(BuildingShadowPrefabPath);
+        var shadow = (GameObject)PrefabUtility.InstantiatePrefab(prefab, block.transform);
+        shadow.name = "BuildingShadow (Baked)";
+
+        Vector3 corner = block.transform.localPosition;
+        shadow.transform.position = block.transform.parent.TransformPoint(new Vector3(corner.x + offset.x, offset.y, corner.z + offset.z));
+        shadow.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+        // Cancel the block's non-uniform scale (measured, as the shadow is rotated against it).
+        shadow.transform.localScale = Vector3.one;
+        Vector3 lossy = shadow.transform.lossyScale;
+        shadow.transform.localScale = new Vector3(1f / lossy.x, 1f / lossy.y, 1f / lossy.z);
+
+        var renderer = shadow.GetComponent<SpriteRenderer>();
+        renderer.size = size;
+        renderer.enabled = true;
+
+        var so = new SerializedObject(block.GetComponent<HasBuildingShadow>());
+        so.FindProperty("bakedShadow").objectReferenceValue = shadow;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    private static void SetBlobShadow(HasShadow target, float baseScale, Vector2 offset)
+    {
+        if (target == null)
+            return;
+
+        var so = new SerializedObject(target);
+        so.FindProperty("baseScale").floatValue = baseScale;
+        so.FindProperty("shadowOffset").vector2Value = offset;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     private static void Respawn(GameObject station, float x, float z, float top)
@@ -426,6 +473,7 @@ public static class TrainingZoneBuilder
         var so = new SerializedObject(view);
         so.FindProperty("warningTelegraph").objectReferenceValue = telegraph;
         so.FindProperty("fallbackMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>(SpikeFallbackMaterialPath);
+        so.FindProperty("retractSpeed").floatValue = 1f; // user-tuned
         so.ApplyModifiedPropertiesWithoutUndo();
 
         // Hazard-stripe borders just outside both long edges.
@@ -453,6 +501,7 @@ public static class TrainingZoneBuilder
 
         var board = sign.AddComponent<SpriteRenderer>();
         board.sprite = LoadSubSprite(PoiSignSheetPath, PoiSignSpriteName);
+        SetBlobShadow(sign.AddComponent<HasShadow>(), 2.5f, new Vector2(0f, 0.1f));
 
         // The POI's warm warning glow (TraversalActivator's "Available" particles), on the sign's lamp.
         var glowSource = AssetDatabase.LoadAssetAtPath<GameObject>(TraversalActivatorPath).transform.Find("Available");
@@ -463,6 +512,10 @@ public static class TrainingZoneBuilder
             glow.transform.localPosition = new Vector3(0f, 2.723f, -0.01f);
             glow.transform.localRotation = Quaternion.identity;
             glow.transform.localScale = Vector3.one * 2f;
+
+            // Deeper orange than the POI's own glow (user-tuned).
+            ParticleSystem.MainModule main = glow.GetComponent<ParticleSystem>().main;
+            main.startColor = new Color(0.992156863f, 0.459761649f, 0.2588235f, 1f);
         }
 
         var icon = new GameObject("CautionIcon");
@@ -482,7 +535,8 @@ public static class TrainingZoneBuilder
         }
     }
 
-    private const string TraversalActivatorPath = "Assets/_QuantumUser/Entities/LevelChunk/TraversalActivator.prefab";
+    private const string BuildingShadowPrefabPath = "Assets/_Project/Prefabs/Gameplay/BuildingShadowPrefab.prefab";
+    private const string TraversalActivatorPath ="Assets/_QuantumUser/Entities/LevelChunk/TraversalActivator.prefab";
     private const string PoiSignSheetPath = "Assets/_Project/Art/Sprites/Environment/RiftRaiders_POI.png";
     private const string PoiSignSpriteName = "RR_TrainingFinishSign";
 
