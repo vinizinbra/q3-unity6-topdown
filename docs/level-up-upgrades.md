@@ -769,6 +769,14 @@ Beyond the missing assets/wiring:
   area is secured, `CurrencyOrbVacuumUtility` sweeps every leftover `CurrencyOrb` in over ~1s (see
   `docs/experience-drops.md`); if an early orb in that sweep crosses a level threshold, the screen
   stays queued until the WHOLE sweep finishes rather than popping mid-sweep with orbs still landing.
+- **No level-up screen mid-challenge** - Team Challenge (incl. its Starting countdown) and Traversal
+  Challenge hold the screen exactly like Boss: XP is still dropped/collected and levels still queue
+  on `Global.DebugPendingLevelUps`, only the screen waits, then the queued screens open one by one
+  once the challenge ends. All holds (Boss, challenges, orb vacuum) live in ONE predicate,
+  `LevelUpUtility.IsLevelUpScreenHeld`, gating both open paths (`TryOpenNextPendingLevelUp`'s drain
+  and `LevelUpSystem`'s `PendingLevelUpScreen` retry). **Any future challenge `GameState` must be
+  added there** (a reminder sits in `GameState.qtn`). Chests/the Team Challenge reward claim are
+  voluntary interactions and are not held.
 - **`PassiveUpgrade`/`GlobalUpgrade`/`WeaponPerk` candidates are now deduplicated against past picks**,
   same as `SkillUpgrade`/`RiftMutation` always were - `PassiveUpgrade` via `UpgradeHistory`
   (single-pick, filtered to `Kind == PassiveUpgrade`; judged safe to share that ledger's 32-slot

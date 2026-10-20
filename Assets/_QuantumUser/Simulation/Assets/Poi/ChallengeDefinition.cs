@@ -28,7 +28,9 @@ namespace Quantum
         // POI's own Interaction Area prompt BEFORE anyone activates (InteractionPromptWidget's
         // Available-state description, see TeamChallengeUtility.EnsureChallengeRolled - the
         // challenge is rolled as soon as the POI exists specifically so this can already reflect
-        // the real selection instead of a generic placeholder).
+        // the real selection instead of a generic placeholder). Use {0} for the co-op-scaled kill
+        // target and {1} for Duration in seconds - never a hardcoded count (see ResolveDescription).
+        [UnityEngine.Tooltip("One-line rules blurb. {0} = live co-op-scaled kill target, {1} = Duration in seconds - e.g. \"Kill {0} enemies in {1} seconds.\" Never hardcode the count: it scales with player count.")]
         public string Description;
 
         // 0 = no timeout. Kill Rush uses this as its own fail condition (ran out of time before

@@ -258,3 +258,9 @@ Not yet manually verified end-to-end in-Editor, solo or co-op.
   `ActiveTraversalChallengeCount` would leak incremented, permanently freezing `SurvivalTime`/
   spawning for the rest of the run. Not guarded against - would need
   `ISignalOnComponentRemoved<TraversalChallenge>` if this ever becomes reachable.
+
+## Level-ups during the challenge
+
+No level-up screen opens while the challenge runs - XP is still collected, earned levels queue and
+their screens open once it ends (`LevelUpUtility.IsLevelUpScreenHeld`, see
+`docs/level-up-upgrades.md`).

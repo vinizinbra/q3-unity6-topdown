@@ -14,6 +14,33 @@ namespace Quantum
             public int Weight;
         }
 
+        // True while an earned level-up screen must WAIT - XP keeps being collected and levels keep
+        // queueing on Global.DebugPendingLevelUps as normal, only the screen (which pauses
+        // GameplaySystemGroup) is held, then opens once this clears. Single source of truth for both
+        // open paths: DebugCheatSystem.TryOpenNextPendingLevelUp (the queue drain) and
+        // LevelUpSystem's PendingLevelUpScreen retry.
+        //  - Boss: a pause mid boss fight is terrible (see docs/boss-encounter.md).
+        //  - Any challenge (Team Challenge incl. its Starting countdown, Traversal Challenge): a
+        //    timed, whole-team objective must never be interrupted by an upgrade screen. ANY FUTURE
+        //    CHALLENGE STATE MUST BE ADDED HERE TOO (see GameState.qtn). The underlying sim
+        //    conditions are checked alongside CurrentState because ApplyEffectiveState only
+        //    re-resolves the state once a tick - this closes the one-tick gap at a challenge's start.
+        //  - Orb vacuum: wait until every swept orb has landed (see docs/experience-drops.md).
+        public static bool IsLevelUpScreenHeld(Frame f)
+        {
+            switch (f.Global->CurrentState)
+            {
+                case GameState.Boss:
+                case GameState.TeamChallenge:
+                case GameState.TraversalChallenge:
+                    return true;
+            }
+
+            return f.Global->ActiveTraversalChallengeCount > 0
+                || TeamChallengeUtility.AnyBannerActive(f)
+                || f.Global->OrbVacuumTimeRemaining > FP._0;
+        }
+
         // Called by ExperienceUtility.Grant the instant Level increases (regardless of how many
         // levels a single Grant call covered - see that method's own comment) AND, every tick until
         // it actually gets through, by LevelUpSystem.Update while Global.PendingLevelUpScreen stays

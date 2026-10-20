@@ -17,7 +17,7 @@ MonoBehaviour:
     Guid:
       Value: 325807758720455975
   PickupRadius:
-    RawValue: 65536
+    RawValue: 131072
   OrbLifetime:
     RawValue: 15728640
   MinSpawnOffset:

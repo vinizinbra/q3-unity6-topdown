@@ -162,8 +162,16 @@ public class TeamChallengeWidget : GameStateGatedWidget
     {
         ChallengeDefinition definition = frame.FindAsset(challenge.SelectedChallenge);
 
+        // KillTarget is only committed at ChallengeActive (BeginChallengeActive) - during the
+        // Starting countdown show the same live preview the POI prompt's rules row uses.
         if (descriptionText != null)
-            descriptionText.text = definition != null ? definition.Description : string.Empty;
+        {
+            int killTarget = challenge.State == TeamChallengeState.ChallengeActive || definition == null
+                ? challenge.KillTarget
+                : TeamChallengeUtility.ResolveKillTarget(frame, definition);
+
+            descriptionText.text = definition != null ? definition.ResolveDescription(killTarget) : string.Empty;
+        }
 
         if (challenge.State == TeamChallengeState.Starting)
         {

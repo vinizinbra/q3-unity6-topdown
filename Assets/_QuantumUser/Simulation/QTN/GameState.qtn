@@ -60,6 +60,9 @@ enum GameState : Byte
 
     TraversalChallenge  // Same overlay shape as TeamChallenge above, entered while
                         // Global.ActiveTraversalChallengeCount > 0. See docs/traversal-challenge.md.
+
+    // Adding a new challenge state? Also add it to LevelUpUtility.IsLevelUpScreenHeld - no level-up
+    // screen may open mid-challenge (XP is still collected, the screen just waits).
 }
 
 // Resolution order CombatDirectorSystem.ApplyEffectiveState uses when more than one of the above

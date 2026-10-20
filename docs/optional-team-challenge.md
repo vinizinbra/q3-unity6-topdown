@@ -123,6 +123,12 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
   live instead of a fixed `PoiView` string. A NEW `InteractionPromptWidget` "rules area" (a fixed
   pool of `IconTextRowWidget` slots, same shape as the Ready-icon pool above) shows one row per
   `ChallengeDefinition.Rules` entry, Available/WaitingForTeam only.
+- **`ChallengeDefinition.Description` is a format string: `{0}` = kill target, `{1}` = Duration
+  in seconds** (`ChallengeDefinition.ResolveDescription`). Never hardcode the count - Kill Rush/
+  Flawless Hunt's target scales with player count (`ResolveKillTarget`: x1/1.3/1.6/1.8), and a
+  flat "Kill 40" contradicted the rules row and objective readout in co-op. The prompt and the
+  Starting banner use the live `ResolveKillTarget` preview; the ChallengeActive banner uses the
+  committed `TeamChallenge.KillTarget`. Keep descriptions to one line on the HUD banner (~45 chars).
 - **The reward preview (one icon+text row, e.g. "RIFT MUTATION") is a plain, constant
   `InteractionPromptPoiView` field (`promptRewardIcon`/`promptRewardText`)**, threaded through
   `Setup` exactly like `promptTitle` already is - not pulled from `TeamChallengeConfig` - because
@@ -335,3 +341,9 @@ prompt never reflected the real co-op-scaled target).
 - If more than one Optional Team Challenge POI is ever `Starting`/`ChallengeActive` at once,
   `TeamChallengeWidget`'s single HUD banner only reflects whichever one the scan finds first - same
   accepted simplification `TraversalChallengeWidget`'s own multi-instance countdown documents.
+
+## Level-ups during the challenge
+
+No level-up screen opens while the challenge runs - XP is still collected, earned levels queue and
+their screens open once it ends (`LevelUpUtility.IsLevelUpScreenHeld`, see
+`docs/level-up-upgrades.md`).

@@ -145,13 +145,16 @@ namespace Quantum
         // the user: a level crossed by an orb collected mid-sweep (CurrencyOrbVacuumUtility) should
         // only actually open its screen once EVERY leftover orb has finished landing, not the
         // instant the threshold is crossed while the rest are still being swept in.
+        //
+        // Same again for every challenge (Team Challenge incl. its countdown, Traversal Challenge) -
+        // XP is still collected, only the screen waits. All of these holds live in
+        // LevelUpUtility.IsLevelUpScreenHeld.
         private void TryOpenNextPendingLevelUp(Frame f)
         {
             if (f.Global->DebugPendingLevelUps <= 0
                 || f.Global->LevelUpScreenOpen == true
                 || f.Global->DebugLevelUpScreenOpenLastTick == true
-                || f.Global->CurrentState == GameState.Boss
-                || f.Global->OrbVacuumTimeRemaining > FP._0)
+                || LevelUpUtility.IsLevelUpScreenHeld(f) == true)
                 return;
 
             f.Global->Level++;

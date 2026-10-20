@@ -651,7 +651,7 @@ public class InteractionPromptWidget : MonoBehaviour
                 ChallengeDefinition definition = frame.FindAsset(challenge->SelectedChallenge);
 
                 if (definition != null && string.IsNullOrEmpty(definition.Description) == false)
-                    return definition.Description;
+                    return definition.ResolveDescription(TeamChallengeUtility.ResolveKillTarget(frame, definition));
             }
         }
 

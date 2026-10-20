@@ -23,7 +23,10 @@ namespace Quantum
             // the instant Grant raised Level) and is still owed - retry every tick until it actually
             // gets through, same "keep retrying while blocked" idiom ChestSystem's own top-of-Update
             // guard already uses. See Global.PendingLevelUpScreen's own comment.
-            if (f.Global->LevelUpScreenOpen == false && f.Global->PendingLevelUpScreen == true)
+            // Held (not dropped) during Boss/challenges, same as the queue drain - see
+            // LevelUpUtility.IsLevelUpScreenHeld.
+            if (f.Global->LevelUpScreenOpen == false && f.Global->PendingLevelUpScreen == true
+                && LevelUpUtility.IsLevelUpScreenHeld(f) == false)
                 LevelUpUtility.BeginLevelUpScreen(f);
 
             if (f.Global->LevelUpScreenOpen == false)
