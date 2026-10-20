@@ -41,13 +41,13 @@ namespace Quantum
             if (tierStats.ExpValue <= FP._0)
                 return;
 
-            if (f.RuntimeConfig.Prefabs.ExpOrbPrototype.IsValid == false)
+            if (f.GameConfig.Prefabs.ExpOrbPrototype.IsValid == false)
             {
                 Log.Debug($"[Experience] {target} died with ExpValue {tierStats.ExpValue} but RuntimeConfig has no ExpOrbPrototype assigned - drop skipped");
                 return;
             }
 
-            EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.ExpOrbPrototype);
+            EntityRef orb = f.Create(f.GameConfig.Prefabs.ExpOrbPrototype);
 
             if (f.Unsafe.TryGetPointer<Transform3D>(orb, out var orbTransform) == true)
             {
@@ -63,9 +63,9 @@ namespace Quantum
 
             FP lifetime = 30;
 
-            if (f.RuntimeConfig.ExperienceConfig.IsValid == true)
+            if (f.GameConfig.ExperienceConfig.IsValid == true)
             {
-                ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
+                ExperienceConfig config = f.FindAsset(f.GameConfig.ExperienceConfig);
                 lifetime = config.OrbLifetime;
             }
 
@@ -101,10 +101,10 @@ namespace Quantum
         {
             f.Global->TotalExperience += amount;
 
-            if (f.RuntimeConfig.ExperienceConfig.IsValid == false)
+            if (f.GameConfig.ExperienceConfig.IsValid == false)
                 return;
 
-            ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
+            ExperienceConfig config = f.FindAsset(f.GameConfig.ExperienceConfig);
             FP xpRequirementMultiplier = ResolveXpRequirementMultiplier(f);
 
             // Peek from Level + DebugPendingLevelUps, not Level alone - Level only catches up once a
@@ -146,11 +146,11 @@ namespace Quantum
         // multiplier-scaled one).
         public static FP ResolveXpRequirementMultiplier(Frame f)
         {
-            BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            BalanceConfig balance = f.FindAsset(f.GameConfig.BalanceConfig);
 
             if (balance == null)
             {
-                Log.Error("[Experience] RuntimeConfig.BalanceConfig did not resolve - XP requirement at its authored curve value only (1x), no co-op scaling applied. Assign it on RuntimeConfig.");
+                Log.Error("[Experience] OverallGameConfig.BalanceConfig did not resolve - XP requirement at its authored curve value only (1x), no co-op scaling applied. Assign it on OverallGameConfig.");
                 return FP._1;
             }
 
@@ -175,10 +175,10 @@ namespace Quantum
         // same precedent as ResolveXpRequirementMultiplier.
         public static FP ResolvePlayerLevelDamageMultiplier(Frame f)
         {
-            if (f.RuntimeConfig.ExperienceConfig.IsValid == false)
+            if (f.GameConfig.ExperienceConfig.IsValid == false)
                 return FP._1;
 
-            ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
+            ExperienceConfig config = f.FindAsset(f.GameConfig.ExperienceConfig);
             int displayLevel = f.Global->Level + 1;
 
             return FP._1 + config.DamageBonusPerLevel * displayLevel;

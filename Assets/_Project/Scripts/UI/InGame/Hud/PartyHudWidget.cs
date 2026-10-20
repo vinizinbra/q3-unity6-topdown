@@ -28,14 +28,16 @@ public class PartyHudWidget : MonoBehaviour
     private DamageReductionUiWidget damageReductionWidget;
     [SerializeField, Tooltip("Shows while this player has a Cursed Rift/Store/Blacksmith Choice Window open - most relevant during a Breathing grace hold (see docs/run-phase.md). Left empty, auto-populated via GetComponentInChildren.")]
     private ChoiceWindowIndicatorUiWidget choiceWindowIndicatorWidget;
+    [SerializeField, Tooltip("Tints the slot while this player is Downed and dims it once KO. Left empty, auto-populated via GetComponentInChildren.")]
+    private PartyLifeStateWidget lifeStateWidget;
 
     [Header("Skills")]
     [SerializeField, Tooltip("Left empty, auto-populated via GetComponentsInChildren (Awake, or the Populate Children button below) - only set these manually to override which widgets belong to this slot (e.g. excluding one).")]
     private SkillCooldownUiWidget[] skillCooldownWidgets;
 
     [Header("Upgrade History")]
-    [SerializeField, Tooltip("Grid of icons for every upgrade this slot's player has ever picked (see UpgradeHistory in LevelUp.qtn) - Skill Upgrade/Global Upgrade/Passive Upgrade/Rift Mutation alike; Weapon Perk excluded. Left empty, auto-populated via GetComponentInChildren.")]
-    private PartyHistoryUpgradeContainer upgradeHistoryContainer;
+    [SerializeField, Tooltip("Icon grids for the upgrades this slot's player has picked (see UpgradeHistory in LevelUp.qtn) - each filtered by its own kindFilter, e.g. Rift Mutations beside the banner and everything else below it; Weapon Perk excluded. Left empty, auto-populated via GetComponentsInChildren.")]
+    private PartyHistoryUpgradeContainer[] upgradeHistoryContainers;
 
     public EntityRef BoundEntityRef { get; private set; }
 
@@ -65,11 +67,14 @@ public class PartyHudWidget : MonoBehaviour
         if (choiceWindowIndicatorWidget == null)
             choiceWindowIndicatorWidget = GetComponentInChildren<ChoiceWindowIndicatorUiWidget>(true);
 
+        if (lifeStateWidget == null)
+            lifeStateWidget = GetComponentInChildren<PartyLifeStateWidget>(true);
+
         if (skillCooldownWidgets == null || skillCooldownWidgets.Length == 0)
             skillCooldownWidgets = GetComponentsInChildren<SkillCooldownUiWidget>(true);
 
-        if (upgradeHistoryContainer == null)
-            upgradeHistoryContainer = GetComponentInChildren<PartyHistoryUpgradeContainer>(true);
+        if (upgradeHistoryContainers == null || upgradeHistoryContainers.Length == 0)
+            upgradeHistoryContainers = GetComponentsInChildren<PartyHistoryUpgradeContainer>(true);
 
         DisableChildAutoBind();
     }
@@ -85,8 +90,8 @@ public class PartyHudWidget : MonoBehaviour
         if (damageReductionWidget != null)
             damageReductionWidget.DisableAutoBind();
 
-        if (upgradeHistoryContainer != null)
-            upgradeHistoryContainer.DisableAutoBind();
+        foreach (var container in upgradeHistoryContainers)
+            container.DisableAutoBind();
     }
 
     public void Initialize(EntityRef entityRef)
@@ -111,11 +116,14 @@ public class PartyHudWidget : MonoBehaviour
         if (choiceWindowIndicatorWidget != null)
             choiceWindowIndicatorWidget.Initialize(entityRef);
 
+        if (lifeStateWidget != null)
+            lifeStateWidget.Initialize(entityRef);
+
         foreach (var widget in skillCooldownWidgets)
             widget.Initialize(entityRef);
 
-        if (upgradeHistoryContainer != null)
-            upgradeHistoryContainer.Initialize(entityRef);
+        foreach (var container in upgradeHistoryContainers)
+            container.Initialize(entityRef);
     }
 
     public void Clear()

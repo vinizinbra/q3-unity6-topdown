@@ -52,8 +52,12 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
   its own `Stats.MoveSpeed`; until then it counts toward Director pressure but can't be damaged.
   This is what keeps the Director from re-buying every pulse the way instant kills would.
 - **XP** - `TierStats.ExpValue` per kill x collector's `ExperienceGainMultiplier` into one shared total,
-  each orb subject to the `OrbPickupEfficiency` curve (orbs expire after `ExperienceConfig.OrbLifetime`,
-  60 s); kill coin orbs roll separately at that share x `CoinPickupFactor` (coins expire after 30 s);
+  each orb subject to the `OrbPickupEfficiency` curve; kill coin orbs roll separately at that share x
+  `CoinPickupFactor`. A missed orb isn't lost yet: it waits for its lifetime (`ExperienceConfig.
+  OrbLifetime` / `CoinConfig.OrbLifetime` / `RiftShardConfig.OrbLifetime`, all 240 s since 2026-10-20 - longer than the gap between Breaks, so in a won run every orb ends up collected; on RunTime) and is collected if a Breathing Break is
+  secured first (Breathing + nothing alive - `CurrencyOrbVacuumUtility`). The Break's shopping runs on
+  that same secured tick (POIs need `BreathingAreaSecured`), so swept coins count for it. `OrbPickup` =
+  XP orbs collected / kills that minute, vacuumed ones included (same as the recorder);
   level thresholds `ExperienceConfig.RequiredExperience.Evaluate(level) x DifficultyMultiplier x
   CoopGlobal(XpRequirement)` (`ExperienceUtility.GetRequiredExperience`).
 - **Coins** - `TierStats.CoinValue` with `CoinDropChance` per kill; a collected coin orb credits
@@ -93,7 +97,21 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
     live through `SimWeapon.BaseDps` (tick rounding included) with Overclock's fire rate, extra
     lifetime and Redline.
   - Dedicated models: `BerserkSkillData` (Max) = weapon fire-rate/reload buff at channel / (channel +
-    cooldown) uptime, read live; `JuggernautSkillData` (Brute) = `Damage` per discharge x `AreaTargets`
+    cooldown) uptime, read live and **time-weighted** (uptime x DPS at the full buff + the rest at
+    base - not the bonus averaged into an always-on value, which tick rounding makes wrong). Full
+    Throttle adds its damage (x `SkillDamageMultiplier`) and reload (multiplied with Berserk's,
+    rank 3 = instant reload); Uncontrolled Fury lengthens the channel from the player's kill rate over
+    the last minute (+`PerKillExtension` per `KillsPerExtension` kills, capped at `MaxExtension`).
+    Assumes max Rage the whole Overdrive. Fire Mastery rank 3's Infernal Rage (+30% during Overdrive on
+    a Fire weapon, or any weapon once Ignition is picked) multiplies the buffed part. Run & Gun (Max's
+    dash line) is a second buff window: Haste +20/30/40% fire rate (multiplies attack speed), +15%
+    weapon damage from rank 2, no reload inside it (dash refills the magazine, rank 3 = no ammo use),
+    for `HasteDuration` (2 s) after each dash; uptime = 2 s / dash cooldown (`DashSkill.Cooldown` /
+    `DashCooldownMultiplier`, Dash Cooldown Global Upgrades included) x the `DashUseEfficiency` knob.
+    The two windows overlap independently (four time-weighted states). The extra weapon damage they add
+    is reported as
+    **SkillDps** (`SimPlayer.BuffDps`), not WeaponDps - it's Max's skill damage; weapon offers are still
+    judged with it (`WeaponDpsWithBuffs`); `JuggernautSkillData` (Brute) = `Damage` per discharge x `AreaTargets`
     x `Duration/DischargeCooldownPerEnemy` x `ChannelContactUptime`; `ProjectileSkillData` = `Damage` x
     (area? `AreaTargets`) - only when the hit carries a `DamageEffectData` (or is a vortex) - plus
     `SpawnAlternatingAreaEffectData` beats (Zara: Damage/Support alternate, Support deals half, so 0.75
@@ -109,7 +127,7 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
   Cluster Bomb / Direct Hit (x `InnerRadiusFraction`^2 - only the blast's inner area qualifies) /
   Birthday Cake (bonus from rank 3 only), Brute Bone Breaker / Aftershock (stacks = every unit hit this
   cast, Earthquake = the stacked blast x its percent) / Concussive Impact (per discharge hit), Max Full
-  Throttle (weapon damage while Overdrive, assumes max Rage), Zara Amplifier/Double Time/Main Stage,
+  Throttle (weapon damage while Overdrive x `SkillDamageMultiplier`, assumes max Rage), Zara Amplifier/Double Time/Main Stage,
   Lux Weapon Systems (extra barrels) / Overclock (fire rate, lifetime, Redline) / Overload Core; unknown
   actions use a generic `DamagePercent` rule. A modelled action whose rank adds nothing stays at 0;
   only unmodelled ranks (Singularity, Momentum, Last Stand...) fall back to the flat
@@ -144,8 +162,9 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
 | `HitEfficiency` | share of theoretical weapon DPS that lands | 0.7 |
 | `SkillUseEfficiency` | share of theoretical skill DPS that lands | 0.85 |
 | `AreaTargets` | enemies an AoE hits when enough are alive | 3 |
+| `DashUseEfficiency` | share of dash cooldowns used in combat (drives Max's Run & Gun window) | recorded Max run |
 | `RetargetSeconds` | seconds of one player's DPS lost per kill (overkill + retarget) - fixed per kill, so independent of `TickSeconds` | 0.15 s |
-| `CoinPickupFactor` | coin orbs expire sooner (30 s vs 60 s): coin pickup share = XP share x this | 0.9 |
+| `CoinPickupFactor` | coin orbs walked over before the next Break sweep, relative to XP (all orbs live 240 s now, so it mostly shifts *when* coins arrive) | 0.9 |
 | `OrbPickupEfficiency` (curve by survival minute), `CoopPickupBonus` | share of XP/kill-coin orbs collected before `OrbLifetime` expires (solo); each extra player shrinks the loss by the bonus | 0.95 → 0.9 (6 min) → 0.8 (12 min); 0.35 |
 | `ChannelContactUptime` | share of a contact channel (Juggernaut) with `AreaTargets` enemies actually in contact | 0.5 |
 | `UnquantifiedPerkDpsValue` | DPS worth of a perk the sim can't quantify (procs, pierce...) | +4% |
@@ -235,3 +254,40 @@ Verified/found so far by comparing against play:
 
 Not yet calibrated: every knob in the table above still carries its default - the next recorded run
 per hero is the input for that.
+
+## End-of-run totals
+
+Under the pick log, one row per hero for the selected player count (shared by the whole party):
+final run level, total run XP (orbs swept in at secured Breaks included), and **Rift Shards banked**
+- `EnemyTierStatsConfig` `RiftShardValue`/`RiftShardDropChance` per kill (only Specialist+ drop
+today), a 30 s orb like a coin (same pickup share x `CoinPickupFactor`, same Break sweep), every
+wallet gets each one (`RiftShardUtility.GrantAll`), x the local hero's `RiftShardGainMultiplier`,
+floored (`RunResultManager.BankRiftShards`, win or loss; quitting banks nothing). The Boss fight
+isn't simulated: a Victory is assumed, so the Boss's own shard is added. Rift Mutations (Greed /
+Blood Tithe `RiftShardGainBonus`) aren't modelled. There is no account XP - shards are the only
+thing a run saves.
+
+## Burn is deliberately not modelled (measured 2026-10-18)
+
+A per-enemy Burn model (stacks, Wildfire spread, Ignition's Burning Ground / Inferno, Flashpoint crits
+/ explosions / executes) was built and run for Max solo: Burn and its procs were 0.2% of total DPS at
+minute 4, 0.9% at 8 and 2% at 12. Burn is too slow to matter: its first tick lands 1 s after it starts
+(`ElementalReactionConfig.TickInterval`), Normal enemies die in 0.2-0.8 s, and one target maxes out
+at ~8 Burn DPS (5 stacks x max(10% of the hit, 5% of the owner's MaxHealth) over 3 s). So it was
+removed again. Revisit it only if Burn is retuned (faster first tick, % of hit per tick) - and note
+Wildfire ranks 1-2 spread a flat 0.1 / 0.18 damage per tick, which reads like an authoring slip.
+
+## Calibration 2026-10-20 (recorded Brute, World 2, solo, 12 min)
+
+The recorded run matched the sim on spawns (~1043 both), but it killed only 775 of them while the sim killed ~1034. In the
+real game ~25% of spawns are left behind as the party moves on (retired by `EnemyLifecycleSystem`). Changes:
+- `EnemyLeakFraction` 0.05 -> **0.25**, and a leaker now **never engages** (`EngageAt` = never). Before, leakers walked in and
+  were shot inside their 7 s retire window, and their refund bought replacements, so the setting did nothing.
+- New `ShardPickupFactor` (**0.75**, was reusing `CoinPickupFactor`): only 36 of 57 dropped shards were collected (63%).
+  The shard droppers are often ranged and die far away.
+- `WorldBalanceData` now applies (World 2: enemy HP x1.15). The recorder's `HpNormal/HpHeavy/HpElite` include it too.
+
+Result for the same config: kills 755 (actual 775), level 21.7 (20), coins 9624 (9060), Heavy/Elite 10/4 (10/3), shard
+pickup ~67% (63%). Still open: Specialist kills 58 vs 44, so shards come out at 51 vs 36. That's probably ranged Specialists
+being left behind more; confirm with a second run before adding a per-tier leak. DPS couldn't be checked: the run was
+spawn-limited, so landed damage is capped by enemy supply rather than player damage.

@@ -61,10 +61,10 @@ public class ExpBarUiWidget : QuantumGlobalMonoBehaviour
     {
         Frame frame = game.Frames.Predicted;
 
-        if (frame.RuntimeConfig.ExperienceConfig.Id.IsValid == false)
+        if (frame.GameConfig.ExperienceConfig.Id.IsValid == false)
             return;
 
-        ExperienceConfig config = frame.FindAsset(frame.RuntimeConfig.ExperienceConfig);
+        ExperienceConfig config = frame.FindAsset(frame.GameConfig.ExperienceConfig);
 
         // Global.Level counts level-ups earned so far and stays at its natural unseeded 0 (see
         // ExperienceUtility.Grant) - the displayed/curve-facing level is always Level + 1, since

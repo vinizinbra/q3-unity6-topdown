@@ -103,7 +103,7 @@ namespace Quantum
 
         // Recoverable Accessory Guard (see docs/accessory-guard.md) - added here rather than
         // authored on each hero's own prototype, so the whole mechanic switches on/off with a single
-        // RuntimeConfig.AccessoryGuardConfig assignment and no hero can silently be missing it.
+        // OverallGameConfig.AccessoryGuardConfig assignment and no hero can silently be missing it.
         //
         // PlayerLink is the "is this a player character, not some other CharacterStats carrier"
         // gate - the same distinction PlayerSpawnUtility.Spawn relies on. Seeded from here rather

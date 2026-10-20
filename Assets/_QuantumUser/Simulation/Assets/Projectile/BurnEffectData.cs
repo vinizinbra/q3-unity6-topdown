@@ -4,7 +4,7 @@ namespace Quantum
 
     // Refresh-only DoT - see StatusEffectUtility.ApplyBurn for what happens when this lands on an
     // already-burning target. Duration/DamagePercent are read from the shared
-    // RuntimeConfig.ElementalReactionConfig rather than authored here, so every source of Burn hits
+    // OverallGameConfig.ElementalReactionConfig rather than authored here, so every source of Burn hits
     // identically (same reasoning as HasteEffectData).
     public unsafe class BurnEffectData : HitEffectData
     {

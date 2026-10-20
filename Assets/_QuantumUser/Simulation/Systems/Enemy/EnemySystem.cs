@@ -684,6 +684,27 @@ namespace Quantum
             enemy->StaggerImmuneTimer = tierStats.HitStaggerDuration + tierStats.StaggerCooldown;
         }
 
+        // Brute's Juggernaut launch (DamageUtility.ApplyLaunch) - the tier-independent counterpart to
+        // OnEnemyKnockedBack. That handler bails out for CanBeInterruptedByKnockback == false (Heavy
+        // and up), which is exactly the tier a launch has to carry: the AI would keep driving its
+        // velocity and flatten the launch on its next tick. This opens the stagger window
+        // unconditionally (KnockbackTimer + the airborne gate in TickKnockbackRecovery then hold the AI
+        // off until it is back on the ground) and cancels whatever it was winding up or doing.
+        public static void BeginLaunch(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false || enemy->Phase == EnemyActionPhase.Dead)
+                return;
+
+            EnemyStuckRecoveryUtility.OnKnockedBack(f, entity, enemy);
+
+            TierStats tierStats = EnemyTierStatsConfig.Resolve(f, f.FindAsset(enemy->EnemyData).Tier);
+
+            enemy->KnockbackTimer = FPMath.Max(enemy->KnockbackTimer, tierStats.KnockbackRecoveryTime);
+            enemy->StaggerImmuneTimer = FPMath.Max(enemy->StaggerImmuneTimer, tierStats.KnockbackRecoveryTime + tierStats.StaggerCooldown);
+
+            EnemyActionUtility.TryInterrupt(f, entity, ignoreInterruptibleFlag: true);
+        }
+
         public void OnEnemyKnockedBack(Frame f, EntityRef entity, QBoolean canInterrupt)
         {
             if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false)

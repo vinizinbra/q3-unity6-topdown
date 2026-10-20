@@ -53,7 +53,7 @@ namespace Quantum
                 DamageUtility.ApplyDamage(f, filter.Entity, damage, owner, DamageSource.Skill);
             }
 
-            if (DamageUtility.RollChance(f, stunChance) == true)
+            if (stunDuration > FP._0 && DamageUtility.RollChance(f, stunChance) == true)
             {
                 StatusEffectUtility.ApplyStun(f, filter.Entity, stunDuration, owner);
             }

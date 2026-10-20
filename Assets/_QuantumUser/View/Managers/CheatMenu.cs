@@ -843,9 +843,9 @@ namespace QuantumUser.View
         {
             frame = _game != null ? _game.Frames.Predicted : null;
             config = null;
-            if (frame == null || frame.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (frame == null || frame.GameConfig.LevelUpConfig.IsValid == false)
                 return false;
-            config = frame.FindAsset(frame.RuntimeConfig.LevelUpConfig);
+            config = frame.FindAsset(frame.GameConfig.LevelUpConfig);
             return config != null;
         }
 

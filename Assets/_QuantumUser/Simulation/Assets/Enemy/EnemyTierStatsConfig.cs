@@ -61,7 +61,7 @@ namespace Quantum
     }
 
     // Global per-tier baseline for stats that would otherwise need hand-tuning on every single
-    // EnemyDataAsset - referenced via RuntimeConfig.EnemyTierStatsConfig. Pure lookup, same shape
+    // EnemyDataAsset - referenced via OverallGameConfig.EnemyTierStatsConfig. Pure lookup, same shape
     // as EnemyTierResistanceConfig: a tier fully determines these values, no per-asset override.
     // ScaleMultiplier multiplies the enemy's own EnemyDataAsset.Stats.Radius (see
     // EnemySystem.SeedRadius) rather than replacing it, so per-enemy footprint differences within
@@ -88,11 +88,11 @@ namespace Quantum
         // One-line convenience so call sites don't repeat FindAsset(f.RuntimeConfig...) + Get(tier).
         public static TierStats Resolve(Frame f, EnemyTier tier)
         {
-            EnemyTierStatsConfig config = f.FindAsset(f.RuntimeConfig.EnemyTierStatsConfig);
+            EnemyTierStatsConfig config = f.FindAsset(f.GameConfig.EnemyTierStatsConfig);
 
             if (config == null)
             {
-                Log.Error($"[EnemyTierStatsConfig] RuntimeConfig.EnemyTierStatsConfig ({f.RuntimeConfig.EnemyTierStatsConfig}) did not resolve to an asset - it's likely unassigned on whatever RuntimeConfig started this session (check MatchMakingConfig in MenuScene vs. QuantumRunnerLocalDebug in QuantumGameScene).");
+                Log.Error($"[EnemyTierStatsConfig] OverallGameConfig.EnemyTierStatsConfig ({f.GameConfig.EnemyTierStatsConfig}) did not resolve to an asset - it's likely unassigned on whatever RuntimeConfig started this session (check MatchMakingConfig in MenuScene vs. QuantumRunnerLocalDebug in QuantumGameScene).");
                 return null;
             }
 

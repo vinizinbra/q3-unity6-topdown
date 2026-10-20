@@ -530,7 +530,7 @@ namespace Quantum
             if (mark->HasMarkChance == true && RollChance(f, mark->MarkChance) == false)
                 return;
 
-            ExplodeOnDeathConfig config = f.FindAsset(f.RuntimeConfig.ExplodeOnDeathConfig);
+            ExplodeOnDeathConfig config = f.FindAsset(f.GameConfig.ExplodeOnDeathConfig);
 
             f.AddOrGet<ExplodeOnDeath>(target, out var explode);
             explode->Remaining = config.Duration * durationMultiplier;
@@ -554,7 +554,7 @@ namespace Quantum
         // Enemies only (see the call site) - gated purely on the dying target's own ExplodeOnDeath
         // tag (see TryMarkExplodeOnDeath) - there's no owner-side "my kills explode" concept anymore,
         // just "this specific enemy was marked at some point and it just died." DamagePercent is read
-        // from the shared RuntimeConfig.ExplodeOnDeathConfig rather than anything per-upgrade, so
+        // from the shared OverallGameConfig.ExplodeOnDeathConfig rather than anything per-upgrade, so
         // every source of the mark hits identically. Radius comes from the dying enemy's own REAL
         // collider radius (EnemyMovementUtility.ResolveEntityRadius) - same reasoning FireEnemyExploded
         // already uses it for - so a Brute still explodes bigger than a Grunt with zero extra tuning
@@ -576,7 +576,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
                 return;
 
-            ExplodeOnDeathConfig config = f.FindAsset(f.RuntimeConfig.ExplodeOnDeathConfig);
+            ExplodeOnDeathConfig config = f.FindAsset(f.GameConfig.ExplodeOnDeathConfig);
             FP blastRadius = radius * config.RadiusMultiplier;
             FP damage = maxHealth * config.DamagePercent;
 
@@ -1216,11 +1216,11 @@ namespace Quantum
             ApplyResolvedImpulse(f, target, impulse * scale, mode, canInterrupt);
         }
 
-        private static void ApplyResolvedImpulse(Frame f, EntityRef target, FPVector3 impulse,
+        private static bool ApplyResolvedImpulse(Frame f, EntityRef target, FPVector3 impulse,
             KnockbackApplyMode mode = KnockbackApplyMode.Additive, bool canInterrupt = true)
         {
             if (impulse.SqrMagnitude <= FP._0)
-                return;
+                return false;
 
             bool pushed = false;
 
@@ -1255,7 +1255,7 @@ namespace Quantum
             if (pushed == false)
             {
                 Log.Debug($"[Knockback] {target} took no impulse ({impulse}) - no KCC, and no non-kinematic PhysicsBody3D");
-                return;
+                return false;
             }
 
             // Only once the push actually landed: EnemySystem has to stop driving this enemy's
@@ -1266,6 +1266,34 @@ namespace Quantum
             {
                 f.Signals.OnEnemyKnockedBack(target, canInterrupt);
             }
+
+            return true;
+        }
+
+        // A launch, not a knockback: a "throw this enemy into the air" push whose height has to read
+        // the same on every tier it is aimed at. Deliberately skips the tier KnockbackMultiplier
+        // (0.4 on Heavy would turn a 16 u/s launch into a 0.5-unit hop) while keeping every other
+        // knockback stat, and additionally holds the AI off for the whole flight via
+        // EnemySystem.BeginLaunch - Heavy+ is CanBeInterruptedByKnockback = false, so without that the
+        // enemy's own movement would erase the launch on its next tick. Returns false when nothing
+        // could be pushed (kinematic mid-charge/leap, resisted entirely) so the caller can fall back to
+        // resolving whatever it was deferring to the landing right away.
+        public static bool ApplyLaunch(Frame f, EntityRef target, FPVector3 impulse, EntityRef owner)
+        {
+            FP scale = ResolveKnockbackScale(f, owner, target, ignoreTierResistance: true);
+
+            if (scale <= FP._0)
+                return false;
+
+            if (ApplyResolvedImpulse(f, target, impulse * scale) == false)
+                return false;
+
+            if (f.Has<Enemy>(target) == true)
+            {
+                EnemySystem.BeginLaunch(f, target);
+            }
+
+            return true;
         }
 
         // Vortex's continuous pull, not a one-shot knockback pop - reuses ResolveImpulse/
@@ -1324,7 +1352,10 @@ namespace Quantum
         // positional push, which scales a kinematic move distance instead of a physics impulse) can
         // still respect the same KnockbackMultiplier/KnockbackTakenMultiplier stats every other
         // knockback in the game does.
-        public static FP ResolveKnockbackScale(Frame f, EntityRef owner, EntityRef target)
+        //
+        // ignoreTierResistance: ApplyLaunch only - a launch has its own per-tier rule (who launches at
+        // all, and the Heavy scale), so the generic tier multiplier must not also shrink it.
+        public static FP ResolveKnockbackScale(Frame f, EntityRef owner, EntityRef target, bool ignoreTierResistance = false)
         {
             FP scale = FP._1;
 
@@ -1338,7 +1369,7 @@ namespace Quantum
                 scale *= targetStats->KnockbackTakenMultiplier;
             }
 
-            if (StatusEffectUtility.GetTierResistance(f, target) is { } resistance)
+            if (ignoreTierResistance == false && StatusEffectUtility.GetTierResistance(f, target) is { } resistance)
             {
                 scale *= resistance.KnockbackMultiplier;
             }

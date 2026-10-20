@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DirectorConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.DirectorConfig
   Identifier:
-    Path: _QuantumUser/Resources/Director/DirectorConfig
+    Path: _QuantumUser/Resources/Configs/DirectorConfig
     Guid:
       Value: 416415362832844946
   EnemyPrototype:

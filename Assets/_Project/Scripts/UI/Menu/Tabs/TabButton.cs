@@ -50,7 +50,7 @@ public class TabButton : MonoBehaviour, IPointerClickHandler,IPointerEnterHandle
         if (eventData.moveDir != MoveDirection.Right || !group.HasContent(this))
             return;
 
-        group.OnTabSelected(this, true);
+        group.OnTabSelected(this, true, fromRight: true);
         eventData.Use();
     }
 

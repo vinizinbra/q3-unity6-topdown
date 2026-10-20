@@ -63,10 +63,16 @@ namespace QuantumUser.Editor.BalanceSimulator
                 perSeed[i] = new List<List<MinuteRow>>();
 
             SimPlayer[] firstSeedPlayers = null;
+            var totals = new RunTotals();
 
             for (int seed = 0; seed < seeds; seed++)
             {
-                SimPlayer[] players = RunSeed(party, seed, out List<MinuteRow>[] rows);
+                SimPlayer[] players = RunSeed(party, seed, out List<MinuteRow>[] rows, out RunTotals seedTotals);
+                totals.TotalXp += seedTotals.TotalXp / seeds;
+                totals.FinalLevel += seedTotals.FinalLevel / seeds;
+                totals.ShardsDropped += seedTotals.ShardsDropped / seeds;
+                totals.RiftShards += seedTotals.RiftShards / seeds;
+                totals.BossShards += seedTotals.BossShards / seeds;
                 firstSeedPlayers ??= players;
                 for (int i = 0; i < party.Count; i++)
                     perSeed[i].Add(rows[i]);
@@ -88,13 +94,14 @@ namespace QuantumUser.Editor.BalanceSimulator
                     SkillModel = firstSeedPlayers[i].Skill.Model,
                     Rows = BalanceSimReport.Average(perSeed[i]),
                     PickLog = firstSeedPlayers[i].PickLog,
+                    Totals = totals,
                 });
             }
 
             return results;
         }
 
-        private SimPlayer[] RunSeed(List<CharacterData> party, int seed, out List<MinuteRow>[] rowsPerPlayer)
+        private SimPlayer[] RunSeed(List<CharacterData> party, int seed, out List<MinuteRow>[] rowsPerPlayer, out RunTotals totals)
         {
             var rng = new SimRng((scenario.BaseSeed + seed) * 7919 + 17);
             int playerCount = party.Count;
@@ -111,6 +118,8 @@ namespace QuantumUser.Editor.BalanceSimulator
                 Skill = BalanceSimSkillModel.Evaluate(hero, assets, scenario),
                 DamageBonusPerLevel = D(assets.Experience.DamageBonusPerLevel),
                 TickSeconds = assets.SimTickSeconds,
+                DashCooldown = assets.Resolve(hero.DashSkill) is SkillData dash ? Math.Max(0.1, D(dash.Cooldown)) : 4,
+                DashUseEfficiency = scenario.DashUseEfficiency,
             }).ToArray();
 
             var rows = new List<MinuteRow>[playerCount];
@@ -120,7 +129,7 @@ namespace QuantumUser.Editor.BalanceSimulator
 
             double totalXp = 0;
             int displayLevel = 1;
-            double coopXp = D(assets.Balance.GetCoopGlobal(CoopGlobalKey.XpRequirement, playerCount));
+            double coopXp = D(assets.Balance.GetCoopGlobal(CoopGlobalKey.XpRequirement, playerCount)) * assets.WorldXpRequirement;
             double partyKills = 0;
             double dt = Math.Clamp(scenario.TickSeconds, 0.05f, 5f);
             double duration = Math.Max(1, scenario.DurationMinutes) * 60.0;
@@ -128,9 +137,23 @@ namespace QuantumUser.Editor.BalanceSimulator
             int minute = 0;
             double minuteKills = 0, minuteSpawnStart = 0, minuteIdle = 0, minuteTicks = 0;
             double bossHp = 0;
-            double coopCoinGain = D(assets.Balance.GetCoopGlobal(CoopGlobalKey.CoinGain, playerCount));
+            double coopCoinGain = D(assets.Balance.GetCoopGlobal(CoopGlobalKey.CoinGain, playerCount)) * assets.WorldCoinGain;
             double barrelCoinsPerSecond = assets.BarrelsPerRun * scenario.BarrelBreakFraction * assets.CoinsPerBarrel / duration;
             double barrelCoins = 0;
+
+            // Orbs nobody walked over yet. They expire after their OrbLifetime (RunTime - DestroyAfterTime
+            // keeps ticking through the SurvivalTime freezes), unless a Breathing Break is secured first:
+            // CurrencyOrbVacuumUtility then collects every orb still on the map.
+            double xpOrbLifetime = assets.Experience != null ? D(assets.Experience.OrbLifetime) : 60;
+            double coinOrbLifetime = assets.Coin != null ? D(assets.Coin.OrbLifetime) : 30;
+            var pendingXp = new List<(double ExpireAt, double Exp)>();
+            var pendingCoins = new List<(double ExpireAt, double Value)>();
+            var pendingShards = new List<(double ExpireAt, double Value)>();
+            double shardOrbLifetime = assets.RiftShard != null ? D(assets.RiftShard.OrbLifetime) : 30;
+            double shardsDropped = 0, shardsCollected = 0;
+            bool wasSecured = false;
+            var killsAtSnapshot = new double[playerCount];
+            double minuteXpOrbs = 0;
 
             // Solo loss from the curve, shrunk per extra player (more bodies covering the ground).
             double PickupEfficiency()
@@ -156,6 +179,11 @@ namespace QuantumUser.Editor.BalanceSimulator
 
                 for (int i = 0; i < playerCount; i++)
                 {
+                    // Kills/s over the minute that just ended - feeds Uncontrolled Fury's extension.
+                    if (m > 0)
+                        players[i].KillRate = (players[i].Kills - killsAtSnapshot[i]) / 60.0;
+                    killsAtSnapshot[i] = players[i].Kills;
+
                     SimPlayer p = players[i];
                     double dps = p.TotalDps(scenario);
                     var row = new MinuteRow { Phase = director.PhaseName, Weapon = p.Weapon.Name };
@@ -206,12 +234,15 @@ namespace QuantumUser.Editor.BalanceSimulator
 
                     row[Col.LoopCostToDate] = p.LoopCostToDate;
                     row[Col.LoopAfford] = p.LoopCostToDate > 0 ? p.CoinsEarned / p.LoopCostToDate : 0;
-                    row[Col.OrbPickup] = PickupEfficiency();
+                    // Collected so far (every wallet gets each shard), before the run-end floor/Boss shard.
+                    row[Col.RiftShards] = shardsCollected * D(p.Data.RiftShardGainMultiplier);
+                    row[Col.OrbPickup] = minuteKills > 0 ? Math.Min(1, minuteXpOrbs / minuteKills) : 0;
                     row[Col.Players] = playerCount;
                     rows[i].Add(row);
                 }
 
                 minuteKills = 0;
+                minuteXpOrbs = 0;
                 minuteIdle = 0;
                 minuteTicks = 0;
                 minuteSpawnStart = director.SpawnedTotal;
@@ -227,8 +258,8 @@ namespace QuantumUser.Editor.BalanceSimulator
 
                 // XP orbs credit the shared total scaled by the finder's own multiplier; coin orbs
                 // credit EVERY wallet (CoinUtility.GrantAll), each scaled by that player's own multiplier.
-                // Orbs that expire before anyone reaches them (OrbLifetime) are lost - a per-orb roll
-                // against the survival-minute pickup efficiency curve.
+                // A per-orb roll against the survival-minute pickup efficiency curve; a missed orb waits
+                // on the ground until it expires (OrbLifetime) or a secured Break sweeps it in.
                 double pickup = PickupEfficiency();
 
                 // Elite chests (EnemyChestDropUtility.TrySpawnDrop): an extra forced-category pick
@@ -240,24 +271,47 @@ namespace QuantumUser.Editor.BalanceSimulator
                         policy.OnChest(p, chestKind.Value, director.SurvivalTime);
                 }
 
-                // Coin orbs are separate from the XP orb and expire sooner (30s vs 60s).
-                bool coinCollected = rng.Chance(enemy.CoinChance) && rng.Chance(pickup * Math.Clamp(scenario.CoinPickupFactor, 0, 1));
-
-                if (coinCollected)
+                // Coin orbs are separate from the XP orb (own lifetime, CoinConfig.OrbLifetime).
+                if (rng.Chance(enemy.CoinChance))
                 {
-                    foreach (SimPlayer p in players)
-                    {
-                        double coins = enemy.CoinValue * coopCoinGain * p.Stats.CoinGainMultiplier;
-                        p.Coins += coins;
-                        p.CoinsEarned += coins;
-                    }
+                    if (rng.Chance(pickup * Math.Clamp(scenario.CoinPickupFactor, 0, 1)))
+                        GrantCoins(enemy.CoinValue);
+                    else
+                        pendingCoins.Add((director.RunTime + coinOrbLifetime, enemy.CoinValue));
                 }
 
-                if (rng.Chance(pickup) == false)
-                    return;
+                // Rift Shards (RiftShardUtility.TrySpawnDrop): per-tier value/chance, a 30s orb like a
+                // coin - XP pickup share x ShardPickupFactor (ranged Specialists die far away), same Break sweep.
+                if (enemy.ShardValue > 0 && rng.Chance(enemy.ShardChance))
+                {
+                    shardsDropped += enemy.ShardValue;
+                    if (rng.Chance(pickup * Math.Clamp(scenario.ShardPickupFactor, 0, 1)))
+                        shardsCollected += enemy.ShardValue;
+                    else
+                        pendingShards.Add((director.RunTime + shardOrbLifetime, enemy.ShardValue));
+                }
 
+                if (rng.Chance(pickup))
+                    GrantXp(enemy.Exp);
+                else
+                    pendingXp.Add((director.RunTime + xpOrbLifetime, enemy.Exp));
+            }
+
+            void GrantCoins(double value)
+            {
+                foreach (SimPlayer p in players)
+                {
+                    double coins = value * coopCoinGain * p.Stats.CoinGainMultiplier;
+                    p.Coins += coins;
+                    p.CoinsEarned += coins;
+                }
+            }
+
+            void GrantXp(double exp)
+            {
+                minuteXpOrbs++;
                 SimPlayer finder = players[rng.Next(playerCount)];
-                totalXp += enemy.Exp * finder.Stats.ExperienceGainMultiplier;
+                totalXp += exp * finder.Stats.ExperienceGainMultiplier;
 
                 while (displayLevel < assets.Experience.MaxLevel && totalXp >= RequiredXp(displayLevel + 1))
                 {
@@ -280,7 +334,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             // never lets the clock advance.
             while ((director.SurvivalTime < duration || director.Phase.Kind == SurvivalPhaseKind.Breathing) && director.RunTime < duration * 4)
             {
-                director.Tick(dt, out bool enteredBreak);
+                director.Tick(dt, out bool _);
 
                 if (director.BossReached)
                 {
@@ -288,8 +342,28 @@ namespace QuantumUser.Editor.BalanceSimulator
                     break;
                 }
 
-                if (enteredBreak)
+                bool breathing = director.Phase.Kind == SurvivalPhaseKind.Breathing;
+
+                // SurvivalProgressionUtility: on the tick a Break is secured (Breathing + nothing alive)
+                // CurrencyOrbVacuumUtility sweeps in every orb that hasn't expired yet.
+                bool secured = breathing && director.Alive.Count == 0;
+                if (secured && wasSecured == false)
                 {
+                    foreach (var orb in pendingCoins)
+                        if (orb.ExpireAt > director.RunTime)
+                            GrantCoins(orb.Value);
+                    foreach (var orb in pendingXp)
+                        if (orb.ExpireAt > director.RunTime)
+                            GrantXp(orb.Exp);
+                    foreach (var orb in pendingShards)
+                        if (orb.ExpireAt > director.RunTime)
+                            shardsCollected += orb.Value;
+                    pendingShards.Clear();
+                    pendingCoins.Clear();
+                    pendingXp.Clear();
+
+                    // The Break's POIs only open once it's secured (GameState.Breathing needs
+                    // BreathingAreaSecured), so the shopping runs here - with the swept coins in hand.
                     double loopCost = policy.ExpectedLoopCost(director.SurvivalTime, director.BreathingIndex);
 
                     foreach (SimPlayer p in players)
@@ -302,7 +376,11 @@ namespace QuantumUser.Editor.BalanceSimulator
                     }
                 }
 
-                bool breathing = director.Phase.Kind == SurvivalPhaseKind.Breathing;
+                wasSecured = secured;
+                pendingCoins.RemoveAll(o => o.ExpireAt <= director.RunTime);
+                pendingXp.RemoveAll(o => o.ExpireAt <= director.RunTime);
+                pendingShards.RemoveAll(o => o.ExpireAt <= director.RunTime);
+
                 if (breathing == false)
                 {
                     minuteTicks++;
@@ -338,7 +416,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                     for (int i = 0; i < playerCount; i++)
                     {
                         SimPlayer p = players[i];
-                        double dps = p.WeaponDps(scenario) + p.SkillDps(scenario) * (p.Skill.UsesArea ? areaFill : 1);
+                        double dps = p.WeaponDpsWithBuffs(scenario) + p.OwnSkillDps(scenario) * (p.Skill.UsesArea ? areaFill : 1);
                         shares[i] = dps;
                         partyDps += dps;
                         budget += dps * dt;
@@ -385,6 +463,25 @@ namespace QuantumUser.Editor.BalanceSimulator
                     last[Col.BossTtk] = partyDps > 0 ? bossHp / partyDps : 0;
                 }
             }
+
+            // The Boss fight isn't simulated: assume a Victory, so the Boss's own shard drop counts.
+            // Banked = floor(RiftShardsEarned) of the local player (RunResultManager.BankRiftShards).
+            double bossShards = 0;
+            if (director.BossReached)
+            {
+                TierStats bossTier = assets.Tier(EnemyTier.Boss);
+                bossShards = D(bossTier.RiftShardValue) * Math.Clamp(D(bossTier.RiftShardDropChance), 0, 1);
+            }
+
+            double shardGain = D(party[0].RiftShardGainMultiplier);
+            totals = new RunTotals
+            {
+                TotalXp = totalXp,
+                FinalLevel = displayLevel,
+                ShardsDropped = shardsDropped + bossShards,
+                RiftShards = Math.Floor((shardsCollected + bossShards) * shardGain),
+                BossShards = bossShards,
+            };
 
             return players;
         }

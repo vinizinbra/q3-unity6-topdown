@@ -45,7 +45,7 @@ ExperienceUtility.Grant - right after its own while-loop finishes incrementing L
        LevelUpUtility.BeginLevelUpScreen(f)
 
 LevelUpUtility.BeginLevelUpScreen
-  -> RuntimeConfig.LevelUpConfig not assigned -> skip (logged)
+  -> OverallGameConfig.LevelUpConfig not assigned -> skip (logged)
   -> for every entity with a PlayerLink: RollOptionsFor(f, entity, config)
        -> collect candidates from WeaponPerkPool.Perks (global - only the eligible-perks list is
           read, not WeaponPerkPoolData's own weight fields, see below) and GlobalUpgrades (global,

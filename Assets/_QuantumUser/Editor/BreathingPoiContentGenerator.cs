@@ -30,7 +30,7 @@ namespace QuantumUser.Editor
         private const string CoinOfferingPath = SacrificeFolderPath + "/CoinOffering.asset";
         private const string RiftShardOfferingPath = SacrificeFolderPath + "/RiftShardOffering.asset";
         private const string AccessoryOfferingPath = SacrificeFolderPath + "/AccessoryOffering.asset";
-        private const string CursedRiftConfigPath = SacrificeFolderPath + "/CursedRiftConfig.asset";
+        private const string CursedRiftConfigPath = "Assets/_QuantumUser/Resources/Configs/CursedRiftConfig.asset"; // shared configs live in Resources/Configs (OverallGameConfig)
 
         [MenuItem("Tools/RiftRaiders/Breathing POI/Generate Breathing POI Content")]
         internal static void Generate()
@@ -57,7 +57,7 @@ namespace QuantumUser.Editor
                 "(1) on SurvivalConfig.asset (Tools/RiftRaiders/Generate Survival Director Content), interleave a few Phases[] entries " +
                 "with Kind=Breathing (e.g. Duration=30) among the existing combat phases - that IS the whole Combat<->Breathing " +
                 "timeline now, see docs/run-phase.md; " +
-                "(2) assign RuntimeConfig's CursedRiftConfig field (QuantumMenuConfig.asset), same place LevelUpConfig etc. are already assigned; " +
+                "(2) assign OverallGameConfig's CursedRiftConfig field (Resources/Configs/OverallGameConfig), same place LevelUpConfig etc. are already assigned; " +
                 "(3) hand-place a HealingShrine EntityPrototype (HealingShrine + Interactable components, Interactable.Kind = " +
                 "HealingShrine - press-to-heal via the same Base-Skill redirect Cursed Rift uses, not a walk-in auto-heal) and a " +
                 "CursedRift EntityPrototype (CursedRift + Interactable components, Interactable.Kind = CursedRift) in the level; " +

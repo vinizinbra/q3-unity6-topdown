@@ -31,10 +31,10 @@ namespace Quantum
             if (filter.Enemy->Phase == EnemyActionPhase.Dead)
                 return;
 
-            if (f.RuntimeConfig.LifecycleConfig.Id.IsValid == false)
+            if (f.GameConfig.LifecycleConfig.Id.IsValid == false)
                 return;
 
-            LifecycleConfig lifecycleConfig = f.FindAsset(f.RuntimeConfig.LifecycleConfig);
+            LifecycleConfig lifecycleConfig = f.FindAsset(f.GameConfig.LifecycleConfig);
             EnemyDataAsset data = f.FindAsset(filter.Enemy->EnemyData);
 
             RecentCombatMarker.Begin();

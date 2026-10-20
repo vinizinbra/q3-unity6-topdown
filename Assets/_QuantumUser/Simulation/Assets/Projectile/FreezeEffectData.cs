@@ -6,7 +6,7 @@ namespace Quantum
     // ApplyAnticipationSlow/GetAnticipationMultiplier) for Duration - not a lockout, see
     // docs/elemental-reactions.md's "Stagger: pausing, not stopping" (the same stretch-vs-stop
     // distinction, applied to this older primitive). Plain overwrite-on-reapply. Duration/Multiplier
-    // are read from RuntimeConfig.EffectConfig.AnticipationSlowDuration/AnticipationSlowMultiplier.
+    // are read from OverallGameConfig.EffectConfig.AnticipationSlowDuration/AnticipationSlowMultiplier.
     // Gives Freeze a freely-authorable HitEffectData the same way Stun/Root already have one - any
     // skill/perk can drop this directly, it's not tied to any one elemental reaction.
     public unsafe class FreezeEffectData : HitEffectData

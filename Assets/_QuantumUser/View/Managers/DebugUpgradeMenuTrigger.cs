@@ -94,13 +94,13 @@ namespace QuantumUser.View
                     () => SendGrantPassive(upgrade), null, currentStacks, maxStacks, descriptionForRank);
             }
 
-            if (frame.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (frame.GameConfig.LevelUpConfig.IsValid == false)
             {
                 LogHelper.Warn("DebugUpgradeMenuTrigger", "RuntimeConfig has no LevelUpConfig assigned - Weapon Perk/Global rows skipped");
                 return;
             }
 
-            LevelUpConfig config = frame.FindAsset(frame.RuntimeConfig.LevelUpConfig);
+            LevelUpConfig config = frame.FindAsset(frame.GameConfig.LevelUpConfig);
 
             if (config.WeaponPerkPool.IsValid)
             {

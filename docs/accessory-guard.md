@@ -126,7 +126,7 @@ pellet in that same tick finds `State != Equipped` and lands normally.
 ## The dropped collectible
 
 One shared, fully generic `EntityPrototype`
-(`RuntimeConfig.Prefabs.DroppedAccessoryPrototype`) - **not one per hero**. Every gameplay behaviour
+(`OverallGameConfig.Prefabs.DroppedAccessoryPrototype`) - **not one per hero**. Every gameplay behaviour
 of the pickup is identical for all heroes; only the sprite differs, and a sprite is presentation, so
 `DroppedAccessoryView` swaps it at spawn by resolving `DroppedAccessory.Owner`.
 
@@ -435,7 +435,7 @@ public FP AccessoryBrokenReplacementCost = 50;  // the first point back from Bro
 ```
 
 `AccessoryServiceUtility.ResolvePrice` returns the price of the *next* point, read off
-`f.RuntimeConfig.StoreConfig` live. `StoreConfig.ResolveAccessoryFullRestoreCost(current, max)` gives
+`f.OverallGameConfig.StoreConfig` live. `StoreConfig.ResolveAccessoryFullRestoreCost(current, max)` gives
 the total to full (for the Balance Simulator / previews only).
 
 The one invariant authoring can get wrong ("replacement > a repair point") is checked by an Editor-only `OnValidate` on `StoreConfig`, so a designer finds out while
@@ -575,7 +575,7 @@ some other `CharacterStats` carrier" test - only the 7 hero prototypes carry bot
 
 Added in code rather than authored on each hero's prototype so:
 
-- the whole mechanic switches on/off with a single `RuntimeConfig.AccessoryGuardConfig` assignment
+- the whole mechanic switches on/off with a single `OverallGameConfig.AccessoryGuardConfig` assignment
   (unassigned, or `BaseDurability == 0`, seeds nothing and therefore blocks nothing);
 - no hero prototype can silently be missing it.
 
@@ -650,11 +650,11 @@ been verified in-Editor yet**, and no assets are authored.
 
 1. Run `Tools > RiftRaiders > Generate Accessory Guard Content` to author
    `Assets/_QuantumUser/Resources/Accessory/AccessoryGuardConfig.asset`.
-2. **Assign `RuntimeConfig.AccessoryGuardConfig`** (`QuantumMenuConfig.asset`), same place
+2. **Assign `OverallGameConfig.AccessoryGuardConfig`** (`QuantumMenuConfig.asset`), same place
    `ReviveConfig`/`CursedRiftConfig`/`StoreConfig` already are. Until this is assigned the whole
    mechanic is off - nothing is seeded, so nothing blocks.
 3. Build **one** shared `DroppedAccessory` `EntityPrototype` and assign it to
-   `RuntimeConfig.Prefabs.DroppedAccessoryPrototype`. Easiest route is to duplicate
+   `OverallGameConfig.Prefabs.DroppedAccessoryPrototype`. Easiest route is to duplicate
    `Assets/_QuantumUser/Entities/Prefabs/CoinOrb.prefab` and swap `QPrototypeCurrencyOrb` for
    `QPrototypeDroppedAccessory`, then put a `DroppedAccessoryView` on the sprite child. It needs
    exactly three Quantum components:

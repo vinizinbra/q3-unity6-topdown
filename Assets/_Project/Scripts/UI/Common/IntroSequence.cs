@@ -132,6 +132,10 @@ public class IntroSequence : MonoBehaviour
     [SerializeField, Tooltip("Hide the balloon while a step has no subtitle.")]
     private bool hideBalloonWithoutText = true;
 
+    [Header("Music")]
+    [SerializeField, SoundDataPicker, Tooltip("Background theme under the whole intro, started with the fade-in through AudioManager's music channel. It keeps playing through the scene load until the next scene's music crossfades it out. Leave empty for no music.")]
+    private SoundData music;
+
     [Header("Steps")]
     [SerializeField] private Step[] steps;
 
@@ -184,6 +188,7 @@ public class IntroSequence : MonoBehaviour
     private bool _skipRequested;
     private bool _skipAllRequested;
     private float _startTime;
+    private SoundHandle _musicHandle = SoundHandle.None;
 
     // Index of the step that started most recently. Unlike CurrentStepIndex it survives the end of
     // the intro, so "replay from previous steps" still has an anchor after it finishes.
@@ -688,6 +693,10 @@ public class IntroSequence : MonoBehaviour
         // while the screen is still covered. Not skippable, like the fade-out.
         if (startIndex == 0)
         {
+            // A replay keeps the running theme instead of restarting it.
+            if (music != null && _musicHandle.IsPlaying == false)
+                _musicHandle = AudioManager.PlayMusic(music);
+
             SetFadeAlpha(1f);
             yield return FadeAlpha(1f, 0f, fadeInDuration);
             yield return WaitOrSkip(initialDelay);

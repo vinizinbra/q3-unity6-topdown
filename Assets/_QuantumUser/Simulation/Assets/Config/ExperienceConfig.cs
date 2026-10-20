@@ -3,7 +3,7 @@ namespace Quantum
     using Photon.Deterministic;
 
     // Global tuning for the experience-drop mechanic - see ExpOrb.qtn, ExperienceUtility and
-    // CurrencyOrbSystem. Referenced via RuntimeConfig.ExperienceConfig.
+    // CurrencyOrbSystem. Referenced via OverallGameConfig.ExperienceConfig.
     public class ExperienceConfig : AssetObject
     {
         // X = Level, Y = cumulative TotalExperience required to reach that level - tweak the curve
@@ -27,7 +27,10 @@ namespace Quantum
         public FP PickupRadius = 1;
 
         // How long an uncollected orb lingers before DestroyAfterTime removes it.
-        public FP OrbLifetime = 30;
+        // Deliberately longer than the ~3 min between Breathing Breaks: every orb still on the map when a
+        // Break is secured gets swept in (CurrencyOrbVacuumUtility), so a missed orb is only lost by dying
+        // before the next Break - not by walking past it.
+        public FP OrbLifetime = 240;
 
         // Flat +damage-per-DISPLAYED-level bonus, additive (not compounding) - a level-1 player
         // (Global.Level == 0, see ExperienceUtility.Grant's own comment on Level vs. display level)

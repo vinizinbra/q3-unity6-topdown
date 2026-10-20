@@ -20,7 +20,11 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
                 return;
 
-            stats->WeaponDamageMultiplier *= FP._1 + fullThrottle->WeaponDamageBonus;
+            // Overdrive's damage bonus is Max's skill damage: Skill Damage scales the bonus itself
+            // (+40% x 1.10 Skill Damage = +44%). Only SkillDamageMultiplier - DamageMultiplier already
+            // reaches every weapon hit.
+            fullThrottle->AppliedWeaponDamageBonus = fullThrottle->WeaponDamageBonus * stats->SkillDamageMultiplier;
+            stats->WeaponDamageMultiplier *= FP._1 + fullThrottle->AppliedWeaponDamageBonus;
             stats->ReloadSpeedMultiplier *= FP._1 + fullThrottle->ReloadSpeedBonus;
             fullThrottle->Applied = true;
 
@@ -33,7 +37,7 @@ namespace Quantum
                 WeaponSystem.RefillMagazine(f, owner);
             }
 
-            Log.Debug($"[Skill] {owner} Full Throttle engaged (+{fullThrottle->WeaponDamageBonus} Weapon Damage, +{fullThrottle->ReloadSpeedBonus} Reload Speed)");
+            Log.Debug($"[Skill] {owner} Full Throttle engaged (+{fullThrottle->AppliedWeaponDamageBonus} Weapon Damage, +{fullThrottle->ReloadSpeedBonus} Reload Speed)");
         }
 
         public static void RevertFullThrottle(Frame f, EntityRef owner, FullThrottleUpgrade* fullThrottle)
@@ -43,7 +47,7 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == true)
             {
-                stats->WeaponDamageMultiplier /= FP._1 + fullThrottle->WeaponDamageBonus;
+                stats->WeaponDamageMultiplier /= FP._1 + fullThrottle->AppliedWeaponDamageBonus;
                 stats->ReloadSpeedMultiplier /= FP._1 + fullThrottle->ReloadSpeedBonus;
             }
 

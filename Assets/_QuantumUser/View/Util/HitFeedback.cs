@@ -55,6 +55,14 @@ namespace QuantumUser.View.Util
         [SerializeField, HideIf(nameof(HasFxConfig))] private Color restColor = Color.clear;
         [SerializeField, HideIf(nameof(HasFxConfig))] private float duration = 0.1f;
 
+        [Header("Hit Flash Scaling")]
+        [SerializeField, Tooltip("A hit dealing at least this fraction of the target's Max Health flashes at full strength (alpha/duration as authored). Smaller hits scale down linearly toward Min Strength - so a rapid-fire weapon's tiny hits give a faint blink instead of keeping the enemy solid white, while a sniper shot still reads as a full flash. 0 disables scaling.")]
+        private float fullFlashHealthFraction = 0.1f;
+        [SerializeField, Range(0f, 1f), Tooltip("Floor for the strength of a damage flash, so even a tiny hit stays visible.")]
+        private float minFlashStrength = 0.15f;
+        [SerializeField, Tooltip("Fraction of the flash duration kept at Min Strength (duration scales Min..1 along with strength).")]
+        private float minFlashDurationScale = 0.5f;
+
         [Header("Jolt")]
         [SerializeField, Tooltip("Punch-scale strength played on EventJoltTriggered - fired whenever a Stun genuinely lands (StatusEffectUtility.ApplyStun), regardless of source, not tied to Electrified anymore - see docs/elemental-reactions.md. Via EnemyBlobAnimationView.PunchScale (enemy-only - see _enemyBlobAnimationView's own comment). Small by design - a brief flinch, not a big hit reaction. No color flash accompanies it - a landed Stun is already brief enough that a punch-scale reads clearly on its own without a redundant color flash on top.")]
         private Vector3 joltPunchScaleStrength = new Vector3(0.08f, 0.08f, 0f);
@@ -353,7 +361,22 @@ namespace QuantumUser.View.Util
                 return;
 
             Color color = e.FrontalReduced == true ? frontalReducedFlashColor : ResolveFlashColor(e.Element);
-            FlashDamage(color);
+            FlashDamage(color, ResolveDamageStrength(e));
+        }
+
+        // 1 for a hit worth fullFlashHealthFraction of the target's Max Health or more, down to
+        // minFlashStrength for a negligible one - see fullFlashHealthFraction's tooltip.
+        private float ResolveDamageStrength(EventEntityDamaged e)
+        {
+            if (fullFlashHealthFraction <= 0f)
+                return 1f;
+
+            Frame frame = e.Game.Frames.Predicted;
+            if (frame == null || frame.TryGet(_entityRef, out Health health) == false || health.MaxHealth <= 0)
+                return 1f;
+
+            float fraction = e.Damage.AsFloat / health.MaxHealth.AsFloat;
+            return Mathf.Lerp(minFlashStrength, 1f, Mathf.Clamp01(fraction / fullFlashHealthFraction));
         }
 
         // Fire/Ice/Lightning only - see UpdateStatusRestTint.
@@ -513,12 +536,29 @@ namespace QuantumUser.View.Util
         // regardless of anything currently playing (heal/shield/rift-mark-application/spawn/
         // pickup), and locks out every one of those for its own duration so a hit landing right
         // after e.g. a heal always reads clearly instead of the heal visually winning.
-        private void FlashDamage(Color color)
+        //
+        // strength < 1 (small hit on a big-HP target) fades the flash toward restColor and shortens
+        // it. A weaker hit never restarts a flash that is still stronger than it would be - this is
+        // what stops a high fire-rate weapon from re-triggering a full flash every few ticks.
+        private void FlashDamage(Color color, float strength = 1f)
         {
-            _damageFlashLockUntil = Time.time + duration;
-            _priorityFlashLockUntil = Time.time + duration;
-            ApplyFlash(color, duration);
+            float now = Time.time;
+            float remaining = _flashEndTime > now ? _flashStrength * (_flashEndTime - now) / _flashDuration : 0f;
+            if (strength < remaining)
+                return;
+
+            float flashDuration = duration * Mathf.Lerp(minFlashDurationScale, 1f, strength);
+            _flashStrength = strength;
+            _flashDuration = flashDuration;
+            _flashEndTime = now + flashDuration;
+            _damageFlashLockUntil = _flashEndTime;
+            _priorityFlashLockUntil = _flashEndTime;
+            ApplyFlash(Color.Lerp(restColor, color, strength), flashDuration);
         }
+
+        private float _flashStrength;
+        private float _flashDuration = 1f;
+        private float _flashEndTime;
 
         // Lower-priority flash for a currency pickup landing on this character (see
         // FlyingCurrencyManager, called once its flying sprite actually arrives here - not on the

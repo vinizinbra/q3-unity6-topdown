@@ -200,6 +200,7 @@ public class HeroesTab : TabContent
         {
             row.Clicked -= OnRowClicked;
             row.Submitted -= OnRowSubmitted;
+            row.MovedRight -= OnRowMovedRight;
             Destroy(row.gameObject);
         }
         rows.Clear();
@@ -219,6 +220,7 @@ public class HeroesTab : TabContent
                 HeroListState.Unlocked);
             row.Clicked += OnRowClicked;
             row.Submitted += OnRowSubmitted;
+            row.MovedRight += OnRowMovedRight;
 
             rows.Add(row);
             ids.Add(entry.id);
@@ -232,7 +234,8 @@ public class HeroesTab : TabContent
 
     // Explicit up/down chain between the rows, nothing past either end. With automatic navigation, Down on
     // the last row (Lux) found some other selectable below/beside the list and left focus stranded there;
-    // now it just stays on the row. Left/Right stay unlinked on purpose - Submit is what enters the detail panel.
+    // now it just stays on the row. Left/Right stay unlinked on purpose: Right enters the info panel
+    // (HeroRowWidget.MovedRight) and Left at the list's edge goes back to the main menu (MenuNavigationController).
     private void LinkRowNavigation()
     {
         for (int i = 0; i < rows.Count; i++)
@@ -257,10 +260,38 @@ public class HeroesTab : TabContent
         return string.IsNullOrEmpty(entry.displayName) ? entry.id : entry.displayName;
     }
 
+    // Submit picks the hero - what this screen is for - instead of stepping into the panel and on to its
+    // Select button. Submit on the hero already picked has nothing to do, so it looks into the panel instead.
     private void OnRowSubmitted(HeroRowWidget row)
     {
+        View(row.Index);
+        if (ids[row.Index] != EquippedId)
+            OnSelectPressed();
+        else
+            OnRowMovedRight(row);
+    }
+
+    // Right steps into the info panel onto the open page's own controls (Overview: Select; Ascensions: the
+    // first row), not the page tabs - L1/R1 already switch those from anywhere. With nothing usable on the
+    // page (the equipped hero's greyed Select) the scope's own default applies.
+    private void OnRowMovedRight(HeroRowWidget row)
+    {
         if (infoScope != null)
-            infoScope.Enter(row.GetComponent<Selectable>());
+            infoScope.Enter(row.GetComponent<Selectable>(), FirstPageControl());
+    }
+
+    private Selectable FirstPageControl()
+    {
+        foreach (Selectable selectable in infoScope.GetComponentsInChildren<Selectable>(false))
+        {
+            if (!selectable.IsInteractable())
+                continue;
+            if (infoTabs != null && selectable.transform.IsChildOf(infoTabs.transform))
+                continue;
+            return selectable;
+        }
+
+        return null;
     }
 
     private void OnRowClicked(HeroRowWidget row)

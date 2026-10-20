@@ -47,6 +47,20 @@ public class ShieldUiWidget : QuantumGlobalMonoBehaviour
         if (frame.TryGet<Shield>(_entityRef, out var shield) == false || shield.Max <= FP._0)
             return;
 
+        // A TEMPORARY shield (Brute's Juggernaut) is only shown while it's up - hidden at 0, back with
+        // the next grant. Toggles the bar/text objects, never this component's own GameObject, which
+        // would stop QUpdate and the widget could never reappear.
+        bool visible = shield.TemporaryDuration <= FP._0 || shield.Current > FP._0;
+
+        if (shieldSlider != null && shieldSlider.gameObject.activeSelf != visible)
+            shieldSlider.gameObject.SetActive(visible);
+
+        if (shieldText != null && shieldText.gameObject.activeSelf != visible)
+            shieldText.gameObject.SetActive(visible);
+
+        if (visible == false)
+            return;
+
         if (shieldSlider != null)
         {
             // Current can no longer exceed Max - every grant caps there now that Overshield is gone

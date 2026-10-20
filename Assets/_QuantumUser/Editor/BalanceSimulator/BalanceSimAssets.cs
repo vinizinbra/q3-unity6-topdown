@@ -18,6 +18,18 @@ namespace QuantumUser.Editor.BalanceSimulator
         public SurvivalConfig Survival;
         public BalanceConfig Balance;
         public ExperienceConfig Experience;
+        public CoinConfig Coin;
+        public RiftShardConfig RiftShard;
+        public WorldBalanceData World;
+
+        // WorldBalanceData channels (1 when no world balance applies) - mirrored at the same consumers
+        // as the game (EnemyBalanceUtility, CombatDirectorUtility, PlayerClusterDirectorUtility,
+        // ExperienceUtility, CoinUtility).
+        public double WorldEnemyHp => World != null ? D(World.EnemyHpMultiplier) : 1;
+        public double WorldBudget => World != null ? D(World.DirectorBudgetMultiplier) : 1;
+        public double WorldPressure => World != null ? D(World.DirectorPressureMultiplier) : 1;
+        public double WorldXpRequirement => World != null ? D(World.XpRequirementMultiplier) : 1;
+        public double WorldCoinGain => World != null ? D(World.CoinGainMultiplier) : 1;
         public LevelUpConfig LevelUp;
         public StoreConfig Store;
         public BlacksmithConfig Blacksmith;
@@ -63,7 +75,11 @@ namespace QuantumUser.Editor.BalanceSimulator
                 Director = scenario.DirectorConfig != null ? scenario.DirectorConfig : FindDefault<DirectorConfig>(),
                 Lifecycle = scenario.LifecycleConfig != null ? scenario.LifecycleConfig : FindDefault<LifecycleConfig>(),
                 Level = scenario.LevelConfig != null ? scenario.LevelConfig : FindDefault<LevelConfig>(),
+                Coin = FindDefault<CoinConfig>(),
+                RiftShard = FindDefault<RiftShardConfig>(),
             };
+
+            a.World = scenario.WorldBalance != null ? scenario.WorldBalance : a.FindWorldBalance(a.Survival);
 
             if (a.LevelUp != null)
             {
@@ -160,6 +176,22 @@ namespace QuantumUser.Editor.BalanceSimulator
 
             cache[assetRef.Id] = asset;
             return asset;
+        }
+
+        // The WorldDefinition simulated: the one whose SurvivalConfig is the timeline under test.
+        private WorldBalanceData FindWorldBalance(SurvivalConfig survival)
+        {
+            if (survival == null)
+                return null;
+
+            foreach (string guid in AssetDatabase.FindAssets($"t:{nameof(WorldDefinition)}"))
+            {
+                var world = AssetDatabase.LoadAssetAtPath<WorldDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+                if (world != null && Resolve(world.SurvivalConfig) == survival)
+                    return Resolve(world.Balance);
+            }
+
+            return null;
         }
 
         public static T FindDefault<T>(string preferredName = null) where T : AssetObject

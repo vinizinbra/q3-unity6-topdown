@@ -111,16 +111,17 @@ MonoBehaviour:
     ProjectileGlowScale: {x: 1, y: 1, z: 1}
     EnableProjectileLight: 1
     ProjectileLightColor: {r: 1, g: 0.68235296, b: 0.3254902, a: 1}
+    EnableProjectileDestroyEffect: 1
     ProjectileDestroyColor: {r: 1, g: 0.68235296, b: 0.3254902, a: 1}
     ProjectileDestroyGlowColor: {r: 0.9716981, g: 0.8141276, b: 0.637104, a: 1}
     ProjectileDestroyScale: {x: 1, y: 1, z: 1}
     ProjectileExtraParticle: {fileID: 0}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
-  _dpsPreview: 'Burst DPS: 93.7
+  _dpsPreview: 'Burst DPS: 46.2
 
-    Sustained DPS (incl. reload): 80.1
+    Sustained DPS (incl. reload): 42.6
 
     Damage/min:
-    4807
+    2559
 
     Crit dmg/shot: 16.5 (vs 11 normal) @ 10 % chance, x1.5'

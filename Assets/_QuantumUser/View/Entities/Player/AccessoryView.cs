@@ -70,7 +70,7 @@ namespace Quantum
             if (frame == null)
                 return;
 
-            // No AccessoryGuard at all (the mechanic is disabled - RuntimeConfig.AccessoryGuardConfig
+            // No AccessoryGuard at all (the mechanic is disabled - OverallGameConfig.AccessoryGuardConfig
             // unassigned, so nothing is ever seeded) reads as "worn", so a hero authored with both
             // visuals still looks right in a build where the guard was never turned on.
             bool equipped = frame.Unsafe.TryGetPointer<AccessoryGuard>(_entityRef, out var guard) == false

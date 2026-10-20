@@ -72,6 +72,43 @@ public class MainMenuWindow : UiWindow
 
         InitializeWorldDropdown();
         InitializeDifficultyDropdown();
+        LinkNavigation();
+    }
+
+    // Gamepad links Automatic navigation got wrong on this screen. The hero picker ([<] hero [>]) sits alone
+    // at the bottom middle, so Up/Down from it jumped across the screen to the party panel / Training; it is
+    // now one row: Left/Right walk it, Right off its end reaches Play, Left off its start goes back to the
+    // main menu (MenuNavigationController), Up/Down stay put. Up from Play Offline skipped Play for the
+    // difficulty picker above it.
+    private void LinkNavigation()
+    {
+        if (partyRoom != null && partyRoom.characterDropdown != null)
+        {
+            UnityEngine.UI.Selectable previous = partyRoom.previousCharacterButton;
+            UnityEngine.UI.Selectable hero = partyRoom.characterDropdown;
+            UnityEngine.UI.Selectable next = partyRoom.nextCharacterButton;
+
+            if (previous != null)
+                SetExplicit(previous, left: null, right: hero, up: null);
+            SetExplicit(hero, left: previous, right: next != null ? next : playButton, up: null);
+            if (next != null)
+                SetExplicit(next, left: hero, right: playButton, up: null);
+        }
+
+        if (practiceButton != null)
+            SetExplicit(practiceButton, left: trainingButton, right: null, up: playButton);
+    }
+
+    private static void SetExplicit(UnityEngine.UI.Selectable selectable, UnityEngine.UI.Selectable left,
+        UnityEngine.UI.Selectable right, UnityEngine.UI.Selectable up)
+    {
+        MenuNavigationController.SetNavigation(selectable, new UnityEngine.UI.Navigation
+        {
+            mode = UnityEngine.UI.Navigation.Mode.Explicit,
+            selectOnLeft = left,
+            selectOnRight = right,
+            selectOnUp = up,
+        });
     }
 
     private void OnDestroy()

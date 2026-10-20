@@ -62,10 +62,10 @@ namespace Quantum
         // own already-rolled LevelUpChoice, found via PlayerLink, never another player's.
         private static void ProcessRerollCommands(Frame f)
         {
-            if (f.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (f.GameConfig.LevelUpConfig.IsValid == false)
                 return;
 
-            LevelUpConfig config = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
+            LevelUpConfig config = f.FindAsset(f.GameConfig.LevelUpConfig);
             var filtered = f.Filter<PlayerLink>();
 
             while (filtered.Next(out EntityRef entity, out PlayerLink playerLink))

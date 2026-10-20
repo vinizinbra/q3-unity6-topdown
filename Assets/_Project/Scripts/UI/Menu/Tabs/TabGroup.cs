@@ -100,14 +100,16 @@ public class TabGroup : MonoBehaviour
             OnTabSelected(button, false);
     }
 
-    public void OnTabSelected(TabButton button, bool focusContent)
+    /// <param name="fromRight">Entered by pressing Right on the rail button rather than Submit: focus lands on the
+    /// content's <see cref="TabContent.RightFocus"/> (the item nearest the rail) instead of its DefaultFocus.</param>
+    public void OnTabSelected(TabButton button, bool focusContent, bool fromRight = false)
     {
         // Already open (focus came back to its button, or Submit/Right on it): don't hide and re-show the
         // content - that restarts its intro animations - just hand over focus if asked.
         if (selectedTabButton == button && selectedTabContent != null && selectedTabContent.gameObject.activeSelf)
         {
             if (focusContent)
-                StartCoroutine(FocusContentNextFrame(selectedTabContent, button));
+                StartCoroutine(FocusContentNextFrame(selectedTabContent, button, fromRight));
             return;
         }
 
@@ -150,13 +152,13 @@ public class TabGroup : MonoBehaviour
                 PageTransitionWidget.Play(tabContent[index].gameObject);
 
             if (focusContent)
-                StartCoroutine(FocusContentNextFrame(tabContent[index], button));
+                StartCoroutine(FocusContentNextFrame(tabContent[index], button, fromRight));
         }
     }
 
     // Gamepad: after opening a tab by Submit, focus moves into it (its DefaultFocus, else the first
     // interactable). Deferred a frame so the content's own Show()/layout has settled.
-    private IEnumerator FocusContentNextFrame(TabContent content, TabButton button)
+    private IEnumerator FocusContentNextFrame(TabContent content, TabButton button, bool fromRight)
     {
         yield return null;
 
@@ -167,11 +169,11 @@ public class TabGroup : MonoBehaviour
         FocusScopeWidget scope = content.GetComponent<FocusScopeWidget>();
         if (scope != null)
         {
-            scope.Enter(button != null ? button.GetComponent<Selectable>() : null);
+            scope.Enter(button != null ? button.GetComponent<Selectable>() : null, fromRight ? content.RightFocus : null);
             yield break;
         }
 
-        Selectable target = content.DefaultFocus;
+        Selectable target = fromRight ? content.RightFocus : content.DefaultFocus;
         if (target == null || !target.interactable || !target.gameObject.activeInHierarchy)
         {
             target = null;

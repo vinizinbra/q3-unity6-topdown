@@ -38,8 +38,9 @@ namespace QuantumUser.Editor.BalanceSimulator
             { Col.SpawnedMin, "Enemies the Director spawned during this minute" },
             { Col.Alive, "Enemies alive at the end of the minute" },
             { Col.Budget, "Unspent DirectorBudget - large values mean spawns are capped by MaxAlive/TargetPressure, not budget" },
-            { Col.WeaponDps, "Sustained weapon DPS incl. reloads x HitEfficiency. Actual = the recorder's every-shot-lands ceiling x this scenario's HitEfficiency, so the pair compares like for like" },
-            { Col.SkillDps, "Expected skill DPS x SkillUseEfficiency" },
+            { Col.WeaponDps, "Sustained weapon DPS incl. reloads x HitEfficiency, without skill buffs (Max's Overdrive share is in SkillDps). Actual = the recorder's every-shot-lands ceiling x this scenario's HitEfficiency, so the pair compares like for like" },
+            { Col.SkillDps, "Expected skill DPS x SkillUseEfficiency, plus the extra weapon damage a skill buff adds averaged over its uptime (Max's Overdrive + Full Throttle, the latter scaled by Skill Damage)" },
+            { Col.RiftShards, "Rift Shards collected so far (shared - every player gets each one). Actual = CharacterStats.RiftShardsEarned. Only Specialist+ kills drop them; the gap to KillsSpecialist+Heavy+Elite is orbs that expired" },
             { Col.TotalDps, "Weapon + skill DPS. Actual = damage that landed on enemies (overkill removed) / seconds outside Breathing" },
             { Col.ExpectedDps, "BalanceConfig.ExpectedPlayerDps curve x ExpectedDpsBaseline" },
             { Col.DpsRatio, "TotalDps / ExpectedDps - >1 the player is ahead of the design curve" },
@@ -99,6 +100,37 @@ namespace QuantumUser.Editor.BalanceSimulator
 
             DrawTable(hero);
             DrawPickLog(hero);
+            DrawRunTotals();
+        }
+
+        // Shared by the whole party, so one row per hero for the selected player count rather than a
+        // per-player column. Rift Shards = what RunResultManager banks to the account (win or loss).
+        private void DrawRunTotals()
+        {
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("End of run (shared by the whole party)", EditorStyles.boldLabel);
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("Hero", EditorStyles.miniBoldLabel, GUILayout.Width(140));
+                EditorGUILayout.LabelField(new GUIContent("Level", "Run level reached at the end (shared XP total)"), EditorStyles.miniBoldLabel, GUILayout.Width(60));
+                EditorGUILayout.LabelField(new GUIContent("Total XP", "Run XP collected, incl. orbs swept in at secured Breaks. The Boss fight isn't simulated"), EditorStyles.miniBoldLabel, GUILayout.Width(80));
+                EditorGUILayout.LabelField(new GUIContent("Rift Shards", "Banked to the account at run end: 1 per collected Specialist+ kill (EnemyTierStatsConfig), every player gets each one; assumes a Victory, so the Boss's shard counts"), EditorStyles.miniBoldLabel, GUILayout.Width(80));
+                EditorGUILayout.LabelField(new GUIContent("Dropped", "Shards dropped - the gap to Rift Shards is orbs that expired before pickup or a Break sweep"), EditorStyles.miniBoldLabel, GUILayout.Width(70));
+            }
+
+            foreach (HeroResult result in VisibleResults())
+            {
+                RunTotals t = result.Totals;
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField(result.HeroName, EditorStyles.miniLabel, GUILayout.Width(140));
+                    EditorGUILayout.LabelField($"{t.FinalLevel:0.#}", EditorStyles.miniLabel, GUILayout.Width(60));
+                    EditorGUILayout.LabelField($"{t.TotalXp:0}", EditorStyles.miniLabel, GUILayout.Width(80));
+                    EditorGUILayout.LabelField($"{t.RiftShards:0.#}", EditorStyles.miniLabel, GUILayout.Width(80));
+                    EditorGUILayout.LabelField($"{t.ShardsDropped:0.#}", EditorStyles.miniLabel, GUILayout.Width(70));
+                }
+            }
         }
 
         private List<HeroResult> VisibleResults()

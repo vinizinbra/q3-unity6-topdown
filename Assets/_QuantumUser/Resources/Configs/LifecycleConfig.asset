@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LifecycleConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.LifecycleConfig
   Identifier:
-    Path: _QuantumUser/Resources/Director/LifecycleConfig
+    Path: _QuantumUser/Resources/Configs/LifecycleConfig
     Guid:
       Value: 336734921985004182
   RelevantRange:
@@ -24,3 +24,7 @@ MonoBehaviour:
     RawValue: 196608
   RefundFraction:
     RawValue: 32768
+  EliteLostRange:
+    RawValue: 1638400
+  EliteLostTeleportDelay:
+    RawValue: 524288

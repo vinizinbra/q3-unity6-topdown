@@ -15,7 +15,7 @@ namespace Quantum
         // Called from CharacterSystem.OnEntityPrototypeMaterialized for every PLAYER character (see
         // its own PlayerLink gate). Adds the component rather than requiring it on each hero's
         // prototype, so the mechanic is enabled or disabled entirely by whether
-        // RuntimeConfig.AccessoryGuardConfig is assigned - no per-hero authoring, and no chance of
+        // OverallGameConfig.AccessoryGuardConfig is assigned - no per-hero authoring, and no chance of
         // one hero's prototype silently missing it.
         public static void Seed(Frame f, EntityRef player)
         {
@@ -25,7 +25,7 @@ namespace Quantum
             // Worth a line per spawning player (4 at most) to make that unmistakable.
             if (TryGetConfig(f, out AccessoryGuardConfig config) == false)
             {
-                Log.Warn($"[Accessory] {player} spawned with no AccessoryGuard - RuntimeConfig.AccessoryGuardConfig " +
+                Log.Warn($"[Accessory] {player} spawned with no AccessoryGuard - OverallGameConfig.AccessoryGuardConfig " +
                          "is unassigned for THIS runtime config (note the menu path and each scene's own embedded " +
                          "debug config are separate copies). Nothing will block, drop or be repairable.");
                 return;
@@ -298,16 +298,16 @@ namespace Quantum
         // thrown, and the arc is then solved exactly onto it.
         private static EntityRef SpawnCollectible(Frame f, EntityRef owner, FPVector3 position, bool broken)
         {
-            if (f.RuntimeConfig.Prefabs.DroppedAccessoryPrototype.IsValid == false)
+            if (f.GameConfig.Prefabs.DroppedAccessoryPrototype.IsValid == false)
             {
-                Log.Error("[Accessory] RuntimeConfig.Prefabs.DroppedAccessoryPrototype is not assigned - the hit was still blocked, but the accessory stays worn instead of popping off (see TryBlock's own degradation note)");
+                Log.Error("[Accessory] OverallGameConfig.Prefabs.DroppedAccessoryPrototype is not assigned - the hit was still blocked, but the accessory stays worn instead of popping off (see TryBlock's own degradation note)");
                 return EntityRef.None;
             }
 
             if (TryGetConfig(f, out AccessoryGuardConfig config) == false)
                 return EntityRef.None;
 
-            EntityRef collectible = f.Create(f.RuntimeConfig.Prefabs.DroppedAccessoryPrototype);
+            EntityRef collectible = f.Create(f.GameConfig.Prefabs.DroppedAccessoryPrototype);
 
             FPVector3 landing = ResolveLandingPosition(f, owner, position, config);
 
@@ -484,7 +484,7 @@ namespace Quantum
         // "Does this player participate in the Accessory mechanic at all?" - the capability test the
         // Accessory-dependent Rift Mutations gate their own IsEligible on, so none of them is ever
         // offered to a player who could never benefit (Last Bastion traded the whole system away, or
-        // RuntimeConfig.AccessoryGuardConfig was never assigned so nothing was ever seeded).
+        // OverallGameConfig.AccessoryGuardConfig was never assigned so nothing was ever seeded).
         //
         // Deliberately a state query on the guard itself rather than a separate marker component:
         // there is exactly one source of truth for whether an Accessory exists, and it is this.
@@ -519,10 +519,10 @@ namespace Quantum
         {
             config = null;
 
-            if (f.RuntimeConfig.AccessoryGuardConfig.IsValid == false)
+            if (f.GameConfig.AccessoryGuardConfig.IsValid == false)
                 return false;
 
-            config = f.FindAsset(f.RuntimeConfig.AccessoryGuardConfig);
+            config = f.FindAsset(f.GameConfig.AccessoryGuardConfig);
             return config != null;
         }
     }

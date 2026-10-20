@@ -31,7 +31,7 @@ namespace Quantum
             if (DamageUtility.RollChance(f, tierStats.CoinDropChance) == false)
                 return;
 
-            if (f.RuntimeConfig.Prefabs.CoinPrototype.IsValid == false)
+            if (f.GameConfig.Prefabs.CoinPrototype.IsValid == false)
             {
                 Log.Debug($"[Coin] {target} died with CoinValue {tierStats.CoinValue} but RuntimeConfig has no CoinPrototype assigned - drop skipped");
                 return;
@@ -41,15 +41,15 @@ namespace Quantum
             FP minOffset = FP._0;
             FP maxOffset = FP._0;
 
-            if (f.RuntimeConfig.CoinConfig.IsValid == true)
+            if (f.GameConfig.CoinConfig.IsValid == true)
             {
-                CoinConfig config = f.FindAsset(f.RuntimeConfig.CoinConfig);
+                CoinConfig config = f.FindAsset(f.GameConfig.CoinConfig);
                 lifetime = config.OrbLifetime;
                 minOffset = config.MinSpawnOffset;
                 maxOffset = config.MaxSpawnOffset;
             }
 
-            EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.CoinPrototype);
+            EntityRef orb = f.Create(f.GameConfig.Prefabs.CoinPrototype);
             OrbSpawnUtility.SpawnWithPop(f, orb, position, minOffset, maxOffset);
 
             if (f.Unsafe.TryGetPointer<CurrencyOrb>(orb, out var currencyOrb) == true)
@@ -71,7 +71,7 @@ namespace Quantum
         // BalanceConfig.CoopGlobalKey.CoinGain - 1x when the asset is unassigned.
         public static FP ResolveCoopCoinGain(Frame f)
         {
-            BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            BalanceConfig balance = f.FindAsset(f.GameConfig.BalanceConfig);
             WorldBalanceData world = WorldBalanceData.Get(f);
             FP coop = balance != null ? balance.GetCoopGlobal(CoopGlobalKey.CoinGain, f.PlayerConnectedCount) : FP._1;
             return coop * (world != null ? world.CoinGainMultiplier : FP._1);

@@ -17,9 +17,21 @@ public class MenuMusicPlayer : MonoBehaviour
     [SerializeField, SoundDataPicker, Tooltip("Theme played on Start, and again whenever the gameplay scene unloads. Leave empty for silence in the menu.")]
     private SoundData music;
 
+    private bool _skipStartMusic;
+
+    // Read in Awake, before GameManager.Start consumes the flag: heading straight from the intro into
+    // the Training Zone, the intro's track keeps playing (the Training Zone's MusicDirector authors
+    // the same one), so the menu theme must not cut in for the moment MenuScene is up.
+    private void Awake()
+    {
+        _skipStartMusic = GameManager.IsTrainingZoneAfterIntroPending;
+    }
+
     private void Start()
     {
-        AudioManager.PlayMusic(music);
+        if (_skipStartMusic == false)
+            AudioManager.PlayMusic(music);
+
         SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
 

@@ -79,10 +79,10 @@ namespace Quantum
         public static void ApplyMetaWeaponLevels(Frame f, EntityRef owner, Weapon* weapon)
         {
             int levels = ResolveMetaWeaponLevels(f, owner);
-            if (levels <= 0 || f.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (levels <= 0 || f.GameConfig.LevelUpConfig.IsValid == false)
                 return;
 
-            FP bonusPerLevel = f.FindAsset(f.RuntimeConfig.LevelUpConfig).WeaponLevelDamageBonusPerLevel;
+            FP bonusPerLevel = f.FindAsset(f.GameConfig.LevelUpConfig).WeaponLevelDamageBonusPerLevel;
             for (int i = 0; i < levels; i++)
                 AddLevel(weapon, bonusPerLevel);
         }

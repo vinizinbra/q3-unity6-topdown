@@ -63,7 +63,7 @@ namespace Quantum
             if (CanInteract(f, player, rift) == false)
                 return;
 
-            if (f.RuntimeConfig.CursedRiftConfig.IsValid == false || f.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (f.GameConfig.CursedRiftConfig.IsValid == false || f.GameConfig.LevelUpConfig.IsValid == false)
             {
                 Log.Error("[CursedRift] interaction requested but RuntimeConfig has no CursedRiftConfig/LevelUpConfig assigned - ignored");
                 return;
@@ -88,7 +88,7 @@ namespace Quantum
             }
             else
             {
-                CursedRiftConfig config = f.FindAsset(f.RuntimeConfig.CursedRiftConfig);
+                CursedRiftConfig config = f.FindAsset(f.GameConfig.CursedRiftConfig);
 
                 if (config.SacrificePool.IsValid == false)
                 {
@@ -105,7 +105,7 @@ namespace Quantum
                     return;
                 }
 
-                LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
+                LevelUpConfig levelUpConfig = f.FindAsset(f.GameConfig.LevelUpConfig);
                 LevelUpOption[] rolledMutation = LevelUpUtility.RollMutationOptions(f, player, levelUpConfig, 1);
 
                 if (rolledMutation.Length == 0)

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ScrapConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.ScrapConfig
   Identifier:
-    Path: _QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/ScrapConfig
+    Path: _QuantumUser/Resources/Configs/ScrapConfig
     Guid:
       Value: 526209465784127970
   PickupRadius:

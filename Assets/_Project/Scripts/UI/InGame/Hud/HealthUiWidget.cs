@@ -12,8 +12,20 @@ public class HealthUiWidget : QuantumGlobalMonoBehaviour
     [SerializeField] private Slider healthSlider;
     [SerializeField, Tooltip("Optional - shows CurrentHealth/MaxHealth. Left unassigned, this feature is simply off.")]
     private TMP_Text healthText;
+    [SerializeField, Tooltip("Optional - the slider's fill, recoloured to lowHealthColor below lowHealthThreshold so the bar alone reads as \"in trouble\" (e.g. teammate slots with no number). Left unassigned, this feature is simply off.")]
+    private Graphic healthFill;
+    [SerializeField, Range(0f, 1f)] private float lowHealthThreshold = 0.3f;
+    [SerializeField] private Color lowHealthColor = new Color(1f, 0.23f, 0.23f);
 
     [SerializeField] private EntityRef _entityRef;
+
+    private Color _normalFillColor;
+
+    private void Awake()
+    {
+        if (healthFill != null)
+            _normalFillColor = healthFill.color;
+    }
 
     public void Initialize(EntityRef entityRef)
     {
@@ -35,8 +47,13 @@ public class HealthUiWidget : QuantumGlobalMonoBehaviour
         if (frame.TryGet<Health>(_entityRef, out var health) == false || health.MaxHealth <= FP._0)
             return;
 
+        float ratio = (health.CurrentHealth / health.MaxHealth).AsFloat;
+
         if (healthSlider != null)
-            healthSlider.value = (health.CurrentHealth / health.MaxHealth).AsFloat;
+            healthSlider.value = ratio;
+
+        if (healthFill != null)
+            healthFill.color = ratio <= lowHealthThreshold ? lowHealthColor : _normalFillColor;
 
         if (healthText != null)
             healthText.text = $"{Mathf.CeilToInt(health.CurrentHealth.AsFloat)}/{Mathf.CeilToInt(health.MaxHealth.AsFloat)}";

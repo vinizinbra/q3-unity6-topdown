@@ -13,7 +13,7 @@ namespace Quantum
     // MomentumSkillAction already established.
     public unsafe partial class FullThrottleSkillAction : SkillActionData
     {
-        public FP[] WeaponDamageBonus = { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
+        public FP[] WeaponDamageBonus = { FP.FromString("0.40"), FP.FromString("0.70"), FP._1 };
         public FP[] ReloadSpeedBonus = { FP._0, FP._0_50, FP._0_50 };
 
         public FullThrottleSkillAction()

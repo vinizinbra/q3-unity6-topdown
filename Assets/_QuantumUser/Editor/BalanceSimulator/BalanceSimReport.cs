@@ -19,7 +19,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         HpNormal, HpHeavy, HpElite, TtkNormal, TtkHeavy, TtkElite,
         KillsPerMin, SpawnsPerMin, PressureFill, IdlePct, BossHp, BossTtk,
         BreakCoins, BreakLoopCost, BreakAfford, LoopCostToDate, LoopAfford, OrbPickup,
-        Players,
+        Players, RiftShards,
     }
 
     public class MinuteRow
@@ -41,6 +41,19 @@ namespace QuantumUser.Editor.BalanceSimulator
         public List<MinuteRow> Rows = new();
         public List<string> PickLog = new();
         public Dictionary<int, MinuteRow> Actual = new();
+        public RunTotals Totals;
+    }
+
+    // End-of-run numbers shared by the whole party (seed-averaged): the run's XP total / level, and
+    // the Rift Shards banked to the account (RunResultManager.BankRiftShards - every wallet gets every
+    // collected shard, CurrencyOrbSystem -> RiftShardUtility.GrantAll).
+    public struct RunTotals
+    {
+        public double TotalXp;
+        public double FinalLevel;
+        public double ShardsDropped;
+        public double RiftShards;
+        public double BossShards;
     }
 
     public static class BalanceSimReport
@@ -53,13 +66,13 @@ namespace QuantumUser.Editor.BalanceSimulator
             Col.WeaponDps, Col.SkillDps, Col.TotalDps, Col.ExpectedDps, Col.DpsRatio, Col.WeaponLevel, Col.Perks,
             Col.CoinsEarned, Col.CoinsSpent, Col.Coins, Col.HpNormal, Col.HpHeavy, Col.HpElite, Col.TtkNormal, Col.TtkHeavy, Col.TtkElite,
             Col.KillsPerMin, Col.SpawnsPerMin, Col.PressureFill, Col.IdlePct, Col.BossHp, Col.BossTtk,
-            Col.BreakCoins, Col.BreakLoopCost, Col.BreakAfford, Col.LoopCostToDate, Col.LoopAfford, Col.OrbPickup,
+            Col.BreakCoins, Col.BreakLoopCost, Col.BreakAfford, Col.LoopCostToDate, Col.LoopAfford, Col.OrbPickup, Col.RiftShards,
         };
 
         // Columns a live recording can produce, and therefore the ones shown as Predicted/Actual pairs.
         public static readonly Col[] CompareColumns =
         {
-            Col.Level, Col.PartyKills, Col.MyKills, Col.TotalDps, Col.WeaponDps, Col.WeaponLevel, Col.Perks, Col.CoinsEarned, Col.Coins, Col.Alive, Col.OrbPickup,
+            Col.Level, Col.PartyKills, Col.MyKills, Col.TotalDps, Col.WeaponDps, Col.WeaponLevel, Col.Perks, Col.CoinsEarned, Col.Coins, Col.Alive, Col.OrbPickup, Col.RiftShards,
         };
 
         public static List<MinuteRow> Average(List<List<MinuteRow>> perSeed)
@@ -134,6 +147,9 @@ namespace QuantumUser.Editor.BalanceSimulator
                 sb.AppendLine();
             }
 
+            RunTotals t = hero.Totals;
+            sb.AppendLine();
+            sb.AppendLine($"Run totals (shared): level {t.FinalLevel:0.#}, {t.TotalXp:0} XP, {t.RiftShards:0.#} Rift Shards banked ({t.ShardsDropped:0.#} dropped, {t.BossShards:0.#} from the Boss)");
             return sb.ToString();
         }
 

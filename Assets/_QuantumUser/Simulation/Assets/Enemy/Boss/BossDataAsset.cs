@@ -83,9 +83,18 @@ namespace Quantum
     [Serializable]
     public struct StaggerProfileData
     {
-        // <= 0 means no stagger mechanic for this boss - BossSystem.TickStagger no-ops entirely.
-        public FP Threshold;
-        public FP RegenRate;
+        // Fraction of the boss's MaxHealth (already party/difficulty-scaled) of damage the Nth break
+        // needs, e.g. {0.20} = every Kneel after 20% of its life; {0.10, 0.20} = first at 10%, the
+        // rest at 20% (the last entry repeats). Empty = no stagger mechanic for this boss.
+        public List<FP> ThresholdPercents;
+
+        // Meter drain while untouched, as a fraction of MaxHealth per second.
+        public FP RegenRatePercent;
+
+        // At or below this fraction of remaining life the boss no longer kneels (and its meter is
+        // cleared) - the final stretch is a straight fight, not another exposure window.
+        public FP MinHealthPercent;
+
         public AssetRef<EnemyActionData> OnBreakForcedAction;
     }
 

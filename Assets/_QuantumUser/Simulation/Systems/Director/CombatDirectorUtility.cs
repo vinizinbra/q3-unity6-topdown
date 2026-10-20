@@ -211,11 +211,11 @@ namespace Quantum
         // precedent as EnemyBalanceUtility.ResolveEnemyStats - BudgetPerPulse alone still applies.
         private static FP ResolveBudgetMultiplier(Frame f)
         {
-            BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            BalanceConfig balance = f.FindAsset(f.GameConfig.BalanceConfig);
 
             if (balance == null)
             {
-                Log.Error("[Director] RuntimeConfig.BalanceConfig did not resolve - DirectorBudget accumulating at its authored BudgetPerPulse only (1x), no run-curve/co-op scaling applied. Assign it on RuntimeConfig.");
+                Log.Error("[Director] OverallGameConfig.BalanceConfig did not resolve - DirectorBudget accumulating at its authored BudgetPerPulse only (1x), no run-curve/co-op scaling applied. Assign it on OverallGameConfig.");
                 return FP._1;
             }
 

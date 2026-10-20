@@ -72,12 +72,14 @@ reading any other delta as a balance signal**:
 | `SkillUseEfficiency` | casting on cooldown x targets actually hit | per-hero skill feel |
 | `AreaTargets` | enemies an AoE hits | crowd density in the phase being tuned |
 | `ChannelContactUptime` | Juggernaut-style contact channels (knockback pushes enemies out) | Brute run |
+| `DashUseEfficiency` | share of dash cooldowns used in combat (Max's Run & Gun window) | recorded Max run |
 | `RetargetSeconds` | damage lost per kill (overkill + retarget), fixed per kill | kills-per-minute delta |
-| `CoinPickupFactor` | coin orbs expire sooner than XP orbs (30 s vs 60 s) | `CoinsEarned` delta |
-| `OrbPickupEfficiency` curve, `CoopPickupBonus` | XP/coin orbs left to expire (30 s lifetime, 1 m radius), worse late while kiting; loss shrinks per extra player | recorder `OrbPickup` = XP orbs collected / kills per minute, at each player count |
+| `CoinPickupFactor` | coin orbs walked over vs XP orbs before a Break sweep (all orbs live 240 s since 2026-10-20) | `CoinsEarned` delta |
+| `OrbPickupEfficiency` curve, `CoopPickupBonus` | XP/coin orbs not walked over (1 m radius; 240 s lifetime, so in a won run the Break sweeps collect the rest), worse late while kiting; loss shrinks per extra player | recorder `OrbPickup` = XP orbs collected / kills per minute, at each player count |
 | `EngageDistanceFraction`, `EngageReactionSeconds`, `StationaryEngageSeconds` | walk-in before a spawn can be shot (ring radius / enemy `MoveSpeed`) | `SpawnsPerMin` + `Alive` deltas |
 | `SpawnFailureChance` | Director purchases that find no anchor (rest of pulse forfeited) | `SpawnsPerMin` vs `Budget` piling up |
-| `EnemyLeakFraction` | spawns retired/refunded instead of killed | kills vs spawns |
+| `EnemyLeakFraction` (0.25, calibrated 2026-10-20) | spawns left behind and retired instead of killed; leakers never engage | kills vs spawns |
+| `ShardPickupFactor` (0.75) | Rift Shard orbs collected vs XP orbs (ranged Specialists die far away) | recorder `RiftShards` vs KillsSpecialist+Heavy+Elite |
 | `UnquantifiedPerkDpsValue`, `SkillUpgradeDpsValue` | perks/ranks with no stat the sim can read | leave unless a hero is clearly mis-valued |
 | `WeaponBuysPerBreak`, `WeaponBuyThreshold`, `BlacksmithBuysPerBreak`, `AccessoryRepairsPerBreak`, `FoodBuysPerBreak`, `CoinReserve` | the designed per-Break loop: 1 weapon, 1 perk, 1 accessory repair, 1 food (user's spec, 2026-09-13) | pick log vs what the user actually bought |
 | `BarrelBreakFraction` (+ `BarrelsPerEnemyChunk` override, `BarrelLoot`, `CoinsPerBarrelOverride`) | Breakable barrel loot: LevelConfig Enemy chunk Count x barrels/chunk counted from each chunk's ChunkSpawnConfig x BreakLootData value | `CoinsEarned` delta |

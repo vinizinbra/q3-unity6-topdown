@@ -92,11 +92,11 @@ namespace QuantumUser.Editor
                 asset.Description = "At max Rage, gain bonus Weapon Damage and faster reloads.";
                 asset.RankDescriptions = new[]
                 {
-                    "At maximum Rage, gain <color=#FD3971>+20%</color> Weapon Damage.",
-                    "At maximum Rage, gain <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color> Reload Speed.",
-                    "At maximum Rage, gain <color=#FD3971>+40%</color> Weapon Damage and reloads are instant.",
+                    "At maximum Rage, gain <color=#FD3971>+40%</color> Weapon Damage.",
+                    "At maximum Rage, gain <color=#FD3971>+70%</color> Weapon Damage and <color=#FD3971>+50%</color> Reload Speed.",
+                    "At maximum Rage, gain <color=#FD3971>+100%</color> Weapon Damage and reloads are instant.",
                 };
-                asset.WeaponDamageBonus = new[] { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
+                asset.WeaponDamageBonus = new[] { FP.FromString("0.40"), FP.FromString("0.70"), FP._1 };
                 asset.ReloadSpeedBonus = new[] { FP._0, FP._0_50, FP._0_50 };
             });
 

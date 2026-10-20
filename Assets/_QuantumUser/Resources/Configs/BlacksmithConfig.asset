@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BlacksmithConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.BlacksmithConfig
   Identifier:
-    Path: _QuantumUser/Resources/Store/BlacksmithConfig
+    Path: _QuantumUser/Resources/Configs/BlacksmithConfig
     Guid:
       Value: 348202425962028469
   PerkPool:

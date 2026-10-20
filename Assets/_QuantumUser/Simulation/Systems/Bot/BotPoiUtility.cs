@@ -239,7 +239,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<BlacksmithInteraction>(self, out var interaction) == false)
                 return;
 
-            BlacksmithConfig config = f.FindAsset(f.RuntimeConfig.BlacksmithConfig);
+            BlacksmithConfig config = f.FindAsset(f.GameConfig.BlacksmithConfig);
             FP coins = GetCoins(f, self);
             int bestIndex = -1;
             FP bestPrice = default;
@@ -289,22 +289,22 @@ namespace Quantum
 
         private static bool CanAffordWeaponLevelUp(Frame f, EntityRef self)
         {
-            if (f.RuntimeConfig.StoreConfig.IsValid == false || f.Has<Weapon>(self) == false)
+            if (f.GameConfig.StoreConfig.IsValid == false || f.Has<Weapon>(self) == false)
                 return false;
 
             if (StoreUtility.IsWeaponLevelUpPurchased(f, self) == true)
                 return false;
 
-            StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
+            StoreConfig config = f.FindAsset(f.GameConfig.StoreConfig);
             return GetCoins(f, self) >= StoreUtility.ResolveWeaponLevelUpPrice(f, self, config);
         }
 
         private static bool CanAffordCheapestPerk(Frame f, EntityRef self)
         {
-            if (f.RuntimeConfig.BlacksmithConfig.IsValid == false)
+            if (f.GameConfig.BlacksmithConfig.IsValid == false)
                 return false;
 
-            BlacksmithConfig config = f.FindAsset(f.RuntimeConfig.BlacksmithConfig);
+            BlacksmithConfig config = f.FindAsset(f.GameConfig.BlacksmithConfig);
             return GetCoins(f, self) >= config.CommonPerkPrice;
         }
 

@@ -51,13 +51,13 @@ namespace Quantum
         // pricing, same as every other offer/service StoreConfig already prices.
         public static FP ResolvePrice(Frame f, EntityRef player)
         {
-            if (f.RuntimeConfig.StoreConfig.IsValid == false)
+            if (f.GameConfig.StoreConfig.IsValid == false)
                 return FP._0;
 
             if (f.Unsafe.TryGetPointer<AccessoryGuard>(player, out var guard) == false)
                 return FP._0;
 
-            StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
+            StoreConfig config = f.FindAsset(f.GameConfig.StoreConfig);
 
             switch (ResolveService(f, player))
             {

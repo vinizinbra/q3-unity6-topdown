@@ -438,7 +438,7 @@ spend. Sacrificing the last point Breaks it exactly like a killing block does, e
 1. **`SurvivalConfig.Phases[]`'s `IsBreathing` entries** (manual Inspector step - see
    `docs/run-phase.md`), plus `CursedRiftConfig`/`SacrificePoolData` + the 4 `SacrificeDefinition`
    instances, authored by `Tools/RiftRaiders/Generate Breathing POI Content`
-   (`BreathingPoiContentGenerator.cs`). Still needs `RuntimeConfig.CursedRiftConfig` assigned by
+   (`BreathingPoiContentGenerator.cs`). Still needs `OverallGameConfig.CursedRiftConfig` assigned by
    hand (`QuantumMenuConfig.asset`).
 2. **`HealingShrine`/`CursedRift` `EntityPrototype`s** - hand-placed directly in a level chunk,
    same pattern `Chest` already uses. Both now need an `Interactable` component (a real `Radius`, a

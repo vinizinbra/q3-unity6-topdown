@@ -75,8 +75,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Arms sentry weapon slot 0 with the assigned weapon, mounted at a fixed
-    muzzle offset on the chassis.
+  Description: 'Sentry gains a weapon.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -137,8 +136,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While equipped, the deployed sentry multiplies nearby allies' shield
-    recharge rate by {0}x within its range.
+  Description: 'Sentry multiplies nearby allies'' shield recharge by {0}x.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -190,9 +188,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Deploys a sentry turret at Lux's position with {0} range that decays
-    over about {1} seconds if left undamaged, applying any equipped weapon, shield,
-    and aura upgrades to it.
+  Description: 'Deploy a Sentry. It shoots for you and decays over {1}s unless damaged.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -304,8 +300,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While equipped, the deployed sentry hastes nearby allies' attack speed
-    by {0}% within its range.
+  Description: 'Sentry hastes nearby allies'' attack speed by {0}%.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -356,8 +351,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Arms sentry weapon slot 2 with the assigned weapon, mounted at a fixed
-    muzzle offset on the chassis.
+  Description: 'Sentry gains a weapon.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -418,7 +412,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Permanently increases the deployed sentry's own fire rate by {0}%.
+  Description: 'Sentry fires {0}% faster.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -469,8 +463,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Arms sentry weapon slot 1 with the assigned weapon, mounted at a fixed
-    muzzle offset on the chassis.
+  Description: 'Sentry gains a weapon.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -531,8 +524,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Arms sentry weapon slot 3 with the assigned weapon, mounted at a fixed
-    muzzle offset on the chassis.
+  Description: 'Sentry gains a weapon.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -593,8 +585,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While equipped, the deployed sentry explodes for {0} damage in a {1}-unit
-    radius when it dies.
+  Description: 'Sentry explodes on death: {0} damage in {1} units.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

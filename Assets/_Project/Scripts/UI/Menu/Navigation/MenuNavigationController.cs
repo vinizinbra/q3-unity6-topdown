@@ -30,6 +30,8 @@ public class MenuNavigationController : MonoBehaviour
     private bool popupWasOpen;
     private bool typingWasActive;
     private GameObject focusBeforePopup;
+    private GameObject selectedAtFrameStart;
+    private Vector2 lastNavigate;
 
     private void Awake()
     {
@@ -119,6 +121,110 @@ public class MenuNavigationController : MonoBehaviour
             SwitchSubTab(-1);
         else if (Quantum.GamepadControls.TabNextPressed)
             SwitchSubTab(1);
+    }
+
+    // Runs after every Update, so after the EventSystem has applied this frame's stick move whatever the
+    // script order. Two rules on top of uGUI's own navigation:
+    //  - a move may not leave the menu: Automatic navigation also finds unscoped Selectables on other
+    //    canvases (debug panels, the cheat menu, a prefab open in Prefab Mode), which left focus on
+    //    something invisible. Such a move is undone;
+    //  - Left at the left edge of a level (nothing there to move to) goes back one level, like Cancel -
+    //    the mirror of Right on a rail button stepping into its tab.
+    private void LateUpdate()
+    {
+        GameObject before = selectedAtFrameStart;
+        Vector2 navigate = Quantum.GamepadControls.Navigate;
+        bool leftPress = IsLeft(navigate) && !IsLeft(lastNavigate);
+        lastNavigate = navigate;
+
+        EventSystem eventSystem = EventSystem.current;
+        selectedAtFrameStart = eventSystem != null ? eventSystem.currentSelectedGameObject : null;
+
+        if (eventSystem == null || (menuCanvas != null && !menuCanvas.enabled) || PopupOpen || popupWasOpen || typingWasActive)
+            return;
+        if (before == null || !before.activeInHierarchy || active == null || !active.Contains(before))
+            return;
+
+        GameObject now = eventSystem.currentSelectedGameObject;
+        if (now != before && now != null && navigate != Vector2.zero && !Quantum.GamepadControls.SubmitPressed &&
+            FocusScopeWidget.Find(now) == null)
+        {
+            // Redo the move with everything outside the menu out of the search, so the nearest menu item in that
+            // direction still wins (e.g. Left from Play reaches the hero picker, not a debug button past it).
+            Selectable inMenu = FindInMenu(before.GetComponent<Selectable>(), navigate);
+            now = inMenu != null ? inMenu.gameObject : before;
+            eventSystem.SetSelectedGameObject(now);
+        }
+
+        if (leftPress && now == before && !ConsumesHorizontal(before))
+            Back();
+
+        selectedAtFrameStart = eventSystem.currentSelectedGameObject;
+    }
+
+    private readonly List<KeyValuePair<Selectable, Navigation>> hiddenFromSearch = new List<KeyValuePair<Selectable, Navigation>>();
+
+    // uGUI's own neighbour search from `from` in the stick's direction, with every unscoped Selectable
+    // temporarily non-navigable (FindSelectable skips Navigation.None) - only runs on a frame a move leaked.
+    private Selectable FindInMenu(Selectable from, Vector2 navigate)
+    {
+        if (from == null)
+            return null;
+
+        hiddenFromSearch.Clear();
+        foreach (Selectable selectable in Selectable.allSelectablesArray)
+        {
+            if (selectable == null || selectable.navigation.mode == Navigation.Mode.None || FocusScopeWidget.Find(selectable.gameObject) != null)
+                continue;
+
+            hiddenFromSearch.Add(new KeyValuePair<Selectable, Navigation>(selectable, selectable.navigation));
+            Navigation none = selectable.navigation;
+            none.mode = Navigation.Mode.None;
+            selectable.navigation = none;
+        }
+
+        Selectable found;
+        if (Mathf.Abs(navigate.x) >= Mathf.Abs(navigate.y))
+            found = navigate.x < 0f ? from.FindSelectableOnLeft() : from.FindSelectableOnRight();
+        else
+            found = navigate.y < 0f ? from.FindSelectableOnDown() : from.FindSelectableOnUp();
+
+        foreach (KeyValuePair<Selectable, Navigation> hidden in hiddenFromSearch)
+            hidden.Key.navigation = hidden.Value;
+        hiddenFromSearch.Clear();
+
+        return found != null && found.IsInteractable() && FocusScopeWidget.Find(found.gameObject) != null ? found : null;
+    }
+
+    private static bool IsLeft(Vector2 navigate) => navigate.x < -0.5f && Mathf.Abs(navigate.x) > Mathf.Abs(navigate.y);
+
+    // Controls that use Left themselves (a horizontal slider changes its value), so Left on them never goes back.
+    private static bool ConsumesHorizontal(GameObject go)
+    {
+        Slider slider = go.GetComponent<Slider>();
+        if (slider != null && slider.IsInteractable() &&
+            (slider.direction == Slider.Direction.LeftToRight || slider.direction == Slider.Direction.RightToLeft))
+            return true;
+
+        Scrollbar scrollbar = go.GetComponent<Scrollbar>();
+        return scrollbar != null && scrollbar.IsInteractable() &&
+               (scrollbar.direction == Scrollbar.Direction.LeftToRight || scrollbar.direction == Scrollbar.Direction.RightToLeft);
+    }
+
+    /// <summary>
+    /// Sets a scoped Selectable's navigation. Use this instead of assigning <c>navigation</c> directly: while
+    /// the Selectable's scope is inactive this controller holds its real navigation aside (it is set to None),
+    /// and a direct assignment would be overwritten when the scope becomes active again.
+    /// </summary>
+    public static void SetNavigation(Selectable selectable, Navigation navigation)
+    {
+        if (selectable == null)
+            return;
+
+        if (Instance != null && Instance.savedNavigation.ContainsKey(selectable))
+            Instance.savedNavigation[selectable] = navigation;
+        else
+            selectable.navigation = navigation;
     }
 
     // A menu popup makes every scoped Selectable non-navigable (so the stick can't reach the menu behind

@@ -9,7 +9,7 @@ namespace Quantum
     // elemental-domain-owned, none of them reused from EffectConfig's own Stun/Root/etc fields, even
     // where a reaction's effect reuses an existing status (Static Collapse applies Stagger) - those
     // existing fields already have other live consumers, so borrowing them would silently couple an
-    // unrelated skill's tuning to a reaction's. Referenced via RuntimeConfig.ElementalReactionConfig,
+    // unrelated skill's tuning to a reaction's. Referenced via OverallGameConfig.ElementalReactionConfig,
     // read by StatusEffectUtility.
     //
     // Burn is DoT: total damage dealt over Duration is HitDamage * DamagePercent, spread evenly

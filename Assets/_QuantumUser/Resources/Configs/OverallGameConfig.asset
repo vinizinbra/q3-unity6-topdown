@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41fc80e52f494f41bbbb3f4b5cd3941, type: 3}
+  m_Name: OverallGameConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.OverallGameConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Configs/OverallGameConfig
+    Guid:
+      Value: 511874348272920894
+  ExplodeOnDeathConfig:
+    Id:
+      Value: 383090212337731835
+  EffectConfig:
+    Id:
+      Value: 522287310210420591
+  ElementalReactionConfig:
+    Id:
+      Value: 491478871009097374
+  EnemyTierResistanceConfig:
+    Id:
+      Value: 411343015007468473
+  EnemyTierStatsConfig:
+    Id:
+      Value: 785124012434522664
+  BalanceConfig:
+    Id:
+      Value: 503423254243386843
+  DifficultyConfig:
+    Id:
+      Value: 375077487635899393
+  DirectorConfig:
+    Id:
+      Value: 416415362832844946
+  LifecycleConfig:
+    Id:
+      Value: 336734921985004182
+  ExperienceConfig:
+    Id:
+      Value: 431439649865532567
+  LevelUpConfig:
+    Id:
+      Value: 467002707681896236
+  ScrapConfig:
+    Id:
+      Value: 526209465784127970
+  RiftShardConfig:
+    Id:
+      Value: 325807758720455975
+  CoinConfig:
+    Id:
+      Value: 308933191886885705
+  HealthOrbConfig:
+    Id:
+      Value: 312826867456356232
+  CursedRiftConfig:
+    Id:
+      Value: 493596684989510471
+  StoreConfig:
+    Id:
+      Value: 466436701424375694
+  BlacksmithConfig:
+    Id:
+      Value: 348202425962028469
+  TalentsConfig:
+    Id:
+      Value: 344446873976981054
+  AccessoryGuardConfig:
+    Id:
+      Value: 390381435654004468
+  ReviveConfig:
+    Id:
+      Value: 533983932994204390
+  Prefabs:
+    ExpOrbPrototype:
+      Id:
+        Value: 1379323974186270784
+    ScrapOrbPrototype:
+      Id:
+        Value: 1453380309836259711
+    RiftShardPrototype:
+      Id:
+        Value: 1373424837902233216
+    CoinPrototype:
+      Id:
+        Value: 1526470837466056071
+    DroppedAccessoryPrototype:
+      Id:
+        Value: 1320939754598664055

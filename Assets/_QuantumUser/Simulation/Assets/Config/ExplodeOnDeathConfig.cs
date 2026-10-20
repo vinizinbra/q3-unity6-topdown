@@ -5,7 +5,7 @@ namespace Quantum
     // Global balance tuning for the ExplodeOnDeath mechanic - one shared knob for "how hard does a
     // marked enemy's death explosion hit", instead of a DamagePercent authored separately on each
     // upgrade that grants the mark (Max's Berserk upgrade, Pixie's bomb upgrade, any future one).
-    // Referenced via RuntimeConfig.ExplodeOnDeathConfig.
+    // Referenced via OverallGameConfig.ExplodeOnDeathConfig.
     public class ExplodeOnDeathConfig : AssetObject
     {
         // Percent of the dying enemy's own MaxHealth - tougher enemies explode harder with zero

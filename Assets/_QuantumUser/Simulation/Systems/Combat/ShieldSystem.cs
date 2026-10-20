@@ -80,6 +80,12 @@ namespace Quantum
             if (shield->TemporaryDuration <= FP._0 || shield->Current <= FP._0)
                 return;
 
+            // Brute's Juggernaut: the countdown is frozen for the whole channel (JuggernautCharge is
+            // present from Begin to End) - the Shield only starts decaying once he's out of it.
+            // JuggernautSkillData.End restarts the timer at full so the grace window begins there.
+            if (f.Has<JuggernautCharge>(entity) == true)
+                return;
+
             shield->ExpirationRemaining -= f.DeltaTime;
 
             if (shield->ExpirationRemaining > FP._0)

@@ -3,7 +3,7 @@ namespace Quantum
     using Photon.Deterministic;
 
     // Haste-side counterpart to HasteEffectData, with its own Duration/AttackSpeedMultiplier rather
-    // than reading the shared RuntimeConfig.EffectConfig defaults - lets Healing Chorus rank 2+/
+    // than reading the shared OverallGameConfig.EffectConfig defaults - lets Healing Chorus rank 2+/
     // Restorative Beat rank 2+ grant a short (~2s) Haste as specified, independent of whatever
     // duration every other Haste source in the game shares. Same StatusEffectUtility.ApplyHaste
     // entry point either way - only the source of the numbers differs.

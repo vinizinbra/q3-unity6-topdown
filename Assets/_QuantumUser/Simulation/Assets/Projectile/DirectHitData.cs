@@ -41,6 +41,10 @@ namespace Quantum
             if (ShouldDetonate(f, projectile, hitEntity) == false)
                 return false;
 
+            // Brute's Juggernaut swallows non-explosive enemy shots - spent, no effects, no pierce.
+            if (BruteAscensionUtility.TryDeflectProjectile(f, hitEntity, projectile, point) == true)
+                return true;
+
             ApplyEffects(f, projectile, hitEntity, point, projectile->Velocity.Normalized);
 
             // Heavy Mastery's "Heavy Hit Area Expansion" R3 (docs/hero-mastery.md) - a single-target

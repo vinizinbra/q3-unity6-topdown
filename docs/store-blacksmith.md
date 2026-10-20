@@ -332,7 +332,7 @@ defaults every other config in this doc already has. Not yet run/authored in the
 1. `Tools/RiftRaiders/Generate Store & Blacksmith Content` (authors the plain-data assets) - not yet run.
 2. `StoreConfig.WeaponPool`/`BlacksmithConfig.PerkPool` need hand-assigning (point at the same pools
    `LevelUpConfig` already uses, or curated ones) - the generator deliberately leaves these unassigned.
-3. `RuntimeConfig.StoreConfig`/`BlacksmithConfig` need assigning on `QuantumMenuConfig.asset`.
+3. `OverallGameConfig.StoreConfig`/`BlacksmithConfig` need assigning on `QuantumMenuConfig.asset`.
 4. No `Store`/`Blacksmith` `EntityPrototype` exists yet - `Store` needs hand-placing on
    `MarketChunk.prefab` (`ChunkType.Merchant`, already exists, currently unwired) + a
    `StoreChunkSpawnConfig.asset`; `Blacksmith` needs a new `BlacksmithChunk.prefab`

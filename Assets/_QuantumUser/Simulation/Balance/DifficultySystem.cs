@@ -7,14 +7,14 @@ namespace Quantum
     {
         public override void OnInit(Frame f)
         {
-            DifficultyConfig config = f.FindAsset(f.RuntimeConfig.DifficultyConfig);
+            DifficultyConfig config = f.FindAsset(f.GameConfig.DifficultyConfig);
 
             if (config == null)
             {
                 // All-zero snapshot = every DifficultyUtility accessor reads 1 (Medium). Only worth a
                 // warning when someone actually asked for a non-Medium tier.
                 if (f.RuntimeConfig.Difficulty != DifficultyTier.Medium)
-                    Log.Error($"[Difficulty] RuntimeConfig.DifficultyConfig did not resolve - running {f.RuntimeConfig.Difficulty} as Medium (1x). Assign it on RuntimeConfig.");
+                    Log.Error($"[Difficulty] OverallGameConfig.DifficultyConfig did not resolve - running {f.RuntimeConfig.Difficulty} as Medium (1x). Assign it on OverallGameConfig.");
 
                 return;
             }

@@ -4,54 +4,22 @@
     using Photon.Deterministic;
     using UnityEngine;
 
+    // Per-match settings only: which map/level/world/difficulty this match plays, the leader's world
+    // unlocks, and debug/bot test knobs. Everything shared that barely changes (Store, Blacksmith,
+    // currencies, Director, balance tables, effects...) lives on ONE OverallGameConfig asset referenced
+    // below and read as `f.GameConfig` (Frame.User.cs) - so the menu and every debug runner can't
+    // drift apart. See docs/game-config.md.
     public partial class RuntimeConfig
     {
+        [Header("Game Config")]
+        // The shared, rarely-changing game tuning - Resources/Configs/OverallGameConfig.
+        public AssetRef<OverallGameConfig> GameConfig;
+
         [Header("Level")]
         // Which level to generate for this match - like Map/Seed above, this can differ game to
         // game (e.g. different game modes or difficulty tiers picking a different chunk pool),
         // unlike SimulationConfig's static engine tuning.
         public AssetRef<LevelConfig> LevelConfig;
-
-        [Header("Status Effects & Elemental Reactions")]
-        // Shared balance tuning for the ExplodeOnDeath mechanic (Max's Berserk upgrade, Pixie's bomb
-        // upgrade) - see ExplodeOnDeathConfig and DamageUtility.TryExplodeOnDeath.
-        public AssetRef<ExplodeOnDeathConfig> ExplodeOnDeathConfig;
-
-        // Shared balance tuning for every element-independent status effect (Stun/Root/
-        // AnticipationSlow/Haste/Intimidate/Knockback) - see EffectConfig, the matching EffectData
-        // classes, and SentryAuraSystem. Fire/Ice's own baselines (Burn/Chill+Freeze) live on
-        // ElementalReactionConfig below instead.
-        public AssetRef<EffectConfig> EffectConfig;
-
-        // Balance tuning for the 6 elemental reactions (Explosion/Freeze/Knockback/Magma
-        // Prison/Stun/Break) - see ElementalReactionConfig and
-        // StatusEffectUtility.TryApplyElementalStatus/docs/elemental-reactions.md.
-        public AssetRef<ElementalReactionConfig> ElementalReactionConfig;
-
-        [Header("Enemy Tiers")]
-        // Per-EnemyTier resistance multipliers for stun/root/slow/burn/break/knockback - see
-        // EnemyTierResistanceConfig, StatusEffectUtility.GetTierResistance and
-        // DamageUtility.ResolveKnockbackScale.
-        public AssetRef<EnemyTierResistanceConfig> EnemyTierResistanceConfig;
-
-        // Per-EnemyTier baseline for MaxHealth/Cost/ExpValue/ScaleMultiplier, so authoring a new
-        // enemy only requires picking a Tier for these - see EnemyTierStatsConfig,
-        // EnemySystem.SeedRadius, CombatDirectorUtility, EnemyLifecycleSystem,
-        // EnemyGroupConfig.ComputeCost and ExperienceUtility.TrySpawnDrop. MaxHealth specifically
-        // is also read by EnemyBalanceUtility.ResolveEnemyStats (below) as the baseline the run
-        // curves/co-op multipliers scale - single source of truth, not duplicated there.
-        public AssetRef<EnemyTierStatsConfig> EnemyTierStatsConfig;
-
-        [Header("Balance - Run Curves & Co-op Scaling")]
-        // Time-based run curves + player-count co-op scaling (global multipliers, per-tier HP
-        // multipliers) applied on top of EnemyTierStatsConfig.MaxHealth - see BalanceConfig,
-        // EnemyBalanceUtility.ResolveEnemyStats and EnemySystem.SeedHealth/SeedCombatModifiers.
-        // Also read by CombatDirectorUtility.ResolveBudgetMultiplier to scale DirectorBudget
-        // (Survival Director "Milestone 7", docs/survival-director.md), and by
-        // ExperienceUtility.ResolveXpRequirementMultiplier to scale the XP needed to level up.
-        // ExpectedPlayerDps/EliteFrequency remain reserved, no consumer yet. See
-        // docs/run-curves-coop-scaling.md.
-        public AssetRef<BalanceConfig> BalanceConfig;
 
         [Header("World")]
         // THE world to author: one WorldDefinition bundles Theme + SurvivalConfig + WorldBalance. The menu's
@@ -75,88 +43,15 @@
         // growth^N, so Nightmare 1 is already harder than Hard.
         public int NightmareLevel = 1;
 
-        public AssetRef<DifficultyConfig> DifficultyConfig;
-
-        [Header("Survival Director")]
-        // Survival Director tuning - see SurvivalConfig/DirectorConfig/LifecycleConfig and
-        // CombatDirectorSystem/EnemyLifecycleSystem.
-        // SurvivalConfig is derived from WorldDefinition (don't author).
+        // The world's Director timeline - derived from WorldDefinition (don't author). DirectorConfig/
+        // LifecycleConfig (shared tuning) live on OverallGameConfig.
         [HideInInspector] public AssetRef<SurvivalConfig> SurvivalConfig;
-        public AssetRef<DirectorConfig> DirectorConfig;
-        public AssetRef<LifecycleConfig> LifecycleConfig;
 
-        [Header("Experience & Level-Up")]
-        // Balance tuning for the experience-drop mechanic (leveling curve + pickup tunables) - see
-        // ExperienceConfig and ExperienceUtility/CurrencyOrbSystem. The per-level RequiredExperience
-        // curve is additionally scaled by live player count via BalanceConfig.CoopGlobalKey.
-        // XpRequirement (below) - see ExperienceUtility.ResolveXpRequirementMultiplier.
-        public AssetRef<ExperienceConfig> ExperienceConfig;
-
-        // Tuning for the level-up upgrade-choice screen (decision time, choice count, the two
-        // globally-pooled kinds) - see LevelUpConfig, LevelUpUtility and LevelUpSystem.
-        public AssetRef<LevelUpConfig> LevelUpConfig;
-
-        [Header("Currencies")]
-        // Balance tuning for Lux's Scrap pickup (Scrap Collector passive) - see ScrapConfig and
-        // ScrapUtility/ScrapOrbSystem.
-        public AssetRef<ScrapConfig> ScrapConfig;
-
-        // Balance tuning for the Rift Shard currency pickup (Greed Global Upgrade doubles its
-        // gain) - see RiftShardConfig and RiftShardUtility/CurrencyOrbSystem.
-        public AssetRef<RiftShardConfig> RiftShardConfig;
-
-        // Balance tuning for the Coin currency pickup - a second, independent currency from Rift
-        // Shards, see CoinConfig and CoinUtility/CurrencyOrbSystem.
-        public AssetRef<CoinConfig> CoinConfig;
-
-        // Pickup tunables for the HealthOrb (dropped by a Breakable's loot table, heals on collect) -
-        // see HealthOrbConfig and HealthOrbSystem.
-        public AssetRef<HealthOrbConfig> HealthOrbConfig;
-
-        [Header("Run Phase & Breathing POIs")]
-        // Breathing Break timing (Combat<->Breathing loop) lives directly in SurvivalConfig.Phases[]
-        // (SurvivalPhase.Kind == Breathing entries, above) - see CombatDirectorSystem and docs/run-phase.md.
-
-        // Cursed Rift's sacrifice pool + choice counts - see CursedRiftConfig, CursedRiftUtility
-        // and docs/breathing-poi.md. The Rift Mutation reward pool reuses LevelUpConfig.
-        // RiftMutations directly (below), no separate list.
-        public AssetRef<CursedRiftConfig> CursedRiftConfig;
-
-        // Store's weapon/food offer pools + pricing - see StoreConfig, StoreUtility and
-        // docs/store-blacksmith.md.
-        public AssetRef<StoreConfig> StoreConfig;
-
-        // Blacksmith's perk pool + per-Break rarity tuning + price - see BlacksmithConfig,
-        // BlacksmithUtility and docs/store-blacksmith.md.
-        public AssetRef<BlacksmithConfig> BlacksmithConfig;
-
-        [Header("Talents")]
-        // Meta-progression talent tuning (flat per-level bonus shared by every leveling talent) -
-        // see TalentsConfig, TalentUtility and RuntimePlayer's own Player*/Has*/Can* fields.
-        public AssetRef<TalentsConfig> TalentsConfig;
-
+        [Header("World Unlocks")]
         // World-feature meta-progression (which Breathing POIs/challenges/Base services exist and how far
         // they're upgraded) - the leader's levels, written by MatchMakingConfig before CloneConfig. Leave
         // Enforce off when authoring by hand: everything unlocked. See WorldUnlocks/WorldUnlockUtility.
         public WorldUnlocks WorldUnlocks;
-
-        [Header("Accessory Guard")]
-        // Recoverable Accessory Guard tuning - durability, how the accessory pops off/is recovered,
-        // and what a Merchant repair/replacement costs. See AccessoryGuardConfig,
-        // AccessoryGuardUtility/AccessoryServiceUtility and docs/accessory-guard.md. Unassigned
-        // disables the mechanic entirely (nothing is seeded, so nothing ever blocks) - the same
-        // "no config, no feature" shape every other optional POI/mechanic config here already has.
-        public AssetRef<AccessoryGuardConfig> AccessoryGuardConfig;
-
-        [Header("Revive")]
-        // Hold-to-revive tuning (Downed/KO life-state, revive/self-revive durations, damage-pause,
-        // completion heal/invuln) - see ReviveConfig and docs/revive.md.
-        public AssetRef<ReviveConfig> ReviveConfig;
-
-        [Header("Prefabs")]
-        // Every pickup entity spawned straight from RuntimeConfig rather than authored on a
-        // prototype elsewhere - see PrefabRefs below.
-        public PrefabRefs Prefabs;
 
         [Header("Debug")]
         // Debug-only knobs for testing low-health/no-shield scenarios without re-authoring
@@ -282,22 +177,5 @@
             public bool DisableAutoTeamChallengeReady;
         }
 
-        // The pickup entity prototypes each currency/pickup utility spawns on an eligible enemy
-        // kill - see ExpOrb.qtn/ScrapOrb.qtn/RiftShard.qtn/Coin.qtn and
-        // ExperienceUtility/ScrapUtility/RiftShardUtility/CoinUtility.TrySpawnDrop.
-        [Serializable]
-        public struct PrefabRefs
-        {
-            public AssetRef<EntityPrototype> ExpOrbPrototype;
-            public AssetRef<EntityPrototype> ScrapOrbPrototype;
-            public AssetRef<EntityPrototype> RiftShardPrototype;
-            public AssetRef<EntityPrototype> CoinPrototype;
-
-            // ONE shared prototype for every hero's dropped Signature Accessory - the collectible is
-            // fully generic (see DroppedAccessory in AccessoryGuard.qtn) and resolves its own sprite
-            // from its owner's hero presentation data on the View side (DroppedAccessoryView), so
-            // there is deliberately no per-hero prototype here.
-            public AssetRef<EntityPrototype> DroppedAccessoryPrototype;
-        }
     }
 }

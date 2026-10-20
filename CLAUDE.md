@@ -21,6 +21,8 @@ which one to open.
 
 ## Core loop & run flow
 
+- **Game Config** — shared, rarely-changing tuning (Store, Blacksmith, currencies, XP/level-up, Director, balance tables, effects, enemy tiers, revive, accessory, pickup prefabs) is ONE asset, `Resources/Configs/OverallGameConfig`, read as `f.GameConfig.X`; `RuntimeConfig` keeps only per-match picks (level, world, difficulty, unlocks, debug/bots) + a `GameConfig` ref. All shared configs live in `Resources/Configs/`. → `docs/game-config.md`
+
 - **Survival Director** — continuous-spawn combat pacing (progression/director/spawner/lifecycle) deciding when, where, and what to spawn. → `docs/survival-director.md`
 - **Run Curves & Co-op Scaling** — time-based difficulty curves + player-count scaling for enemy HP/damage, DirectorBudget, and XP requirement (`BalanceConfig`). → `docs/run-curves-coop-scaling.md`
 - **Difficulty Tiers** — Easy/Medium/Hard/Nightmare N (`RuntimeConfig.Difficulty`/`NightmareLevel`) via `DifficultyConfig`, snapshotted into `Global.Difficulty`; multiplies enemy HP/damage, density, elite weight, windup/recovery, enemy projectile speed/lead, move speed on top of the balance stack. Nightmare = Hard × growth^N. → `docs/difficulty.md`
@@ -89,7 +91,7 @@ which one to open.
 
 - **Haptics** — Nice Vibrations behind one `Haptics.Play` entry point + Settings on/off toggle; triggered by `SoundData.haptic` (fires with the sound) or `HapticsDirector` (self-installed: any UI press + local-player Quantum events, tuned in `Resources/HapticsConfig`). Never call Nice Vibrations directly. → `docs/haptics.md`
 
-- **Off-screen Teammate Indicators** — local-only Mario-style hex heads (live rig head, RingColor border, red while Downed, hidden on KO, distance label, hex ping ripple) pinned to the safe-area screen edge for remote players/bots off camera; `OffscreenPlayerIndicatorManager` + template prefab nested in the gameplay `Canvas.prefab`, registered from `CharView`. → `docs/offscreen-indicators.md`
+- **Off-screen Teammate Indicators** — local-only Mario-style hex heads (live rig head, RingColor border, red while Downed, hidden on KO, distance label, hex ping ripple) pinned to the safe-area screen edge for remote players/bots off camera; `OffscreenPlayerIndicatorManager` + template prefab nested in the gameplay `Canvas.prefab`, registered from `CharView`. Also red edge arrows to the enemies still alive during the "clear all enemies" Breathing hold (`OffscreenEnemyIndicatorManager`, frame-driven). → `docs/offscreen-indicators.md`
 
 - **Smart Ping** — one Ping button (Y / middle mouse), `PingSystem` resolves Elite/POI/Team Challenge/ground from context → `PingPlaced` event → HUD chat feed + minimap radar. → `docs/ping.md`
 

@@ -41,9 +41,9 @@ public class BossWidget : GameStateGatedWidget
     private Slider shieldSlider;
     [SerializeField, Tooltip("Shows \"current/max\" (rounded to whole numbers) alongside shieldSlider.")]
     private TMP_Text shieldText;
-    [SerializeField, Tooltip("Whole stagger visual group (slider + any label/background/icon) - toggled off together, same reasoning as shieldRoot. Shown only while Stagger.Threshold > 0, same optional-feature gating as shieldRoot.")]
+    [SerializeField, Tooltip("Whole stagger visual group (slider + any label/background/icon) - toggled off together, same reasoning as shieldRoot. Shown only while Stagger.ThresholdPercents is non-empty, same optional-feature gating as shieldRoot.")]
     private GameObject staggerRoot;
-    [SerializeField, Tooltip("BossRuntimeState.StaggerMeter / BossDataAsset.Stagger.Threshold - fills as the boss takes damage, resets to empty (and freezes - see BossSystem.TickStagger) the instant it breaks into Kneel.")]
+    [SerializeField, Tooltip("BossRuntimeState.StaggerMeter / the current BossDataAsset.Stagger.ThresholdPercents entry x MaxHealth - fills as the boss takes damage, resets to empty (and freezes - see BossSystem.TickStagger) the instant it breaks into Kneel.")]
     private Slider staggerSlider;
     [SerializeField, Tooltip("Shown once, the instant the boss entity is first found this encounter - populated from its own EnemyDataAsset if it's a BossDataAsset (Title/Subtitle/UiSprite), left as whatever's already on the prefab otherwise.")]
     private BossWindow bossWindow;
@@ -215,14 +215,26 @@ public class BossWidget : GameStateGatedWidget
             return;
 
         BossDataAsset bossData = frame.FindAsset(enemy.EnemyData) as BossDataAsset;
-        bool shown = bossData != null && bossData.Stagger.Threshold > FP._0;
+        var percents = bossData != null ? bossData.Stagger.ThresholdPercents : null;
+        bool shown = percents != null && percents.Count > 0 && frame.TryGet<Health>(bossEntity, out _);
 
         SetShown(staggerRoot, shown);
 
         if (shown == false)
             return;
 
-        SetSliderValue(staggerSlider, (bossRuntimeState.StaggerMeter / bossData.Stagger.Threshold).AsFloat);
+        // Same threshold BossSystem.TickStagger breaks on: current ThresholdPercents entry x MaxHealth.
+        // Empty in the execution phase (no more Kneels below MinHealthPercent).
+        Health health = frame.Get<Health>(bossEntity);
+        FP threshold = percents[Mathf.Min(bossRuntimeState.StaggerBreakCount, percents.Count - 1)] * health.MaxHealth;
+
+        if (threshold <= FP._0 || health.CurrentHealth <= bossData.Stagger.MinHealthPercent * health.MaxHealth)
+        {
+            SetSliderValue(staggerSlider, 0f);
+            return;
+        }
+
+        SetSliderValue(staggerSlider, Mathf.Clamp01((bossRuntimeState.StaggerMeter / threshold).AsFloat));
     }
 
     private void UpdateName(Frame frame, EntityRef bossEntity)

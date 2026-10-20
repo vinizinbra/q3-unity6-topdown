@@ -205,7 +205,7 @@ namespace Quantum
 
         public static ReviveConfig GetConfig(Frame f)
         {
-            return f.RuntimeConfig.ReviveConfig.IsValid ? f.FindAsset(f.RuntimeConfig.ReviveConfig) : null;
+            return f.GameConfig.ReviveConfig.IsValid ? f.FindAsset(f.GameConfig.ReviveConfig) : null;
         }
     }
 }

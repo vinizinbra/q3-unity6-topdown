@@ -1039,6 +1039,16 @@ event FreeHitGuardConsumed
 // The accessory just ate a hit. Damage is the RAW incoming amount, before any resolution - a block
 // negates the hit outright, so nothing further was ever computed for it (see
 // AccessoryGuardUtility.TryBlock). RemainingDurability is the value AFTER this block.
+// Brute's active Juggernaut ate an enemy direct-hit projectile (see
+// BruteAscensionUtility.TryDeflectProjectile) - no EntityDamaged fires, so this is the View's only
+// cue to play a deflect spark/clank at the contact point.
+event JuggernautProjectileDeflected
+{
+    EntityRef Owner;
+    EntityRef Attacker;
+    FPVector3 Position;
+}
+
 event AccessoryBlocked
 {
     EntityRef Owner;

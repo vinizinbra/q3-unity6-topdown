@@ -37,7 +37,8 @@ namespace Quantum {
 
     // Menu navigation (uGUI focus itself is driven by the InputSystemUIInputModule's default actions;
     // these are for the project's own MenuNavigationController).
-    public static bool NavigateActive => Map.FindAction("Navigate").ReadValue<Vector2>() != Vector2.zero;
+    public static Vector2 Navigate => Map.FindAction("Navigate").ReadValue<Vector2>();
+    public static bool NavigateActive => Navigate != Vector2.zero;
     public static bool SubmitPressed => Map.FindAction("Submit").WasPressedThisFrame();
     public static bool CancelPressed => Map.FindAction("Cancel").WasPressedThisFrame();
     public static bool TabPrevPressed => Map.FindAction("TabPrev").WasPressedThisFrame();

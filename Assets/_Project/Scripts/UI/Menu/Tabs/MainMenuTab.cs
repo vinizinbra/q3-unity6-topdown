@@ -31,6 +31,17 @@ public class MainMenuTab : TabContent
         }
     }
 
+    // Right on the Home rail button lands on the hero picker (the control nearest the rail); Submit goes to Play.
+    public override UnityEngine.UI.Selectable RightFocus
+    {
+        get
+        {
+            var party = FindFirstObjectByType<PartyRoomWidget>(FindObjectsInactive.Exclude);
+            var hero = party != null ? party.characterDropdown : null;
+            return hero != null && hero.IsActive() && hero.IsInteractable() ? hero : DefaultFocus;
+        }
+    }
+
     protected override void OnShow()
     {
     }

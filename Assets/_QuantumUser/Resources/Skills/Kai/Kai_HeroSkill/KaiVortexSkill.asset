@@ -24,8 +24,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While equipped, deals {0} damage to every enemy caught in the vortex
-    every {1}s via its damage effect.
+  Description: 'Deals {0} damage to enemies in the Vortex every {1}s.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -81,9 +80,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While equipped, the vortex's damage (pulses, mini-explosions, and
-    final blast) increases by {0}% for each enemy caught beyond the first, capping
-    at {1} enemies caught.
+  Description: '+{0}% Vortex damage per extra enemy caught (max {1}).'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -158,8 +155,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While equipped, the vortex deals {0} damage in a {1}m radius at a
-    random point inside its pull area every {2}s.
+  Description: 'Every {2}s, deals {0} damage in {1}m at a random point in the Vortex.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -262,8 +258,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 0
-  Description: While equipped, overrides the vortex's pull force to {0} and makes
-    it pulse every tick, instead of scaling off the cast's own damage.
+  Description: 'Vortex pulls with force {0} and pulses every tick.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -316,8 +311,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While equipped, the vortex deals {0} damage in a radius around itself
-    the instant it's destroyed or expires.
+  Description: 'Vortex explodes for {0} damage when it ends.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -402,8 +396,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: While equipped, the vortex fires a homing projectile ({0} damage)
-    at the nearest enemy within {1}x its pull radius, every {2}s.
+  Description: 'Vortex fires a homing shard ({0} dmg) every {2}s.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

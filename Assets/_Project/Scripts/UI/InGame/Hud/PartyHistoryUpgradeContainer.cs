@@ -1,6 +1,7 @@
 using Quantum;
 using QuantumUser.View;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Grid of PartyHistoryUpgradeWidget icons in a PartyHudWidget slot - one icon per distinct upgrade
 // the bound entity has ever picked, read off UpgradeHistory (see LevelUp.qtn and LevelUpUtility.
@@ -16,6 +17,10 @@ public class PartyHistoryUpgradeContainer : QuantumGlobalMonoBehaviour
     private Transform grid;
     [SerializeField, Tooltip("Live template, NOT a child of grid - hidden at Start, cloned into grid on rebuild.")]
     private PartyHistoryUpgradeWidget iconPrefab;
+    [SerializeField, Tooltip("None shows every kind. Anything else shows only that kind (e.g. the Rift Mutation row beside a party slot) - or, with excludeKind on, everything BUT that kind.")]
+    private LevelUpPoolKind kindFilter = LevelUpPoolKind.None;
+    [SerializeField, Tooltip("On: kindFilter is hidden instead of being the only kind shown (e.g. the general history row leaving Rift Mutations to their own row).")]
+    private bool excludeKind;
 
     [SerializeField, Tooltip("On: binds itself to local slot 0 (player 1) automatically. Off: stays unbound until something else calls Initialize (e.g. the party HUD).")]
     private bool autoBindLocalPlayerOne = true;
@@ -70,7 +75,7 @@ public class PartyHistoryUpgradeContainer : QuantumGlobalMonoBehaviour
         if (hasHistory == false)
             return;
 
-        int signature = ComputeSignature(history);
+        int signature = ComputeSignature(history, kindFilter, excludeKind);
 
         if (signature == _signature)
             return;
@@ -79,14 +84,14 @@ public class PartyHistoryUpgradeContainer : QuantumGlobalMonoBehaviour
         Rebuild(frame, history);
     }
 
-    private static int ComputeSignature(UpgradeHistory history)
+    private static int ComputeSignature(UpgradeHistory history, LevelUpPoolKind kindFilter, bool excludeKind)
     {
         int signature = 17;
         var entries = history.Entries;
 
         for (int i = 0; i < entries.Length; i++)
         {
-            if (entries[i].Upgrade.IsValid == false)
+            if (IsShown(entries[i], kindFilter, excludeKind) == false)
                 continue;
 
             signature = signature * 31 + entries[i].Upgrade.GetHashCode();
@@ -98,14 +103,19 @@ public class PartyHistoryUpgradeContainer : QuantumGlobalMonoBehaviour
 
     private void Rebuild(Frame frame, UpgradeHistory history)
     {
+        // Deactivated first: Destroy is deferred, and a still-active old icon would count in this
+        // frame's layout pass (grid spacing, PartySlotHeightWidget).
         for (int i = grid.childCount - 1; i >= 0; i--)
+        {
+            grid.GetChild(i).gameObject.SetActive(false);
             Destroy(grid.GetChild(i).gameObject);
+        }
 
         var entries = history.Entries;
 
         for (int i = 0; i < entries.Length; i++)
         {
-            if (entries[i].Upgrade.IsValid == false)
+            if (IsShown(entries[i], kindFilter, excludeKind) == false)
                 continue;
 
             UpgradeData data = frame.FindAsset(entries[i].Upgrade);
@@ -113,6 +123,17 @@ public class PartyHistoryUpgradeContainer : QuantumGlobalMonoBehaviour
             icon.gameObject.SetActive(true);
             icon.Setup(data.Icon, entries[i].Count);
         }
+
+        // Lets a parent layout (the PartyBar via PartySlotHeightWidget) follow the row growing/emptying.
+        LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
+    }
+
+    private static bool IsShown(UpgradeHistoryEntry entry, LevelUpPoolKind kindFilter, bool excludeKind)
+    {
+        if (entry.Upgrade.IsValid == false || kindFilter == LevelUpPoolKind.None)
+            return entry.Upgrade.IsValid;
+
+        return (entry.Kind == kindFilter) != excludeKind;
     }
 
     private void SetShown(bool shown)

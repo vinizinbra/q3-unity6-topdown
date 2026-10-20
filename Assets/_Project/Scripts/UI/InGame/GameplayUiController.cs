@@ -302,8 +302,8 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
             if (isWeaponChoice)
             {
-                LevelUpConfig levelUpConfig = frame.RuntimeConfig.LevelUpConfig.IsValid
-                    ? frame.FindAsset(frame.RuntimeConfig.LevelUpConfig)
+                LevelUpConfig levelUpConfig = frame.GameConfig.LevelUpConfig.IsValid
+                    ? frame.FindAsset(frame.GameConfig.LevelUpConfig)
                     : null;
 
                 var weaponCardData = new WeaponCardWidget.CardData[choice->Options.Length];
@@ -447,10 +447,10 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     {
         EntityRef store = interaction->Store;
 
-        if (frame.RuntimeConfig.StoreConfig.IsValid == false || frame.Unsafe.TryGetPointer<StoreInventory>(store, out var inventory) == false)
+        if (frame.GameConfig.StoreConfig.IsValid == false || frame.Unsafe.TryGetPointer<StoreInventory>(store, out var inventory) == false)
             return;
 
-        StoreConfig config = frame.FindAsset(frame.RuntimeConfig.StoreConfig);
+        StoreConfig config = frame.FindAsset(frame.GameConfig.StoreConfig);
         int weaponOfferCount = StoreUtility.ResolveWeaponOfferCount(frame, entity, store, config);
 
         // The food/utility row is PACKED, not fixed-index: however many food offers actually rolled,
@@ -505,16 +505,28 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 : default;
         }
 
-        window.RefreshStore("STORE", foodData, weaponData, BuildCoinWalletSubtitle(frame, entity));
+        window.RefreshStore("STORE", foodData, weaponData, string.Empty);
+        ApplyPoiHeader(frame, entity, window, CurrencyType.Coin);
     }
 
-    // "YOUR COINS: 120 <coin icon>" - the Store/Blacksmith subtitle. The trailing TMP sprite tag
-    // resolves against the subtitle text's sprite asset (glyph named "COIN").
-    private static unsafe string BuildCoinWalletSubtitle(Frame frame, EntityRef entity)
+    // The Store/Blacksmith/Cursed Rift header: the player's balance of the currency this screen
+    // spends (null = none, Cursed Rift) and the Break countdown, same label/grace swap as
+    // BreathingWidget. Shown only by these three flows; ChooseWindow.Show() clears it for the rest.
+    private static unsafe void ApplyPoiHeader(Frame frame, EntityRef entity, ChooseWindow window, CurrencyType? currency)
     {
-        return frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true
-            ? $"YOUR COINS: {stats->Coins.AsFloat:0} <sprite name=\"COIN\">"
-            : null;
+        int amount = 0;
+
+        if (currency.HasValue && frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true)
+        {
+            amount = currency.Value == CurrencyType.RiftShard
+                ? Mathf.FloorToInt(stats->RiftShards.AsFloat)
+                : Mathf.FloorToInt(stats->Coins.AsFloat);
+        }
+
+        bool grace = frame.Global->BreathingGraceActive == true;
+        float remaining = grace ? frame.Global->BreathingGraceTimeRemaining.AsFloat : frame.Global->BreathingTimeRemaining.AsFloat;
+
+        window.SetPoiHeader(currency, amount, grace ? "Waiting for players:" : "Next survival in:", Mathf.CeilToInt(Mathf.Max(remaining, 0f)));
     }
 
     // Blacksmith's own screen - a single homogeneous UpgradeCardWidget family, structurally
@@ -522,10 +534,10 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     // (now with Purchase populated per-card, since perks cost Coins - see BuildPerkOfferCardData).
     private static unsafe void RefreshBlacksmithWindow(Frame frame, EntityRef entity, BlacksmithInteraction* interaction, ChooseWindow window)
     {
-        if (frame.RuntimeConfig.BlacksmithConfig.IsValid == false)
+        if (frame.GameConfig.BlacksmithConfig.IsValid == false)
             return;
 
-        BlacksmithConfig config = frame.FindAsset(frame.RuntimeConfig.BlacksmithConfig);
+        BlacksmithConfig config = frame.FindAsset(frame.GameConfig.BlacksmithConfig);
         var cardData = new UpgradeCardWidget.CardData[interaction->PerkChoices.Length];
 
         for (int j = 0; j < interaction->PerkChoices.Length; j++)
@@ -536,14 +548,15 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         }
 
         // The perks on offer are added to the weapon the player is holding, so show it for reference.
-        LevelUpConfig levelUpConfig = frame.RuntimeConfig.LevelUpConfig.IsValid
-            ? frame.FindAsset(frame.RuntimeConfig.LevelUpConfig)
+        LevelUpConfig levelUpConfig = frame.GameConfig.LevelUpConfig.IsValid
+            ? frame.FindAsset(frame.GameConfig.LevelUpConfig)
             : null;
 
         // Reroll only exists with Gunsmith L4 (meta progression) - one per Break, shown as a 1/0 charge.
         bool rerollUnlocked = BlacksmithUtility.IsRerollUnlocked(frame);
-        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: BuildCoinWalletSubtitle(frame, entity), allowCancel: true, allowReroll: rerollUnlocked,
+        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: string.Empty, allowCancel: true, allowReroll: rerollUnlocked,
             currentWeapon: BuildCurrentWeaponCardData(frame, entity, levelUpConfig));
+        ApplyPoiHeader(frame, entity, window, CurrencyType.Coin);
         if (rerollUnlocked)
             window.UpdateRerollButton(BlacksmithUtility.CanReroll(frame, entity) ? 1 : 0, false);
     }
@@ -785,6 +798,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             : new[] { BuildCursedRiftOfferCardData(frame, entity, interaction, interaction->Sacrifice) };
 
         window.Refresh("CURSED RIFT", 0f, cardData, null, subtitle: "SACRIFICE FOR A MUTATION", allowCancel: true, allowReroll: false);
+        ApplyPoiHeader(frame, entity, window, null);
     }
 
     // Reuses BuildCardData unchanged (internal, see its own comment) for the mutation reward's

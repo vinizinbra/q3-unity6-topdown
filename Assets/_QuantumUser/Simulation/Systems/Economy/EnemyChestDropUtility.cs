@@ -3,7 +3,7 @@ namespace Quantum
     // Spawn side of a specific enemy's own designed Chest drop (EnemyDataAsset.ChestDrop) - e.g. a
     // mini-boss/rare spawn guaranteed (or chance-rolled) to leave a Chest behind. Unlike Coin/
     // RiftShard/Exp (a fungible currency every enemy of a tier can drop from a shared
-    // RuntimeConfig.Prefabs pickup), this is a per-enemy-asset one-off, so it spawns whichever
+    // OverallGameConfig.Prefabs pickup), this is a per-enemy-asset one-off, so it spawns whichever
     // EntityPrototype that enemy's own asset points at directly - same "f.Create -> set Position ->
     // GroundOffsetUtility.Apply" runtime-spawn idiom TalentGateSystem already uses for a Chest
     // referenced from a ChunkSpawnConfig (see docs/chests.md's own "Editor authoring needed"

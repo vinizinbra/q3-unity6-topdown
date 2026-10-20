@@ -19,10 +19,10 @@ MonoBehaviour:
   Icon: {fileID: -8991408154821295463, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Full Throttle
   RankDescriptions:
-  - At maximum Rage, gain <color=#FD3971>+20%</color> Weapon Damage.
-  - At maximum Rage, gain <color=#FD3971>+30%</color> Weapon Damage and <color=#FD3971>+50%</color>
+  - At maximum Rage, gain <color=#FD3971>+40%</color> Weapon Damage.
+  - At maximum Rage, gain <color=#FD3971>+70%</color> Weapon Damage and <color=#FD3971>+50%</color>
     Reload Speed.
-  - At maximum Rage, gain <color=#FD3971>+40%</color> Weapon Damage and reloads are
+  - At maximum Rage, gain <color=#FD3971>+100%</color> Weapon Damage and reloads are
     instant.
   <MaxRank>k__BackingField: 3
   Priority: 0
@@ -56,9 +56,9 @@ MonoBehaviour:
     Scale: 1
     Alignment: 0
   WeaponDamageBonus:
-  - RawValue: 13107
-  - RawValue: 19661
   - RawValue: 26214
+  - RawValue: 45875
+  - RawValue: 65536
   ReloadSpeedBonus:
   - RawValue: 0
   - RawValue: 32768

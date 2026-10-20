@@ -5,7 +5,7 @@ namespace Quantum
     // Owns the push it deals - unlike DamageEffectData, which scales a number the hit already
     // decided on. Knockback has no per-attack "how hard" to inherit: authoring Tier here means an
     // attack's Effects list is the one place that decides whether and how hard it pushes. Force/
-    // UpwardForce themselves are read from the shared RuntimeConfig.EffectConfig (see
+    // UpwardForce themselves are read from the shared OverallGameConfig.EffectConfig (see
     // EffectConfig.GetKnockback) rather than authored here, so every source of a given Tier pushes
     // identically (same reasoning as HasteEffectData) - only Direction/Tier are ever authored per use.
     //

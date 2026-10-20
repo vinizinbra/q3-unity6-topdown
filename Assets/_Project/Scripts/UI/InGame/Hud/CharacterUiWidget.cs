@@ -348,7 +348,7 @@ public class CharacterUiWidget : MonoBehaviour
     // marker plus one pip per remaining durability point. Both are plain SetActive swaps off the
     // simulation's own AccessoryGuard, the same idiom every other indicator on this widget uses, and
     // both self-hide entirely for any entity that has no guard at all (every enemy, and every hero
-    // in a build where RuntimeConfig.AccessoryGuardConfig was never assigned) - so the one shared
+    // in a build where OverallGameConfig.AccessoryGuardConfig was never assigned) - so the one shared
     // widget prefab keeps serving players and enemies alike.
     //
     // The pip strip is SPAWNED to match MaxDurability rather than hand-authored, because MaxDurability
@@ -592,6 +592,11 @@ public class CharacterUiWidget : MonoBehaviour
     private void UpdateShield(Frame frame)
     {
         bool shown = frame.TryGet<Shield>(_entityRef, out var shield) && shield.Max > FP._0;
+
+        // A TEMPORARY shield (Brute's Juggernaut) is only a thing while it's up - hide the bar at 0 and
+        // bring it back with the next grant, instead of showing an empty bar between casts.
+        if (shown && shield.TemporaryDuration > FP._0 && shield.Current <= FP._0)
+            shown = false;
 
         SetShown(shieldSlider, shown);
         SetShown(shieldText, shown);

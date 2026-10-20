@@ -4,7 +4,7 @@ namespace Quantum
 
     // Pins the target's movement only (unlike Stun, attacking/skills/firing stay untouched) for
     // Duration - see StatusEffectUtility.IsRooted/ApplyRoot. Plain overwrite-on-reapply. Duration is
-    // read from the shared RuntimeConfig.EffectConfig.RootDuration rather than authored here, so
+    // read from the shared OverallGameConfig.EffectConfig.RootDuration rather than authored here, so
     // every source of Root hits identically (same reasoning as HasteEffectData/StunEffectData) -
     // that field was already scoped as a generic shared value even before this class existed (see
     // its own comment on EffectConfig), previously only reached via JuggernautLandingRootSkillAction.

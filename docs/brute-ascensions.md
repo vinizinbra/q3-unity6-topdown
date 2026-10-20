@@ -70,6 +70,17 @@ Baseline, no Ascension needed (same treatment `ActiveMoveSpeedBonus`/`ChargedMov
 got): every enemy caught by a Discharge grants Brutus `ShieldGainPerHit` (5) Shield, capped at his own
 Max via `ShieldUtility.ApplyFlatShield`.
 
+Baseline projectile deflect (2026-10-19): while Juggernaut is active (`JuggernautCharge` present),
+enemy **direct-hit** projectiles (`DirectHitData`) from tiers up to `JuggernautSkillData.MaxDeflectTier`
+(default `Heavy` - Elite/Boss shots still land) are destroyed on contact for no damage, so they don't
+pass through to allies behind him either. Explosive projectiles (`AreaHitData`) are untouched - they
+still detonate on Brutus and only get the channel's Damage Reduction. Check sits in
+`DirectHitData.ApplyHit` before `ApplyEffects` via `BruteAscensionUtility.TryDeflectProjectile`, so a
+deflected shot never reaches `DamageUtility` (no Accessory/Free Hit Guard/Shield spent, no
+`OnHostileHitConnected`). VFX is the shot's own `ProjectileDestroyed` impact (the deflect returns "spent", so the normal
+`Destroy` path runs). Sound: `JuggernautProjectileDeflected` → `JuggernautDeflectSoundView` on the shared
+`CharFeedbacks.prefab` (`deflectSound` SoundData, played at the contact point). No haptics by design. Hitscan enemy attacks (if any) are not covered.
+
 > **Superseded in detail, unchanged in shape.** This was originally an **Overshield** (above-Max, 1.5x
 > cap) because player Shield refilled itself for free and a grant needed something to make it feel
 > meaningful. As of 2026-08-25 Shield is charge-only and Overshield is deleted outright — which makes
@@ -936,3 +947,37 @@ description updated ("Starts Charged: ram enemies to launch them, run to recharg
 
 **Watch:** Momentum R3 (100% retention) + starting full = Charged for the entire channel, so R3's
 "builds 40% faster" is dead weight at that rank — candidate for a swap if R3 feels flat.
+
+# 2026-10-19 — Discharge launches the crowd, damage on landing
+
+Discharge used to push every enemy through `ApplyKnockbackImpulse`, whose scale folds in the tier
+`KnockbackMultiplier` (Filler/Normal 1.0, Specialist 0.6, Heavy 0.4, Elite/Boss 0.2) — a Heavy got 6.4 u/s
+against a Normal's 16 u/s (≈0.5 vs 3.2 unit apex), and Heavy+ is `CanBeInterruptedByKnockback = false`
+so the AI erased what little push it got. Damage was also dealt on contact.
+
+- **`DamageUtility.ApplyLaunch`** — same knockback stats, but `ResolveKnockbackScale(ignoreTierResistance:
+  true)`, then `EnemySystem.BeginLaunch` opens the stagger window unconditionally (KnockbackTimer + the
+  airborne gate hold the AI off until it lands) and interrupts the current action. Returns false when
+  nothing could be pushed (kinematic mid-charge/leap).
+- **Who launches:** Filler/Normal/Specialist at full `KnockbackUpwardForce * KnockbackForce`, Heavy at
+  `JuggernautSkillData.HeavyLaunchScale` (0.75). Elite/Boss keep the plain tier-scaled knockback and take
+  their damage on contact (nothing to wait for).
+- **Damage on landing is now baseline.** Every launched enemy gets `JuggernautLaunched` carrying the
+  Bone-Breaker-scaled Discharge damage; `JuggernautLandingImpactSystem` applies it on ground/wall
+  landing. Concussive Impact layers its landing damage, stun, shockwave and impact VFX on top. A launch
+  that couldn't move the target falls back to immediate damage.
+- Playtest knobs: `KnockbackUpwardForce`/`KnockbackForce` (apex), `HeavyLaunchScale`.
+
+## 2026-10-19 (later) — Shield granted on cast, not earned per hit
+`JuggernautSkillData.Begin` now grants `ShieldOnCastFraction` (1 = full) of Max Shield via
+`ShieldUtility.ApplyFlatShield` the moment Juggernaut is activated, so the shield (and the Accessory
+protection it gives) is there from the first ram. `ShieldGainPerHit` is authored 0 on
+`BruteBaseSkill-Juggernaut.asset` — still a working optional top-up/refresh, just off by default. The
+temporary-Shield timer (6s) starts at cast and is only refreshed by another grant. The Max-Shield-based amount means
+`ShieldTemporaryDuration` vs the 8s channel is a playtest knob: the shield expires ~2s before the channel ends.
+
+## 2026-10-19 (later still) — Shield expiry frozen during the channel
+`ShieldSystem.TickExpiration` skips the countdown while the entity has `JuggernautCharge` (Begin→End,
+including a Momentum R3 hold). `JuggernautSkillData.End` resets `ExpirationRemaining` to the full
+`TemporaryDuration`, so the 6s decay window starts only after Juggernaut is over. Damage still drains the
+Shield during the channel as normal — only the timed expiry is paused.

@@ -56,10 +56,8 @@ namespace Quantum
                 stats->ReloadSpeedMultiplier *= FP._1 + ReloadSpeedBonus;
             }
 
-            // Starts full. The Ascension actions that react to being at max Rage (Full Throttle,
-            // Ignition, Last Stand) run LATER in this same Begin phase and each re-check IsAtMaxRage
-            // themselves, which is what applies their effects immediately instead of waiting for a
-            // threshold crossing that never happens.
+            // Starts full. The Ascension actions run BEFORE this Begin (see EnterMaxRage call below),
+            // so this method is what applies Full Throttle/Ignition/Last Stand at cast time.
             f.AddOrGet<RageOverdrive>(filter.Entity, out var rage);
             rage->MaxStacks = MaxRageStacks;
             rage->Stacks = MaxRageStacks;
@@ -76,6 +74,12 @@ namespace Quantum
             extension->VendettaKillExtension = FP._0;
             extension->KillCount = 0;
             extension->KillsPerExtension = 0;
+
+            // SkillSystem.TryBegin runs the Ascension actions BEFORE this Begin, so their own
+            // "already at max Rage?" checks (Full Throttle/Ignition/Last Stand) saw no RageOverdrive
+            // yet and never applied; with Rage starting full there is no later threshold crossing
+            // either. Fire the entry transition here, now that Rage exists. Idempotent per upgrade.
+            RageOverdriveUtility.EnterMaxRage(f, filter.Entity);
 
             Log.Debug($"[Skill] {filter.Entity} began Overdrive for {Duration}s at max Rage {MaxRageStacks}");
             return false; // runs for its full Duration, never resolves on the same tick

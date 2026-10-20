@@ -19,10 +19,10 @@ namespace Quantum
         // unchanged.
         public override void Update(Frame f, ref Filter filter)
         {
-            if (f.RuntimeConfig.HealthOrbConfig.IsValid == false)
+            if (f.GameConfig.HealthOrbConfig.IsValid == false)
                 return;
 
-            FP pickupRadius = f.FindAsset(f.RuntimeConfig.HealthOrbConfig).PickupRadius;
+            FP pickupRadius = f.FindAsset(f.GameConfig.HealthOrbConfig).PickupRadius;
 
             if (pickupRadius <= FP._0)
                 return;

@@ -172,7 +172,7 @@ Scrap Collector passive, was the second):
 - **`RiftShardOrbSystem.cs`** - mirrors `ExpOrbSystem` exactly: any player in pickup range collects
   it, amount scaled by the collecting player's own new `CharacterStats.RiftShardGainMultiplier`
   (doubled by Greed), credited to the shared run-wide total.
-- **`RuntimeConfig.RiftShardConfig`/`RiftShardPrototype`** (`Assets/_QuantumUser/Simulation/Default/
+- **`OverallGameConfig.RiftShardConfig`/`RiftShardPrototype`** (`Assets/_QuantumUser/Simulation/Default/
   RuntimeConfig.User.cs`) - next to the existing `ExperienceConfig`/`ExpOrbPrototype` pair.
 - **`EnemySystem.SeedHealth`** reads the new global bonus: `MaxHealth = EnemyTierStatsConfig.
   Resolve(f, data.Tier).MaxHealth * (1 + f.Global->EnemyHealthBonusMultiplier)`.

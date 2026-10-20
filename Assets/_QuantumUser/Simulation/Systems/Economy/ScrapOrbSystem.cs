@@ -16,9 +16,9 @@ namespace Quantum
         {
             FP pickupRadius = FP._2;
 
-            if (f.RuntimeConfig.ScrapConfig.IsValid == true)
+            if (f.GameConfig.ScrapConfig.IsValid == true)
             {
-                pickupRadius = f.FindAsset(f.RuntimeConfig.ScrapConfig).PickupRadius;
+                pickupRadius = f.FindAsset(f.GameConfig.ScrapConfig).PickupRadius;
             }
 
             Span<EntityRef> players = stackalloc EntityRef[PlayerQueryUtility.MaxPlayers];

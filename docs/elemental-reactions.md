@@ -474,7 +474,7 @@ element, even if one lands afterward - only ever the first.
 ## Configuration - `ElementalReactionConfig`
 
 Same convention as `EffectConfig`: a dedicated, `[Header]`-grouped asset, referenced via
-`RuntimeConfig.ElementalReactionConfig`. Every field is elemental-reaction-domain-owned - the class
+`OverallGameConfig.ElementalReactionConfig`. Every field is elemental-reaction-domain-owned - the class
 was completely gutted and repurposed when Rift Mark was removed (every one of its old fields belonged
 to that system).
 

@@ -2609,13 +2609,15 @@ namespace Quantum {
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(40)]
     public FP StaggerMeter;
+    [FieldOffset(1)]
+    public Byte StaggerBreakCount;
     [FieldOffset(16)]
     public FP LastObservedHealth;
     [FieldOffset(4)]
     public Int32 CurrentPhaseIndex;
     [FieldOffset(24)]
     public FP PhaseTimer;
-    [FieldOffset(1)]
+    [FieldOffset(2)]
     public EnemyActionPhase LastObservedPhase;
     [FieldOffset(8)]
     public AssetRef<EnemyActionData> ActiveComboAction;
@@ -2627,6 +2629,7 @@ namespace Quantum {
       unchecked { 
         var hash = 16001;
         hash = hash * 31 + StaggerMeter.GetHashCode();
+        hash = hash * 31 + StaggerBreakCount.GetHashCode();
         hash = hash * 31 + LastObservedHealth.GetHashCode();
         hash = hash * 31 + CurrentPhaseIndex.GetHashCode();
         hash = hash * 31 + PhaseTimer.GetHashCode();
@@ -2640,6 +2643,7 @@ namespace Quantum {
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (BossRuntimeState*)ptr;
         serializer.Stream.Serialize(&p->ComboRepeatsRemaining);
+        serializer.Stream.Serialize(&p->StaggerBreakCount);
         serializer.Stream.Serialize((Byte*)&p->LastObservedPhase);
         serializer.Stream.Serialize(&p->CurrentPhaseIndex);
         AssetRef.Serialize(&p->ActiveComboAction, serializer);
@@ -4545,12 +4549,14 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct FullThrottleUpgrade : Quantum.IComponent {
-    public const Int32 SIZE = 24;
+    public const Int32 SIZE = 32;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(16)]
+    [FieldOffset(24)]
     public FP WeaponDamageBonus;
-    [FieldOffset(8)]
+    [FieldOffset(16)]
     public FP ReloadSpeedBonus;
+    [FieldOffset(8)]
+    public FP AppliedWeaponDamageBonus;
     [FieldOffset(4)]
     public QBoolean HasInstantReload;
     [FieldOffset(0)]
@@ -4560,6 +4566,7 @@ namespace Quantum {
         var hash = 2657;
         hash = hash * 31 + WeaponDamageBonus.GetHashCode();
         hash = hash * 31 + ReloadSpeedBonus.GetHashCode();
+        hash = hash * 31 + AppliedWeaponDamageBonus.GetHashCode();
         hash = hash * 31 + HasInstantReload.GetHashCode();
         hash = hash * 31 + Applied.GetHashCode();
         return hash;
@@ -4569,6 +4576,7 @@ namespace Quantum {
         var p = (FullThrottleUpgrade*)ptr;
         QBoolean.Serialize(&p->Applied, serializer);
         QBoolean.Serialize(&p->HasInstantReload, serializer);
+        FP.Serialize(&p->AppliedWeaponDamageBonus, serializer);
         FP.Serialize(&p->ReloadSpeedBonus, serializer);
         FP.Serialize(&p->WeaponDamageBonus, serializer);
     }

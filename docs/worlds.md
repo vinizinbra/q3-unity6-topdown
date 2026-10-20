@@ -45,5 +45,5 @@ Fill only **`RuntimeConfig.WorldDefinition`** (MatchMakingConfig's RuntimeConfig
 
 ## Not done / caveats
 - Not playtested end-to-end (menu -> match) yet.
-- The Balance Simulator reads `BalanceConfig` only - it doesn't apply `WorldBalanceData` yet.
+- The Balance Simulator applies `WorldBalanceData` too: the scenario's `WorldBalance`, or the `WorldDefinition` whose SurvivalConfig is the timeline being simulated (enemy HP, Director budget/pressure, XP requirement, coin gain; enemy damage isn't modelled).
 - LevelConfig (chunk pool / layout) is still shared; add it to `WorldDefinition` when worlds need their own.

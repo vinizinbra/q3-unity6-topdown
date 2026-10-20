@@ -16,7 +16,7 @@ namespace Quantum
     // Global balance tuning for every status effect - one shared knob per status instead of authored
     // separately on every {Stun,Haste}EffectData asset and duplicated again as private constants in
     // StatusEffectUtility.TryApplyElementalStatus's elemental-proc path. Referenced via
-    // RuntimeConfig.EffectConfig, read by StatusEffectUtility and the EffectData classes above.
+    // OverallGameConfig.EffectConfig, read by StatusEffectUtility and the EffectData classes above.
     // Fire/Ice's own baselines (Burn/Chill+Freeze) AND elemental-reaction tuning (Explosion/
     // Knockback/Magma Prison/Stun/Break) both live on the separate ElementalReactionConfig instead -
     // see docs/elemental-reactions.md.

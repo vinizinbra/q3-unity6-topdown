@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ReviveConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.ReviveConfig
   Identifier:
-    Path: _QuantumUser/Resources/Revive/ReviveConfig
+    Path: _QuantumUser/Resources/Configs/ReviveConfig
     Guid:
       Value: 533983932994204390
   DownedReviveDuration:

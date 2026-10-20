@@ -829,7 +829,7 @@ namespace QuantumUser.View.Managers
         }
 
         // Real seconds between hops, read live off the SAME asset the simulation itself uses
-        // (RuntimeConfig.ElementalReactionConfig.OverloadChainDelay) rather than a separately authored
+        // (OverallGameConfig.ElementalReactionConfig.OverloadChainDelay) rather than a separately authored
         // view-side duration that could silently drift out of sync with it - a mismatch is exactly what
         // makes one hop's travel still animating when the next hop's damage has already landed and its
         // own link event has already fired. Only still needed by TravelOverloadSegment's own travel
@@ -838,9 +838,9 @@ namespace QuantumUser.View.Managers
         {
             float duration = 0.15f;
 
-            if (frame != null && frame.RuntimeConfig.ElementalReactionConfig.IsValid == true)
+            if (frame != null && frame.GameConfig.ElementalReactionConfig.IsValid == true)
             {
-                ElementalReactionConfig config = frame.FindAsset(frame.RuntimeConfig.ElementalReactionConfig);
+                ElementalReactionConfig config = frame.FindAsset(frame.GameConfig.ElementalReactionConfig);
                 if (config != null)
                     duration = config.OverloadChainDelay.AsFloat;
             }

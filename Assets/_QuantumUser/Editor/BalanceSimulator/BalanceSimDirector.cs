@@ -45,11 +45,11 @@ namespace QuantumUser.Editor.BalanceSimulator
         public SurvivalPhase Phase => assets.Survival.Phases[Math.Min(PhaseIndex, assets.Survival.Phases.Length - 1)];
         public string PhaseName => string.IsNullOrEmpty(Phase.Name) ? $"Phase {PhaseIndex}" : Phase.Name;
         public double Pressure { get { double p = 0; foreach (SimEnemy e in Alive) p += e.Cost; return p; } }
-        public double CoopPressure => D(assets.Balance.GetCoopGlobal(CoopGlobalKey.DirectorPressure, playerCount));
+        public double CoopPressure => D(assets.Balance.GetCoopGlobal(CoopGlobalKey.DirectorPressure, playerCount)) * assets.WorldPressure;
         public double TargetPressure => D(Phase.TargetPressure) * CoopPressure;
 
         public double EnemyHpMultiplier(EnemyTier tier)
-            => D(assets.Balance.EvaluateEnemyHp(tier, FP.FromFloat_UNSAFE((float)SurvivalTime))) * D(assets.Balance.GetCoopHp(tier, playerCount));
+            => D(assets.Balance.EvaluateEnemyHp(tier, FP.FromFloat_UNSAFE((float)SurvivalTime))) * D(assets.Balance.GetCoopHp(tier, playerCount)) * assets.WorldEnemyHp;
 
         public double EnemyDamageMultiplier
             => D(assets.Balance.Evaluate(CurveChannel.EnemyDmg, FP.FromFloat_UNSAFE((float)SurvivalTime))) * D(assets.Balance.GetCoopGlobal(CoopGlobalKey.EnemyDamage, playerCount));
@@ -144,7 +144,7 @@ namespace QuantumUser.Editor.BalanceSimulator
 
         private double BudgetMultiplier
             => D(assets.Balance.Evaluate(CurveChannel.DirectorBudget, FP.FromFloat_UNSAFE((float)SurvivalTime)))
-               * D(assets.Balance.GetCoopGlobal(CoopGlobalKey.DirectorBudget, playerCount));
+               * D(assets.Balance.GetCoopGlobal(CoopGlobalKey.DirectorBudget, playerCount)) * assets.WorldBudget;
 
         // CombatDirectorUtility.TryPulse resets the timer to PulseInterval (no remainder) and counts it
         // down once per 20 Hz game tick, so a pulse really lands every ceil(interval / tick) ticks.
@@ -338,6 +338,8 @@ namespace QuantumUser.Editor.BalanceSimulator
                 Exp = D(tier.ExpValue),
                 CoinValue = D(tier.CoinValue),
                 CoinChance = D(tier.CoinDropChance),
+                ShardValue = D(tier.RiftShardValue),
+                ShardChance = D(tier.RiftShardDropChance),
                 Source = source,
                 Leaker = data.Tier < EnemyTier.Elite && rng.Chance(scenario.EnemyLeakFraction),
             };
@@ -350,7 +352,9 @@ namespace QuantumUser.Editor.BalanceSimulator
             double ring = (D(assets.Director.SpawnRingRadiusMin) + D(assets.Director.SpawnRingRadiusMax)) * 0.5 * scenario.EngageDistanceFraction;
             double speed = D(data.Stats.MoveSpeed);
             double walkIn = speed > 0.1 ? ring / speed : scenario.StationaryEngageSeconds;
-            enemy.EngageAt = RunTime + walkIn + scenario.EngageReactionSeconds;
+            // A leaker is left behind as the party moves on: it holds pressure until it retires but
+            // never reaches the player (otherwise it just gets shot inside its retire window).
+            enemy.EngageAt = enemy.Leaker ? double.MaxValue : RunTime + walkIn + scenario.EngageReactionSeconds;
 
             Alive.Add(enemy);
             aliveBySource[source] = AliveFor(source) + 1;

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TalentsConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.TalentsConfig
   Identifier:
-    Path: _QuantumUser/Resources/Talents/TalentsConfig
+    Path: _QuantumUser/Resources/Configs/TalentsConfig
     Guid:
       Value: 344446873976981054
   PercentPerLevel:
@@ -23,6 +23,7 @@ MonoBehaviour:
   StartingGoldByLevel: 0000000064000000c80000002c01000090010000f4010000
   RerollsByLevel: 000000000100000002000000
   SelfReviveChargesByLevel: 0000000001000000010000000100000002000000
+  SoloSelfReviveBonus: 1
   SelfReviveHealthBonus:
     RawValue: 13107
   CoopRescueSpeedBonus:
@@ -35,7 +36,31 @@ MonoBehaviour:
     RawValue: 6554
   ShrineCooldownMultiplier:
     RawValue: 49152
-  FoundWeaponLevelBonusByLevel: 000000000100000001000000020000000200000003000000
-  ChestPerkRarityTierByLevel: 000000000000000002000000020000000300000003000000
+  WeaponLevelBonusByLevel: 000000000100000002000000030000000400000005000000
+  WeaponPerkRarityByLevel:
+  - CommonWeight: 0
+    RareWeight: 0
+    EpicWeight: 0
+    LegendaryWeight: 0
+  - CommonWeight: 100
+    RareWeight: 28
+    EpicWeight: 7
+    LegendaryWeight: 1
+  - CommonWeight: 100
+    RareWeight: 36
+    EpicWeight: 10
+    LegendaryWeight: 2
+  - CommonWeight: 100
+    RareWeight: 45
+    EpicWeight: 13
+    LegendaryWeight: 3
+  - CommonWeight: 100
+    RareWeight: 55
+    EpicWeight: 17
+    LegendaryWeight: 4
+  - CommonWeight: 100
+    RareWeight: 65
+    EpicWeight: 22
+    LegendaryWeight: 6
   BaseChestGuaranteedPerks: 1
   GunsmithRarityBreakOffset: 2

@@ -36,6 +36,13 @@ namespace Quantum
         // adds/subtracts a slice of it rather than scaling an already-multiplicative stat.
         public FP DamageReductionBonus = FP._0_50;
 
+        // While the channel is live, enemy DIRECT projectile hits (DirectHitData) from this tier or
+        // below are deflected outright - destroyed on contact for no damage, so they don't reach the
+        // ally behind him either. Explosive projectiles (AreaHitData) still detonate on him as normal
+        // and only get DamageReductionBonus. Elite/Boss shots stay threats by default. See
+        // BruteAscensionUtility.TryDeflectProjectile.
+        public EnemyTier MaxDeflectTier = EnemyTier.Heavy;
+
         public FP DistancePerCharge = 5;
         public byte MaxCharge = 5;
 
@@ -54,6 +61,13 @@ namespace Quantum
         public FP KnockbackRadius = 3;
         public FP KnockbackForce = 8;
         public FP KnockbackUpwardForce = 1;
+
+        // Discharge LAUNCHES Filler/Normal/Specialist/Heavy (full KnockbackUpwardForce * KnockbackForce
+        // vertical speed, ignoring the tier KnockbackMultiplier - see DamageUtility.ApplyLaunch) and
+        // deals its damage when they land. Heavy gets this fraction of the launch so it rises a little
+        // lower than the crowd but still visibly leaves the ground. Elite/Boss are not launched at
+        // all: they keep the plain tier-scaled knockback and take their damage on contact.
+        public FP HeavyLaunchScale = FP._0_75;
 
         // "Juggernaut Skill Damage" - the percentage basis every Ascension in this pool (Bone
         // Breaker's own multiplier, Aftershock, Concussive Impact's landing/shockwave, Iron Shoulder)
@@ -100,6 +114,12 @@ namespace Quantum
         // enemies for a full charge, and it all evaporates 6s after the last one lands.
         public FP ShieldGainPerHit = 5;
 
+        // Fraction of his Max Shield Brutus is handed the moment Juggernaut is activated (1 = full).
+        // Baseline: the shield is there from the first ram, no need to hit anything to earn it. Like
+        // every grant it refreshes the temporary-Shield expiration timer. ShieldGainPerHit above is
+        // now an optional extra top-up (authored 0 = off).
+        public FP ShieldOnCastFraction = FP._1;
+
         // {0} = Duration, {1} = DamageReductionBonus as a percent - e.g. "Channel for {0} seconds,
         // reducing damage taken by {1}% and gaining Charge as you move - once fully Charged, touching
         // an enemy unleashes a knockback discharge that launches them into the air."
@@ -113,6 +133,11 @@ namespace Quantum
             {
                 stats->DamageReduction += DamageReductionBonus;
                 stats->MoveSpeedMultiplier *= FP._1 + ResolveActiveMoveSpeedBonus(f, filter.Entity);
+            }
+
+            if (f.Unsafe.TryGetPointer<Shield>(filter.Entity, out var castShield) == true)
+            {
+                ShieldUtility.ApplyFlatShield(f, filter.Entity, filter.Entity, castShield, castShield->Max * ShieldOnCastFraction);
             }
 
             f.AddOrGet<JuggernautCharge>(filter.Entity, out var charge);
@@ -194,6 +219,13 @@ namespace Quantum
                 unitsHit = chargeForStack->UnitsHit;
 
             f.Remove<JuggernautCharge>(filter.Entity);
+
+            // The Shield's expiration is frozen while JuggernautCharge exists (ShieldSystem.
+            // TickExpiration); the countdown starts fresh now that the channel is over.
+            if (f.Unsafe.TryGetPointer<Shield>(filter.Entity, out var endShield) == true && endShield->TemporaryDuration > FP._0)
+            {
+                endShield->ExpirationRemaining = endShield->TemporaryDuration;
+            }
 
             TryEndExplosion(f, filter.Entity, filter.Transform3D->Position, unitsHit);
 
@@ -546,7 +578,22 @@ namespace Quantum
                 // is the killing blow (Filler/Normal tier is destroyed immediately - see below).
                 FPVector3 targetPosition = targetTransform->Position;
 
-                DamageUtility.ApplyKnockbackImpulse(f, target, impulse, owner);
+                EnemyTier tier = f.Unsafe.TryGetPointer<Enemy>(target, out var targetEnemy) == true
+                    ? f.FindAsset(targetEnemy->EnemyData).Tier
+                    : EnemyTier.Normal;
+
+                bool launched = false;
+
+                if (tier != EnemyTier.Elite && tier != EnemyTier.Boss)
+                {
+                    FPVector3 launchImpulse = tier == EnemyTier.Heavy ? impulse * HeavyLaunchScale : impulse;
+                    launched = DamageUtility.ApplyLaunch(f, target, launchImpulse, owner);
+                }
+                else
+                {
+                    DamageUtility.ApplyKnockbackImpulse(f, target, impulse, owner);
+                }
+
                 charge->UnitsHit++;
 
                 // Rewarded for landing the hit itself, independent of whether this same hit goes on
@@ -566,18 +613,20 @@ namespace Quantum
                 {
                     damage *= FP._1 + boneBreaker->DamageMultiplierBonus;
 
-                    if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
+                    if (tier == EnemyTier.Specialist || tier == EnemyTier.Heavy)
                     {
-                        EnemyDataAsset enemyData = f.FindAsset(enemy->EnemyData);
-
-                        if (enemyData.Tier == EnemyTier.Specialist || enemyData.Tier == EnemyTier.Heavy)
-                        {
-                            damage *= FP._1 + boneBreaker->TierDamageBonus;
-                        }
+                        damage *= FP._1 + boneBreaker->TierDamageBonus;
                     }
                 }
 
-                DamageUtility.ApplyDamage(f, target, damage, owner, DamageSource.Skill);
+                // A launched enemy takes the Discharge damage when it comes back down (baked onto it
+                // below, resolved by JuggernautLandingImpactSystem) rather than on contact. Anything
+                // that wasn't launched - Elite/Boss, or a kinematic mid-charge/leap enemy the push
+                // couldn't move - has no landing to wait for and is hit right away.
+                if (launched == false)
+                {
+                    DamageUtility.ApplyDamage(f, target, damage, owner, DamageSource.Skill);
+                }
 
                 f.Events.JuggernautDischargeHit(target, targetPosition, this);
 
@@ -590,21 +639,34 @@ namespace Quantum
                 f.AddOrGet<JuggernautDischargeCooldown>(target, out var cooldown);
                 cooldown->Remaining = DischargeCooldownPerEnemy;
 
-                // Concussive Impact - baked onto the target itself (not tracked on Brutus) so
-                // JuggernautLandingImpactSystem can resolve everything it needs purely off the
-                // launched enemy, even if Brutus's own skill has already ended by the time it lands.
+                if (launched == false)
+                    continue;
+
+                // Baked onto the target itself (not tracked on Brutus) so JuggernautLandingImpactSystem
+                // can resolve everything it needs purely off the launched enemy, even if Brutus's own
+                // skill has already ended by the time it lands. Baseline carries just the Discharge
+                // damage; Concussive Impact layers its landing damage, stun, shockwave and impact VFX
+                // on top.
+                f.AddOrGet<JuggernautLaunched>(target, out var launchedState);
+                launchedState->Owner = owner;
+                launchedState->GroundCheckDelay = FP._0_20;
+                launchedState->Damage = damage;
+                launchedState->StunChance = FP._0;
+                launchedState->StunDuration = FP._0;
+                launchedState->ShockwaveRadius = FP._0;
+                launchedState->ShockwaveDamagePercent = FP._0;
+                launchedState->ShockwaveStunDuration = FP._0;
+                launchedState->Source = default;
+
                 if (hasConcussiveImpact == true)
                 {
-                    f.AddOrGet<JuggernautLaunched>(target, out var launched);
-                    launched->Owner = owner;
-                    launched->GroundCheckDelay = FP._0_20;
-                    launched->Damage = concussiveImpact->LandingDamagePercent * Damage;
-                    launched->StunChance = FP._1;
-                    launched->StunDuration = concussiveImpact->LandingStunDuration;
-                    launched->ShockwaveRadius = concussiveImpact->ShockwaveRadius;
-                    launched->ShockwaveDamagePercent = concussiveImpact->ShockwaveDamagePercent;
-                    launched->ShockwaveStunDuration = concussiveImpact->ShockwaveStunDuration;
-                    launched->Source = concussiveImpact->Source;
+                    launchedState->Damage += concussiveImpact->LandingDamagePercent * Damage;
+                    launchedState->StunChance = FP._1;
+                    launchedState->StunDuration = concussiveImpact->LandingStunDuration;
+                    launchedState->ShockwaveRadius = concussiveImpact->ShockwaveRadius;
+                    launchedState->ShockwaveDamagePercent = concussiveImpact->ShockwaveDamagePercent;
+                    launchedState->ShockwaveStunDuration = concussiveImpact->ShockwaveStunDuration;
+                    launchedState->Source = concussiveImpact->Source;
                 }
             }
 

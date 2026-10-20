@@ -13,11 +13,9 @@ MonoBehaviour:
   m_Name: CursedRiftConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.CursedRiftConfig
   Identifier:
-    Path: _QuantumUser/Resources/Sacrifice/CursedRiftConfig
+    Path: _QuantumUser/Resources/Configs/CursedRiftConfig
     Guid:
       Value: 493596684989510471
   SacrificePool:
     Id:
       Value: 496780673626404914
-  SacrificeChoiceCount: 3
-  MutationChoiceCount: 3

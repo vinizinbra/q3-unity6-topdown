@@ -24,6 +24,26 @@ focused element is shown. Input plumbing itself (bindings, `GamepadControls`) li
 - `TabGroup.PrewarmClosedTabs`: ~1 s after the menu opens, each closed tab is switched on invisibly for two frames so
   it builds its lists then, not on first focus (Catalog 36 ms → 2 ms). `Show()/Hide()` aren't called by it.
 - A scope's own `Selectable`s get `Navigation.None` while it is not active, so the stick never leaks between levels.
+- **Left at a level's left edge = back** (like Cancel): when Left moves focus nowhere, `MenuNavigationController.LateUpdate`
+  steps back one level - the mirror of Right on a rail button. Horizontal sliders/scrollbars are exempt (Left is theirs).
+- **The stick can't leave the menu**: Automatic navigation also finds unscoped Selectables on other canvases (the debug
+  OfflineTestPartyPanel on the left edge, CheatMenu, SRDebugger, a prefab open in Prefab Mode during Play). A stick move
+  that lands on an unscoped Selectable is redone with every unscoped Selectable left out of uGUI's search, so the nearest
+  menu item in that direction still wins; with none, focus stays (and counts as "nothing there" for the Left rule).
+- Setting navigation from code on a scoped Selectable goes through `MenuNavigationController.SetNavigation` - a direct
+  assignment is overwritten when its scope is next activated (the controller holds the real value aside while inactive).
+- **Right vs Submit on a rail button**: Submit lands on the tab's `DefaultFocus`, Right on `TabContent.RightFocus`
+  (defaults to DefaultFocus). Home: Submit = Play, Right = the hero dropdown.
+- **Heroes tab**: Submit on a hero row picks that hero (on the already-picked hero it steps into the panel instead);
+  Right (`HeroRowWidget.MovedRight`) steps into the info panel onto the open page's first control (Overview: Select;
+  Ascensions: first row) - not the page tabs, which L1/R1 already switch. Left / B inside the panel = back to the list.
+  Loadout and Upgrades keep Submit = open the detail panel (their lists are grids, so Right moves within them, and an
+  Upgrade costs Rift Shards - one press must not buy it).
+- Home's hero picker stays three stops (`<` hero `>`), not a single `◀ hero ▶` spinner: there Left/Right would cycle
+  heroes and the only ways off it would be B or Submit (opens the list), trapping focus on that control.
+- Home tab: Left from the right-hand column (Play, Training, World/Difficulty, party panel) reaches the hero picker's `>`,
+  then `hero`, `<`, and the rail. `MainMenuWindow.LinkNavigation` makes the hero picker (`[<] hero [>]`) one explicit row (Right off its end =
+  Play, Left off its start = back to the rail, Up/Down stay put) and points Play Offline's Up at Play.
 - **L1/R1** switch the sub-tabs of the open tab (Power/Exploration, Enemies/Bosses/…, Skill/Mastery,
   Weapons/Perks), wrapping. Tabs without a `TabStripWidget` (Home) ignore them. Focus follows if the switch
   hides the focused page.

@@ -30,8 +30,8 @@ namespace QuantumUser.Editor
         private const string MoveSpeedPath = StoreFolderPath + "/EnergyDrink.asset";
         private const string DamagePath = StoreFolderPath + "/CombatStims.asset";
         private const string FoodPoolPath = StoreFolderPath + "/FoodOfferPool.asset";
-        private const string StoreConfigPath = StoreFolderPath + "/StoreConfig.asset";
-        private const string BlacksmithConfigPath = StoreFolderPath + "/BlacksmithConfig.asset";
+        private const string StoreConfigPath = "Assets/_QuantumUser/Resources/Configs/StoreConfig.asset"; // shared configs live in Resources/Configs (OverallGameConfig)
+        private const string BlacksmithConfigPath = "Assets/_QuantumUser/Resources/Configs/BlacksmithConfig.asset";
 
         // Existing hand-authored icon sheet (multi-sprite) already has an "RR_Burger" sub-sprite -
         // unlike every other FoodOfferData here (left with no Icon, see the log message below),
@@ -64,7 +64,7 @@ namespace QuantumUser.Editor
                 $"({BlacksmithConfigPath}) authored. Still needed by hand: " +
                 "(1) assign StoreConfig.WeaponPool and BlacksmithConfig.PerkPool - point both at the same WeaponChoicePoolData/" +
                 "WeaponPerkPoolData assets LevelUpConfig already uses (LevelUpConfig.WeaponChoicePool/WeaponPerkPool), or curated ones; " +
-                "(2) assign RuntimeConfig's StoreConfig/BlacksmithConfig fields (QuantumMenuConfig.asset), same place LevelUpConfig etc. are already assigned; " +
+                "(2) assign OverallGameConfig's StoreConfig/BlacksmithConfig fields (Resources/Configs/OverallGameConfig), same place LevelUpConfig etc. are already assigned; " +
                 "(3) hand-place a Store EntityPrototype (Store + StoreInventory + Interactable components, Interactable.Kind = Store) on " +
                 "MarketChunk.prefab (ChunkType.Merchant, already exists, currently unwired) plus a StoreChunkSpawnConfig assigned to its own " +
                 "Chunk.SpawnConfig, and a Blacksmith EntityPrototype (Blacksmith + Interactable components, Interactable.Kind = Blacksmith) on a " +

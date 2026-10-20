@@ -4,7 +4,7 @@ namespace Quantum
 
     // Freezes the target's state machine/movement/firing for Duration - see
     // StatusEffectUtility.IsStunned, read by EnemySystem, PlayerMovementProcessor and WeaponSystem.
-    // Plain overwrite-on-reapply. Duration is read from the shared RuntimeConfig.EffectConfig rather
+    // Plain overwrite-on-reapply. Duration is read from the shared OverallGameConfig.EffectConfig rather
     // than authored here, so every source of Stun hits identically (same reasoning as HasteEffectData).
     public unsafe class StunEffectData : HitEffectData
     {

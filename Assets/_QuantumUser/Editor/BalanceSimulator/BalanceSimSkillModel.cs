@@ -271,6 +271,18 @@ namespace QuantumUser.Editor.BalanceSimulator
                 // -- Max (applied x live Berserk uptime; assumes max Rage the whole Overdrive)
                 case "FullThrottleSkillAction":
                     value.WeaponBonus = F("WeaponDamageBonus");
+                    value.BuffReloadBonus = F("ReloadSpeedBonus");
+                    value.BuffInstantReload = rank >= 3; // FullThrottleSkillAction.HasInstantReload
+                    break;
+                case "RunAndGunSkillAction":
+                    value.DashFireRateBonus = F("FireRateBonus");
+                    value.DashBuffDuration = F("HasteDuration");
+                    value.DashDamageBonus = rank >= 2 ? F("WeaponDamageBonus") : 0;
+                    break;
+                case "UncontrolledFurySkillAction":
+                    value.ExtensionPerKill = F("PerKillExtension");
+                    value.KillsPerExtension = F("KillsPerExtension");
+                    value.MaxExtension = F("MaxExtension");
                     break;
 
                 // -- Zara (totem beats: stretched by SkillDurationMultiplier)

@@ -145,6 +145,7 @@ SpriteAtlas:
     - {fileID: 2800000, guid: d63abe57cf39d493995046ead71853d0, type: 3}
     - {fileID: 2800000, guid: 8a35b77046da446fa839fc58f0ae540d, type: 3}
     - {fileID: 2800000, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
+    - {fileID: 2800000, guid: bede341d29758405bb8d09d359e83e42, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -596,6 +597,7 @@ SpriteAtlas:
     - 1398529c57dc443e7a3096f4ad470a4c: -1872768098
     - 1398529c57dc443e7a3096f4ad470a4c: 1553153578
     - 52eb3efc5c7e4410baff3fdf95ec5e4a: 21300000
+    - bede341d29758405bb8d09d359e83e42: 21300000
     - 70e0c33dd75e14260ac5969139c6e271: -987882355
     - 70e0c33dd75e14260ac5969139c6e271: -263415970
     - 70e0c33dd75e14260ac5969139c6e271: 770376088
@@ -1137,6 +1139,7 @@ SpriteAtlas:
   - {fileID: -1872768098, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   - {fileID: 1553153578, guid: 1398529c57dc443e7a3096f4ad470a4c, type: 3}
   - {fileID: 21300000, guid: 52eb3efc5c7e4410baff3fdf95ec5e4a, type: 3}
+  - {fileID: 21300000, guid: bede341d29758405bb8d09d359e83e42, type: 3}
   - {fileID: -987882355, guid: 70e0c33dd75e14260ac5969139c6e271, type: 3}
   - {fileID: -263415970, guid: 70e0c33dd75e14260ac5969139c6e271, type: 3}
   - {fileID: 770376088, guid: 70e0c33dd75e14260ac5969139c6e271, type: 3}
@@ -1677,6 +1680,7 @@ SpriteAtlas:
   - PinningImpact
   - BuildingPressure
   - RR_MenuButton_Focus
+  - RR_Hex96WhiteBorderBlack_Focus
   - BruteLobby_2
   - BruteLobby_0
   - BruteLobby_1

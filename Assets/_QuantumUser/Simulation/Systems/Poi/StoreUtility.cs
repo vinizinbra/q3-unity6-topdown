@@ -37,13 +37,13 @@ namespace Quantum
             if (ResolveInteractionState(f, player, store) != ContextInteractionState.Available)
                 return;
 
-            if (f.RuntimeConfig.StoreConfig.IsValid == false)
+            if (f.GameConfig.StoreConfig.IsValid == false)
             {
                 Log.Error("[Store] interaction requested but RuntimeConfig has no StoreConfig assigned - ignored");
                 return;
             }
 
-            StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
+            StoreConfig config = f.FindAsset(f.GameConfig.StoreConfig);
             EnsureInventoryRolled(f, player, store, config);
 
             f.AddOrGet<StoreInteraction>(player, out var interaction);
@@ -114,14 +114,14 @@ namespace Quantum
 
             inventory->WeaponOfferCount = 0;
 
-            if (config.WeaponPool.IsValid == false || f.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (config.WeaponPool.IsValid == false || f.GameConfig.LevelUpConfig.IsValid == false)
             {
-                Log.Error("[Store] StoreConfig.WeaponPool or RuntimeConfig.LevelUpConfig not assigned - no weapon offers rolled");
+                Log.Error("[Store] StoreConfig.WeaponPool or OverallGameConfig.LevelUpConfig not assigned - no weapon offers rolled");
                 return;
             }
 
             WeaponChoicePoolData pool = f.FindAsset(config.WeaponPool);
-            LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
+            LevelUpConfig levelUpConfig = f.FindAsset(f.GameConfig.LevelUpConfig);
 
             int poolCount = pool.Weapons.Count;
             int slots = config.MaxWeaponOfferSlots < offers.Length ? config.MaxWeaponOfferSlots : offers.Length;
@@ -235,11 +235,11 @@ namespace Quantum
         // constructing a throwaway LevelUpOption from this offer's own 3 relevant fields.
         public static void BuyWeapon(Frame f, EntityRef player, StoreInteraction* interaction, int offerIndex)
         {
-            if (f.RuntimeConfig.StoreConfig.IsValid == false || f.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (f.GameConfig.StoreConfig.IsValid == false || f.GameConfig.LevelUpConfig.IsValid == false)
                 return;
 
-            StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
-            LevelUpConfig levelUpConfig = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
+            StoreConfig config = f.FindAsset(f.GameConfig.StoreConfig);
+            LevelUpConfig levelUpConfig = f.FindAsset(f.GameConfig.LevelUpConfig);
             EntityRef store = interaction->Store;
 
             if (f.Unsafe.TryGetPointer<StoreInventory>(store, out var inventory) == false)
@@ -351,7 +351,7 @@ namespace Quantum
         // or grant a new weapon, only the one already equipped.
         public static void BuyWeaponLevelUp(Frame f, EntityRef player)
         {
-            if (f.RuntimeConfig.StoreConfig.IsValid == false)
+            if (f.GameConfig.StoreConfig.IsValid == false)
                 return;
 
             if (f.Unsafe.TryGetPointer<Weapon>(player, out var weapon) == false)
@@ -366,7 +366,7 @@ namespace Quantum
                 return;
             }
 
-            StoreConfig config = f.FindAsset(f.RuntimeConfig.StoreConfig);
+            StoreConfig config = f.FindAsset(f.GameConfig.StoreConfig);
             FP price = ResolveWeaponLevelUpPrice(f, player, config);
 
             if (CoinUtility.TrySpend(f, player, price) == false)

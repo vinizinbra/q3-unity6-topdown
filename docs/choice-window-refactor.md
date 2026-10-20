@@ -206,3 +206,49 @@ Cursed Rift renders through changed (now shared, was briefly a duplicate).
    existing Chest still roll/display/reroll/confirm exactly as before, AND a couch-co-op collision
    (one player mid-Cursed-Rift while another levels up) behaves as documented above (screen
    pre-empted, then resumes) - the riskiest acceptance criteria this refactor touches.
+
+## Current-weapon card intro (2026-10-15)
+
+The "CURRENT WEAPON" card beside the offer row used to just pop in. `ChooseWindow` no longer strips the
+`ShakeGrowImpactAnimation` it inherits from the weapon-card template: `PlayIntroAnimation` plays it at
+`cardsStart` (just ahead of the offer cards' stagger) and `SkipIntroAnimation` calls `PlayInstant`. No
+extra sound (the offer cards already play `cardAppearSound`). A scene/prefab-assigned `currentWeaponCard`
+animates only if it carries its own `ShakeGrowImpactAnimation`.
+
+## Header row: currency balance + countdown (2026-10-15)
+
+- **`CurrencyBalanceWidget`** (`UI/InGame/Hud/`, prefab object `ChooseWindow/CurrencyBalance`): "YOUR COINS 4,820"
+  frame. Currency-agnostic - icon from `SpriteManager` by `CurrencyType` name, label from `LabelFor`, so the
+  future Black Market (Rift Shards) just passes `CurrencyType.RiftShard`. Punches on change.
+- **`ChooseWindow.SetPoiHeader(currency, amount, label, seconds)`** is called every tick by
+  `GameplayUiController.ApplyPoiHeader` for **Store and Blacksmith (Coin) and Cursed Rift (no balance) only**;
+  it also drives the `NextSurvival` row ("Next survival in: 22s", or "Waiting for players:" during a grace
+  hold, same swap as `BreathingWidget`). `Show()` clears both, so Level-Up/Chest never show a balance.
+- The Store/Blacksmith "YOUR COINS" subtitle string (`BuildCoinWalletSubtitle`) is gone; they pass an empty
+  subtitle.
+- **Timed picks** (Level-Up/Chest, `timeRemaining > 0`) reuse the same row as **"Choose in: 30s"**, centered
+  under the title. The old bare number at the bottom (`Bottom/UpgradeTimerCountdown`) is deactivated in
+  `Canvas.prefab` (the field still gets written, harmlessly).
+- Positions: balance top -140 (overlaps the banner's subtitle strip, empty on POI screens), row
+  `rowPositionBesideBalance` (200, -180) / `rowPositionCentered` (0, -205) - Inspector fields on `ChooseWindow`.
+- **Appear animation:** both parts pop in (scale 0 -> authored, `headerPopEase` OutBack, `headerPopDuration`)
+  `headerRevealDelay` after the LAST card's intro starts. `PlayIntroAnimation` stamps `_headerRevealAt`; the first
+  per-tick activation after each `Show()` schedules its pop for that moment (`PopIn`). Skip-intro = instant.
+
+## Reroll replays the card intros (2026-10-15)
+
+Clicking Reroll (Level-Up upgrades, Choose-Weapon, Blacksmith Gunsmith reroll - all the same `rerollButton`) arms
+`ChooseWindow._cardReplayArmed`; the first `Refresh`/`RefreshWeaponChoice` whose offered cards differ (signature =
+name + description per card) replays every visible card's `ShakeGrowImpactAnimation` on the normal
+`cardIntroStagger`, plus `cardAppearSound`. Waiting for the changed data (not the click) means it never animates the
+old cards before the sim's new roll arrives online. The arm expires after 3s and is cleared on `Show()`, so a
+refused reroll can't fire on a later unrelated change (e.g. a Store purchase). No dim/title/header replay.
+
+## Explicit card navigation (2026-10-15)
+
+`ChooseWindow.ApplyNavigation()` (called from every Refresh, before `SelectFirstInteractableOnce`) sets **Explicit**
+navigation each tick: cards (both families, visible + interactable, sorted by screen x) form one row - left on the
+first / right on the last does nothing unless `wrapCardNavigation`; down -> nearest bottom button (Reroll /
+secondary); buttons left/right between themselves, up -> nearest card. Before this, Automatic navigation searched the
+whole screen and let focus leave the window onto HUD selectables. Verified in Play Mode (offline match + Level Up
+cheat), along with "Choose in: Ns" and the reroll card replay.

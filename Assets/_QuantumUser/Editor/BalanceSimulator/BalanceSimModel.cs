@@ -27,6 +27,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double AttackSpeedMultiplier = 1;
         public double ReloadSpeedMultiplier = 1;
         public double SkillCooldownMultiplier = 1;
+        public double DashCooldownMultiplier = 1;
         public double SkillDurationMultiplier = 1;
         public double AreaRadiusMultiplier = 1;
         public double ExperienceGainMultiplier = 1;
@@ -49,6 +50,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             AttackSpeedMultiplier = D(data.AttackSpeedMultiplier),
             ReloadSpeedMultiplier = D(data.ReloadSpeedMultiplier),
             SkillCooldownMultiplier = D(data.SkillCooldownMultiplier),
+            DashCooldownMultiplier = D(data.DashCooldownMultiplier),
             SkillDurationMultiplier = D(data.SkillDurationMultiplier),
             AreaRadiusMultiplier = D(data.AreaRadiusMultiplier),
             ExperienceGainMultiplier = D(data.ExperienceGainMultiplier),
@@ -76,6 +78,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                 case CriticalDamageUpgradeData: CriticalDamageMultiplier *= m; return true;
                 case SkillDamageUpgradeData: SkillDamageMultiplier *= m; return true;
                 case SkillCooldownUpgradeData: SkillCooldownMultiplier *= m; return true;
+                case DashCooldownUpgradeData: DashCooldownMultiplier *= m; return true;
                 case SkillAreaUpgradeData: AreaRadiusMultiplier *= m; return true;
                 case ExperienceGainUpgradeData: ExperienceGainMultiplier *= m; return true;
                 case CoinGainUpgradeData: CoinGainMultiplier *= m; return true;
@@ -281,8 +284,9 @@ namespace QuantumUser.Editor.BalanceSimulator
         // build-up/hit-chance simulation - see their own comments below; treat those two
         // contributions as knobs, not exact numbers, same as every other approximation this sim
         // already documents in docs/balance-simulator.md.
-        public double Dps(SimStats stats, double fireRateBonus = 0, double reloadBonus = 0)
+        public double Dps(SimStats stats, double fireRateBonus = 0, double reloadBonus = 0, bool instantReload = false)
         {
+
             if (Data == null)
                 return 0;
 
@@ -313,7 +317,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             // leave BurstDelay apart per trigger pull, and only the LAST one pays the full
             // FireCooldownTimer (WeaponSystem.Update's burst-start block/TickWeaponBurst).
             int burstCount = Math.Max(1, BurstCount);
-            double reload = ReloadDuration > 0
+            double reload = ReloadDuration > 0 && instantReload == false
                 ? ReloadDuration / Math.Max(0.01, stats.ReloadSpeedMultiplier) / (1 + reloadBonus)
                 : 0;
             double shotsPerSecond = magazine / MagazineCycleSeconds(magazine, burstCount, cooldown, reload);
@@ -473,13 +477,21 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double SkillDamage;          // own damage per cast
         public double ScaledSkillDamage;    // own damage per cast stretched by SkillDurationMultiplier
         public double WeaponBonus;          // weapon damage bonus while the Berserk buff is up
+        public double BuffReloadBonus;      // Full Throttle reload speed while the buff is up (rank total)
+        public bool BuffInstantReload;      // Full Throttle rank 3
+        public double ExtensionPerKill;     // Uncontrolled Fury: seconds per KillsPerExtension kills
+        public double KillsPerExtension;
+        public double MaxExtension;         // per-activation cap
+        public double DashFireRateBonus;    // Run & Gun: Haste after every dash (rank total)
+        public double DashDamageBonus;      // Run & Gun rank 2+
+        public double DashBuffDuration;
         public List<WeaponDataAsset> MountedWeapons; // barrels unlocked so far (Weapon Systems)
         public double MountedFireRate;      // Overclock (1 = none)
         public double MountedDurationBonus; // Overclock rank 2+
         public double RedlineSeconds;       // Overclock rank 3
         public double RedlineFireRate;
 
-        public bool Quantified => SkillDamage > 0 || ScaledSkillDamage > 0 || WeaponBonus > 0
+        public bool Quantified => SkillDamage > 0 || ScaledSkillDamage > 0 || WeaponBonus > 0 || MaxExtension > 0 || DashFireRateBonus > 0
                                   || (MountedWeapons != null && MountedWeapons.Count > 0) || MountedFireRate > 1 || MountedDurationBonus > 0;
     }
 
@@ -494,6 +506,74 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double SkillUpgradeDamage;
         public double SkillUpgradeScaledDamage;
         public double WeaponBuffBonus;
+
+        // Max's Overdrive lines, rank totals: Full Throttle reload (multiplies Berserk's own) / instant
+        // reload, Uncontrolled Fury's kill extension. KillRate = this player's kills/s over the last
+        // survival minute (BalanceSimRunner.Snapshot) - what feeds the extension.
+        public double BuffReloadBonus;
+        public bool BuffInstantReload;
+        public double ExtensionPerKill;
+        public double KillsPerExtension;
+        public double MaxExtension;
+        public double KillRate;
+
+        // Run & Gun (Max's dash line): every dash opens a DashBuffDuration window of Haste (fire rate,
+        // multiplies AttackSpeedMultiplier), +weapon damage from rank 2, and no reload inside it (the
+        // dash refills the magazine; rank 3 stops ammo use outright). DashCooldown = the dash skill's
+        // own cooldown, before DashCooldownMultiplier.
+        public double DashFireRateBonus;
+        public double DashDamageBonus;
+        public double DashBuffDuration;
+        public double DashCooldown = 4;
+        public double DashUseEfficiency = 0.5;
+
+        // Share of time inside a Run & Gun window: dashing on cooldown DashUseEfficiency of the time.
+        public double DashBuffUptime => DashFireRateBonus > 0 && DashBuffDuration > 0
+            ? Math.Min(1, DashBuffDuration / Math.Max(0.1, DashCooldown / Math.Max(0.01, Stats.DashCooldownMultiplier))) * Math.Clamp(DashUseEfficiency, 0, 1)
+            : 0;
+
+        // Cached by type (read inside WeaponDps, which the policy calls a lot), cleared whenever a rank
+        // changes (SetSkillRank).
+        private Dictionary<Type, (UpgradeData Asset, int Rank)> rankCache = new();
+
+        public void SetSkillRank(UpgradeData upgrade, int rank)
+        {
+            SkillRanks[upgrade] = rank;
+            rankCache.Clear();
+        }
+
+        public int RankOf<T>(out T asset) where T : UpgradeData
+        {
+            if (rankCache.TryGetValue(typeof(T), out var cached) == false)
+            {
+                cached = (null, 0);
+                foreach (KeyValuePair<UpgradeData, int> pair in SkillRanks)
+                {
+                    if (pair.Key is T)
+                    {
+                        cached = (pair.Key, pair.Value);
+                        break;
+                    }
+                }
+                rankCache[typeof(T)] = cached;
+            }
+
+            asset = (T)cached.Asset;
+            return cached.Rank;
+        }
+
+        // Max's Fire Mastery rank 3 (HeroMasteryUtility.ResolveInfernalRage): +30% while Overdrive runs,
+        // on a Fire weapon or while Ignition guarantees Burn.
+        private double InfernalRageMultiplier
+        {
+            get
+            {
+                if (RankOf<MaxFireMasteryData>(out MaxFireMasteryData fire) < 3)
+                    return 1;
+                bool eligible = (Weapon.Data != null && Weapon.Data.Element == ElementType.Fire) || RankOf<IgnitionSkillAction>(out _) > 0;
+                return eligible ? 1 + D(fire.InfernalRageDamageBonus) : 1;
+            }
+        }
 
         // Sentry upgrades (Lux): extra barrels plus Overclock's fire rate / lifetime / Redline, all
         // folded into mounted DPS live so tick rounding of the barrels' fire rate applies.
@@ -546,6 +626,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             c.KillsByTier = (double[])KillsByTier.Clone();
             c.GlobalPicks = new Dictionary<GlobalUpgradeData, int>(GlobalPicks);
             c.SkillRanks = new Dictionary<UpgradeData, int>(SkillRanks);
+            c.rankCache = new Dictionary<Type, (UpgradeData Asset, int Rank)>();
             c.PickLog = new List<string>(PickLog);
             c.UpgradeMountedWeapons = new List<WeaponDataAsset>(UpgradeMountedWeapons);
             return c;
@@ -573,14 +654,73 @@ namespace QuantumUser.Editor.BalanceSimulator
 
         // Share of time a channel buff (Berserk) is up: channel / (channel + cooldown).
         public double BuffUptime => Skill.IsChannel && Skill.ChannelDuration > 0
-            ? Skill.ChannelDuration / (Skill.ChannelDuration + SkillCooldown)
+            ? ChannelDuration / (ChannelDuration + SkillCooldown)
             : 0;
 
-        public double WeaponDps(BalanceSimScenario scenario)
+        // Channel incl. Uncontrolled Fury: every KillsPerExtension kills during Overdrive add
+        // ExtensionPerKill, capped per activation. Kills come at KillRate over the extended window too,
+        // so E = rate x (D + E) x k  ->  E = rate x D x k / (1 - rate x k), capped at MaxExtension.
+        public double ChannelDuration
         {
-            double uptime = BuffUptime;
-            return Weapon.Dps(Stats, Skill.WeaponFireRateBonus * uptime, Skill.WeaponReloadBonus * uptime)
-                   * (1 + WeaponBuffBonus * uptime) * LevelDamageMultiplier * MasteryMultiplier * scenario.HitEfficiency;
+            get
+            {
+                double duration = Skill.ChannelDuration;
+                if (MaxExtension <= 0 || KillsPerExtension <= 0 || duration <= 0)
+                    return duration;
+
+                double perSecond = KillRate * ExtensionPerKill / KillsPerExtension;
+                double extension = perSecond >= 1 ? MaxExtension : Math.Min(MaxExtension, perSecond * duration / (1 - perSecond));
+                return duration + extension;
+            }
+        }
+
+        // The weapon on its own - the Berserk / Run & Gun buffs' share is skill damage (BuffDps).
+        public double WeaponDps(BalanceSimScenario scenario) => BuffedWeaponDps(scenario, false);
+
+        // Weapon incl. the buffs averaged over their uptime - what weapon offers are judged by.
+        public double WeaponDpsWithBuffs(BalanceSimScenario scenario) => BuffedWeaponDps(scenario, true);
+
+        // Extra weapon damage the buffs add (Overdrive fire rate/reload + Full Throttle, Run & Gun).
+        // Counted as skill damage; Full Throttle's damage bonus is scaled by SkillDamageMultiplier like
+        // the game (MaxAscensionUtility.ApplyFullThrottle), the rest is not.
+        public double BuffDps(BalanceSimScenario scenario)
+            => BuffUptime > 0 || DashBuffUptime > 0 ? WeaponDpsWithBuffs(scenario) - WeaponDps(scenario) : 0;
+
+        // Time-weighted: `uptime` of the time at the full buff, the rest without - not the bonus
+        // averaged into one always-on value, which tick rounding and the reload cycle make wrong.
+        // Assumes max Rage the whole Overdrive (Full Throttle only runs at max Rage). Reload bonuses
+        // multiply like the game's (Berserk and Full Throttle each scale ReloadSpeedMultiplier).
+        // Overdrive and Run & Gun windows overlap independently: four states, each weighted by its
+        // share of time. Fire-rate bonuses multiply (Haste and AttackSpeedMultiplier both scale the
+        // fire cooldown), damage bonuses multiply.
+        private double BuffedWeaponDps(BalanceSimScenario scenario, bool withBuffs)
+        {
+            double overdrive = withBuffs ? BuffUptime : 0;
+            double dash = withBuffs ? DashBuffUptime : 0;
+            double dps = 0;
+
+            for (int o = 0; o < 2; o++)
+            {
+                double wo = o == 1 ? overdrive : 1 - overdrive;
+                if (wo <= 0)
+                    continue;
+
+                for (int d = 0; d < 2; d++)
+                {
+                    double weight = wo * (d == 1 ? dash : 1 - dash);
+                    if (weight <= 0)
+                        continue;
+
+                    double fireRate = (1 + (o == 1 ? Skill.WeaponFireRateBonus : 0)) * (1 + (d == 1 ? DashFireRateBonus : 0)) - 1;
+                    double reload = o == 1 ? (1 + Skill.WeaponReloadBonus) * (1 + BuffReloadBonus) - 1 : 0;
+                    bool instant = (o == 1 && BuffInstantReload) || d == 1;
+                    double damage = (o == 1 ? (1 + WeaponBuffBonus * Stats.SkillDamageMultiplier) * InfernalRageMultiplier : 1)
+                                    * (d == 1 ? 1 + DashDamageBonus : 1);
+                    dps += weight * Weapon.Dps(Stats, fireRate, reload, instant) * damage;
+                }
+            }
+
+            return dps * LevelDamageMultiplier * MasteryMultiplier * scenario.HitEfficiency;
         }
 
         // Damage per cast from skill-mounted weapons (before the baked skill multiplier).
@@ -607,7 +747,9 @@ namespace QuantumUser.Editor.BalanceSimulator
         // Skill-mounted weapons (Lux's sentry barrels) fire as their own entity with no
         // CharacterStats: they get the baked DamageMultiplier x SkillDamageMultiplier
         // (StatUtility.GetSkillDamageMultiplier) but no crit and no level bonus.
-        public double SkillDps(BalanceSimScenario scenario)
+        public double SkillDps(BalanceSimScenario scenario) => OwnSkillDps(scenario) + BuffDps(scenario);
+
+        public double OwnSkillDps(BalanceSimScenario scenario)
         {
             double durationMultiplier = Stats.SkillDurationMultiplier;
             double flat = Skill.DamagePerActivation - Skill.DurationScaledDamage + SkillUpgradeDamage;
@@ -618,7 +760,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             if (own + mounted <= 0)
                 return 0;
 
-            double cycle = SkillCooldown + (Skill.IsChannel ? Skill.ChannelDuration : 0);
+            double cycle = SkillCooldown + (Skill.IsChannel ? ChannelDuration : 0);
             double critFactor = 1 + Math.Clamp(Stats.CriticalChance, 0, 1) * (Stats.CriticalDamageMultiplier - 1);
             double damage = (own * critFactor * LevelDamageMultiplier + mounted)
                             * Stats.DamageMultiplier * Stats.SkillDamageMultiplier * (1 + SkillUpgradeBonus);
@@ -639,6 +781,8 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double Exp;
         public double CoinValue;
         public double CoinChance;
+        public double ShardValue;
+        public double ShardChance;
         public AssetObject Source;
         public bool Leaker;
         public double RetireAt;

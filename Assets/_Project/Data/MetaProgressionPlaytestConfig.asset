@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MetaProgressionPlaytestConfig
   m_EditorClassIdentifier: Assembly-CSharp::MetaProgressionPlaytestConfig
   notes: 'Mid-progression profile for balancing playtests: every Power line L1, core
-    POIs unlocked. Applied as a floor while META_PLAYTEST is on, or written into
+    POIs unlocked, no Rift Anchor (no starting Weapon Chest in the Base). Applied as a floor while META_PLAYTEST is on, or written into
     the save by the cheat Apply Playtest Profile.'
   levels:
   - id: 1
@@ -49,8 +49,6 @@ MonoBehaviour:
   - id: 201
     level: 1
   - id: 202
-    level: 1
-  - id: 105
     level: 1
   - id: 102
     level: 2

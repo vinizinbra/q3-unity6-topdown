@@ -321,7 +321,7 @@ check).
 5. ~~Author a `SurvivalConfig` with at least one `SurvivalPhase`~~ - done: `SurvivalConfig.asset` has one phase (`BudgetPerPulse = 100`, `PulseInterval = 1`, `TargetPressure = 10`, `MaxAliveEnemies = 5`, `AllowedGroups = [EnemyGroupConfig]`).
 6. ~~`LifecycleConfig.RelevantRange >= DirectorConfig.SpawnRingRadiusMax`~~ - fixed 2026-08-07: `RelevantRange` was 12 (less than `SpawnRingRadiusMax`'s 16, the exact inverted case the `ValidateOnce` guardrail warns about), raised to 20 for a margin above 16 rather than the bare minimum.
 7. ~~Stale `MaxSpawnPlacementAttempts` YAML key~~ - resolved; the current `DirectorConfig.asset` only has `MaxGroupSpawnAttempts: 8`, no orphaned key.
-8. ~~Optional: assign `RuntimeConfig.BalanceConfig`~~ - done, see `docs/run-curves-coop-scaling.md`'s own now-updated status.
+8. ~~Optional: assign `OverallGameConfig.BalanceConfig`~~ - done, see `docs/run-curves-coop-scaling.md`'s own now-updated status.
 
 ## First playable content pass (2026-08-07)
 

@@ -294,11 +294,11 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
                 return null;
 
-            EnemyTierResistanceConfig config = f.FindAsset(f.RuntimeConfig.EnemyTierResistanceConfig);
+            EnemyTierResistanceConfig config = f.FindAsset(f.GameConfig.EnemyTierResistanceConfig);
 
             if (config == null)
             {
-                Log.Error("[Status] Couldn't resolve RuntimeConfig.EnemyTierResistanceConfig - is it assigned in the RuntimeConfig asset?");
+                Log.Error("[Status] Couldn't resolve OverallGameConfig.EnemyTierResistanceConfig - is it assigned on the OverallGameConfig asset?");
                 return null;
             }
 
@@ -920,30 +920,30 @@ namespace Quantum
             return FPMath.Max(damagePerTick, floorPerTick);
         }
 
-        // Single resolve point for RuntimeConfig.EffectConfig - every non-Fire/Ice EffectData class
+        // Single resolve point for OverallGameConfig.EffectConfig - every non-Fire/Ice EffectData class
         // goes through this instead of each repeating the null/log check, same shape as
         // GetTierResistance above.
         public static EffectConfig GetEffectConfig(Frame f)
         {
-            EffectConfig config = f.FindAsset(f.RuntimeConfig.EffectConfig);
+            EffectConfig config = f.FindAsset(f.GameConfig.EffectConfig);
 
             if (config == null)
             {
-                Log.Error("[Status] Couldn't resolve RuntimeConfig.EffectConfig - is it assigned in the RuntimeConfig asset?");
+                Log.Error("[Status] Couldn't resolve OverallGameConfig.EffectConfig - is it assigned on the OverallGameConfig asset?");
             }
 
             return config;
         }
 
-        // Single resolve point for RuntimeConfig.ElementalReactionConfig - same shape as
+        // Single resolve point for OverallGameConfig.ElementalReactionConfig - same shape as
         // GetEffectConfig above.
         public static ElementalReactionConfig GetElementalReactionConfig(Frame f)
         {
-            ElementalReactionConfig config = f.FindAsset(f.RuntimeConfig.ElementalReactionConfig);
+            ElementalReactionConfig config = f.FindAsset(f.GameConfig.ElementalReactionConfig);
 
             if (config == null)
             {
-                Log.Error("[Status] Couldn't resolve RuntimeConfig.ElementalReactionConfig - is it assigned in the RuntimeConfig asset?");
+                Log.Error("[Status] Couldn't resolve OverallGameConfig.ElementalReactionConfig - is it assigned on the OverallGameConfig asset?");
             }
 
             return config;

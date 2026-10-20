@@ -34,7 +34,7 @@ namespace Quantum
             if (DamageUtility.RollChance(f, tierStats.RiftShardDropChance) == false)
                 return;
 
-            if (f.RuntimeConfig.Prefabs.RiftShardPrototype.IsValid == false)
+            if (f.GameConfig.Prefabs.RiftShardPrototype.IsValid == false)
             {
                 Log.Debug($"[RiftShard] {target} died with RiftShardValue {tierStats.RiftShardValue} but RuntimeConfig has no RiftShardPrototype assigned - drop skipped");
                 return;
@@ -44,9 +44,9 @@ namespace Quantum
             FP minOffset = FP._0;
             FP maxOffset = FP._0;
 
-            if (f.RuntimeConfig.RiftShardConfig.IsValid == true)
+            if (f.GameConfig.RiftShardConfig.IsValid == true)
             {
-                RiftShardConfig config = f.FindAsset(f.RuntimeConfig.RiftShardConfig);
+                RiftShardConfig config = f.FindAsset(f.GameConfig.RiftShardConfig);
                 lifetime = config.OrbLifetime;
 
                 // Scattered away from the exact death position - same reasoning ScrapUtility's own
@@ -56,7 +56,7 @@ namespace Quantum
                 maxOffset = config.MaxSpawnOffset;
             }
 
-            EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.RiftShardPrototype);
+            EntityRef orb = f.Create(f.GameConfig.Prefabs.RiftShardPrototype);
             OrbSpawnUtility.SpawnWithPop(f, orb, position, minOffset, maxOffset);
 
             if (f.Unsafe.TryGetPointer<CurrencyOrb>(orb, out var currencyOrb) == true)

@@ -56,7 +56,7 @@ namespace QuantumUser.Editor
             // Not wired into RuntimeConfig here - RuntimeConfig's asset refs live on
             // QuantumMenuConfig.asset (a scene/menu config, not a plain AssetObject this generator can
             // safely locate) - see the log below for the manual step.
-            CreateOrUpdate<ScrapConfig>($"{PassivesFolderPath}/ScrapConfig.asset", asset =>
+            CreateOrUpdate<ScrapConfig>("Assets/_QuantumUser/Resources/Configs/ScrapConfig.asset", asset =>
             {
                 asset.PickupRadius = 2;
                 asset.OrbLifetime = 30;
@@ -305,8 +305,8 @@ namespace QuantumUser.Editor
 
             LogHelper.Log("LuxAscensionAssetGenerator", "Scrap Collector passive + 9 Lux Ascension lines authored and wired (4 Sentry lines into " +
                       "LuxSkill.Actions, 3 Passive + 2 Dash into LuxCharacterData) - every list fully replaced, not appended. " +
-                      "Still needed by hand: (1) assign ScrapConfig.asset and a ScrapOrb EntityPrototype to RuntimeConfig's " +
-                      "ScrapConfig/ScrapOrbPrototype fields (QuantumMenuConfig.asset); (2) author dedicated sentry weapon data - " +
+                      "Still needed by hand: (1) assign ScrapConfig.asset and a ScrapOrb EntityPrototype to OverallGameConfig's " +
+                      "ScrapConfig/ScrapOrbPrototype fields (Resources/Configs/OverallGameConfig); (2) author dedicated sentry weapon data - " +
                       "Minigun/Rocket Pod/Laser currently reuse SMG/GrenadeLauncher/BeamGun as decisive placeholders, and MK II's " +
                       "Twin Cannon reuses the baseline Cannon (so MK II is a visual no-op until a real 2-projectile weapon exists); " +
                       "(3) delete the stale EfficientSalvage.asset/Enhacement.asset/PortableCoverSkillAction.asset files - those " +

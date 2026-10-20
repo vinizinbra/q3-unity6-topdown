@@ -166,7 +166,11 @@ namespace QuantumUser.Editor.BalanceSimulator
                     if (castDelta > 0)
                         label += $" +{castDelta:0}/cast";
                     else if (next.WeaponBonus > current.WeaponBonus)
-                        label += $" +{next.WeaponBonus - current.WeaponBonus:P0} weapon while Overdrive";
+                        label += $" +{next.WeaponBonus - current.WeaponBonus:P0} weapon while Overdrive" + (next.BuffInstantReload ? ", instant reload" : next.BuffReloadBonus > 0 ? $", +{next.BuffReloadBonus:P0} reload" : "");
+                    else if (next.DashFireRateBonus > 0)
+                        label += $" +{next.DashFireRateBonus:P0} fire rate" + (next.DashDamageBonus > 0 ? $", +{next.DashDamageBonus:P0} damage" : "") + $" for {next.DashBuffDuration:0.#}s after a dash";
+                    else if (next.MaxExtension > 0)
+                        label += $" Overdrive +{next.ExtensionPerKill:0.#}s / {next.KillsPerExtension:0} kills, up to {next.MaxExtension:0.#}s";
                     else if (next.MountedWeapons != null || next.MountedFireRate > 1)
                         label += " (sentry)";
                     else if (next.Modelled)
@@ -207,6 +211,25 @@ namespace QuantumUser.Editor.BalanceSimulator
                             pl.SkillUpgradeScaledDamage += Math.Max(0, next.ScaledSkillDamage - current.ScaledSkillDamage);
                             pl.WeaponBuffBonus += Math.Max(0, next.WeaponBonus - current.WeaponBonus);
 
+                            // Max's Overdrive lines: rank values are totals.
+                            if (next.WeaponBonus > 0)
+                            {
+                                pl.BuffReloadBonus = next.BuffReloadBonus;
+                                pl.BuffInstantReload = next.BuffInstantReload;
+                            }
+                            if (next.DashFireRateBonus > 0)
+                            {
+                                pl.DashFireRateBonus = next.DashFireRateBonus;
+                                pl.DashDamageBonus = next.DashDamageBonus;
+                                pl.DashBuffDuration = next.DashBuffDuration;
+                            }
+                            if (next.MaxExtension > 0)
+                            {
+                                pl.ExtensionPerKill = next.ExtensionPerKill;
+                                pl.KillsPerExtension = next.KillsPerExtension;
+                                pl.MaxExtension = next.MaxExtension;
+                            }
+
                             if (next.MountedWeapons != null)
                             {
                                 foreach (WeaponDataAsset barrel in next.MountedWeapons)
@@ -230,7 +253,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                             pl.SkillUpgradeBonus += scenario.SkillUpgradeDpsValue;
                         }
 
-                        pl.SkillRanks[u] = nextRank;
+                        pl.SetSkillRank(u, nextRank);
                     },
                 });
             }
@@ -336,7 +359,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             int slots = Math.Min(Math.Min(3, Math.Max(1, assets.LevelUp.ChoiceCount)), pool.Weapons.Count);
             var taken = new HashSet<int>();
             SimWeapon best = null;
-            double bestDps = player.WeaponDps(scenario);
+            double bestDps = player.WeaponDpsWithBuffs(scenario);
 
             for (int slot = 0; slot < slots; slot++)
             {
@@ -374,7 +397,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         {
             SimPlayer preview = player.Clone();
             preview.Weapon = offer;
-            return preview.WeaponDps(scenario);
+            return preview.WeaponDpsWithBuffs(scenario);
         }
 
         // Level and perk count from LevelUpConfig.WeaponOfferCurve (shared by Store and Choose
@@ -637,7 +660,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             int offerCount = Math.Min(1, Math.Max(1, store.MaxWeaponOfferSlots));
             int bought = 0;
             var taken = new HashSet<int>();
-            double currentDps = player.WeaponDps(scenario);
+            double currentDps = player.WeaponDpsWithBuffs(scenario);
 
             for (int i = 0; i < offerCount; i++)
             {

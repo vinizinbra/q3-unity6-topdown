@@ -22,6 +22,7 @@ MonoBehaviour:
   GridDepth: 128
   PlayerSpawnHeight:
     RawValue: 131072
+  IsTrainingZone: 0
   FallDeathHeight:
     RawValue: -65536
   FallRespawnHeightOffset:
@@ -57,7 +58,7 @@ MonoBehaviour:
         Id:
           Value: 1447946178488252128
       Weight:
-        RawValue: 32768
+        RawValue: 13107
     - Prototype:
         Id:
           Value: 1482437271914828619

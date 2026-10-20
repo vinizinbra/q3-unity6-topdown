@@ -575,9 +575,9 @@ namespace Quantum
 
             bool allowAllies = false;
 
-            if (f.RuntimeConfig.AccessoryGuardConfig.IsValid == true)
+            if (f.GameConfig.AccessoryGuardConfig.IsValid == true)
             {
-                allowAllies = f.FindAsset(f.RuntimeConfig.AccessoryGuardConfig).AllowAllyRecovery;
+                allowAllies = f.FindAsset(f.GameConfig.AccessoryGuardConfig).AllowAllyRecovery;
             }
 
             FP leaderLimit = Or(settings.LeaderMaxDistance, DefaultLeaderMaxDistance) - AccessoryLeaderMargin;

@@ -503,7 +503,7 @@ namespace QuantumUser.Editor
 
         // Looks up an already-authored, shared HitEffectData instance under Resources/HitEffects
         // (BurnEffectData.asset, SlowEffectData.asset, etc. - all zero-config, reading their own
-        // magnitudes from RuntimeConfig.EffectConfig/ElementalReactionConfig) rather than creating a
+        // magnitudes from OverallGameConfig.EffectConfig/ElementalReactionConfig) rather than creating a
         // bespoke copy.
         private static AssetRef<HitEffectData> LoadHitEffect(string name)
         {

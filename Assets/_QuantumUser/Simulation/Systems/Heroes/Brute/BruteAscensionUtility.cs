@@ -42,6 +42,33 @@ namespace Quantum
         // JuggernautSkillData asset, resolved via the same CharacterStats.CharacterData ->
         // CharacterData.HeroSkill chain ResolveJuggernautSkillDamage above already uses, so this is the
         // first (and only) place ChargePoints >= MaxCharge is compared outside that file.
+        // Juggernaut's projectile deflect - true means the direct hit was eaten (caller treats the
+        // shot as spent and applies nothing). JuggernautCharge exists exactly from Begin to End, so
+        // it doubles as the "channel is live" check. Only DirectHitData calls this; AreaHitData never
+        // does, which is what keeps explosive shots detonating on him.
+        public static bool TryDeflectProjectile(Frame f, EntityRef target, Projectile* projectile, FPVector3 point)
+        {
+            if (f.Has<JuggernautCharge>(target) == false)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<Enemy>(projectile->Owner, out var enemy) == false)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<CharacterStats>(target, out var stats) == false || stats->CharacterData.IsValid == false)
+                return false;
+
+            CharacterData data = f.FindAsset(stats->CharacterData);
+
+            if (data.HeroSkill.IsValid == false || f.FindAsset(data.HeroSkill) is not JuggernautSkillData juggernautSkill)
+                return false;
+
+            if (f.FindAsset(enemy->EnemyData).Tier > juggernautSkill.MaxDeflectTier)
+                return false;
+
+            f.Events.JuggernautProjectileDeflected(target, projectile->Owner, point);
+            return true;
+        }
+
         public static bool IsJuggernautCharged(Frame f, EntityRef owner)
         {
             if (f.Unsafe.TryGetPointer<JuggernautCharge>(owner, out var charge) == false)

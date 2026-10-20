@@ -39,10 +39,10 @@ namespace Quantum
         // established (reused, not new).
         private static bool HasEligiblePerks(Frame f, EntityRef player)
         {
-            if (f.RuntimeConfig.BlacksmithConfig.IsValid == false)
+            if (f.GameConfig.BlacksmithConfig.IsValid == false)
                 return false;
 
-            BlacksmithConfig config = f.FindAsset(f.RuntimeConfig.BlacksmithConfig);
+            BlacksmithConfig config = f.FindAsset(f.GameConfig.BlacksmithConfig);
 
             if (config.PerkPool.IsValid == false)
                 return false;
@@ -100,13 +100,13 @@ namespace Quantum
             if (state != ContextInteractionState.Available)
                 return;
 
-            if (f.RuntimeConfig.BlacksmithConfig.IsValid == false)
+            if (f.GameConfig.BlacksmithConfig.IsValid == false)
             {
                 Log.Error("[Blacksmith] interaction requested but RuntimeConfig has no BlacksmithConfig assigned - ignored");
                 return;
             }
 
-            BlacksmithConfig config = f.FindAsset(f.RuntimeConfig.BlacksmithConfig);
+            BlacksmithConfig config = f.FindAsset(f.GameConfig.BlacksmithConfig);
             BlacksmithOffer* offer = EnsureOfferRolled(f, player, config);
 
             if (offer->PerkChoiceCount == 0)
@@ -234,7 +234,7 @@ namespace Quantum
             if (perkRef.IsValid == false)
                 return;
 
-            if (f.RuntimeConfig.BlacksmithConfig.IsValid == false)
+            if (f.GameConfig.BlacksmithConfig.IsValid == false)
                 return;
 
             // The offer is cached per Break (see RollOffer), so the weapon it was rolled for may have
@@ -248,7 +248,7 @@ namespace Quantum
                 return;
             }
 
-            BlacksmithConfig config = f.FindAsset(f.RuntimeConfig.BlacksmithConfig);
+            BlacksmithConfig config = f.FindAsset(f.GameConfig.BlacksmithConfig);
             WeaponPerkData perkData = f.FindAsset(perkRef);
             FP price = config.ResolvePerkPrice(perkData.Rarity);
 
@@ -309,13 +309,13 @@ namespace Quantum
         // open window's copy (so a Cancel + reopen keeps the rerolled options), once per Break.
         public static void Reroll(Frame f, EntityRef player, BlacksmithInteraction* interaction)
         {
-            if (CanReroll(f, player) == false || f.RuntimeConfig.BlacksmithConfig.IsValid == false)
+            if (CanReroll(f, player) == false || f.GameConfig.BlacksmithConfig.IsValid == false)
                 return;
 
             if (f.Unsafe.TryGetPointer<BlacksmithOffer>(player, out var offer) == false)
                 return;
 
-            AssetRef<WeaponPerkData>[] rolled = RollPerkOptions(f, player, f.FindAsset(f.RuntimeConfig.BlacksmithConfig));
+            AssetRef<WeaponPerkData>[] rolled = RollPerkOptions(f, player, f.FindAsset(f.GameConfig.BlacksmithConfig));
             var offerChoices = offer->PerkChoices;
             var windowChoices = interaction->PerkChoices;
 

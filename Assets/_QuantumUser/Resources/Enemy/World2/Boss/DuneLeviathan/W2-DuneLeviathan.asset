@@ -2583,10 +2583,12 @@ MonoBehaviour:
         RawValue: 65536
   GlobalActionSlots: 
   Stagger:
-    Threshold:
-      RawValue: 327680000
-    RegenRate:
-      RawValue: 65536
+    ThresholdPercents:
+    - RawValue: 13107
+    RegenRatePercent:
+      RawValue: 655
+    MinHealthPercent:
+      RawValue: 13107
     OnBreakForcedAction:
       Id:
         Value: 410914328159082563

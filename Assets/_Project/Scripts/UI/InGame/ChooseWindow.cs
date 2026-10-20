@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NaughtyAttributes;
 using PrimeTween;
 using TMPro;
@@ -60,6 +61,52 @@ public class ChooseWindow : UiWindow
     private float currentWeaponCardGap = 40f;
 
     [SerializeField] private TMP_Text countdownText;
+
+    // Store/Blacksmith/Cursed Rift extras - hidden on every Show() and only turned on by the POI
+    // refresh path (GameplayUiController), so Level-Up/Chest never show them. The balance is a
+    // widget so any currency fits (Coins now, Rift Shards for a future Black Market).
+    [Header("POI header (Store / Blacksmith / Cursed Rift)")]
+    [SerializeField, Tooltip("\"YOUR COINS 4,820\" readout. Optional.")]
+    private CurrencyBalanceWidget currencyBalance;
+    [SerializeField, Tooltip("Root of the \"Next survival in: 22s\" row. Optional.")]
+    private GameObject nextSurvivalRoot;
+    [SerializeField] private TMP_Text nextSurvivalLabelText;
+    [SerializeField] private TMP_Text nextSurvivalValueText;
+    [SerializeField, Tooltip("Row label on a timed Level-Up/Chest pick.")]
+    private string chooseInLabel = "Choose in:";
+    [SerializeField, Tooltip("Row position (from the window's top centre) on POI screens - right of the balance.")]
+    private Vector2 rowPositionBesideBalance = new Vector2(200f, -180f);
+    [SerializeField, Tooltip("Row position on a timed Level-Up/Chest pick - centred between the subtitle strip and the cards.")]
+    private Vector2 rowPositionCentered = new Vector2(0f, -205f);
+    [SerializeField, Tooltip("Header (balance + row) pops in this long after the LAST card's intro starts, so it lands once the screen has settled.")]
+    private float headerRevealDelay = 0.25f;
+    [SerializeField] private float headerPopDuration = 0.35f;
+    [SerializeField] private Ease headerPopEase = Ease.OutBack;
+
+    // Header parts are switched on by the per-tick refresh, which can't know where the intro is -
+    // so Show/PlayIntroAnimation stamp when they're allowed to land, and the first activation after
+    // each Show schedules its pop for that moment.
+    private float _headerRevealAt;
+    private bool _balancePopped;
+    private bool _rowPopped;
+    private Tween _balancePopTween;
+    private Tween _rowPopTween;
+    private Vector3 _balanceRestScale = Vector3.one;
+    private Vector3 _rowRestScale = Vector3.one;
+
+    // Reroll replays the card intros, but only once the NEW offers have arrived from the sim (a
+    // command round-trip later online) - so the click just arms it and the first change of the
+    // offered cards' identities fires it. Expires so a refused reroll can't fire on some later,
+    // unrelated change.
+    [SerializeField, Tooltip("Left on the first card / right on the last card wraps around instead of stopping.")]
+    private bool wrapCardNavigation = false;
+    private readonly List<Selectable> _navCards = new List<Selectable>();
+    private readonly List<Selectable> _navButtons = new List<Selectable>();
+
+    private const float CardReplayArmSeconds = 3f;
+    private bool _cardReplayArmed;
+    private float _cardReplayArmedAt;
+    private string _cardSignature;
 
     // "Level Up!" for a plain level-up, the rolled category's display name (e.g. "Weapon Perk")
     // for a Chest, "CURSED RIFT" for Cursed Rift's own single screen, or "STORE"/"BLACKSMITH" -
@@ -168,6 +215,7 @@ public class ChooseWindow : UiWindow
     // shake/grow/impact tuning is authored on the prefab). Null if a given prefab has none.
     private ShakeGrowImpactAnimation[] cardIntros;
     private ShakeGrowImpactAnimation[] weaponCardIntros;
+    private ShakeGrowImpactAnimation currentWeaponCardIntro;
 
     private float _dimFullAlpha = 1f;
     private Tween _dimTween;
@@ -186,6 +234,12 @@ public class ChooseWindow : UiWindow
     {
         if (dimImage != null)
             _dimFullAlpha = dimImage.color.a;
+
+        if (currencyBalance != null)
+            _balanceRestScale = currencyBalance.transform.localScale;
+
+        if (nextSurvivalRoot != null)
+            _rowRestScale = nextSurvivalRoot.transform.localScale;
 
         cards = new UpgradeCardWidget[cardCount];
         cardIntros = new ShakeGrowImpactAnimation[cardCount];
@@ -232,7 +286,10 @@ public class ChooseWindow : UiWindow
             currentWeaponCard = CreateCurrentWeaponCard();
 
         if (currentWeaponCard != null)
+        {
+            currentWeaponCardIntro = currentWeaponCard.GetComponent<ShakeGrowImpactAnimation>();
             currentWeaponCard.gameObject.SetActive(false);
+        }
 
         weaponCardPrefab.gameObject.SetActive(false);
 
@@ -248,7 +305,11 @@ public class ChooseWindow : UiWindow
         }
 
         if (rerollButton != null)
-            rerollButton.onClick.AddListener(() => onRerollClicked?.Invoke());
+            rerollButton.onClick.AddListener(() =>
+            {
+                ArmCardReplay();
+                onRerollClicked?.Invoke();
+            });
 
         if (secondaryButton != null)
         {
@@ -264,11 +325,7 @@ public class ChooseWindow : UiWindow
         WeaponCardWidget card = Instantiate(weaponCardPrefab, weaponCardPrefab.transform.parent);
         card.name = "CurrentWeaponCard";
 
-        // Not a ShakeGrowImpact-driven offer card - drop its intro so it just appears.
-        var intro = card.GetComponent<ShakeGrowImpactAnimation>();
-        if (intro != null)
-            Destroy(intro);
-
+        // Keeps the offer card's ShakeGrowImpactAnimation - PlayIntroAnimation plays it with the row.
         var layoutElement = card.GetComponent<LayoutElement>() ?? card.gameObject.AddComponent<LayoutElement>();
         layoutElement.ignoreLayout = true;
 
@@ -294,7 +351,10 @@ public class ChooseWindow : UiWindow
     {
         ResetIntroParticles();
         base.Show();
+        ClearPoiHeader();
         _hasAutoSelectedThisShow = false;
+        _cardReplayArmed = false;
+        _cardSignature = null;
 
         if (debugSkipIntroAnimation || UpgradeScreenDebugState.SkipAnimations)
             SkipIntroAnimation();
@@ -381,6 +441,9 @@ public class ChooseWindow : UiWindow
 
         float cardsStart = titleStart + cardIntroStartDelay;
 
+        // The current weapon is context for the offers, so it lands first, just ahead of the row.
+        currentWeaponCardIntro?.Play(cardsStart);
+
         for (int i = 0; i < cards.Length; i++)
         {
             float at = cardsStart + i * cardIntroStagger;
@@ -393,6 +456,67 @@ public class ChooseWindow : UiWindow
             float at = cardsStart + i * cardIntroStagger;
             weaponCardIntros[i]?.Play(at);
             PlayCardAppear(weaponCards[i] != null && weaponCards[i].gameObject.activeSelf, at);
+        }
+
+        int lastCard = Mathf.Max(cards.Length, weaponCards.Length) - 1;
+        _headerRevealAt = Time.unscaledTime + cardsStart + Mathf.Max(lastCard, 0) * cardIntroStagger + headerRevealDelay;
+    }
+
+    private void ArmCardReplay()
+    {
+        _cardReplayArmed = true;
+        _cardReplayArmedAt = Time.unscaledTime;
+    }
+
+    private static string BuildSignature(UpgradeCardWidget.CardData[] data)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var d in data)
+            sb.Append(d.HasOption ? d.DisplayName + "|" + d.Description : "-").Append(';');
+        return sb.ToString();
+    }
+
+    private static string BuildSignature(WeaponCardWidget.CardData[] data)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var d in data)
+            sb.Append(d.HasOption ? d.WeaponName + "|" + d.Description : "-").Append(';');
+        return sb.ToString();
+    }
+
+    private void ReplayCardsIfRerolled(string signature)
+    {
+        bool changed = _cardSignature != null && signature != _cardSignature;
+        _cardSignature = signature;
+
+        if (changed == false || _cardReplayArmed == false)
+            return;
+
+        _cardReplayArmed = false;
+
+        if (Time.unscaledTime - _cardReplayArmedAt > CardReplayArmSeconds)
+            return;
+
+        if (debugSkipIntroAnimation || UpgradeScreenDebugState.SkipAnimations)
+            return;
+
+        // Same grow/shake/impact + per-card sound as the window intro, minus dim/title/header.
+        for (int i = 0; i < cards.Length; i++)
+        {
+            if (cards[i] == null || cards[i].gameObject.activeSelf == false)
+                continue;
+
+            cardIntros[i]?.Play(i * cardIntroStagger);
+            PlayCardAppear(true, i * cardIntroStagger);
+        }
+
+        for (int i = 0; i < weaponCards.Length; i++)
+        {
+            if (weaponCards[i] == null || weaponCards[i].gameObject.activeSelf == false)
+                continue;
+
+            weaponCardIntros[i]?.Play(i * cardIntroStagger);
+            PlayCardAppear(true, i * cardIntroStagger);
         }
     }
 
@@ -409,12 +533,15 @@ public class ChooseWindow : UiWindow
         }
 
         titleIntro?.PlayInstant();
+        currentWeaponCardIntro?.PlayInstant();
 
         for (int i = 0; i < cards.Length; i++)
             cardIntros[i]?.PlayInstant();
 
         for (int i = 0; i < weaponCards.Length; i++)
             weaponCardIntros[i]?.PlayInstant();
+
+        _headerRevealAt = 0f;
     }
 
     // Scheduled through the audio system's own delay rather than a coroutine, so it shares the
@@ -474,6 +601,9 @@ public class ChooseWindow : UiWindow
             cards[i].Setup(data, interactable);
         }
 
+        ReplayCardsIfRerolled(BuildSignature(cardData));
+
+        ApplyNavigation();
         SelectFirstInteractableOnce();
 
         // Every card here normally locks together via the shared `interactable` above (a one-shot
@@ -508,9 +638,12 @@ public class ChooseWindow : UiWindow
             weaponCards[i].Setup(data, interactable);
         }
 
+        ReplayCardsIfRerolled(BuildSignature(cardData));
+
         if (secondaryButton != null)
             secondaryButton.interactable = interactable;
 
+        ApplyNavigation();
         SelectFirstInteractableOnce();
     }
 
@@ -582,10 +715,99 @@ public class ChooseWindow : UiWindow
             subtitleText.text = subtitle;
     }
 
+    // Called every tick by the POI refresh (Store/Blacksmith pass a currency; Cursed Rift doesn't).
+    public void SetPoiHeader(CurrencyType? currency, int amount, string nextSurvivalLabel, int nextSurvivalSeconds)
+    {
+        if (currencyBalance != null)
+        {
+            if (currency.HasValue)
+            {
+                currencyBalance.Setup(currency.Value, amount);
+                PopIn(currencyBalance.transform, _balanceRestScale, ref _balancePopped, ref _balancePopTween);
+            }
+            else
+                currencyBalance.Hide();
+        }
+
+        SetHeaderRow(nextSurvivalLabel, nextSurvivalSeconds, besideBalance: currency.HasValue);
+    }
+
+    // The one small label+seconds row under the title: "Next survival in: 22s" on the POI screens
+    // (sits beside the balance), "Choose in: 30s" on a timed Level-Up/Chest (centered, no balance).
+    private void SetHeaderRow(string label, int seconds, bool besideBalance)
+    {
+        if (nextSurvivalRoot == null)
+            return;
+
+        if (nextSurvivalRoot.activeSelf == false)
+            nextSurvivalRoot.SetActive(true);
+
+        PopIn(nextSurvivalRoot.transform, _rowRestScale, ref _rowPopped, ref _rowPopTween);
+
+        var rect = (RectTransform)nextSurvivalRoot.transform;
+        rect.pivot = new Vector2(besideBalance ? 0f : 0.5f, 0.5f);
+        rect.anchoredPosition = besideBalance ? rowPositionBesideBalance : rowPositionCentered;
+
+        if (nextSurvivalRoot.TryGetComponent(out HorizontalLayoutGroup layout))
+            layout.childAlignment = besideBalance ? TextAnchor.MiddleLeft : TextAnchor.MiddleCenter;
+
+        if (nextSurvivalLabelText != null)
+            nextSurvivalLabelText.text = label;
+
+        if (nextSurvivalValueText != null)
+            nextSurvivalValueText.text = seconds + "s";
+    }
+
+    // Once per Show: hidden at scale 0 until _headerRevealAt, then grows to its authored scale.
+    private void PopIn(Transform target, Vector3 restScale, ref bool popped, ref Tween tween)
+    {
+        if (popped)
+            return;
+
+        popped = true;
+        tween.Stop();
+        float delay = Mathf.Max(0f, _headerRevealAt - Time.unscaledTime);
+
+        if (delay <= 0f && _headerRevealAt <= 0f)
+        {
+            target.localScale = restScale;
+            return;
+        }
+
+        target.localScale = Vector3.zero;
+        tween = Tween.Scale(target, Vector3.zero, restScale, headerPopDuration, headerPopEase, startDelay: delay, useUnscaledTime: true);
+    }
+
+    private void ClearPoiHeader()
+    {
+        _balancePopped = false;
+        _rowPopped = false;
+        _balancePopTween.Stop();
+        _rowPopTween.Stop();
+
+        if (currencyBalance != null)
+            currencyBalance.transform.localScale = _balanceRestScale;
+
+        if (nextSurvivalRoot != null)
+            nextSurvivalRoot.transform.localScale = _rowRestScale;
+
+        if (currencyBalance != null)
+            currencyBalance.Hide();
+
+        if (nextSurvivalRoot != null)
+            nextSurvivalRoot.SetActive(false);
+    }
+
     private void RefreshCountdown(float timeRemaining)
     {
+        int seconds = Mathf.CeilToInt(Mathf.Max(timeRemaining, 0f));
+
         if (countdownText != null)
-            countdownText.text = Mathf.CeilToInt(Mathf.Max(timeRemaining, 0f)).ToString();
+            countdownText.text = seconds.ToString();
+
+        // A timed pick (Level-Up/Chest) says so up top; POI screens pass 0 and set their own row.
+        if (timeRemaining > 0f)
+            SetHeaderRow(chooseInLabel, seconds, besideBalance: false);
     }
 
     // showCards/showWeaponCards are independently settable (not one boolean, unlike the old
@@ -648,6 +870,7 @@ public class ChooseWindow : UiWindow
             weaponCards[i].Setup(data, interactable: true);
         }
 
+        ApplyNavigation();
         SelectFirstInteractableOnce();
 
         // Store stays open across multiple purchases (see this method's own comment) - a purchase
@@ -655,6 +878,87 @@ public class ChooseWindow : UiWindow
         // afford) must not leave gamepad/joystick focus stuck on it. secondaryButton ("CLOSE") is
         // the fallback for when every offer ends up sold out/unaffordable at once.
         UiSelectionUtility.ReselectIfNoLongerInteractable(_lastClickedSelectable, transform, secondaryButton);
+    }
+
+    // Explicit navigation, rebuilt every refresh: Automatic navigation searches the WHOLE screen, so
+    // right on the last card / left on the first jumped out of the window onto HUD buttons. Cards
+    // form one row in screen order (Store: food then weapons), stopping at the ends unless
+    // wrapCardNavigation; down goes to the nearest bottom button, up from a button to the nearest card.
+    // Only visible + interactable targets count, matching what Automatic would have allowed.
+    private void ApplyNavigation()
+    {
+        _navCards.Clear();
+        _navButtons.Clear();
+
+        foreach (UpgradeCardWidget card in cards)
+            if (card != null && card.gameObject.activeInHierarchy)
+                AddIfNavigable(_navCards, card.ActiveSelectable);
+
+        foreach (WeaponCardWidget card in weaponCards)
+            if (card != null && card.gameObject.activeInHierarchy)
+                AddIfNavigable(_navCards, card.ActiveSelectable);
+
+        AddIfNavigable(_navButtons, rerollButton);
+        AddIfNavigable(_navButtons, secondaryButton);
+
+        _navCards.Sort(CompareByScreenX);
+        _navButtons.Sort(CompareByScreenX);
+
+        for (int i = 0; i < _navCards.Count; i++)
+        {
+            Selectable left = i > 0 ? _navCards[i - 1] : (wrapCardNavigation && _navCards.Count > 1 ? _navCards[_navCards.Count - 1] : null);
+            Selectable right = i < _navCards.Count - 1 ? _navCards[i + 1] : (wrapCardNavigation && _navCards.Count > 1 ? _navCards[0] : null);
+            SetExplicit(_navCards[i], left, right, up: null, down: Nearest(_navButtons, _navCards[i]));
+        }
+
+        for (int i = 0; i < _navButtons.Count; i++)
+        {
+            Selectable left = i > 0 ? _navButtons[i - 1] : null;
+            Selectable right = i < _navButtons.Count - 1 ? _navButtons[i + 1] : null;
+            SetExplicit(_navButtons[i], left, right, up: Nearest(_navCards, _navButtons[i]), down: null);
+        }
+    }
+
+    private static void AddIfNavigable(List<Selectable> list, Selectable selectable)
+    {
+        if (selectable != null && selectable.gameObject.activeInHierarchy && selectable.interactable)
+            list.Add(selectable);
+    }
+
+    private static int CompareByScreenX(Selectable a, Selectable b) => a.transform.position.x.CompareTo(b.transform.position.x);
+
+    private static Selectable Nearest(List<Selectable> candidates, Selectable from)
+    {
+        Selectable best = null;
+        float bestDistance = float.MaxValue;
+
+        foreach (Selectable candidate in candidates)
+        {
+            float distance = Mathf.Abs(candidate.transform.position.x - from.transform.position.x);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = candidate;
+            }
+        }
+
+        return best;
+    }
+
+    private static void SetExplicit(Selectable selectable, Selectable left, Selectable right, Selectable up, Selectable down)
+    {
+        Navigation navigation = selectable.navigation;
+
+        if (navigation.mode == Navigation.Mode.Explicit && navigation.selectOnLeft == left && navigation.selectOnRight == right &&
+            navigation.selectOnUp == up && navigation.selectOnDown == down)
+            return;
+
+        navigation.mode = Navigation.Mode.Explicit;
+        navigation.selectOnLeft = left;
+        navigation.selectOnRight = right;
+        navigation.selectOnUp = up;
+        navigation.selectOnDown = down;
+        selectable.navigation = navigation;
     }
 
     // Gives gamepad/joystick navigation a default selection the instant this window opens, instead

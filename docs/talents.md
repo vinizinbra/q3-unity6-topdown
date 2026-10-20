@@ -226,7 +226,7 @@ Just the leveling-talent tuning now - chest prototype/offset/chance moved onto
   (`ApplyBonus`/`ApplyReduction`/`ApplyFlat`), mirroring how compact
   `CharacterStatMultiplierUpgradeData` (`docs/global-upgrades.md`) already is for the same
   "one field, one number" shape. Called from `PlayerSpawnUtility.Spawn`, right after the existing
-  `WeaponTalentLevel` bake. No-ops with an error log if `RuntimeConfig.TalentsConfig` isn't
+  `WeaponTalentLevel` bake. No-ops with an error log if `OverallGameConfig.TalentsConfig` isn't
   assigned, same tolerance every other optional config-asset consumer in this codebase has
   (e.g. `CombatDirectorSystem`).
 
@@ -332,7 +332,7 @@ raises this over time"). Building that screen is out of scope for this pass.
 
 1. Open the Editor once so `.qtn` codegen regenerates before any of this compiles.
 2. Author `TalentsConfig.asset` (`PercentPerLevel` defaults to 5) and assign to
-   `RuntimeConfig.TalentsConfig` in both scenes.
+   `OverallGameConfig.TalentsConfig` in both scenes.
 3. **`Assets/_QuantumUser/Entities/LevelChunk/LevelChunk.prefab` needs manual cleanup** - it
    already has the OLD component-based `SpawnEntityWithRequirement` added from before this
    refactor (`QPrototypeSpawnEntityWithRequirement` in its serialized YAML). Once codegen

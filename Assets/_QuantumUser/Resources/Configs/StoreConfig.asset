@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: StoreConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.StoreConfig
   Identifier:
-    Path: _QuantumUser/Resources/Store/StoreConfig
+    Path: _QuantumUser/Resources/Configs/StoreConfig
     Guid:
       Value: 466436701424375694
   WeaponPool:
@@ -24,23 +24,6 @@ MonoBehaviour:
     RawValue: 65536000
   WeaponOfferPricePerPerk:
     RawValue: 16384000
-  TalentRarityTuning:
-  - CommonWeight: 90
-    RareWeight: 10
-    EpicWeight: 0
-    LegendaryWeight: 0
-  - CommonWeight: 75
-    RareWeight: 25
-    EpicWeight: 0
-    LegendaryWeight: 0
-  - CommonWeight: 55
-    RareWeight: 35
-    EpicWeight: 10
-    LegendaryWeight: 0
-  - CommonWeight: 35
-    RareWeight: 45
-    EpicWeight: 18
-    LegendaryWeight: 2
   FoodPool:
     Id:
       Value: 412821431523284470

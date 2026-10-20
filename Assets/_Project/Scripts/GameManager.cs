@@ -69,6 +69,10 @@ public class GameManager : MonoBehaviour
         _startTrainingZoneOnLoad = true;
     }
 
+    // Still set during MenuScene's Awakes (Start consumes it) - MenuMusicPlayer reads it there so the
+    // intro's music carries on into the Training Zone instead of the menu theme cutting in.
+    public static bool IsTrainingZoneAfterIntroPending => _startTrainingZoneOnLoad;
+
     // True once a match (e.g. the Training Zone) has fully handed off from LoadingWindow to InMatchWindow -
     // IntroSequence holds its loading cover until then.
     public static bool IsInMatchWindowShown()

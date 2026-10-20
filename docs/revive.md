@@ -561,7 +561,7 @@ needs no new `.qtn`/config/Editor authoring at all - it reuses `GameState.qtn`'s
 live in-Editor testing - Downed/KO/self-revive were all confirmed reachable *pre-KO-removal*. The
 later teammate-hold/self-revive/KO-dead-end change itself (the KO-revival cut) has **not** been
 re-verified in-Editor yet. Still needed by hand before anything works end-to-end at runtime:
-1. Assign `RuntimeConfig.ReviveConfig` (`QuantumMenuConfig.asset`), same place every other config
+1. Assign `OverallGameConfig.ReviveConfig` (`QuantumMenuConfig.asset`), same place every other config
    is already assigned.
 2. Add a `PlayerLifeState` component to every hero `EntityPrototype` (`Pixie`/`Brute`/`Zara`/`Kai`/
    `Max`/`MainChar`/`Lux` under `Assets/_QuantumUser/Entities/Characters/`) - defaults all-zero

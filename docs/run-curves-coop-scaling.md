@@ -179,7 +179,7 @@ never by editing these curves/rows, so Medium (1x) leaves every number in this d
 ```csharp
 EnemyRuntimeStats ResolveEnemyStats(Frame f, EnemyTier tier)
 {
-    BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+    BalanceConfig balance = f.FindAsset(f.OverallGameConfig.BalanceConfig);
 
     FP elapsedSeconds = f.Global->SurvivalTime;   // NOT Time.time / f.Number*f.DeltaTime
     int playerCount = f.PlayerCount;
@@ -246,7 +246,7 @@ both correctly no-op rather than error.
 ```csharp
 FP ResolveBudgetMultiplier(Frame f)
 {
-    BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+    BalanceConfig balance = f.FindAsset(f.OverallGameConfig.BalanceConfig);
     if (balance == null) return FP._1;   // graceful no-op, logs an error
 
     FP curveMultiplier = balance.Evaluate(CurveChannel.DirectorBudget, f.Global->SurvivalTime);
@@ -270,7 +270,7 @@ value baked once. A missing `BalanceConfig` degrades to `1x` (Director keeps run
 ```csharp
 FP ResolveXpRequirementMultiplier(Frame f)
 {
-    BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+    BalanceConfig balance = f.FindAsset(f.OverallGameConfig.BalanceConfig);
     if (balance == null) return FP._1;   // graceful no-op, logs an error
 
     return balance.GetCoopGlobal(CoopGlobalKey.XpRequirement, f.PlayerCount);
@@ -327,7 +327,7 @@ project files, not just this doc's own prior claims.
 
 - ~~No `BalanceConfig.asset` instance exists yet~~ - resolved. `BalanceConfig.asset` exists at
   `Assets/_QuantumUser/Resources/Configs/BalanceConfig.asset` and is assigned to
-  `RuntimeConfig.BalanceConfig` in both `MenuScene.unity` and `QuantumGameScene.unity`. All three
+  `OverallGameConfig.BalanceConfig` in both `MenuScene.unity` and `QuantumGameScene.unity`. All three
   consumers (`ResolveEnemyStats`, `ResolveBudgetMultiplier`, `ResolveXpRequirementMultiplier`) now
   resolve real curve/co-op data instead of degrading to `1x`.
 - ~~`EnemyCombatModifiers` has not been added to any `EntityPrototype` yet~~ - resolved. It's on

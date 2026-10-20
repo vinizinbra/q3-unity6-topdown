@@ -18,7 +18,7 @@ namespace QuantumUser.Editor
     public static class AccessoryGuardContentGenerator
     {
         private const string FolderPath = "Assets/_QuantumUser/Resources/Accessory";
-        private const string ConfigPath = FolderPath + "/AccessoryGuardConfig.asset";
+        private const string ConfigPath = "Assets/_QuantumUser/Resources/Configs/AccessoryGuardConfig.asset"; // shared configs live in Resources/Configs (OverallGameConfig)
 
         [MenuItem("Tools/RiftRaiders/Breathing POI/Generate Accessory Guard Content")]
         internal static void Generate()
@@ -53,11 +53,11 @@ namespace QuantumUser.Editor
 
             LogHelper.Log("AccessoryGuardContentGenerator",
                 $"AccessoryGuardConfig ({ConfigPath}) authored. Still needed by hand: " +
-                "(1) assign RuntimeConfig's AccessoryGuardConfig field (QuantumMenuConfig.asset), same " +
+                "(1) assign OverallGameConfig's AccessoryGuardConfig field (Resources/Configs/OverallGameConfig), same " +
                 "place ReviveConfig/CursedRiftConfig etc. are already assigned - until then the whole " +
                 "mechanic stays off (nothing is seeded, nothing blocks); " +
                 "(2) build ONE shared DroppedAccessory EntityPrototype and assign it to " +
-                "RuntimeConfig.Prefabs.DroppedAccessoryPrototype - easiest is to duplicate " +
+                "OverallGameConfig.Prefabs.DroppedAccessoryPrototype - easiest is to duplicate " +
                 "Entities/Prefabs/CoinOrb.prefab and swap QPrototypeCurrencyOrb for " +
                 "QPrototypeDroppedAccessory, then add a DroppedAccessoryView to the sprite child. It " +
                 "needs Transform3D + GroundOffset + DroppedAccessory; GroundOffset is NOT optional, " +

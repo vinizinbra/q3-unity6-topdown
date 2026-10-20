@@ -154,6 +154,16 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [Header("Local player")]
     [SerializeField, Tooltip("Which local player slot's current chunk this instance highlights (MyLocalPlayer.Slots index) - 0 for the first local player's own HUD instance, 1 for a second couch co-op player's.")]
     private int localSlotIndex;
+    [SerializeField, Tooltip("Extra scale on this instance's own local player marker on top of the shared overlay scale, so \"where am I\" reads at a glance against teammates' markers.")]
+    private float localMarkerScale = 1.1f;
+    [SerializeField, Tooltip("Pulses per second of the local player marker's scale/white flash. 0 disables the pulse (keeps localMarkerScale only).")]
+    private float localMarkerPulseSpeed = 1.5f;
+    [SerializeField, Range(0f, 0.5f), Tooltip("How much the local player marker's scale swells at the peak of each pulse (fraction of its size).")]
+    private float localMarkerPulseAmount = 0.15f;
+    [SerializeField, Range(0f, 1f), Tooltip("How far toward white the local player marker flashes at the peak of each pulse (1 = fully white, 0 = no flash).")]
+    private float localMarkerFlashStrength = 0.25f;
+    [SerializeField, Tooltip("Sprites/SpriteColor material (PachaGames/Materials/SpriteColor) put on the local player marker's Image only - Image.color.rgb becomes the flash color and Image.color.a the mix strength (0 = untouched sprite). A plain UI/Default tint can only darken, never whiten. Unassigned = no flash (scale pulse only).")]
+    private Material localMarkerFlashMaterial;
 
     private readonly Dictionary<EntityRef, MapOverlay> _iconOverlays = new();
 
@@ -198,6 +208,11 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
     private readonly Dictionary<EntityRef, MapOverlay> _playerMarkers = new();
     private readonly HashSet<EntityRef> _seenPlayersThisFrame = new();
+
+    // See PulseLocalPlayerMarker - the marker being pulsed and its Image (switched to
+    // localMarkerFlashMaterial while it's the local one).
+    private EntityRef _localMarkerEntity;
+    private Image _localMarkerImage;
     private List<EntityRef> _stalePlayerBuffer;
 
     // Same seen/stale-sweep shape as the player markers above, keyed by enemy EntityRef instead of
@@ -604,6 +619,73 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         ApplyOverlayScale(_eliteMarkers, localScale);
         ApplyOverlayScale(_specialMarkers, localScale);
         ApplyOverlayScale(_clearEnemyMarkers, localScale);
+        PulseLocalPlayerMarker(scale);
+    }
+
+    // This instance's own local player marker: bigger than teammates' (localMarkerScale), pulsing
+    // in scale with a soft white flash, drawn on top of every other marker - "where am I" at a
+    // glance. Unscaled time so it keeps pulsing while the sim is paused (level-up, chests).
+    private void PulseLocalPlayerMarker(float overlayScale)
+    {
+        EntityRef localEntity = ResolveLocalPlayerEntity();
+
+        if (localEntity != _localMarkerEntity)
+        {
+            if (_localMarkerImage != null)
+            {
+                _localMarkerImage.material = null;
+                _localMarkerImage.color = Color.white;
+            }
+
+            _localMarkerEntity = localEntity;
+            _localMarkerImage = null;
+        }
+
+        if (localEntity == EntityRef.None || _playerMarkers.TryGetValue(localEntity, out MapOverlay marker) == false || marker.Rect == null)
+            return;
+
+        if (_localMarkerImage == null && localMarkerFlashMaterial != null)
+            _localMarkerImage = SetUpMarkerFlash(marker.Rect, localMarkerFlashMaterial);
+
+        float pulse01 = localMarkerPulseSpeed > 0f
+            ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * localMarkerPulseSpeed * Mathf.PI * 2f)
+            : 0f;
+
+        float scale = overlayScale * localMarkerScale * (1f + localMarkerPulseAmount * pulse01);
+        marker.Rect.localScale = new Vector3(scale, scale, 1f);
+        marker.Rect.SetAsLastSibling();
+
+        // SpriteColor: rgb = flash color, a = how far the sprite is mixed toward it.
+        if (_localMarkerImage != null)
+            _localMarkerImage.color = new Color(1f, 1f, 1f, localMarkerFlashStrength * pulse01);
+    }
+
+    private static Image SetUpMarkerFlash(RectTransform marker, Material flashMaterial)
+    {
+        if (marker.TryGetComponent(out Image image) == false)
+            image = marker.GetComponentInChildren<Image>();
+
+        if (image == null)
+            return null;
+
+        image.material = flashMaterial;
+
+        // Image.color.a is now mix strength, not opacity - at 0 the vertex alpha is 0 and a
+        // culling CanvasRenderer would hide the (fully visible) sprite.
+        image.canvasRenderer.cullTransparentMesh = false;
+        return image;
+    }
+
+    private EntityRef ResolveLocalPlayerEntity()
+    {
+        if (MyLocalPlayer.Instance == null)
+            return EntityRef.None;
+
+        var slots = MyLocalPlayer.Instance.Slots;
+        if (localSlotIndex < 0 || localSlotIndex >= slots.Count || slots[localSlotIndex].IsSet == false)
+            return EntityRef.None;
+
+        return slots[localSlotIndex].EntityRef;
     }
 
     private static void ApplyOverlayScale(Dictionary<EntityRef, MapOverlay> overlays, Vector3 localScale)

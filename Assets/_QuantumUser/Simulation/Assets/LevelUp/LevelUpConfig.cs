@@ -6,7 +6,7 @@ namespace Quantum
     using UnityEngine;
 
     // Global tuning for the level-up upgrade-choice screen - see docs/level-up-upgrades.md,
-    // LevelUpUtility and LevelUpSystem. Referenced via RuntimeConfig.LevelUpConfig.
+    // LevelUpUtility and LevelUpSystem. Referenced via OverallGameConfig.LevelUpConfig.
     //
     // Only WeaponPerk and GlobalUpgrade are pooled globally here - SkillUpgrade and PassiveUpgrade
     // are per-hero instead (see CharacterData.DashSkillUpgrades/PassiveUpgrades and HeroSkill's own

@@ -33,7 +33,7 @@ namespace Quantum
             if (data == null || data.Tier != EnemyTier.Elite)
                 return;
 
-            LifecycleConfig lifecycleConfig = f.FindAsset(f.RuntimeConfig.LifecycleConfig);
+            LifecycleConfig lifecycleConfig = f.FindAsset(f.GameConfig.LifecycleConfig);
 
             if (PlayerQueryUtility.IsAnyPlayerWithinFlatRange(f, filter.Transform3D->Position, lifecycleConfig.EliteLostRange) == true)
             {
@@ -109,7 +109,7 @@ namespace Quantum
         // top of another one anyway.
         private static bool TryResolveTeleportDestination(Frame f, FPVector3 playerPosition, out FPVector3 destination)
         {
-            DirectorConfig directorConfig = f.FindAsset(f.RuntimeConfig.DirectorConfig);
+            DirectorConfig directorConfig = f.FindAsset(f.GameConfig.DirectorConfig);
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
 
             for (int attempt = 0; attempt < directorConfig.MaxGroupSpawnAttempts; attempt++)

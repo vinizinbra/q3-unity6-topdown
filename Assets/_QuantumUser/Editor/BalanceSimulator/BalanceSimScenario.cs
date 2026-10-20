@@ -26,6 +26,8 @@ namespace QuantumUser.Editor.BalanceSimulator
         public DirectorConfig DirectorConfig;
         public LifecycleConfig LifecycleConfig;
         public LevelConfig LevelConfig;
+        [Tooltip("Per-world multipliers (enemy HP, Director budget/pressure, XP requirement, coin gain) on top of BalanceConfig. Empty = the WorldDefinition whose SurvivalConfig matches the one simulated (World 2's timeline -> W2-WorldBalance); none matching = all 1.")]
+        public WorldBalanceData WorldBalance;
 
         [Header("Party")]
         [Tooltip("Players in the run. With an empty Party every hero is simulated on its own, as a party of this many copies of that hero.")]
@@ -50,16 +52,20 @@ namespace QuantumUser.Editor.BalanceSimulator
         [Range(0f, 1f)] public float HitEfficiency = 0.7f;
         [Tooltip("Share of theoretical skill DPS that actually lands (cast on cooldown x hits).")]
         [Range(0f, 1f)] public float SkillUseEfficiency = 0.85f;
+        [Tooltip("Share of dash cooldowns actually used in combat (dashing again as soon as it's ready). Only drives dash-triggered buffs such as Max's Run & Gun. Calibrate from a recorded Max run.")]
+        [Range(0f, 1f)] public float DashUseEfficiency = 0.5f;
         [Tooltip("Enemies an area skill hits on average when enough are alive.")]
         public float AreaTargets = 3f;
         [Tooltip("Seconds of one player's DPS lost per kill (overkill on the last hit + turning to the next target). A fixed per-kill cost, so it doesn't depend on TickSeconds.")]
         public float RetargetSeconds = 0.15f;
-        [Tooltip("Share of dropped orbs (XP and kill coins) actually collected before they expire (ExperienceConfig.OrbLifetime 30s, 1m pickup radius), by survival minute. Late-run kiting leaves more behind. Calibrate against the recorder's OrbPickup column.")]
+        [Tooltip("Share of dropped orbs (XP and kill coins) actually collected before they expire by survival minute (1m pickup radius). Missed orbs still come in if a Break is secured before they expire (XP 60s, coins 30s). Late-run kiting leaves more behind. Calibrate against the recorder's OrbPickup column.")]
         public AnimationCurve OrbPickupEfficiency = new AnimationCurve(new Keyframe(0f, 0.95f), new Keyframe(6f, 0.9f), new Keyframe(12f, 0.8f));
         [Tooltip("Every extra player shrinks the share of orbs left behind by this fraction (more bodies covering the ground): loss = (1 - curve) x (1 - this)^(players - 1).")]
         [Range(0f, 1f)] public float CoopPickupBonus = 0.35f;
-        [Tooltip("Coin orbs expire after CoinConfig.OrbLifetime (30s) vs XP's 60s, so more are left behind: coin pickup share = XP pickup share x this. Calibrate against CoinsEarned.")]
+        [Tooltip("Coin orbs walked over before the next Break sweep, relative to XP (CoinConfig.OrbLifetime 240s, so missed coins mostly arrive at the Break): coin pickup share = XP pickup share x this. Calibrate against CoinsEarned.")]
         [Range(0f, 1f)] public float CoinPickupFactor = 0.9f;
+        [Tooltip("Rift Shard orbs: pickup share = XP pickup share x this. Lower than coins because only Specialist+ drop them and many of those are ranged (Mortar, Gunner) and die far from the player. Calibrated 2026-10-20 from two recorded Brute runs (W2: 36 of 57, W1: 14 of 23 - ~62%).")]
+        [Range(0f, 1f)] public float ShardPickupFactor = 0.65f;
         [Tooltip("For sustained-contact channels (Brute's Juggernaut): share of the channel during which AreaTargets enemies are actually in contact and being re-hit. Knockback pushes them out, so well below 1.")]
         [Range(0f, 1f)] public float ChannelContactUptime = 0.5f;
 
@@ -94,8 +100,8 @@ namespace QuantumUser.Editor.BalanceSimulator
         public float CoinsPerBarrelOverride = 0f;
 
         [Header("Enemy behaviour")]
-        [Tooltip("Share of Director spawns that get retired/refunded (never reach the player) instead of being killed.")]
-        [Range(0f, 1f)] public float EnemyLeakFraction = 0.05f;
+        [Tooltip("Share of Director spawns (below Elite) that get retired/refunded instead of killed - left behind as the party moves on. Calibrated 2026-10-20 from a recorded Brute W2 solo run: 775 kills of ~1043 spawns.")]
+        [Range(0f, 1f)] public float EnemyLeakFraction = 0.25f;
         [Tooltip("Share of Director purchases that find no valid spawn anchor (walls, chunk edges). Like the real Director, a failed placement forfeits the rest of that pulse's purchases.")]
         [Range(0f, 1f)] public float SpawnFailureChance = 0.1f;
         [Tooltip("Fraction of the spawn ring (DirectorConfig.SpawnRingRadiusMin/Max average) an enemy must close, at its own MoveSpeed, before the player is effectively shooting it. It holds Director pressure but can't be damaged until then.")]

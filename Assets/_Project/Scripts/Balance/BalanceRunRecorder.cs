@@ -30,7 +30,7 @@ namespace QuantumUser.View.Balance
             "HpNormal", "HpHeavy", "HpElite", "TtkNormal", "TtkHeavy", "TtkElite",
             "KillsPerMin", "SpawnsPerMin", "PressureFill", "IdlePct", "BossHp", "BossTtk",
             "BreakCoins", "BreakLoopCost", "BreakAfford", "LoopCostToDate", "LoopAfford", "OrbPickup",
-            "Players",
+            "Players", "RiftShards",
         };
 
         private static readonly Dictionary<string, int> ColumnIndex = BuildIndex();
@@ -301,14 +301,17 @@ namespace QuantumUser.View.Balance
             if (survival != null && survival.Phases != null && survival.Phases.Length > 0)
                 phase = survival.Phases[Mathf.Clamp(f.Global->CurrentPhaseIndex, 0, survival.Phases.Length - 1)].Name ?? "";
 
-            BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
-            EnemyTierStatsConfig tiers = f.FindAsset(f.RuntimeConfig.EnemyTierStatsConfig);
+            BalanceConfig balance = f.FindAsset(f.GameConfig.BalanceConfig);
+            EnemyTierStatsConfig tiers = f.FindAsset(f.GameConfig.EnemyTierStatsConfig);
             FP survivalTime = f.Global->SurvivalTime;
             int playerCount = Math.Max(1, f.PlayerConnectedCount);
             double expected = balance != null ? balance.Evaluate(CurveChannel.ExpectedPlayerDps, survivalTime).AsDouble * expectedDpsBaseline : 0;
-            double hpNormal = EffectiveHp(balance, tiers, EnemyTier.Normal, survivalTime, playerCount);
-            double hpHeavy = EffectiveHp(balance, tiers, EnemyTier.Heavy, survivalTime, playerCount);
-            double hpElite = EffectiveHp(balance, tiers, EnemyTier.Elite, survivalTime, playerCount);
+            // WorldBalanceData.EnemyHpMultiplier (EnemyBalanceUtility.ResolveEnemyStats) - World 2 is +15%.
+            WorldBalanceData world = WorldBalanceData.Get(f);
+            double worldHp = world != null ? world.EnemyHpMultiplier.AsDouble : 1;
+            double hpNormal = EffectiveHp(balance, tiers, EnemyTier.Normal, survivalTime, playerCount) * worldHp;
+            double hpHeavy = EffectiveHp(balance, tiers, EnemyTier.Heavy, survivalTime, playerCount) * worldHp;
+            double hpElite = EffectiveHp(balance, tiers, EnemyTier.Elite, survivalTime, playerCount) * worldHp;
             // Realised DPS over the time actually spent fighting (Breathing frames excluded).
             double interval = Math.Max(1, activeSeconds);
             double partyDps = 0;
@@ -335,11 +338,12 @@ namespace QuantumUser.View.Balance
             {
                 var row = new double[Columns.Length];
                 string weaponName = "-";
-                double weaponLevel = 0, perks = 0, weaponDps = 0, coins = 0;
+                double weaponLevel = 0, perks = 0, weaponDps = 0, coins = 0, shards = 0;
 
                 if (f.Unsafe.TryGetPointer<CharacterStats>(track.Entity, out var stats))
                 {
                     coins = stats->Coins.AsDouble;
+                    shards = stats->RiftShardsEarned.AsDouble;
 
                     if (f.Unsafe.TryGetPointer<Weapon>(track.Entity, out var weapon))
                     {
@@ -377,6 +381,7 @@ namespace QuantumUser.View.Balance
                 Set(row, "CoinsEarned", track.CoinsEarned);
                 Set(row, "CoinsSpent", track.CoinsSpent);
                 Set(row, "Coins", coins);
+                Set(row, "RiftShards", shards);
                 Set(row, "HpNormal", hpNormal);
                 Set(row, "HpHeavy", hpHeavy);
                 Set(row, "HpElite", hpElite);

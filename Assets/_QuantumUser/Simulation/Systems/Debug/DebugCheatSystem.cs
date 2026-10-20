@@ -166,9 +166,9 @@ namespace Quantum
             // it every drain step would silently erase that real progress each time. Max() makes the
             // same line correct for both sources: a floor that only ever bumps TotalExperience UP to
             // the new level's threshold, never down past what's already genuinely been earned.
-            if (f.RuntimeConfig.ExperienceConfig.IsValid == true)
+            if (f.GameConfig.ExperienceConfig.IsValid == true)
             {
-                ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
+                ExperienceConfig config = f.FindAsset(f.GameConfig.ExperienceConfig);
                 FP xpRequirementMultiplier = ExperienceUtility.ResolveXpRequirementMultiplier(f);
                 FP requiredForLevel = ExperienceUtility.GetRequiredExperience(config, f.Global->Level + 1, xpRequirementMultiplier);
                 f.Global->TotalExperience = FPMath.Max(f.Global->TotalExperience, requiredForLevel);

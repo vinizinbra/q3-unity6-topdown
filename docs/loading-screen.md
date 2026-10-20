@@ -167,6 +167,17 @@ only decides when each hero becomes *visible* on this client:
 Authoring: add `HeroSpawnIntroManager` next to `EffectsManager` in the gameplay scene; assign a
 **looping** `Portal Prefab` (not pooled) and a **non-looping** `Hero Spawn Effect Prefab` (pooled).
 
+### Destination card + flavor line (2026-10-15)
+
+Restyle toward the light "Opening Rift" mock: `LoadingWindow` now has optional **Destination** fields
+(`destinationIcon`, `destinationName`, `destinationRoot`) filled on `Show` (via `ResetToStart` ->
+`ApplyDestination`) from `MatchMakingConfig.Instance.RuntimeConfig.WorldDefinition` - the world's
+`Icon` (map picture) and upper-cased `DisplayName`; the card hides if no world resolves. `flavorText` +
+`flavorLines[]` pick one random lore line per load. The scene's `DestinationCard` / `FlavorText` objects
+were authored in `MenuScene` under `LoadingWindow` (ProgressBar/PercentText nudged down to make room).
+Not yet verified visually in Play Mode; still missing vs the mock: top-left Rift Jumpers wordmark
+(only the square `Art/Icon/RiftJumpersIcon.png` exists, no wordmark sprite) and a "TIP" pill chrome around `TipText`.
+
 ## Editor authoring
 
 Run **`Tools > RiftRaiders > Create Loading Window`** with the menu scene open (`MenuScene`, the one

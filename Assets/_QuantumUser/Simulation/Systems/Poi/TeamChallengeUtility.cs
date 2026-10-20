@@ -366,7 +366,7 @@ namespace Quantum
         // instead of a generic flat count that wouldn't match what BeginChallengeActive actually uses.
         public static int ResolveKillTarget(Frame f, ChallengeDefinition definition)
         {
-            BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            BalanceConfig balance = f.FindAsset(f.GameConfig.BalanceConfig);
             FP coopPressure = PlayerClusterDirectorUtility.ResolveCoopPressure(f, balance, f.PlayerConnectedCount);
             return FPMath.RoundToInt(definition.KillTarget * coopPressure);
         }
@@ -383,15 +383,15 @@ namespace Quantum
         // centered near the POI since that's where every participant is standing.
         public static void PulseChallengeEncounter(Frame f, EntityRef poi, TeamChallenge* challenge, ChallengeDefinition definition)
         {
-            if (f.RuntimeConfig.DirectorConfig.Id.IsValid == false || f.RuntimeConfig.LifecycleConfig.Id.IsValid == false)
+            if (f.GameConfig.DirectorConfig.Id.IsValid == false || f.GameConfig.LifecycleConfig.Id.IsValid == false)
             {
-                Log.Error("[TeamChallenge] RuntimeConfig.DirectorConfig/LifecycleConfig not fully assigned - challenge encounter stays idle");
+                Log.Error("[TeamChallenge] OverallGameConfig.DirectorConfig/LifecycleConfig not fully assigned - challenge encounter stays idle");
                 return;
             }
 
-            DirectorConfig directorConfig = f.FindAsset(f.RuntimeConfig.DirectorConfig);
-            LifecycleConfig lifecycleConfig = f.FindAsset(f.RuntimeConfig.LifecycleConfig);
-            BalanceConfig balanceConfig = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            DirectorConfig directorConfig = f.FindAsset(f.GameConfig.DirectorConfig);
+            LifecycleConfig lifecycleConfig = f.FindAsset(f.GameConfig.LifecycleConfig);
+            BalanceConfig balanceConfig = f.FindAsset(f.GameConfig.BalanceConfig);
 
             if (TryResolveEnemySourcePhase(f, out SurvivalPhase sourcePhase) == false)
                 return;

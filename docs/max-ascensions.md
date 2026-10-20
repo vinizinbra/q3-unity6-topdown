@@ -107,8 +107,10 @@ pairing Begin with an End-time revoke)
    `ReloadSpeedBonus`/`Applied`), toggled at the max-Rage threshold by `RageOverdriveUtility.
    TryAdvanceStack`/`ResetStacks` via `MaxAscensionUtility.ApplyFullThrottle`/`RevertFullThrottle` -
    same enter/exit-threshold toggle shape `JuggernautSkillData.UpdateSpeedBoost` established for
-   Brute's Charged-speed tier. Rank 1: +20% Weapon Damage. Rank 2: +30%/+50% Reload Speed. Rank 3:
-   +40%, plus grants the pre-existing `InstantReloadOverdrive` tag - `WeaponSystem.
+   Brute's Charged-speed tier. The damage bonus counts as Max's skill damage: Apply multiplies it by
+   `CharacterStats.SkillDamageMultiplier` (+100% x 1.10 = +110%) and snapshots the result in
+   `AppliedWeaponDamageBonus`, which Revert divides back out. Rank 1: +40% Weapon Damage. Rank 2: +70%/+50% Reload Speed. Rank 3:
+   +100%, plus grants the pre-existing `InstantReloadOverdrive` tag - `WeaponSystem.
    IsInstantReloadOverdriven` now checks `RageOverdriveUtility.IsAtMaxRage` directly (the old
    `RageOverdrive.Overdriven` flag it used to read no longer exists).
 
@@ -320,3 +322,15 @@ the moment it's cast; the skill expression is *keeping* max Rage, not earning it
 **Playtest:** how often Max actually holds max Rage under real horde pressure at 50% loss (if he
 almost never does, lower the baseline loss rather than buffing the picks); Last Stand R2's blocked hit
 reads clearly (the Free Hit Guard radial on `CharacterUiWidget`).
+
+**2026-10-16 tuning:** Full Throttle raised from 20/30/40% to 40/70/100% Weapon Damage - the Balance
+Simulator had Max at ~700 DPS at minute 12 solo vs 965-1656 for the other heroes; 40/70/100 lands
+him at ~1090 (Brute/Lux band). Kept below that band's top since the sim doesn't model his Burn damage
+but does assume max Rage for the whole Overdrive.
+
+**2026-10-20 fix: max-Rage Ascensions never applied at cast.** `SkillSystem.TryBegin` runs the skill's
+Begin-phase *actions* before `skill.Begin`, so Full Throttle/Ignition/Last Stand's "already at max
+Rage?" check ran before `BerserkSkillData.Begin` had created `RageOverdrive` (always false), and with
+Rage starting full there is no later threshold crossing - they only turned on after Max lost and
+rebuilt Rage. `BerserkSkillData.Begin` now calls `RageOverdriveUtility.EnterMaxRage` after seeding
+Rage (idempotent via each upgrade's Applied latch). Not yet verified in-Editor.

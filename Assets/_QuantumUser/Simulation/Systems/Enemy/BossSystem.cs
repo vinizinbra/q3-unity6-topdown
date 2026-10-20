@@ -74,14 +74,18 @@ namespace Quantum
 
         // Builds StaggerMeter from damage taken since last tick (diffed off Health.CurrentHealth -
         // see BossRuntimeState's own comment for why, instead of a dedicated on-damaged signal),
-        // drains it at RegenRate otherwise, and forces OnBreakForcedAction once it crosses
-        // Threshold.
+        // drains it at RegenRatePercent x MaxHealth per second otherwise, and forces
+        // OnBreakForcedAction (Kneel) once it crosses the current ThresholdPercents entry x
+        // MaxHealth. Both are fractions of the party/difficulty-scaled MaxHealth, so the cadence
+        // scales with party size. At or below MinHealthPercent life the boss never kneels again.
         private static void TickStagger(Frame f, ref Filter filter, BossDataAsset bossData)
         {
-            if (bossData.Stagger.Threshold <= FP._0)
+            var percents = bossData.Stagger.ThresholdPercents;
+
+            if (percents == null || percents.Count == 0)
                 return;
 
-            if (f.Unsafe.TryGetPointer<Health>(filter.Entity, out var health) == false)
+            if (f.Unsafe.TryGetPointer<Health>(filter.Entity, out var health) == false || health->MaxHealth <= FP._0)
                 return;
 
             FP lastHealth = filter.BossRuntimeState->LastObservedHealth;
@@ -96,6 +100,14 @@ namespace Quantum
 
             FP damageTaken = lastHealth - health->CurrentHealth;
             filter.BossRuntimeState->LastObservedHealth = health->CurrentHealth;
+
+            // Execution phase: no more Kneels, and no half-built meter left to pop if healing ever
+            // lifted the boss back above the floor.
+            if (health->CurrentHealth <= bossData.Stagger.MinHealthPercent * health->MaxHealth)
+            {
+                filter.BossRuntimeState->StaggerMeter = FP._0;
+                return;
+            }
 
             // Still tracks LastObservedHealth above even while this early-outs - otherwise the
             // damage dealt during the whole Kneel window (doubled by its own ApplyRupture) would
@@ -113,12 +125,19 @@ namespace Quantum
             }
             else
             {
-                filter.BossRuntimeState->StaggerMeter = FPMath.Max(FP._0, filter.BossRuntimeState->StaggerMeter - bossData.Stagger.RegenRate * f.DeltaTime);
+                filter.BossRuntimeState->StaggerMeter = FPMath.Max(FP._0, filter.BossRuntimeState->StaggerMeter - bossData.Stagger.RegenRatePercent * health->MaxHealth * f.DeltaTime);
             }
 
-            if (filter.BossRuntimeState->StaggerMeter >= bossData.Stagger.Threshold)
+            // Nth break uses entry N, the last entry repeating past the end.
+            int breakIndex = System.Math.Min(filter.BossRuntimeState->StaggerBreakCount, percents.Count - 1);
+
+            if (filter.BossRuntimeState->StaggerMeter >= percents[breakIndex] * health->MaxHealth)
             {
                 filter.BossRuntimeState->StaggerMeter = FP._0;
+
+                if (filter.BossRuntimeState->StaggerBreakCount < byte.MaxValue)
+                    filter.BossRuntimeState->StaggerBreakCount++;
+
                 ForceBreakAction(f, ref filter, bossData);
             }
         }

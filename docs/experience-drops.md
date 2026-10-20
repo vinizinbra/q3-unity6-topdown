@@ -21,7 +21,7 @@ DamageUtility.ApplyDamage - the moment health hits zero, before branching on ene
        hazard)                                  -> drop nothing
        target has no Enemy component             -> drop nothing (player/sentry deaths never drop)
        EnemyTierStatsConfig.Get(data.Tier).ExpValue <= 0 -> drop nothing
-       RuntimeConfig.Prefabs.ExpOrbPrototype not assigned -> drop nothing (logged)
+       OverallGameConfig.Prefabs.ExpOrbPrototype not assigned -> drop nothing (logged)
        otherwise: f.Create the orb prototype at the dying enemy's position, stamp ExpOrb.Value,
        add DestroyAfterTime seeded from ExperienceConfig.OrbLifetime
 
@@ -121,7 +121,7 @@ different scopes:
 
 - `ExpBarUiWidget.cs` - single scene instance (sibling of `DirectorTimelineWidget` under
   `InGameUi`), `QuantumGlobalMonoBehaviour`. Polls `Frame.Global.TotalExperience`/`Level` and
-  `RuntimeConfig.ExperienceConfig`'s curve each `QUpdate` - the `"Lv. N"` text and a `"current/next"`
+  `OverallGameConfig.ExperienceConfig`'s curve each `QUpdate` - the `"Lv. N"` text and a `"current/next"`
   progress text (e.g. `"10/100"`, both relative to the current level's own span, `Mathf.CeilToInt`,
   same convention as `CharacterUiWidget`'s health/shield text) update live every frame, but the fill
   `Slider` deliberately does NOT: it holds its last displayed value (only ever snapped directly on

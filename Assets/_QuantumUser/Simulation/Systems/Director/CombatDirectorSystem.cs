@@ -58,8 +58,8 @@ namespace Quantum
                 return;
 
             if (f.RuntimeConfig.SurvivalConfig.Id.IsValid == false ||
-                f.RuntimeConfig.DirectorConfig.Id.IsValid == false ||
-                f.RuntimeConfig.LifecycleConfig.Id.IsValid == false)
+                f.GameConfig.DirectorConfig.Id.IsValid == false ||
+                f.GameConfig.LifecycleConfig.Id.IsValid == false)
             {
                 Log.Error("[Director] SurvivalConfig/DirectorConfig/LifecycleConfig not fully assigned on RuntimeConfig - Director stays idle");
                 return;
@@ -73,8 +73,8 @@ namespace Quantum
                 return;
             }
 
-            DirectorConfig directorConfig = f.FindAsset(f.RuntimeConfig.DirectorConfig);
-            LifecycleConfig lifecycleConfig = f.FindAsset(f.RuntimeConfig.LifecycleConfig);
+            DirectorConfig directorConfig = f.FindAsset(f.GameConfig.DirectorConfig);
+            LifecycleConfig lifecycleConfig = f.FindAsset(f.GameConfig.LifecycleConfig);
 
             ValidateOnce(directorConfig, lifecycleConfig);
 
@@ -91,7 +91,7 @@ namespace Quantum
             // refreshed every combat tick, before any spawning or reward grant reads them. Runs in
             // Breathing too, where combatActive is false so everything resets to 1 (no split threat/
             // reward while the party legitimately scatters to shops). See PlayerClusterDirectorUtility.
-            BalanceConfig balanceConfig = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            BalanceConfig balanceConfig = f.FindAsset(f.GameConfig.BalanceConfig);
             bool combatActive = currentPhase.Kind == SurvivalPhaseKind.Combat || currentPhase.Kind == SurvivalPhaseKind.Elite;
             PlayerClusterDirectorUtility.UpdateRuntimeScalars(f, directorConfig, balanceConfig, combatActive);
 

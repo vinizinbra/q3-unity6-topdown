@@ -13,14 +13,14 @@ namespace Quantum
     }
 
     // Global tuning for the Recoverable Accessory Guard (see AccessoryGuard.qtn, AccessoryGuardUtility
-    // and docs/accessory-guard.md) - referenced via RuntimeConfig.AccessoryGuardConfig. Deliberately
+    // and docs/accessory-guard.md) - referenced via OverallGameConfig.AccessoryGuardConfig. Deliberately
     // ONE asset covering both halves of the mechanic: the Survival half (durability, how the
     // accessory pops off and how it's recovered) and the Break half (what restoring it costs at the
     // Merchant). Hero-agnostic throughout - the per-hero half is presentation only and lives on
     // CharacterData.View.cs instead.
     //
     // The dropped collectible's own EntityPrototype is NOT here - it lives on
-    // RuntimeConfig.Prefabs.DroppedAccessoryPrototype, same place every other spawned-from-config
+    // OverallGameConfig.Prefabs.DroppedAccessoryPrototype, same place every other spawned-from-config
     // pickup prototype (ExpOrb/Coin/RiftShard/Scrap) already lives.
     public class AccessoryGuardConfig : AssetObject
     {

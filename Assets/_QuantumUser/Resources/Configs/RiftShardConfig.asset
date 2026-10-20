@@ -19,7 +19,7 @@ MonoBehaviour:
   PickupRadius:
     RawValue: 65536
   OrbLifetime:
-    RawValue: 1966080
+    RawValue: 15728640
   MinSpawnOffset:
     RawValue: 0
   MaxSpawnOffset:

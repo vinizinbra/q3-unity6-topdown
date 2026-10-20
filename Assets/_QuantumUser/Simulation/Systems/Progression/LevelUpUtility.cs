@@ -27,14 +27,14 @@ namespace Quantum
         {
             f.Global->PendingLevelUpScreen = true;
 
-            if (f.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (f.GameConfig.LevelUpConfig.IsValid == false)
             {
                 Log.Debug("[LevelUp] level-up reached but RuntimeConfig has no LevelUpConfig assigned - screen skipped");
                 f.Global->PendingLevelUpScreen = false;
                 return;
             }
 
-            LevelUpConfig config = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
+            LevelUpConfig config = f.FindAsset(f.GameConfig.LevelUpConfig);
             OpenUpgradeScreen(f, GetConnectedPlayers(f), config, null);
         }
 
@@ -50,13 +50,13 @@ namespace Quantum
         // minWeaponPerks: a ChooseWeapon chest's per-option perk floor (Chest.MinWeaponPerks).
         public static void BeginChestScreen(Frame f, EntityRef player, LevelUpCategory forcedCategory, int minWeaponPerks = 0)
         {
-            if (f.RuntimeConfig.LevelUpConfig.IsValid == false)
+            if (f.GameConfig.LevelUpConfig.IsValid == false)
             {
                 Log.Debug("[LevelUp] Chest opened but RuntimeConfig has no LevelUpConfig assigned - screen skipped");
                 return;
             }
 
-            LevelUpConfig config = f.FindAsset(f.RuntimeConfig.LevelUpConfig);
+            LevelUpConfig config = f.FindAsset(f.GameConfig.LevelUpConfig);
             OpenUpgradeScreen(f, GetConnectedPlayers(f), config, forcedCategory, minWeaponPerks);
         }
 
@@ -713,7 +713,7 @@ namespace Quantum
         // the screen and resumes gameplay.
         public static void Resolve(Frame f)
         {
-            LevelUpConfig config = f.RuntimeConfig.LevelUpConfig.IsValid ? f.FindAsset(f.RuntimeConfig.LevelUpConfig) : null;
+            LevelUpConfig config = f.GameConfig.LevelUpConfig.IsValid ? f.FindAsset(f.GameConfig.LevelUpConfig) : null;
             var filtered = f.Filter<PlayerLink>();
 
             while (filtered.Next(out EntityRef entity, out PlayerLink _))

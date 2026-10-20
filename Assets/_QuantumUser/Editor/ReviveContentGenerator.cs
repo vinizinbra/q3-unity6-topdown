@@ -16,7 +16,7 @@ namespace QuantumUser.Editor
     public static class ReviveContentGenerator
     {
         private const string ReviveFolderPath = "Assets/_QuantumUser/Resources/Revive";
-        private const string ReviveConfigPath = ReviveFolderPath + "/ReviveConfig.asset";
+        private const string ReviveConfigPath = "Assets/_QuantumUser/Resources/Configs/ReviveConfig.asset"; // shared configs live in Resources/Configs (OverallGameConfig)
 
         [MenuItem("Tools/RiftRaiders/Breathing POI/Generate Revive Content")]
         internal static void Generate()
@@ -30,7 +30,7 @@ namespace QuantumUser.Editor
 
             LogHelper.Log("ReviveContentGenerator",
                 $"ReviveConfig ({ReviveConfigPath}) authored. Still needed by hand: " +
-                "(1) assign RuntimeConfig's ReviveConfig field (QuantumMenuConfig.asset), same place " +
+                "(1) assign OverallGameConfig's ReviveConfig field (Resources/Configs/OverallGameConfig), same place " +
                 "CursedRiftConfig etc. are already assigned; " +
                 "(2) add a PlayerLifeState component to every hero EntityPrototype (Pixie/Brute/Zara/" +
                 "Kai/Max/MainChar/Lux under Assets/_QuantumUser/Entities/Characters/) - defaults all-" +

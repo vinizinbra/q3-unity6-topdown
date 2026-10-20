@@ -79,7 +79,7 @@ namespace Quantum
     }
 
     // Global per-tier tuning for how much of each status effect actually lands on an enemy -
-    // referenced via RuntimeConfig.EnemyTierResistanceConfig, read by
+    // referenced via OverallGameConfig.EnemyTierResistanceConfig, read by
     // StatusEffectUtility.GetTierResistance/DamageUtility.ResolveKnockbackScale. Filler/Normal are
     // meant to stay all-1s (unresisted); Specialist/Elite/Boss taper hard CC (Knockback/Stun/Root/Slow)
     // while Burn/Break are expected to stay near 1 so DoT-based builds don't go dead against tougher

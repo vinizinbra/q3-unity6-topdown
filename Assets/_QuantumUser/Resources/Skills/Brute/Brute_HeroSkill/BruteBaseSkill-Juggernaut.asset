@@ -75,8 +75,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Each discharge also deals {0} damage to every enemy caught in it,
-    on top of the knockback.
+  Description: 'Discharge also deals {0} damage to enemies hit.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -127,8 +126,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Charge no longer resets after a discharge - stay fully Charged and
-    knock back every enemy you touch for the rest of the channel.
+  Description: 'Charge never resets: you stay Charged for the whole channel.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -177,8 +175,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: When the channel ends, deals {0} damage in a {1}-unit radius around
-    you and pushes caught enemies to the edge over {2}s.
+  Description: 'On channel end: {0} damage in {1} units, pushing enemies out over {2}s.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -292,8 +289,7 @@ MonoBehaviour:
   - Id:
       Value: 291462109882006022
   Icon: {fileID: 99700747, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  Description: 'Channel {0}s at {1}% Damage Reduction. Starts Charged: ram enemies
-    to launch them, run to recharge.'
+  Description: 'Channel {0}s: {1}% less damage taken, full Shield. Ram enemies to launch them. Run to recharge.'
   Duration:
     RawValue: 524288
   DamageReductionBonus:
@@ -322,6 +318,6 @@ MonoBehaviour:
   DischargeCooldownPerEnemy:
     RawValue: 65536
   ShieldGainPerHit:
-    RawValue: 327680
+    RawValue: 0
   DischargeEffectPrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}
   DischargeHitEffectPrefab: {fileID: 2507896006552451473, guid: 378bc48cbdf5a4df3bd70135d583790d, type: 3}

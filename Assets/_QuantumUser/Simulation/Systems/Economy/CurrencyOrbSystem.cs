@@ -98,19 +98,19 @@ namespace Quantum
             switch (type)
             {
                 case CurrencyOrbType.Experience:
-                    if (f.RuntimeConfig.ExperienceConfig.IsValid == false)
+                    if (f.GameConfig.ExperienceConfig.IsValid == false)
                         return FP._0;
-                    return f.FindAsset(f.RuntimeConfig.ExperienceConfig).PickupRadius;
+                    return f.FindAsset(f.GameConfig.ExperienceConfig).PickupRadius;
 
                 case CurrencyOrbType.Coin:
-                    if (f.RuntimeConfig.CoinConfig.IsValid == false)
+                    if (f.GameConfig.CoinConfig.IsValid == false)
                         return FP._0;
-                    return f.FindAsset(f.RuntimeConfig.CoinConfig).PickupRadius;
+                    return f.FindAsset(f.GameConfig.CoinConfig).PickupRadius;
 
                 case CurrencyOrbType.RiftShard:
-                    if (f.RuntimeConfig.RiftShardConfig.IsValid == false)
+                    if (f.GameConfig.RiftShardConfig.IsValid == false)
                         return FP._0;
-                    return f.FindAsset(f.RuntimeConfig.RiftShardConfig).PickupRadius;
+                    return f.FindAsset(f.GameConfig.RiftShardConfig).PickupRadius;
 
                 default:
                     return FP._0;

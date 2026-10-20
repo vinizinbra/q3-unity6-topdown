@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: HealthOrbConfig
   m_EditorClassIdentifier: Quantum.Simulation::Quantum.HealthOrbConfig
   Identifier:
-    Path: _QuantumUser/Resources/HealthOrbConfig
+    Path: _QuantumUser/Resources/Configs/HealthOrbConfig
     Guid:
       Value: 312826867456356232
   PickupRadius:

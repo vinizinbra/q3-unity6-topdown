@@ -8,6 +8,11 @@ component FullThrottleUpgrade
     FP WeaponDamageBonus;
     FP ReloadSpeedBonus;
 
+    // WeaponDamageBonus x CharacterStats.SkillDamageMultiplier as it was when applied - Overdrive's
+    // damage bonus counts as Max's skill damage, so Skill Damage scales it. Snapshotted so the
+    // revert divides out exactly what went on, even if Skill Damage or the rank changes meanwhile.
+    FP AppliedWeaponDamageBonus;
+
     // Rank 3 - every reload started while at max Rage completes instantly
     // (WeaponSystem.IsInstantReloadOverdriven, checked once at the reload-trigger event, not polled
     // every simulation tick), plus an immediate one-shot refill on the instant max Rage is first

@@ -65,7 +65,8 @@ public class FocusScopeWidget : MonoBehaviour
     /// Steps into this scope. Does nothing (returns false) when the scope has nothing usable to focus - an info panel
     /// without buttons - since entering it would strand focus on an empty level.
     /// </summary>
-    public bool Enter(Selectable returnTo)
+    /// <param name="target">Lands here instead of the default target when it is usable and belongs to this scope.</param>
+    public bool Enter(Selectable returnTo, Selectable target = null)
     {
         if (ResolveDefault() == null)
             return false;
@@ -74,6 +75,12 @@ public class FocusScopeWidget : MonoBehaviour
 
         if (MenuNavigationController.Instance != null)
             MenuNavigationController.Instance.Activate(this);
+
+        if (IsUsable(target) && Contains(target.gameObject) && EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(target.gameObject);
+            return true;
+        }
 
         return Focus();
     }

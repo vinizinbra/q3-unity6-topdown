@@ -568,11 +568,17 @@ public class AudioManager : MonoBehaviour
 
     // Convenience for the single-track case: crossfades out whatever the previous PlayMusic started.
     // Any other looping SoundData is unaffected - this only tracks the one music handle.
+    // Asking for the track that's already playing keeps it going rather than restarting it, so a
+    // theme can carry across scenes (intro -> Training Zone) when both ends author the same asset.
     public static SoundHandle PlayMusic(SoundData data, float crossfade = 1f)
     {
         var manager = Resolve();
         if (manager == null)
             return SoundHandle.None;
+
+        var current = manager.Resolve(manager._music);
+        if (data != null && current != null && current.Data == data && current.Stopping == false)
+            return manager._music;
 
         if (manager._music.IsPlaying)
             manager._music.Stop(crossfade);

@@ -494,6 +494,7 @@ namespace Quantum.Prototypes {
   [Quantum.Prototypes.Prototype(typeof(Quantum.BossRuntimeState))]
   public unsafe partial class BossRuntimeStatePrototype : ComponentPrototype<Quantum.BossRuntimeState> {
     public FP StaggerMeter;
+    public Byte StaggerBreakCount;
     public FP LastObservedHealth;
     public Int32 CurrentPhaseIndex;
     public FP PhaseTimer;
@@ -509,6 +510,7 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.BossRuntimeState result, in PrototypeMaterializationContext context = default) {
         result.StaggerMeter = this.StaggerMeter;
+        result.StaggerBreakCount = this.StaggerBreakCount;
         result.LastObservedHealth = this.LastObservedHealth;
         result.CurrentPhaseIndex = this.CurrentPhaseIndex;
         result.PhaseTimer = this.PhaseTimer;
@@ -1790,6 +1792,7 @@ namespace Quantum.Prototypes {
   public unsafe partial class FullThrottleUpgradePrototype : ComponentPrototype<Quantum.FullThrottleUpgrade> {
     public FP WeaponDamageBonus;
     public FP ReloadSpeedBonus;
+    public FP AppliedWeaponDamageBonus;
     public QBoolean HasInstantReload;
     public QBoolean Applied;
     partial void MaterializeUser(Frame frame, ref Quantum.FullThrottleUpgrade result, in PrototypeMaterializationContext context);
@@ -1801,6 +1804,7 @@ namespace Quantum.Prototypes {
     public void Materialize(Frame frame, ref Quantum.FullThrottleUpgrade result, in PrototypeMaterializationContext context = default) {
         result.WeaponDamageBonus = this.WeaponDamageBonus;
         result.ReloadSpeedBonus = this.ReloadSpeedBonus;
+        result.AppliedWeaponDamageBonus = this.AppliedWeaponDamageBonus;
         result.HasInstantReload = this.HasInstantReload;
         result.Applied = this.Applied;
         MaterializeUser(frame, ref result, in context);

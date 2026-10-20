@@ -4,9 +4,11 @@ component BossRuntimeState
 {
     // Builds from damage taken (BossSystem diffs Health.CurrentHealth against LastObservedHealth
     // each tick - no dedicated "on damaged" signal exists to hook instead, so this avoids touching
-    // DamageUtility's shared pipeline), drains at StaggerProfileData.RegenRate while untouched.
-    // Triggers StaggerProfileData.OnBreakForcedAction once it crosses Threshold.
+    // DamageUtility's shared pipeline), drains at StaggerProfileData.RegenRatePercent while
+    // untouched. Triggers StaggerProfileData.OnBreakForcedAction once it crosses the current
+    // ThresholdPercents entry (x MaxHealth) - StaggerBreakCount picks which entry.
     FP StaggerMeter;
+    Byte StaggerBreakCount;
     FP LastObservedHealth;
 
     // Index into BossDataAsset.Phases - 0 is the first (base) phase. Advanced by BossSystem once a

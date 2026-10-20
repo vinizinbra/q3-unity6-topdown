@@ -152,7 +152,7 @@ namespace Quantum
         private static string DescribeAccessory(Frame f, EntityRef entity)
         {
             if (f.Unsafe.TryGetPointer<AccessoryGuard>(entity, out var guard) == false)
-                return "no AccessoryGuard (mechanic disabled, or RuntimeConfig.AccessoryGuardConfig unassigned)";
+                return "no AccessoryGuard (mechanic disabled, or OverallGameConfig.AccessoryGuardConfig unassigned)";
 
             if (guard->Disabled == true)
                 return "DISABLED for this player (Last Bastion)";

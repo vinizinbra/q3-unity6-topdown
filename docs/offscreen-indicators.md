@@ -56,3 +56,33 @@ help here: that hero stays a local slot, so it never gets an indicator.
 - Distance is always measured from local player one, even with couch co-op.
 - Ping rings are scaled Images, so the outline gets thicker as they grow. That's fine for the placeholder;
   a thinner ring sprite would keep the line from getting chunky at full size.
+
+## Off-screen enemy arrows ("clear all enemies" window)
+
+Red arrows pinned to the screen edge pointing at the enemies still alive while a Breathing Break waits to be
+secured. That's the "CLEAR ALL ENEMIES TO SECURE THE AREA" window (`CurrentState == Survival`,
+`CurrentPhaseKind == Breathing`, `!BreathingAreaSecured`), the same one `SurvivalWidget`'s banner and the
+minimap's clear-enemy markers use.
+
+- **Who gets one:** every enemy that isn't `EnemyActionPhase.Dead` and is off-screen. Elites/Persistent are included (unlike
+  the minimap's clear-enemy markers): `SurvivalProgressionUtility.IsEncounterCleared` waits for every enemy, so each one is
+  something to go kill. Only the `maxIndicators` (8) nearest to local player one get an arrow at once.
+- **Where:** the same projection/edge clamp as the teammate indicators (safe area, `edgePadding` 48), aimed at the
+  enemy's entity view (interpolated) or its `Transform3D` when it has no view, plus `worldOffset`.
+- **Look:** `StageTriangle` fill (#FF3B3B), dark `StageTriangleOutline`, soft shadow. Pops in `OutBack` and out `InBack`, and pulses
+  (1 to 1.15, 0.8 s, unscaled) while shown.
+- **Elites always get one**, for the whole run (any state except Lobby), not just the clear window. They sort ahead of other
+  enemies and are exempt from `maxIndicators`, so every off-screen Elite has an arrow (`EnemyTier.Elite`, same test as the minimap).
+  Same red look as the other arrows for now.
+- Everything else pops out the moment the area secures or the window ends some other way.
+
+Files:
+- `Scripts/UI/InGame/Hud/OffscreenEnemyIndicatorManager.cs`: self-contained like `MinimapWidget`. It reads
+  `Frames.Predicted` every `LateUpdate` (no view registration, because enemies only matter for this short window) and pools arrows.
+- `Scripts/UI/InGame/Hud/OffscreenEnemyIndicatorWidget.cs`: one arrow (rotate, pop, pulse).
+- `Prefabs/UI/OffscreenEnemyIndicators.prefab`: full-stretch root with the manager, plus an inactive `ArrowTemplate` →
+  `Visual` → `ArrowPivot` → `Shadow`/`Arrow`/`Outline` (authored pointing up). It's nested in `Prefabs/GameplayScene/Canvas.prefab`
+  under `HUD`, right after `OffscreenPlayerIndicators`.
+
+To test, reach the end of a Survival segment with enemies still alive (the timeline hits a Breathing boundary and the
+"CLEAR ALL ENEMIES" banner shows), then walk away from them.

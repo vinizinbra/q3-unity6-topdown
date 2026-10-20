@@ -13,11 +13,20 @@ using UnityEngine;
 // from slotPrefab under slotContainer as they join, and destroyed as they leave, since the match's
 // actual player count isn't known ahead of time. slotPrefab is left as authored (not force-disabled
 // here) - whatever active/inactive state it's given in the scene is up to whoever builds it.
+// Players not controlled from this machine (remote players and bots) use remoteSlotPrefab instead -
+// a compact slot (smaller, no upgrade history) under its own tighter remoteSlotContainer, so a full
+// party doesn't eat the side of the screen. Both fall back to slotPrefab/slotContainer when unset.
 public class PartyHudManager : MonoBehaviour
 {
     [SerializeField] private PartyHudWidget defaultLocalSlot;
     [SerializeField] private PartyHudWidget slotPrefab;
     [SerializeField] private Transform slotContainer;
+
+    [Header("Remote Players")]
+    [SerializeField, Tooltip("Compact slot for remote players and bots. Left empty, they use slotPrefab.")]
+    private PartyHudWidget remoteSlotPrefab;
+    [SerializeField, Tooltip("Where remote slots go. Left empty, they go under slotContainer.")]
+    private Transform remoteSlotContainer;
 
     private readonly Dictionary<EntityRef, PartyHudWidget> _spawnedSlots = new();
 
@@ -58,13 +67,23 @@ public class PartyHudManager : MonoBehaviour
             return;
         }
 
-        if (slotPrefab == null || slotContainer == null)
+        bool isRemote = QuantumHelper.GetLocalSlotIndex(charView.PlayerRef) < 0;
+        PartyHudWidget prefab = isRemote && remoteSlotPrefab != null ? remoteSlotPrefab : slotPrefab;
+        Transform container = isRemote && remoteSlotContainer != null ? remoteSlotContainer : slotContainer;
+
+        if (prefab == null || container == null)
         {
             LogHelper.Warn("PartyHud", "slotPrefab or slotContainer is unassigned - this player won't show in the strip.", this);
             return;
         }
 
-        var slot = Instantiate(slotPrefab, slotContainer);
+        var slot = Instantiate(prefab, container);
+
+        // A full slot for a second local player stays above the remote group when that group lives
+        // inside the same container.
+        if (isRemote == false && remoteSlotContainer != null && remoteSlotContainer.parent == container)
+            slot.transform.SetSiblingIndex(remoteSlotContainer.GetSiblingIndex());
+
         slot.gameObject.SetActive(true);
         slot.Initialize(charView.EntityRef);
         _spawnedSlots[charView.EntityRef] = slot;

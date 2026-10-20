@@ -954,7 +954,7 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    //
    // Talents: TalentSaveMapper writes this device's saved per-player meta-progression LEVELS onto every
    // local slot (bots included - one save per device, same as before). The raw count fields on
-   // PlayerTalents (RerollQuantity, StartingCoins, SelfReviveCharges, ...) are left alone, so values
+   // PlayerTalents (RerollQuantity, StartingCoins, ...) are left alone, so values
    // hand-set on RuntimePlayers[i].Talents in the Inspector for testing still add on top.
    private void AddLocalPlayers(QuantumRunner runner)
    {

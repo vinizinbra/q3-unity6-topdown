@@ -124,6 +124,15 @@ simulation.
 
   **Player markers**: one pooled `RectTransform` per **match player** (`PlayerLink` filter - local
   and remote alike, not `MyLocalPlayer.Slots`, so teammates show up too), repositioned every frame.
+  This instance's own local player marker (`MyLocalPlayer.Slots[localSlotIndex]`) is singled out by
+  `PulseLocalPlayerMarker`: `localMarkerScale` (1.1×) bigger, pulsing in scale
+  (`localMarkerPulseAmount`) with a soft white flash up to `localMarkerFlashStrength` at
+  `localMarkerPulseSpeed` Hz (unscaled time, so it keeps pulsing while the sim is paused), and kept
+  as `mapRect`'s last sibling so it draws over every other marker.
+  The flash swaps the local marker's `Image` to `localMarkerFlashMaterial` (`Sprites/SpriteColor`,
+  `PachaGames/Materials/SpriteColor.mat`), where `Image.color.rgb` is the mix color and `.a` the
+  mix strength - a `UI/Default` tint can only darken a sprite, never whiten it. Unassigned = scale
+  pulse only.
 
   **Elite markers** (`UpdateEliteMarkers`): one pooled `RectTransform` per currently-alive
   `EnemyDataAsset.Tier == Elite` enemy (`Enemy` filter, skipping `EnemyActionPhase.Dead`),

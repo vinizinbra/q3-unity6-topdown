@@ -51,6 +51,9 @@ namespace Quantum
         // Revive line -> self-revive charges (L1 grants one, L4 "Extra Revive" a second).
         public int[] SelfReviveChargesByLevel = { 0, 1, 1, 1, 2 };
 
+        [Tooltip("Extra self-revive charges for every player when the session has exactly one player (bots count), on top of the Revive talent level.")]
+        public int SoloSelfReviveBonus = 1;
+
         // Revive L2 "Revive Recovery" - extra fraction of Max Health on top of ReviveConfig.
         // ReviveHealthPercent when a player revives THEMSELVES (self-revive charge).
         public FP SelfReviveHealthBonus = FP._0_20;

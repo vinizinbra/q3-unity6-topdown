@@ -48,9 +48,9 @@ namespace Quantum
 
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            if (f.RuntimeConfig.DirectorConfig.Id.IsValid == false)
+            if (f.GameConfig.DirectorConfig.Id.IsValid == false)
             {
-                Log.Error("[Enemy] SpawnPackDeliveryData fired but RuntimeConfig.DirectorConfig isn't assigned - nothing spawned");
+                Log.Error("[Enemy] SpawnPackDeliveryData fired but OverallGameConfig.DirectorConfig isn't assigned - nothing spawned");
                 return true;
             }
 
@@ -64,7 +64,7 @@ namespace Quantum
             if (validComposition.Count == 0)
                 return true;
 
-            DirectorConfig directorConfig = f.FindAsset(f.RuntimeConfig.DirectorConfig);
+            DirectorConfig directorConfig = f.FindAsset(f.GameConfig.DirectorConfig);
             FPVector3 anchor = action.Origin == EnemyActionOrigin.Self ? filter.Transform3D->Position : filter.Enemy->SkillTargetPosition;
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
 

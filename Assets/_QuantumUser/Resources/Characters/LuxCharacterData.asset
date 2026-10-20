@@ -28,7 +28,7 @@ MonoBehaviour:
     RawValue: 1310720
   ShieldChargeOnly: 0
   ShieldRechargeDelay:
-    RawValue: 327680
+    RawValue: 655360
   ShieldRechargeRate:
     RawValue: 32768
   ShieldTemporaryDuration:

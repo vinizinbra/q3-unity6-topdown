@@ -68,7 +68,7 @@ namespace Quantum
         // TalentsConfig, or null (logged once by ApplyPerPlayerTalents) when RuntimeConfig has none.
         public static TalentsConfig GetConfig(Frame f)
         {
-            return f.RuntimeConfig.TalentsConfig.Id.IsValid ? f.FindAsset(f.RuntimeConfig.TalentsConfig) : null;
+            return f.GameConfig.TalentsConfig.Id.IsValid ? f.FindAsset(f.GameConfig.TalentsConfig) : null;
         }
 
         // The meta-progression Talents of the player driving this entity (RuntimePlayer is input data,
@@ -96,15 +96,28 @@ namespace Quantum
             return config.ResolveWeaponPerkRarity(talents.WeaponLevel);
         }
 
+        // Joined slots only (f.MaxPlayerCount is the fixed slot count, GetPlayerData is null for an empty one).
+        private static int CountSessionPlayers(Frame f)
+        {
+            int count = 0;
+            for (int i = 0; i < f.MaxPlayerCount; i++)
+            {
+                if (f.GetPlayerData(i) != null)
+                    count++;
+            }
+
+            return count;
+        }
+
         public static void ApplyPerPlayerTalents(Frame f, EntityRef entity, RuntimePlayer runtimePlayer, CharacterStats* stats)
         {
-            if (f.RuntimeConfig.TalentsConfig.Id.IsValid == false)
+            if (f.GameConfig.TalentsConfig.Id.IsValid == false)
             {
                 Log.Error("[Talents] no TalentsConfig assigned on RuntimeConfig - Player* talents won't apply");
                 return;
             }
 
-            TalentsConfig config = f.FindAsset(f.RuntimeConfig.TalentsConfig);
+            TalentsConfig config = f.FindAsset(f.GameConfig.TalentsConfig);
             FP step = config.PercentPerLevel / 100;
 
             ApplyBonus(&stats->DamageMultiplier, runtimePlayer.Talents.PlayerDamageLevel, step);
@@ -124,7 +137,10 @@ namespace Quantum
             // PlayerSpawnUtility.Spawn already copied in.
             stats->Coins += TalentsConfig.Resolve(config.StartingGoldByLevel, runtimePlayer.Talents.StartingGoldLevel);
             stats->RerollQuantity = ClampByte(stats->RerollQuantity + TalentsConfig.Resolve(config.RerollsByLevel, runtimePlayer.Talents.RerollsLevel));
-            stats->SelfReviveCharges = ClampByte(stats->SelfReviveCharges + TalentsConfig.Resolve(config.SelfReviveChargesByLevel, runtimePlayer.Talents.ReviveLevel));
+            int reviveCharges = TalentsConfig.Resolve(config.SelfReviveChargesByLevel, runtimePlayer.Talents.ReviveLevel);
+            if (CountSessionPlayers(f) == 1)
+                reviveCharges += config.SoloSelfReviveBonus;
+            stats->SelfReviveCharges = ClampByte(reviveCharges);
 
             // MaxHealthMultiplier/MaxShieldMultiplier scale CharacterData's baseline into
             // Health.MaxHealth/Shield.MaxShield once, not derived on read - the explicit Refresh

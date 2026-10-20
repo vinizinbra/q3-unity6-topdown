@@ -17,11 +17,11 @@ namespace Quantum
     {
         public static EnemyRuntimeStats ResolveEnemyStats(Frame f, EnemyTier tier)
         {
-            BalanceConfig balance = f.FindAsset(f.RuntimeConfig.BalanceConfig);
+            BalanceConfig balance = f.FindAsset(f.GameConfig.BalanceConfig);
 
             if (balance == null)
             {
-                Log.Error($"[Balance] RuntimeConfig.BalanceConfig did not resolve - returning inert (1x) stats for tier {tier}. Assign it on RuntimeConfig.");
+                Log.Error($"[Balance] OverallGameConfig.BalanceConfig did not resolve - returning inert (1x) stats for tier {tier}. Assign it on OverallGameConfig.");
                 return new EnemyRuntimeStats { MaxHp = FP._1, DamageMultiplier = FP._1 };
             }
 

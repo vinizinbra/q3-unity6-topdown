@@ -177,6 +177,7 @@ MonoBehaviour:
   balloonShakeStrength: 8
   balloonShakeDuration: 0.3
   hideBalloonWithoutText: 1
+  music: {fileID: 11400000, guid: db33fe8f6cb44e7ea03bdf65c7e3fd1d, type: 2}
   steps:
   - Name: Intro-01-GuysTheRiftHeartWasDestroyed
     Speaker: 1

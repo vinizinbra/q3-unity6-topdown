@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// (the Button on this object is what makes it navigable).
 /// </summary>
 [RequireComponent(typeof(Button))]
-public class HeroRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler
+public class HeroRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler, IMoveHandler
 {
     [SerializeField] private Image background;
     [SerializeField] private Image portrait;
@@ -26,8 +26,11 @@ public class HeroRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler
 
     public event Action<HeroRowWidget> Clicked;
 
-    /// <summary>Gamepad/keyboard Submit on this row (not a mouse click) - used to step into the info panel.</summary>
+    /// <summary>Gamepad/keyboard Submit on this row (not a mouse click) - picks this hero.</summary>
     public event Action<HeroRowWidget> Submitted;
+
+    /// <summary>Gamepad/keyboard Right on this row - steps into the info panel beside the list.</summary>
+    public event Action<HeroRowWidget> MovedRight;
 
     public int Index { get; private set; }
 
@@ -124,6 +127,16 @@ public class HeroRowWidget : MonoBehaviour, ISelectHandler, ISubmitHandler
     public void OnSubmit(BaseEventData eventData)
     {
         Submitted?.Invoke(this);
+    }
+
+    // The rows only link Up/Down, so Right is free to mean "go into the panel on the right".
+    public void OnMove(AxisEventData eventData)
+    {
+        if (eventData.moveDir != MoveDirection.Right || MovedRight == null)
+            return;
+
+        MovedRight.Invoke(this);
+        eventData.Use();
     }
 
     private void RaiseClicked()

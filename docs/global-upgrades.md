@@ -113,7 +113,7 @@ position scatters away from the exact death point (`RiftShardConfig`/`CoinConfig
 `Min`/`MaxSpawnOffset`, `EnemyMovementUtility.RandomPositionInRing` - same pattern `ScrapConfig`
 already used) so multiple drops off one kill don't stack exactly on top of each other. `Tools/
 RiftRaiders/Generate Coin Assets` authors `CoinConfig.asset`; a `CoinOrb` `EntityPrototype` and
-`RuntimeConfig.CoinConfig`/`CoinPrototype` still need Editor authoring, same gap `RiftShardOrb` has
+`OverallGameConfig.CoinConfig`/`CoinPrototype` still need Editor authoring, same gap `RiftShardOrb` has
 (see `docs/rift-mutations.md`).
 
 **As of the Cursed Rift pass (see `docs/breathing-poi.md`), both currencies moved from shared

@@ -22,6 +22,7 @@ MonoBehaviour:
   DirectorConfig: {fileID: 11400000, guid: c3627718ea6474c15aed652b14716f0c, type: 2}
   LifecycleConfig: {fileID: 11400000, guid: 31ae62d4ef2f540d784e5160c95c3b52, type: 2}
   LevelConfig: {fileID: 11400000, guid: c0dce0acd1f0c4313a9d0f3da3784850, type: 2}
+  WorldBalance: {fileID: 0}
   PlayerCount: 2
   SimulateAllPlayerCounts: 1
   Party: []
@@ -32,8 +33,9 @@ MonoBehaviour:
   QuantizeWeaponTimers: 1
   HitEfficiency: 0.7
   SkillUseEfficiency: 0.85
+  DashUseEfficiency: 0.5
   AreaTargets: 3
-  OverkillWaste: 0.15
+  RetargetSeconds: 0.15
   OrbPickupEfficiency:
     serializedVersion: 2
     m_Curve:
@@ -68,6 +70,8 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   CoopPickupBonus: 0.35
+  CoinPickupFactor: 0.9
+  ShardPickupFactor: 0.65
   ChannelContactUptime: 0.5
   LevelUpPolicy: 0
   UnquantifiedPerkDpsValue: 0.04
@@ -82,7 +86,7 @@ MonoBehaviour:
   BarrelBreakFraction: 0.75
   BarrelLoot: {fileID: 0}
   CoinsPerBarrelOverride: 0
-  EnemyLeakFraction: 0.05
+  EnemyLeakFraction: 0.25
   SpawnFailureChance: 0.1
   EngageDistanceFraction: 0.7
   EngageReactionSeconds: 0.75

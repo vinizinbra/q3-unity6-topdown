@@ -30,7 +30,7 @@ namespace Quantum
             if (dropCount <= 0)
                 return;
 
-            if (f.RuntimeConfig.Prefabs.ScrapOrbPrototype.IsValid == false)
+            if (f.GameConfig.Prefabs.ScrapOrbPrototype.IsValid == false)
             {
                 Log.Debug($"[Scrap] {target} died eligible for Scrap but RuntimeConfig has no ScrapOrbPrototype assigned - drop skipped");
                 return;
@@ -72,15 +72,15 @@ namespace Quantum
 
         private static void SpawnOrb(Frame f, FPVector3 position)
         {
-            EntityRef orb = f.Create(f.RuntimeConfig.Prefabs.ScrapOrbPrototype);
+            EntityRef orb = f.Create(f.GameConfig.Prefabs.ScrapOrbPrototype);
 
             FP lifetime = 30;
             FP minOffset = FP._0;
             FP maxOffset = FP._0;
 
-            if (f.RuntimeConfig.ScrapConfig.IsValid == true)
+            if (f.GameConfig.ScrapConfig.IsValid == true)
             {
-                ScrapConfig config = f.FindAsset(f.RuntimeConfig.ScrapConfig);
+                ScrapConfig config = f.FindAsset(f.GameConfig.ScrapConfig);
                 lifetime = config.OrbLifetime;
 
                 // Scattered away from the exact death position - ExpOrb always spawns exactly there,

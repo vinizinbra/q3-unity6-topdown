@@ -193,16 +193,16 @@ namespace Quantum
         private static void SpawnEnemy(Frame f, EntityRef player, AssetRef<EnemyDataAsset> enemyDataRef, int count)
         {
             EnemyDataAsset data = f.FindAsset(enemyDataRef);
-            if (data == null || f.RuntimeConfig.DirectorConfig.Id.IsValid == false)
+            if (data == null || f.GameConfig.DirectorConfig.Id.IsValid == false)
             {
-                Log.Error("[Cheat] SpawnEnemy: invalid EnemyDataAsset or RuntimeConfig.DirectorConfig unassigned - nothing spawned");
+                Log.Error("[Cheat] SpawnEnemy: invalid EnemyDataAsset or OverallGameConfig.DirectorConfig unassigned - nothing spawned");
                 return;
             }
 
             if (f.Unsafe.TryGetPointer<Transform3D>(player, out var playerTransform) == false)
                 return;
 
-            DirectorConfig directorConfig = f.FindAsset(f.RuntimeConfig.DirectorConfig);
+            DirectorConfig directorConfig = f.FindAsset(f.GameConfig.DirectorConfig);
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
             FPVector3 anchor = playerTransform->Position;
 
@@ -573,10 +573,10 @@ namespace Quantum
 
         private static void LevelUpOnce(Frame f)
         {
-            if (f.RuntimeConfig.ExperienceConfig.IsValid == false)
+            if (f.GameConfig.ExperienceConfig.IsValid == false)
                 return;
 
-            ExperienceConfig config = f.FindAsset(f.RuntimeConfig.ExperienceConfig);
+            ExperienceConfig config = f.FindAsset(f.GameConfig.ExperienceConfig);
             FP multiplier = ExperienceUtility.ResolveXpRequirementMultiplier(f);
 
             // Grant exactly enough to reach the next display level (Level + 2, see ExperienceUtility)

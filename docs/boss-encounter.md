@@ -223,3 +223,13 @@ authored yet:
   snap (no fade) rather than failing outright.
 
 Not yet manually verified end-to-end in-Editor.
+
+## Stagger / Kneel threshold is % of boss max HP (2026-10-20)
+
+`StaggerProfileData.Threshold`/`RegenRate` (flat damage) became `ThresholdPercents` (list of fractions
+of `Health.MaxHealth`, Nth break uses entry N, last repeats), `RegenRatePercent` (fraction of MaxHealth
+per second) and `MinHealthPercent` (at/below this remaining life the boss never kneels again and the
+meter is cleared). Being fractions of the party/difficulty-scaled MaxHealth, the Kneel cadence scales
+with party size. `BossRuntimeState.StaggerBreakCount` tracks N. Empty list = no mechanic. Both bosses
+(W1 World1Boss, W2 Dune Leviathan): one Kneel per 20% of max HP in damage, regen 1%/s, no Kneel at or
+below 20% life. Needs `.qtn` codegen (`StaggerBreakCount`).

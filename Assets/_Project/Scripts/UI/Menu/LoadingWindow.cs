@@ -63,6 +63,17 @@ public class LoadingWindow : UiWindow
     private TipsData tipsData;
     [SerializeField] private float tipInterval = 4f;
 
+    [Header("Destination")]
+    [SerializeField, Tooltip("Map picture of the world being loaded (WorldDefinition.Icon). Left unassigned to skip.")]
+    private Image destinationIcon;
+    [SerializeField, Tooltip("Name of the world being loaded (WorldDefinition.DisplayName). Left unassigned to skip.")]
+    private TMP_Text destinationName;
+    [SerializeField, Tooltip("Optional card root hidden when the world can't be resolved. Defaults to nothing.")]
+    private GameObject destinationRoot;
+    [SerializeField, Tooltip("Optional lore line under the bar. One is picked at random per load.")]
+    private TMP_Text flavorText;
+    [SerializeField] private string[] flavorLines = { "The Rift Heart shattered. The hunt began." };
+
     [Header("Labels")]
     [SerializeField] private string connectingLabel = "CONNECTING";
     [SerializeField] private string generatingLabel = "GENERATING LEVEL";
@@ -503,8 +514,44 @@ public class LoadingWindow : UiWindow
             : null;
     }
 
+    // The world this match was started for: the leader's pick is already written onto
+    // MatchMakingConfig.RuntimeConfig (menu picker / party sync) by the time this screen shows.
+    private void ApplyDestination()
+    {
+        WorldDefinition world = null;
+
+        if (MatchMakingConfig.Instance != null)
+            QuantumUnityDB.TryGetGlobalAsset(MatchMakingConfig.Instance.RuntimeConfig.WorldDefinition, out world);
+
+        if (destinationRoot != null)
+            destinationRoot.SetActive(world != null);
+
+        if (world != null)
+        {
+            if (destinationIcon != null)
+            {
+                destinationIcon.sprite = world.Icon;
+                destinationIcon.enabled = world.Icon != null;
+            }
+
+            if (destinationName != null)
+                destinationName.text = world.DisplayName.ToUpperInvariant();
+        }
+
+        if (flavorText != null)
+        {
+            bool has = flavorLines != null && flavorLines.Length > 0;
+            flavorText.gameObject.SetActive(has);
+
+            if (has)
+                flavorText.text = flavorLines[Random.Range(0, flavorLines.Length)];
+        }
+    }
+
     private void ResetToStart()
     {
+        ApplyDestination();
+
         _handingOff = false;
         _elapsed = 0f;
         _crawl = 0f;
