@@ -94,7 +94,10 @@ namespace Quantum
         // player's own multiplier then composes on top multiplicatively.
         public static void GrantAll(Frame f, FP baseAmount)
         {
-            FP runAmount = baseAmount * EncounterModifierUtility.ResolveRiftShardGainMultiplier(f);
+            // Difficulty's reward channel (docs/difficulty.md) - harder tiers pay more meta currency, and since every
+            // Rift Shard (pickup or boss defeat reward) is granted through here, one multiply covers them all.
+            FP runAmount = baseAmount * EncounterModifierUtility.ResolveRiftShardGainMultiplier(f)
+                * DifficultyUtility.Get(f, DifficultyChannel.RiftShardReward);
 
             var filtered = f.Filter<PlayerLink>();
 

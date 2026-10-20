@@ -40,6 +40,16 @@ namespace Quantum
         [SerializeField, Range(0f, 1f), Tooltip("0 = full recoil (kicks back, swings past rest, settles), 1 = no recoil (eases straight back to rest with no overshoot). Shared by the rotation and position kicks.")]
         private float recoilAsymmetry = 0.3f;
 
+        // Boss defeat cinematic (BossDefeatSequenceDirector) - a single "dying" pose swapped in at the
+        // killing blow instead of a death animation. Optional: empty = the rig just keeps its normal sprites.
+        [Header("Dying")]
+        [SerializeField, Tooltip("Sprite shown from the killing blow until the boss blows up (boss defeat sequence). Leave empty to keep the normal sprites.")]
+        private Sprite dyingSprite;
+        [SerializeField, Tooltip("Which renderer gets the dying sprite. Leave empty to use Reference Sprite.")]
+        private SpriteRenderer dyingSpriteTarget;
+        [SerializeField, Tooltip("Hide every other body sprite while dying - for a dying pose drawn as the whole body on one sprite. Off = only the target's sprite changes (e.g. just a new face).")]
+        private bool dyingHidesOtherSprites = true;
+
         // EnemyViewRig sits on ViewPrefab's own root, so that root doubles as EnemyRoot - no
         // separate self-reference field to wire. This is the same transform EnemyView.SpawnSprite
         // positions/scales at spawn (bottom-pivot offset, radius scale), so
@@ -59,6 +69,9 @@ namespace Quantum
         public float RecoilDuration => recoilDuration;
         public float RecoilFrequency => recoilFrequency;
         public float RecoilAsymmetry => recoilAsymmetry;
+        public Sprite DyingSprite => dyingSprite;
+        public SpriteRenderer DyingSpriteTarget => dyingSpriteTarget != null ? dyingSpriteTarget : ReferenceSprite;
+        public bool DyingHidesOtherSprites => dyingHidesOtherSprites;
 
         // Gun's authored rest pose, captured once here rather than read live by whichever sibling
         // needs it (EnemyArmAimView._gunBaseLocalPosition) - this GameObject is pooled

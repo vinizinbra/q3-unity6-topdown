@@ -186,7 +186,13 @@ STARTED/COMPLETE/FAILED announcements already use, for the same dramatic weight.
 - `Assets/_Project/Scripts/UI/InGame/Hud/TraversalChallengeWidget.cs` - single always-present HUD
   countdown banner, same idiom `BreathingWidget` already uses - not per-entity, extends
   `GameStateGatedWidget` (see `docs/announcer.md`), reads `Global.TraversalChallengeTimeRemaining`
-  directly for its own countdown text.
+  directly for its own countdown text. Timer presentation: the pill pops in when the banner appears and pulses on
+  every second; at <= `urgentSeconds` (10) the text turns Rift Pink, the pill flashes dark and the
+  clock icon shakes on each tick; at <= `finalCountdownSeconds` (5) its own
+  `ChallengeCountdownWidget` instance (`TraversalFinalCountdownWidget`, HUD sibling - the same
+  slam-in digit + screen-edge flash Team Challenge uses for its 3/2/1, see
+  `docs/optional-team-challenge.md`) takes over, upper third of the screen, never the centre where
+  the hero stands. All of it is a pure function of the sim's remaining time (late-join/rollback-safe).
 - `Assets/_QuantumUser/Simulation/QTN/GameState.qtn` - `GameState` gained `TeamChallenge`/
   `TraversalChallenge` values plus `Global.CombatPhaseState`; the old `HudBannerKind` enum/
   `Global.HudBanner` field is gone. See `docs/game-state.md`.

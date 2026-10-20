@@ -21,8 +21,9 @@ MonoBehaviour:
   category: 1
   group: 0
   maxLevel: 4
-  baseCost: 150
-  costStep: 50
+  baseCost: 45
+  costStep: 45
+  levelCosts: 1200000096000000dc00000040010000
   valuePerLevel: 1
   valueFormat: Level {0}
   valueFormatPlural: 

@@ -18,6 +18,7 @@ namespace Quantum
         EnemyProjectileSpeed,
         EnemyProjectileLead,
         EnemyMoveSpeed,
+        RiftShardReward,        // the one REWARD channel: scales every Rift Shard granted (pickups + boss reward)
     }
 
     // One named tier's multipliers. Medium is the pre-difficulty tuning, so every field defaults to 1.
@@ -34,6 +35,7 @@ namespace Quantum
         public FP EnemyProjectileSpeed = FP._1;
         public FP EnemyProjectileLead = FP._1;  // scales delivery LeadFactor/MaxLeadDistance
         public FP EnemyMoveSpeed = FP._1;
+        public FP RiftShardReward = FP._1;      // harder tiers pay more meta currency (RiftShardUtility.GrantAll)
 
         public FP Get(DifficultyChannel channel) => channel switch
         {
@@ -46,6 +48,7 @@ namespace Quantum
             DifficultyChannel.RecoverySpeed => RecoverySpeed,
             DifficultyChannel.EnemyProjectileSpeed => EnemyProjectileSpeed,
             DifficultyChannel.EnemyProjectileLead => EnemyProjectileLead,
+            DifficultyChannel.RiftShardReward => RiftShardReward,
             _ => EnemyMoveSpeed,
         };
     }
@@ -78,6 +81,7 @@ namespace Quantum
             EnemyProjectileSpeed = FP.FromString("0.85"),
             EnemyProjectileLead = FP.FromString("0.5"),
             EnemyMoveSpeed = FP.FromString("0.95"),
+            RiftShardReward = FP.FromString("0.6"),
         };
 
         public DifficultyRow Medium = new();
@@ -94,6 +98,7 @@ namespace Quantum
             EnemyProjectileSpeed = FP.FromString("1.15"),
             EnemyProjectileLead = FP.FromString("1.2"),
             EnemyMoveSpeed = FP.FromString("1.05"),
+            RiftShardReward = FP.FromString("1.4"),
         };
 
         [Header("Nightmare (Hard x PerLevel^N, clamped to Cap)")]
@@ -109,6 +114,7 @@ namespace Quantum
             new() { Channel = DifficultyChannel.EnemyProjectileSpeed, PerLevel = FP.FromString("1.05"), Cap = FP.FromString("1.5") },
             new() { Channel = DifficultyChannel.EnemyProjectileLead, PerLevel = FP.FromString("1.05"), Cap = FP.FromString("1.6") },
             new() { Channel = DifficultyChannel.EnemyMoveSpeed, PerLevel = FP.FromString("1.03"), Cap = FP.FromString("1.25") },
+            new() { Channel = DifficultyChannel.RiftShardReward, PerLevel = FP.FromString("1.1"), Cap = 3 },
         };
 
         // Hard ceiling on any resolved multiplier, capped channel or not - keeps boss MaxHealth
@@ -158,6 +164,7 @@ namespace Quantum
                 EnemyProjectileSpeed = Resolve(tier, level, DifficultyChannel.EnemyProjectileSpeed),
                 EnemyProjectileLead = Resolve(tier, level, DifficultyChannel.EnemyProjectileLead),
                 EnemyMoveSpeed = Resolve(tier, level, DifficultyChannel.EnemyMoveSpeed),
+                RiftShardReward = Resolve(tier, level, DifficultyChannel.RiftShardReward),
             };
         }
 

@@ -740,7 +740,11 @@ namespace Quantum
             _wasIntroHidden = introHidden;
             isFallPending |= introHidden;
 
-            Vector3 velocity = kcc.Data.RealVelocity.ToUnityVector3();
+            // Hard pause (GameplaySystemGroup disabled - boss intro/defeat cinematics, level-up screens): the KCC keeps the
+            // last tick's velocity frozen, which would leave the rig running in place for the whole pause. Read it as
+            // standing still instead, so heroes settle into idle.
+            bool gameplayPaused = frame.SystemIsEnabledSelf<GameplaySystemGroup>() == false;
+            Vector3 velocity = gameplayPaused == true ? Vector3.zero : kcc.Data.RealVelocity.ToUnityVector3();
             UpdateFacing(frame, velocity);
 
             // Same poll DashFxView already uses - dashing outright cancels an in-progress Jump Flip

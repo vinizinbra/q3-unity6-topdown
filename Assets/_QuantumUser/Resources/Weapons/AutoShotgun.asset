@@ -117,11 +117,11 @@ MonoBehaviour:
     ProjectileDestroyScale: {x: 1, y: 1, z: 1}
     ProjectileExtraParticle: {fileID: 0}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
-  _dpsPreview: 'Burst DPS: 111
+  _dpsPreview: 'Burst DPS: 63
 
-    Sustained DPS (incl. reload): 82.1
+    Sustained DPS (incl. reload): 52.5
 
     Damage/min:
-    4924
+    3150
 
     Crit dmg/shot: 30 (vs 20 normal) @ 10 % chance, x1.5'

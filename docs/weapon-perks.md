@@ -568,3 +568,18 @@ counter, hit or miss. The Nth shot's `FireHitscan`/`ApplyProjectilePerks` add `C
 of Ricochet/`BonusBounces`. Double Tap and echo replays fire outside that window and never chain. The DPS preview adds
 `Bounces / Interval x 0.5` to its est. targets/shot; the Balance Simulator applies the same as a
 damage factor (`chainShotFactor`, 0.5 = `ChainBounceConnectChance`).
+
+
+## Split Shot rework (2026-10-20): aimed fork, not a blind fan
+
+The pool Split Shot used to fan `Count` bare repeats across a 90 degree arc off the parent's heading - in practice
+they mostly flew into empty space, adding noise without impact. `DirectHitData.SpawnSplitProjectiles` (the
+no-override path) now aims each fragment at a DIFFERENT live enemy the shot hasn't hit, nearest first within
+`SplitShotSearchRadius` (8, same reach as a Ricochet bounce) - "a ricochet that forks". No enemy nearby = no
+fragment; fewer enemies than `Count` = fewer fragments. A fragment's travel is capped to reach its target (+2),
+`LastHit` = the enemy the parent finished on, recursion still capped by `MaxSplitShotDepth`. Pool asset: Count 2,
+DamageMultiplier 0.5 -> **0.4** (two forks at 40% vs Ricochet's one bounce at full damage), new text "Hits fork
+toward 2 nearby enemies (40% Damage)". `SplitAngle` is now unused by the aimed path. Cluster Launcher's
+`ClusterLauncherSplit` base trait (ProjectileOverride bomblets via `WeaponPerkUtility.SpawnSplitProjectiles`) is
+untouched. The DPS preview and Balance Simulator already value it as `1 + Count x DamageMultiplier` "assumed to
+land" - which the aimed fork now makes true.

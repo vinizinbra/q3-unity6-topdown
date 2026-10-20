@@ -383,6 +383,10 @@ namespace Quantum
 
                     f.Signals.OnEnemyDied(target);
                     TryExplodeOnDeath(f, owner, target, EnemyMovementUtility.ResolveEntityRadius(f, target), maxHealth, enemy->EnemyData);
+
+                    // The last living boss: hand off to the death cinematic, which pauses gameplay and
+                    // owns removing the body (BossDefeatSystem) instead of DeathLingerTime.
+                    BossDefeatUtility.TryBegin(f, target, owner);
                 }
             }
             else if (f.Has<PlayerLink>(target) == true)
@@ -884,6 +888,8 @@ namespace Quantum
         // rather than captured when a shot was fired, so a projectile crits by the weapon its
         // shooter holds when it lands. An attacker without CharacterStats deals its damage flat -
         // no multiplier, and no crit, since there'd be nothing to multiply by.
+        public static readonly FP CheatDamageBoostMultiplier = 10;
+
         private static FP ResolveOutgoingDamage(Frame f, EntityRef owner, EntityRef target, FP damage, DamageSource source,
             bool forceCritical, out bool isCritical)
         {
@@ -907,6 +913,12 @@ namespace Quantum
                 return damage;
 
             damage *= stats->DamageMultiplier * GetSourceMultiplier(stats, source);
+
+            // Cheat menu "10x Damage" - testing only.
+            if (f.Has<CheatDamageBoost>(owner) == true)
+            {
+                damage *= CheatDamageBoostMultiplier;
+            }
 
             // Player base damage scaling - "1 + DamageBonusPerLevel * displayed Level", the one
             // shared co-op Level (see ExperienceUtility.ResolvePlayerLevelDamageMultiplier). Every

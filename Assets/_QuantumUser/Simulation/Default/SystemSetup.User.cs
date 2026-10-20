@@ -419,6 +419,11 @@
                 new DestroyAfterTimeSystem()
             ));
 
+            // Boss death cinematic timeline (see BossDefeatSystem) - outside the group it pauses and
+            // re-enables, and BEFORE VictorySystem so the tick that destroys the boss is the tick
+            // Victory sees it gone.
+            systems.Add(new BossDefeatSystem());
+
             // Deliberately AFTER GameplaySystemGroup, not before like BossPauseSystem/CheatSystem/
             // TutorialSystem above - it has nothing to re-enable, so placing it here lets it
             // observe the boss's destruction (inside the group, this same tick) immediately

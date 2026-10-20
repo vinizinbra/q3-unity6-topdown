@@ -1,4 +1,3 @@
-using PrimeTween;
 using Quantum;
 using QuantumUser.View;
 using TMPro;
@@ -16,19 +15,8 @@ public class TeamChallengeWidget : GameStateGatedWidget
     [SerializeField] private TMP_Text objectiveText;
     [SerializeField, Tooltip("The same one-line rules blurb InteractionPromptWidget's own Available-state prompt shows before activation (ChallengeDefinition.Description, e.g. \"Kill 20 enemies before the timer runs out\") - shown here too for the rest of the team, who never saw that prompt themselves. Optional - left unassigned, this field is simply skipped.")]
     private TMP_Text descriptionText;
-    [SerializeField, Tooltip("Dedicated 3/2/1 pre-start countdown, separate from objectiveText (which is reused for the kill-count/timer readout once the challenge is actually active) so punching this one doesn't also punch on every kill/second tick during the real objective.")]
-    private TMP_Text countdownText;
-
-    [Header("Punch on countdown change")]
-    [SerializeField, Tooltip("Punched whenever the displayed countdown number changes - defaults to countdownText's own transform if left unassigned.")]
-    private Transform countdownPunchTarget;
-    [SerializeField] private Vector3 countdownPunchStrength = new Vector3(0.35f, 0.35f, 0f);
-    [SerializeField] private float countdownPunchDuration = 0.3f;
-    [SerializeField] private float countdownPunchFrequency = 12f;
-
-    private int? _lastCountdownSeconds;
-    private Tween _countdownPunchTween;
-    private Vector3 _countdownRestScale;
+    [SerializeField, Tooltip("Dedicated 3/2/1 pre-start countdown (slam-in digit, shockwave, screen-edge flash, tick sound) - its own widget, separate from objectiveText (which is reused for the kill-count/timer readout once the challenge is actually active). Placed in the upper third of the screen, never the centre, where the local hero stands.")]
+    private ChallengeCountdownWidget countdown;
 
     protected override void Awake()
     {
@@ -38,9 +26,6 @@ public class TeamChallengeWidget : GameStateGatedWidget
         QuantumEvent.Subscribe<EventTeamChallengeCompleted>(this, OnCompleted);
         QuantumEvent.Subscribe<EventTeamChallengeFailed>(this, OnFailed);
 
-        Transform punchTransform = countdownPunchTarget != null ? countdownPunchTarget : (countdownText != null ? countdownText.transform : null);
-        if (punchTransform != null)
-            _countdownRestScale = punchTransform.localScale;
     }
 
     // Fires exactly once, on the Available->WaitingForTeam edge (see TeamChallengeUtility.
@@ -105,21 +90,6 @@ public class TeamChallengeWidget : GameStateGatedWidget
         RequestRecompute();
     }
 
-    private void PlayCountdownPunch()
-    {
-        Transform target = countdownPunchTarget != null ? countdownPunchTarget : (countdownText != null ? countdownText.transform : null);
-        if (target == null)
-            return;
-
-        // Reset to the authored rest scale before punching again - Tween.PunchScale punches
-        // relative to whatever scale is CURRENT when it's called, so without this a punch that
-        // lands before the previous one finished decaying compounds on top of it instead of
-        // punching from rest (see CurrencyUiWidget.PlayPunch for the same reset-before-punch idiom).
-        _countdownPunchTween.Stop();
-        target.localScale = _countdownRestScale;
-        _countdownPunchTween = Tween.PunchScale(target, countdownPunchStrength, countdownPunchDuration, countdownPunchFrequency, useUnscaledTime: true);
-    }
-
     // TryBeginStarting (TeamChallengeUtility) is ticked every frame from TeamChallengeSystem and can
     // run the SAME tick a solo/last Raider readies up - by the time this event reaches the View, the
     // just-added TeamChallengeReady marker may already have been converted into a
@@ -164,6 +134,14 @@ public class TeamChallengeWidget : GameStateGatedWidget
         return currentGameState == GameState.TeamChallenge ;
     }
 
+    // Covers the widget being hidden mid-Starting (state change/reconnect) - otherwise the
+    // countdown's tick-sound latch would carry over and silence the next challenge's first digits.
+    protected override void OnShownChanged(bool shown, GameState currentGameState)
+    {
+        if (shown == false && countdown != null)
+            countdown.Hide();
+    }
+
     protected override unsafe void OnActiveQUpdate(Frame frame)
     {
         if (frame.Global->CurrentState != GameState.TeamChallenge)
@@ -190,7 +168,7 @@ public class TeamChallengeWidget : GameStateGatedWidget
         if (challenge.State == TeamChallengeState.Starting)
         {
             if (titleText != null)
-                titleText.text = "STARTING";
+                titleText.text = "GET READY!";
 
             // Nothing to track yet - without this the progress readout shows whatever it last held
             // (the authored placeholder text, or a previous challenge's final "20 / 20") until the
@@ -198,48 +176,22 @@ public class TeamChallengeWidget : GameStateGatedWidget
             if (objectiveText != null)
                 objectiveText.text = string.Empty;
 
-            if (countdownText != null)
-            {
-                int seconds = Mathf.CeilToInt(Mathf.Max(challenge.RemainingCountdown.AsFloat, 0f));
-
-                // Disabled rather than shown as "0" - RemainingCountdown crossing to <= 0 flips
-                // the challenge straight to ChallengeActive the same tick (TeamChallengeSystem.
-                // TickStarting), so this is mostly a defensive guard (prediction/rollback could
-                // still transiently read a State-Starting frame with a hit-zero countdown), but
-                // it also means the counter never has to visually settle on "0" for a frame.
-                bool shown = seconds > 0;
-
-                if (countdownText.gameObject.activeSelf != shown)
-                    countdownText.gameObject.SetActive(shown);
-
-                if (shown)
-                {
-                    countdownText.text = seconds.ToString();
-
-                    // Skip the very first read (_lastCountdownSeconds starts unset) so the countdown's
-                    // first frame on screen doesn't punch - only an actual 3->2->1 change should.
-                    if (_lastCountdownSeconds.HasValue && seconds != _lastCountdownSeconds.Value)
-                        PlayCountdownPunch();
-                }
-
-                _lastCountdownSeconds = seconds;
-            }
+            // Hidden rather than shown as "0" - RemainingCountdown crossing to <= 0 flips the
+            // challenge straight to ChallengeActive the same tick (TeamChallengeSystem.TickStarting),
+            // so this is mostly a defensive guard against a prediction/rollback frame that reads
+            // State-Starting with a hit-zero countdown. ChallengeCountdownWidget.Show handles it.
+            if (countdown != null)
+                countdown.Show(challenge.RemainingCountdown.AsFloat);
 
             return;
         }
 
-        // Reset so the next Starting window (a future challenge) punches correctly instead of
-        // silently skipping its own first frame because this still holds a stale prior value.
-        _lastCountdownSeconds = null;
-
-        // Starting is the only branch that ever shows/updates countdownText - once the challenge
-        // moves on (ChallengeActive/RewardAvailable/Completed/Failed) nothing above touches it
-        // again, so without this it would stay stuck on-screen showing its last digit (e.g. "1")
-        // for the rest of the attempt. RemainingCountdown crossing to <= 0 flips State to
-        // ChallengeActive the SAME tick (TeamChallengeSystem.TickStarting), so the seconds == 0
-        // guard above almost never actually fires - this is the real, always-reachable disable path.
-        if (countdownText != null && countdownText.gameObject.activeSelf)
-            countdownText.gameObject.SetActive(false);
+        // Starting is the only branch that ever shows the countdown - once the challenge moves on
+        // (ChallengeActive/RewardAvailable/Completed/Failed) nothing above touches it again, so
+        // without this it would stay stuck on-screen showing its last digit (e.g. "1") for the
+        // rest of the attempt. Hide also resets the widget's tick-sound latch for the next challenge.
+        if (countdown != null)
+            countdown.Hide();
 
         if (titleText != null)
             titleText.text = definition != null ? definition.DisplayName : "TEAM CHALLENGE";

@@ -491,6 +491,31 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.BossDefeatSequence))]
+  public unsafe class BossDefeatSequencePrototype : ComponentPrototype<Quantum.BossDefeatSequence> {
+    public FP Elapsed;
+    public FP Duration;
+    public FP BurstTime;
+    public FP RiftShardReward;
+    public MapEntityId Killer;
+    public QBoolean ArenaCleared;
+    public QBoolean BurstFired;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.BossDefeatSequence component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.BossDefeatSequence result, in PrototypeMaterializationContext context = default) {
+        result.Elapsed = this.Elapsed;
+        result.Duration = this.Duration;
+        result.BurstTime = this.BurstTime;
+        result.RiftShardReward = this.RiftShardReward;
+        PrototypeValidator.FindMapEntity(this.Killer, in context, out result.Killer);
+        result.ArenaCleared = this.ArenaCleared;
+        result.BurstFired = this.BurstFired;
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.BossRuntimeState))]
   public unsafe partial class BossRuntimeStatePrototype : ComponentPrototype<Quantum.BossRuntimeState> {
     public FP StaggerMeter;
@@ -931,6 +956,21 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.CheatDamageBoost))]
+  public unsafe partial class CheatDamageBoostPrototype : ComponentPrototype<Quantum.CheatDamageBoost> {
+    [HideInInspector()]
+    public Int32 _empty_prototype_dummy_field_;
+    partial void MaterializeUser(Frame frame, ref Quantum.CheatDamageBoost result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.CheatDamageBoost component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.CheatDamageBoost result, in PrototypeMaterializationContext context = default) {
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.CheatDeathGuard))]
   public unsafe partial class CheatDeathGuardPrototype : ComponentPrototype<Quantum.CheatDeathGuard> {
     public FP ImmunityDuration;
@@ -1337,6 +1377,7 @@ namespace Quantum.Prototypes {
     public FP EnemyProjectileSpeed;
     public FP EnemyProjectileLead;
     public FP EnemyMoveSpeed;
+    public FP RiftShardReward;
     partial void MaterializeUser(Frame frame, ref Quantum.DifficultySnapshot result, in PrototypeMaterializationContext context);
     public void Materialize(Frame frame, ref Quantum.DifficultySnapshot result, in PrototypeMaterializationContext context = default) {
         result.Tier = this.Tier;
@@ -1351,6 +1392,7 @@ namespace Quantum.Prototypes {
         result.EnemyProjectileSpeed = this.EnemyProjectileSpeed;
         result.EnemyProjectileLead = this.EnemyProjectileLead;
         result.EnemyMoveSpeed = this.EnemyMoveSpeed;
+        result.RiftShardReward = this.RiftShardReward;
         MaterializeUser(frame, ref result, in context);
     }
   }

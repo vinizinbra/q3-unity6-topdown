@@ -64,7 +64,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         [Range(0f, 1f)] public float CoopPickupBonus = 0.35f;
         [Tooltip("Coin orbs walked over before the next Break sweep, relative to XP (CoinConfig.OrbLifetime 240s, so missed coins mostly arrive at the Break): coin pickup share = XP pickup share x this. Calibrate against CoinsEarned.")]
         [Range(0f, 1f)] public float CoinPickupFactor = 0.9f;
-        [Tooltip("Rift Shard orbs: pickup share = XP pickup share x this. Lower than coins because only Specialist+ drop them and many of those are ranged (Mortar, Gunner) and die far from the player. Calibrated 2026-10-20 from two recorded Brute runs (W2: 36 of 57, W1: 14 of 23 - ~62%).")]
+        [Tooltip("Rift Shard orbs: pickup share = XP pickup share x this. Lower than coins because most shard drops are Specialist+ and many of those are ranged (Mortar, Gunner) and die far from the player (Filler/Normal now drop rarely too - recalibrate against a recording made after the 2026-10-20 shard rebalance). Calibrated 2026-10-20 from two recorded Brute runs (W2: 36 of 57, W1: 14 of 23 - ~62%).")]
         [Range(0f, 1f)] public float ShardPickupFactor = 0.65f;
         [Tooltip("For sustained-contact channels (Brute's Juggernaut): share of the channel during which AreaTargets enemies are actually in contact and being re-hit. Knockback pushes them out, so well below 1.")]
         [Range(0f, 1f)] public float ChannelContactUptime = 0.5f;

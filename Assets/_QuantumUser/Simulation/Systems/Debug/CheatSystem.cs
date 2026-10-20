@@ -104,6 +104,13 @@ namespace Quantum
                         f.Add<GodMode>(player);
                     break;
 
+                case CheatActionKind.ToggleDamageBoost:
+                    if (f.Has<CheatDamageBoost>(player))
+                        f.Remove<CheatDamageBoost>(player);
+                    else
+                        f.Add<CheatDamageBoost>(player);
+                    break;
+
                 case CheatActionKind.ResetGodMode:
                     f.Remove<GodMode>(player);
                     break;

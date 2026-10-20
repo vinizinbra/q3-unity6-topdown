@@ -72,9 +72,10 @@ namespace Quantum
                                  // running), so cheat-spawned enemies can be tested in isolation
         JumpToBoss,             // starts the run if still in the lobby, jumps to the first Boss-kind phase and
                                 // auto-resolves level-ups up to a late-run level - see CheatSystem.JumpToBoss
-        RecoverFromBot          // removes BotBrain from the sender's own entity (undo of BecomeBot) -
+        RecoverFromBot,         // removes BotBrain from the sender's own entity (undo of BecomeBot) -
                                 // PlayerInputUtility.Resolve falls back to the real device input the
                                 // very next tick. No-op if the entity isn't a bot.
+        ToggleDamageBoost       // add/remove the sender's CheatDamageBoost tag (x10 outgoing damage, every source)
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

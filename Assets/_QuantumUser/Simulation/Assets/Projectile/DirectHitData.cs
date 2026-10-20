@@ -27,6 +27,8 @@ namespace Quantum
         private const int MaxSplitShotDepth = 1;
 
         private static readonly FP RicochetSearchRadius = 8;
+        // Same reach as a Ricochet bounce - Split Shot's aimed fragments are "a ricochet that forks".
+        private static readonly FP SplitShotSearchRadius = 8;
 
         public override void Initialize(Projectile* projectile)
         {
@@ -240,27 +242,18 @@ namespace Quantum
             return true;
         }
 
-        // Fans evenly across procs->SplitShotArcDegrees centered on the parent's travel direction,
-        // starting from a randomized offset within that arc (same Fisher-Yates-adjacent
-        // "don't look identical every time" idiom AreaHitData's TrySpawnClusterBomblets uses) -
-        // children are spawned via ProjectileSpawner.Spawn directly rather than through
-        // WeaponSystem.FireProjectile, so they don't re-roll BonusPierce/Bounces/Explosive Sequence/
-        // Cataclysm themselves (a bare, un-perked repeat of the base shot at reduced damage), only
-        // capped recursion (MaxSplitShotDepth) and MaxTravelDistance
-        // (WeaponPerkUtility.ResolveProjectileMaxTravelDistance, same as every other weapon-fired
-        // projectile - see Projectile.qtn) carry over.
+        // Aimed split (2026-10-20 rework): each fragment flies at a DIFFERENT nearby enemy the parent hasn't hit
+        // (nearest first, within SplitShotSearchRadius) - "a ricochet that forks", at reduced damage. No enemy around =
+        // no fragment, so it never sprays shots into empty space (the old blind 90-degree fan mostly missed and just
+        // added noise). Fewer targets than Count = fewer fragments. Children are bare repeats of the base shot
+        // (ProjectileSpawner.Spawn directly, so no BonusPierce/Bounces/Explosive Sequence/Cataclysm re-rolls), recursion
+        // capped by MaxSplitShotDepth.
         //
-        // procs->SplitShotProjectileOverride delegates entirely to WeaponPerkUtility.
-        // SpawnSplitProjectiles instead (shared with AreaHitData.Detonate, which has no "parent
-        // ProjectileData" of its own to fall back to and so can ONLY ever use the override path) -
-        // everything below this is the exact flat, un-overridden behavior every existing
-        // SplitShot-capable Hit asset has always had, kept as DirectHitData's own local fallback
-        // since it depends on the parent projectile's own live Velocity/ProjectileData, something
-        // an AreaHitData blast simply doesn't have.
+        // procs->SplitShotProjectileOverride delegates entirely to WeaponPerkUtility.SpawnSplitProjectiles instead
+        // (Cluster Launcher's arcing bomblets - shared with AreaHitData.Detonate), untouched by this rework.
         //
-        // Children start ON splitFrom's surface (the hit point), and with a HitRadius sphere their
-        // first cast overlaps it - without LastHit they re-hit the enemy the parent just finished on,
-        // landing two half-damage hits on it instead of splitting to anyone else.
+        // Children start ON splitFrom's surface (the hit point), and with a HitRadius sphere their first cast
+        // overlaps it - without LastHit they'd re-hit the enemy the parent just finished on.
         private void SpawnSplitProjectiles(Frame f, Projectile* projectile, FPVector3 point, Weapon* weapon, WeaponPostImpactProcs* procs,
             EntityRef splitFrom)
         {
@@ -276,24 +269,25 @@ namespace Quantum
             if (count <= 0)
                 return;
 
-            FP arcDegrees = procs->SplitShotArcDegrees;
-            FP step = count > 1 ? arcDegrees / (count - 1) : FP._0;
-            FPVector3 heading = projectile->Velocity.Normalized;
-            FP headingAngle = FPMath.Atan2(heading.X, heading.Z) * FP.Rad2Deg;
-            FP baseAngle = headingAngle - arcDegrees / 2 + f.RNG->Next(0, step);
             FP splitDamage = projectile->Damage * procs->SplitShotDamageMultiplier;
             FP speed = projectile->Velocity.Magnitude;
-            FP maxTravelDistance = WeaponPerkUtility.ResolveProjectileMaxTravelDistance(f, weapon, projectile);
 
-            for (int i = 0; i < count; i++)
+            if (speed <= FP._0)
+                return;
+
+            var targets = FindSplitTargets(f, point, SplitShotSearchRadius, splitFrom, projectile->RecentHits, count);
+
+            for (int i = 0; i < targets.Count; i++)
             {
-                FP angle = baseAngle + step * i;
-                FPVector3 direction = FPQuaternion.Euler(0, angle, 0) * FPVector3.Forward;
+                FPVector3 aim = EnemyMovementUtility.ResolveEntityCenter(f, targets[i]) - point;
+
+                if (aim.SqrMagnitude <= FP._0)
+                    continue;
 
                 ProjectileLaunch launch = new ProjectileLaunch
                 {
                     SpawnPosition = point,
-                    Velocity = direction * speed,
+                    Velocity = aim.Normalized * speed,
                     IsValid = true
                 };
 
@@ -302,10 +296,62 @@ namespace Quantum
 
                 if (f.Unsafe.TryGetPointer<Projectile>(child, out var childProjectile) == true)
                 {
-                    childProjectile->MaxTravelDistance = maxTravelDistance;
+                    // Enough flight to reach its target (plus slack for a moving enemy), never the parent's leftover range.
+                    FP reach = aim.Magnitude + 2;
+                    childProjectile->MaxTravelDistance = reach;
+                    childProjectile->RemainingLifetime = FPMath.Max(childProjectile->RemainingLifetime, reach / speed);
                     childProjectile->LastHit = splitFrom;
                 }
             }
+        }
+
+        // Up to `count` distinct live enemies nearest to `center` within `radius`, skipping `exclude` and anything this
+        // shot already hit - so a fork never doubles back onto a target it just damaged.
+        private static System.Collections.Generic.List<EntityRef> FindSplitTargets(Frame f, FPVector3 center, FP radius,
+            EntityRef exclude, FixedArray<EntityRef> recentHits, int count)
+        {
+            var result = new System.Collections.Generic.List<EntityRef>(count);
+            var candidates = new System.Collections.Generic.List<(FP sqr, EntityRef entity)>();
+
+            Shape3D sphere = Shape3D.CreateSphere(radius);
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef candidate = hits[i].Entity;
+
+                if (candidate == EntityRef.None || candidate == exclude || f.Unsafe.TryGetPointer<Enemy>(candidate, out var enemy) == false)
+                    continue;
+
+                if (enemy->Phase == EnemyActionPhase.Dead || f.Has<Invulnerable>(candidate) == true)
+                    continue;
+
+                bool alreadyHit = false;
+                for (int h = 0; h < recentHits.Length; h++)
+                {
+                    if (recentHits[h] == candidate)
+                    {
+                        alreadyHit = true;
+                        break;
+                    }
+                }
+
+                if (alreadyHit == true || candidates.Exists(c => c.entity == candidate) == true)
+                    continue;
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(candidate, out var transform) == false)
+                    continue;
+
+                candidates.Add(((transform->Position - center).SqrMagnitude, candidate));
+            }
+
+            // Sort by distance, then EntityRef index as a deterministic tie-break.
+            candidates.Sort((a, b) => a.sqr != b.sqr ? a.sqr.CompareTo(b.sqr) : a.entity.Index.CompareTo(b.entity.Index));
+
+            for (int i = 0; i < candidates.Count && result.Count < count; i++)
+                result.Add(candidates[i].entity);
+
+            return result;
         }
     }
 }

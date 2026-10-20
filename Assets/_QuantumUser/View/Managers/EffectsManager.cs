@@ -36,6 +36,9 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Fallback blast VFX used when the detonating AreaHitData doesn't author its own BlastEffectPrefab.")]
         private ParticleSystem defaultAreaBlastEffect;
 
+        [SerializeField, Tooltip("Played for Pixie's Heavy Mastery R3 area around a single-target Heavy hit (HeavyHitAreaExpanded) - a pink copy of the default blast, matching her identity. Same radius-1 reference scale as defaultAreaBlastEffect. Falls back to defaultAreaBlastEffect if left empty.")]
+        private ParticleSystem heavyHitAreaEffectPrefab;
+
         [Header("Shockwave")]
         [SerializeField, Tooltip("Played whenever a ShockwaveReleased event fires (currently only Empty Chamber, see docs/weapon-perks.md) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Authored at a reference radius of 1, scaled by e.Radius (not diameter) - same convention as the other radius-scaled handlers below.")]
         private ParticleSystem shockwaveEffectPrefab;
@@ -274,6 +277,7 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventGroundbreakerSlammed>(this, OnGroundbreakerSlammed);
             QuantumEvent.Subscribe<EventWallSlammed>(this, OnWallSlammed);
             QuantumEvent.Subscribe<EventWeaponExplosionReleased>(this, OnWeaponExplosionReleased);
+            QuantumEvent.Subscribe<EventHeavyHitAreaExpanded>(this, OnHeavyHitAreaExpanded);
             QuantumEvent.Subscribe<EventJoltTriggered>(this, OnJoltTriggered);
             QuantumEvent.Subscribe<EventThermalShockTriggered>(this, OnThermalShockTriggered);
             QuantumEvent.Subscribe<EventOverloadTriggered>(this, OnOverloadTriggered);
@@ -729,6 +733,14 @@ namespace QuantumUser.View.Managers
         private void OnWeaponExplosionReleased(EventWeaponExplosionReleased e)
         {
             PlayEffect(defaultAreaBlastEffect, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
+        // Pixie's Heavy Mastery R3 area (HeavyHitAreaUtility) - her own pink blast, same radius convention as the
+        // generic one above. Falls back to defaultAreaBlastEffect if left empty.
+        private void OnHeavyHitAreaExpanded(EventHeavyHitAreaExpanded e)
+        {
+            ParticleSystem prefab = heavyHitAreaEffectPrefab != null ? heavyHitAreaEffectPrefab : defaultAreaBlastEffect;
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
         // One-shot spark every time a target is ACTUALLY Stunned (StatusEffectUtility.ApplyStun) -
@@ -1297,6 +1309,17 @@ namespace QuantumUser.View.Managers
 
             if (deathDecalEffect != null && TryFindGroundBelow(position, deathDecalMaxGroundDistance, out Vector3 groundPoint))
                 PlayEffect(deathDecalEffect, groundPoint, Quaternion.identity, Vector3.one * scale, bloodColor);
+        }
+
+        // Boss defeat cinematic (BossDefeatSequenceDirector) - Pixie's bomb blast (the shared default
+        // area blast, its own authored color), at an explicit scale. Placeholder until the boss gets
+        // its own final-burst VFX.
+        public void PlayBossDefeatExplosion(Vector3 position, float scale)
+        {
+            if (defaultAreaBlastEffect == null)
+                return;
+
+            PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, Vector3.one * scale);
         }
 
         // Called by EnvironmentManager.Load - WorldTheme.Enemy.BloodColor becomes the tint for every

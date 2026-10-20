@@ -3,3 +3,9 @@
 component GodMode
 {
 }
+
+// Tag - cheat-menu "10x Damage" (CheatActionKind.ToggleDamageBoost). Multiplies the holder's own
+// outgoing damage (every DamageSource) by DamageUtility.CheatDamageBoostMultiplier, for testing.
+component CheatDamageBoost
+{
+}

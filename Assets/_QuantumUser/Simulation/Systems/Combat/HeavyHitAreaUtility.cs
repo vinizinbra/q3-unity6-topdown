@@ -55,7 +55,7 @@ namespace Quantum
                 StatusEffectUtility.TryApplyElementalStatus(f, target, owner, DamageSource.Weapon, element, damage);
             }
 
-            f.Events.WeaponExplosionReleased(owner, point, radius);
+            f.Events.HeavyHitAreaExpanded(owner, point, radius);
         }
     }
 }

@@ -20,10 +20,14 @@ MonoBehaviour:
   category: 0
   group: 0
   maxLevel: 5
-  baseCost: 100
-  costStep: 0
+  baseCost: 25
+  costStep: 30
   valuePerLevel: 5
   valueFormat: +{0}%
   valueFormatPlural: 
   levelInfos: []
+  levelZeroText: 
+  requiredUpgrade: 0
+  requiredUpgradeLevel: 1
+  requiredCategoryLevels: 0
   id: 5

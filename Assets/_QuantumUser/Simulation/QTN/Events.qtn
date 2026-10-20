@@ -1143,3 +1143,35 @@ event PriorityTargetCleared
     EntityRef Owner;
     EntityRef Target;
 }
+
+// Boss death cinematic (see BossDefeatSequence.qtn / docs/boss-encounter.md). BossDefeated fires on
+// the killing blow of the last living boss - the view's hit-stop/flash/camera-cutaway/death-throes
+// cue; Duration/BurstTime are the sim's own timeline so the view can schedule its beats to match.
+// BossDefeatBurst fires at BurstTime, the same tick RiftShards (base reward, before each player's
+// own gain multiplier) is granted - the final explosion + shard shower + "BOSS DEFEATED" banner cue.
+// synced - a rolled-back false kill must never play the cinematic.
+synced event BossDefeated
+{
+    EntityRef Boss;
+    EntityRef Killer;
+    FPVector3 Position;
+    FP        Duration;
+    FP        BurstTime;
+}
+
+synced event BossDefeatBurst
+{
+    EntityRef Boss;
+    FPVector3 Position;
+    FP        RiftShards;
+}
+
+// Fired by HeavyHitAreaUtility.TryExpandSingleTargetHit - Pixie's Heavy Mastery R3 area around a single-target
+// Heavy hit. Its own event (not WeaponExplosionReleased, which five other sources share) so the view can play
+// Pixie's pink blast for it (EffectsManager.heavyHitAreaEffectPrefab) without recoloring everyone else's.
+event HeavyHitAreaExpanded
+{
+    EntityRef  Entity;
+    FPVector3  Position;
+    FP         Radius;
+}

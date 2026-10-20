@@ -144,6 +144,13 @@ generic read point, used two ways depending on whether the hit already had an ar
   "a second independent explosion", with no duplicated damage/status/crit/proc for the primary
   target. Both call sites are one-line, generic hooks with no Pixie-specific knowledge.
 
+**VFX (2026-10-20):** the single-target expansion raises its own `HeavyHitAreaExpanded` event (no longer
+the shared `WeaponExplosionReleased`), so `EffectsManager.heavyHitAreaEffectPrefab` plays Pixie's pink blast
+(`Prefabs/Effects/PixiePinkExplosion` - `SimpleExplosion` with every warm particle color remapped onto Rift
+Pink #FD3971, same recolor as the boss-defeat copies) without recoloring Overkill/Delayed Blast/Fire Mastery/
+Hot Drop/perk explosions. The already-area path (e.g. Grenade Launcher's own blast, just with a bigger radius)
+still plays that weapon's own BlastEffectPrefab.
+
 **Removed: Ballistic Heavy Conversion ("Rocket Conversion").** An earlier iteration of this R3 also
 converted a ballistic Heavy weapon's shots to fly straight (`ProjectileMovementOverride{Movement}`,
 matched by checking the weapon's own projectile movement **by type**, `BallisticProjectileMovementData`,

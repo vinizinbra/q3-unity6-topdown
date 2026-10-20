@@ -22,7 +22,7 @@ namespace Quantum
             f.Global->Difficulty = config.BuildSnapshot(f.RuntimeConfig.Difficulty, f.RuntimeConfig.NightmareLevel);
 
             DifficultySnapshot s = f.Global->Difficulty;
-            Log.Info($"[Difficulty] {DifficultyConfig.GetDisplayName(s.Tier, s.NightmareLevel)} - HP x{s.EnemyHpLight}/x{s.EnemyHpHeavy}, Dmg x{s.EnemyDamage}, Density x{s.SpawnDensity}, Elite x{s.EliteWeight}, Windup x{s.AnticipationSpeed}, Recovery x{s.RecoverySpeed}, ProjSpeed x{s.EnemyProjectileSpeed}, Lead x{s.EnemyProjectileLead}, Move x{s.EnemyMoveSpeed}");
+            Log.Info($"[Difficulty] {DifficultyConfig.GetDisplayName(s.Tier, s.NightmareLevel)} - HP x{s.EnemyHpLight}/x{s.EnemyHpHeavy}, Dmg x{s.EnemyDamage}, Density x{s.SpawnDensity}, Elite x{s.EliteWeight}, Windup x{s.AnticipationSpeed}, Recovery x{s.RecoverySpeed}, ProjSpeed x{s.EnemyProjectileSpeed}, Lead x{s.EnemyProjectileLead}, Move x{s.EnemyMoveSpeed}, Shards x{s.RiftShardReward}");
         }
 
         public override void Update(Frame f)

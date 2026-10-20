@@ -233,3 +233,95 @@ meter is cleared). Being fractions of the party/difficulty-scaled MaxHealth, the
 with party size. `BossRuntimeState.StaggerBreakCount` tracks N. Empty list = no mechanic. Both bosses
 (W1 World1Boss, W2 Dune Leviathan): one Kneel per 20% of max HP in damage, regen 1%/s, no Kneel at or
 below 20% life. Needs `.qtn` codegen (`StaggerBreakCount`).
+
+## Boss defeat sequence (2026-10-20)
+
+The killing blow on the **last living boss** (a twin dying first just lingers as before) no longer
+lets it vanish after `DeathLingerTime`; `DamageUtility.ResolveDeath` -> `BossDefeatUtility.TryBegin`
+adds `BossDefeatSequence` (`QTN/Enemy/BossDefeatSequence.qtn`), **disables `GameplaySystemGroup`**
+(same hard pause as the intro - nobody can act, take damage or go down) and raises synced
+`BossDefeated(Boss, Killer, Position, Duration, BurstTime)`. The always-on `BossDefeatSystem`
+(registered right before `VictorySystem`) then runs the timeline:
+
+- **first tick** - `ClearArena`: every other enemy pops (`EnemyExploded`, no drops/credit), every
+  `Projectile` and every enemy-owned (or orphaned) `AreaOwner` hazard is destroyed.
+- **`BossDataAsset.DefeatBurstTime`** (2.5s) - `RiftShardUtility.GrantAll(DefeatRiftShardReward)`
+  (20, real shards to every player, each scaled by their own gain multiplier) + synced
+  `BossDefeatBurst(Boss, Position, RiftShards)`.
+- **`DefeatSequenceDuration`** (4.5s) - destroys the boss, re-enables the group; `VictorySystem` sees it
+  gone the same tick (last phase) -> `RunResultManager` popup.
+
+`VoiceDirector` now plays `BossDefeated` VO on `BossDefeatBurst` (its old "boss entity disappeared"
+poll would now fire 4.5s late). Haptics' `bossKilled` still fires on `EntityDied` = killing blow.
+
+**View** - `Assets/_Project/Scripts/Boss/BossDefeatSequenceDirector.cs`, self-installed (like
+`HapticsDirector`, nothing to place in a scene), all tuning in its serialized fields. Off `BossDefeated`:
+hit-stop (boss rig `Animator.speed` 0 + particles paused, 0.15s real time), white full-screen flash (its
+own runtime overlay canvas), heavy `FollowCamera.Shake`, `FollowCamera.SetFocusOverride(boss, snap:
+false)` (pans + zooms in, spread 0 = minZoom). Throes: Pixie's "Unstable" look
+(`StatusEffectsManager.ExplodeMarkParticlePrefab`, own instance parented to the rig) swelling with the
+rig jitter, red flicker and rumble all speeding up toward the burst. Off `BossDefeatBurst`: Pixie's bomb
+blast (`EffectsManager.PlayBossDefeatExplosion` = `defaultAreaBlastEffect`, x8 + x4), flash, shake,
+`bossKilled` haptic, rig renderers hidden, shard shower (copies of the real Rift Shard pickup view -
+`RiftShardPrototype` -> `ViewPrototype` -> `EntityView.Prefab`, Quantum components stripped - pop out
+then home onto every hero; pink-sphere fallback if the view isn't loaded), `AnnouncerManager` "BOSS DEFEATED" + the VO. Camera eases back 0.6s before
+gameplay resumes; the rig is restored afterwards (pooled views). Synced events arrive ~RTT late online;
+fine since gameplay is paused anyway.
+
+**Still placeholder / not done:** no impact sting / victory jingle / music
+cut, no hero victory emoji/pose (emojis are a sim command).
+
+**Dying sprite instead of a death animation:** `EnemyViewRig` has an optional Dying section - `Dying
+Sprite` (swapped in at the killing blow, held until the burst hides the rig), `Dying Sprite Target`
+(empty = Reference Sprite) and `Dying Hides Other Sprites` (on = the pose is the whole body on one
+sprite; off = only the target changes, e.g. a new face). Empty = no swap. Not authored on either boss
+yet - no art exists. The throes flicker multiplies over each body sprite's authored color (restored
+after) and skips `GroundAnchoredOverlay` props like the Leviathan's sand.
+
+**Rift Pink VFX + no tip-over (2026-10-20):** the throes mark and every blast (burst, hero pops) now use
+`Resources/BossDefeat/BossDefeatUnstable` / `BossDefeatExplosion` - copies of `ExplosiveMark` /
+`SimpleExplosion` with every warm particle color (start color, color over lifetime/by speed, trails)
+remapped onto Rift Pink #FD3971 (orange -> exactly #FD3971, yellow -> #FD3971 toward white, red -> darker #FD3971, all x original brightness;
+whites, alpha, brightness kept). Originals untouched; missing copies fall back to them. Materials/textures
+weren't changed - an orange-baked texture would still show orange. `EnemyBlobAnimationView` skips its
+generic `TriggerDie` tip-over-and-fall for an entity carrying `BossDefeatSequence`.
+
+**Bigger payout (2026-10-20):** `DefeatRiftShardReward` 20 -> **100** (upgrades cost 150+), and the burst
+also hoovers every uncollected Rift Shard pickup on the map into the same grant
+(`BossDefeatUtility.CollectLooseRiftShards` - the run is ending, they'd be lost otherwise);
+`BossDefeatBurst.RiftShards` is that total. `DefeatSequenceDuration` 4.5 -> 6.5s so the payout finishes
+before the result popup. View: up to 40 real-shard pieces released over 1s in a rolling wave; each landing
+plays the real Rift Shard pickup sound + pickup flash via `FlyingCurrencyManager.PlayRiftShardShowerArrival`
+with the pitch climbing a semitone per shard (cap 12); a big Rift Pink "+N RIFT SHARDS" tally (announcer's
+font) counts up per landing, punches each time, and slams (x1.5 + flash + shake + haptic) on the last;
+it fades out with the camera return, before the result popup. Neither field is serialized on the boss
+assets yet, so the code defaults apply to both bosses.
+
+**Loot fountain (2026-10-20):** the shower also flies visual-only Coins (20) and XP orbs (24) - real pickup
+looks via the same prototype -> ViewPrototype -> EntityView.Prefab copy as the shards
+(`ResolvePickupTemplate`), random heroes, spread over the same release window, pickup flash on arrival, no
+sound/tally/grant. The burst also plays `Resources/BossDefeat/BossDefeatCrystalSparks`: ~105 tumbling 3D
+Rift Pink crystals (`RiftCrystalSpark` mesh - flat-shaded hexagonal bipyramid - with a URP Particles/Simple
+Lit material, Rift Pink emission) sprayed up/out of a hemisphere, arcing under gravity and shrinking out;
+unscaled time. Built once by an Editor script; tune the prefab/material directly.
+
+**Punchier intro (2026-10-20):** `BossIntroSequenceDirector` (`Scripts/Boss/`, self-installed) adds impact to
+the existing reveal - `BossWidget` calls `BossIntroSequenceDirector.Play(boss, pauseRemaining)` at the cut
+(under the black fade). Cut wide (zoom 1.9) -> 0.35s -> zoom slams to 0.7 (ease-in, small overshoot) -> on
+impact: white flash, Rift Pink blast + crystal spray at the boss's feet, heavy shake, haptic, the boss's view
+root punches x1.2 and wobbles back -> slow push-in to 0.62 with a low rumble while the card is up -> zoom
+override released 0.7s before `BossPauseTimer` ends, then BossWidget's existing ease-back. It reuses the
+defeat director's FX (`BossDefeatSequenceDirector.Instance.FlashScreen/PlayPinkExplosion/PlayCrystalSparks`)
+so intro and defeat read as bookends. New `FollowCamera.SetZoomOverride(float?)`: exact zoom, rigid follow
+(no `speed` smoothing) while set; null = normal eased zoom resumes.
+
+**Heroes idle during hard pauses:** `BlobAnimationView` reads velocity as zero while `GameplaySystemGroup`
+is disabled (boss intro/defeat, level-up screens) - the KCC keeps the last tick's velocity frozen, which
+left heroes running in place.
+
+**Boss Window vs. the slam (2026-10-20):** the card's full-screen dim went from 78% (`#000000C8`) to 35%
+black (`#00000059`, on `BossWindow.prefab`; Canvas.prefab doesn't override it), and `BossWidget` now shows
+the card from `BossIntroSequenceDirector.Play`'s `onImpact` callback instead of at the cut - the slam plays
+clear, then the card bangs in with the impact (its 4s `totalDuration` still ends with the ~5s pause). The
+card is centred on screen exactly where the camera centres the boss, so the impact/explosion happens just
+before it covers that spot.

@@ -446,3 +446,53 @@ still the source of truth for the Exploration card text/cost and now rewires `Ga
 **Known simplifications / not done**: bots never use the Repair Station; Max Shield has a talent field but no menu line; one save per device (couch co-op locals share
 it); the Balance Simulator doesn't model meta talents; "Downed time shrinks with each revive" was dropped from
 the Co-op card (never implemented).
+
+
+## Rift Shard economy & prices (2026-10-20)
+
+Rebalanced to a Gunfire Reborn-style flow: enemies are the bulk of a run's shards, the boss ~a quarter to a
+third of a win. `EnemyTierStatsConfig` RiftShard value@chance: Filler 1@4%, Normal 1@12%, Specialist 1@100%,
+Heavy 2@100%, Elite 5@100%. Boss defeat reward (`BossDataAsset.DefeatRiftShardReward`): W1 45, W2 60 (per-world
+step like GR's per-act bosses). Balance Simulator (Medium, assumes Victory, collects every drop - real pickup
+was ~63% before the rebalance, so read these as upper bounds): solo win W1 ~170-180 (boss ~26%), W2 ~190-205
+(boss ~31%); 4P ~215/~240. Difficulty scales every grant via `DifficultyChannel.RiftShardReward` (Easy 0.6,
+Hard 1.4, NM Hard x1.1^N cap 3 - docs/difficulty.md).
+
+Prices escalate per level. Power lines use the formula `cost(L) = baseCost + costStep*L`: core lines (Damage,
+Fire Rate, Move Speed, Skill Cooldown, XP Gain, Pickup Range, Damage Reduction) 30+40/L (30..190, 550/line);
+utility lines (Max Health, Reload, Crit Chance/Damage, Coin Gain) 25+30/L (425/line).
+
+**Exploration: cheap to unlock every POI, grindy to level up** (FTUE - these lines change what a run contains).
+`PermanentUpgradeData.levelCosts` (explicit price per level, overrides the formula) is authored per line in
+`ExplorationUpgradesGenerator` (`Line.costs`). Unlock levels (a new POI or mechanic) form a ladder sized so that
+EVERY early run - even a struggling player's - buys at least one (Gunfire Reborn's cheapest first talent levels
+cost 5); improvement levels climb steeply (up to 630) - that's the grind:
+
+| Line | Unlock levels | Upgrade levels | Total |
+|---|---|---|---|
+| Store | L1 Store 5 | 150, 250 | 405 |
+| Rift Anchor | L1 start chest 10, L2 Repair Station 30 | 180 | 220 |
+| Gunsmith | L1 18 | 150, 220, 320 | 708 |
+| Healing Shrine | L1 20 | 110, 180 | 310 |
+| Challenges | L1 Traversal 26, L2 Team Challenge 40 | - | 66 |
+| Sacrifice Rift | L1 45 | 180 | 225 |
+| Revive | L1 self-revive 55 | 150, 220, 500 | 925 |
+| Weapons | - | 90, 180, 300, 450, 630 | 1650 |
+| Starting Gold | - | 60, 120, 200, 310, 450 | 1140 |
+| Rerolls | - | 90, 220 | 310 |
+| Co-op | - | 70, 140, 220 | 430 |
+
+All 9 unlocks = 249. Exploration 6,389 + Power 5,975 = **12,364** to max everything.
+
+**FTUE check (2026-10-20 meta pass):** the Balance Simulator's per-minute shard curve (W1, solo, Medium, avg of 6
+heroes: 1/6/8/17/20/29/46/54/63/97/104/114 by minutes 1-12, win 189 incl. boss + leftovers) driven through an
+assumed death curve (the sim has no incoming damage) and a "buy the cheapest affordable unlock" policy:
+
+| Player | Run 1 dies at | All 9 unlocked by | First win |
+|---|---|---|---|
+| Struggling (+0.5 min/run) | min 3 (8 shards) | run 9 | after run 12 |
+| Baseline (+1 min/run) | min 4 (17) | run 6 | run 7 |
+| Fast (+1.5 min/run) | min 5 (20) | run 5 | run 5 |
+
+Every profile buys >= 1 unlock every run until all 9 are open. Early income depends on the Filler/Normal trickle
+(Specialists only spawn from ~minute 3) - don't cut those chances without re-running this.

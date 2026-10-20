@@ -213,6 +213,15 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
   (now on the shared `InteractionPromptPoiView` base it extends), threaded through
   `InteractionPromptWidgetManager.SpawnWidget`/`InteractionPromptWidget.Setup` alongside the
   existing `promptTitle`/description fields.
+- `Assets/_Project/Scripts/UI/InGame/Hud/ChallengeCountdownWidget.cs` - the Starting 3/2/1
+  countdown (HUD sibling of `TeamChallengeWidget`, full-screen rect, fed every tick via `Show(
+  RemainingCountdown)`): per-digit slam-in (scale/rotate OutBack) + shrink-fade exit, hex-outline
+  shockwave, tinted glow, and a full-screen edge-vignette flash (`ScreenEdgeVignette.png`) in the
+  digit's colour (3 yellow / 2 orange / 1 Rift Pink). Every visual is a pure function of time-into-
+  digit derived from the sim value (late-join/rollback-safe); only the optional tick sounds
+  (`tickSound`/`finalTickSound`, unassigned so far) are edge-triggered, latched to strictly
+  decreasing digits. Digit sits ~310px from the top of the 1080 reference - deliberately NOT the
+  screen centre, where the local hero stands.
 - `Assets/_Project/Scripts/UI/InGame/Hud/TeamChallengeWidget.cs` - global HUD banner (objective
   readout during Starting/ChallengeActive), the activation toasts, and the 3 big animated
   "CHALLENGE STARTED/COMPLETE/FAILED" announcements (via `AnnouncerManager`, see

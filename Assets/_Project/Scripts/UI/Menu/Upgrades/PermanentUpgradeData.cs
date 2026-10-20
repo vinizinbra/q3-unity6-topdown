@@ -48,6 +48,9 @@ public class PermanentUpgradeData : ScriptableObject
     [Tooltip("Extra cost added per level already owned (0 = flat price).")]
     public int costStep;
 
+    [Tooltip("Explicit price per level (index 0 = buying level 1). Overrides Base Cost/Cost Step for every level it covers (0 or missing = use the formula). Lets a line price its UNLOCK level cheap and its upgrade levels steep - see docs/talents.md.")]
+    public int[] levelCosts;
+
     [Header("Value shown (CURRENT / NEXT)")]
     [Tooltip("Value at level N = N x this.")]
     public float valuePerLevel = 5f;
@@ -84,7 +87,15 @@ public class PermanentUpgradeData : ScriptableObject
 
     public string Name => string.IsNullOrEmpty(displayName) ? name : displayName;
 
-    public int CostFor(int level) => baseCost + costStep * Mathf.Max(0, level);
+    public int CostFor(int level)
+    {
+        level = Mathf.Max(0, level);
+
+        if (levelCosts != null && level < levelCosts.Length && levelCosts[level] > 0)
+            return levelCosts[level];
+
+        return baseCost + costStep * level;
+    }
 
     public bool HasLevelInfo => levelInfos != null && levelInfos.Length > 0;
 

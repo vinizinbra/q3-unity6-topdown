@@ -59,6 +59,9 @@ MonoBehaviour:
     AnimationType: 2
     Duration: 1.2
     BodySprite: {fileID: -147604254, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1.3, y: 1.3, z: 1.3}
     AlignBodyToDirection: 0
@@ -140,6 +143,9 @@ MonoBehaviour:
     AnimationType: 13
     Duration: 0.3
     BodySprite: {fileID: 1909996209, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: -1}
     BodySpriteScale: {x: 1.1, y: 1.1, z: 1.1}
     AlignBodyToDirection: 0
@@ -221,6 +227,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -302,6 +311,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -440,6 +452,9 @@ MonoBehaviour:
     AnimationType: 4
     Duration: 1
     BodySprite: {fileID: -1896583010, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -521,6 +536,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0
     BodySprite: {fileID: -865403094, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -612,6 +630,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 1
     BodySprite: {fileID: -865403094, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -693,6 +714,9 @@ MonoBehaviour:
     AnimationType: 13
     Duration: 0.4
     BodySprite: {fileID: 1909996209, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: -0.2}
     BodySpriteScale: {x: 1.1, y: 1.1, z: 1.1}
     AlignBodyToDirection: 0
@@ -901,6 +925,9 @@ MonoBehaviour:
     AnimationType: 1
     Duration: 1
     BodySprite: {fileID: 203894394, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -982,6 +1009,9 @@ MonoBehaviour:
     AnimationType: 3
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1063,6 +1093,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1144,6 +1177,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -1610,6 +1646,12 @@ MonoBehaviour:
     OnBreakForcedAction:
       Id:
         Value: 413219400190947953
+  DefeatSequenceDuration:
+    RawValue: 425984
+  DefeatBurstTime:
+    RawValue: 163840
+  DefeatRiftShardReward:
+    RawValue: 2949120
   ComboChains:
   - TriggerAction:
       Id:

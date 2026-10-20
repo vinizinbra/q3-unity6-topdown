@@ -124,12 +124,4 @@ MonoBehaviour:
     Damage/min:
     4904
 
-    Crit dmg/shot: 72 (vs 48 normal) @ 10 % chance, x1.5
-
-    Est. targets/shot:
-    1.5
-
-    Effective Burst DPS (all targets): 151.2
-
-    Effective Sustained DPS
-    (all targets): 122.6'
+    Crit dmg/shot: 72 (vs 48 normal) @ 10 % chance, x1.5'

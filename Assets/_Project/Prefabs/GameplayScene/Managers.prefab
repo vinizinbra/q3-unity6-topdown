@@ -259,6 +259,7 @@ MonoBehaviour:
   disablePooling: 0
   centerHeightOffset: 0
   defaultAreaBlastEffect: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
+  heavyHitAreaEffectPrefab: {fileID: 6350743763286976369, guid: 9133c80be7def462f82f977a497f4bb7, type: 3}
   shockwaveEffectPrefab: {fileID: 6033865322108255657, guid: 3bb65fec9608f45f9b75e9c42b74b14b, type: 3}
   undertowMarkEffectPrefab: {fileID: 0}
   joltEffectPrefab: {fileID: 5623422061307436774, guid: 5fd4bba02f59349b2b1869ef48499e69, type: 3}
@@ -296,6 +297,9 @@ MonoBehaviour:
   minimumAnticipationIconDuration: 0.4
   accessoryBrokenEffectPrefab: {fileID: 0}
   accessoryBrokenEffectScale: 1
+  accessoryBrokenToast: ACCESSORY DESTROYED
+  accessoryBrokenHintToast: Buy a new one at the Store
+  accessoryBrokenHintDelay: 1.5
   accessoryRecoveredEffectPrefab: {fileID: 0}
   accessoryRecoveredEffectScale: 1
   accessoryBlockedEffectPrefab: {fileID: 0}
@@ -352,6 +356,7 @@ MonoBehaviour:
   portalLingerAfterLastHero: 0.6
   portalMaxDuration: 12
   portalDestroyDelay: 3
+  portalLoopSound: {fileID: 11400000, guid: 6cfd4ce581cf4f5fa4fa6f20fd9b596d, type: 2}
   travelEffectPrefab: {fileID: 9186021651541148684, guid: 2681a7250227747d78846a699e01a607, type: 3}
   travelDuration: 0.7
   travelArcHeight: 3
@@ -382,6 +387,7 @@ MonoBehaviour:
   travelDestroyDelay: 1
   heroSpawnEffectPrefab: {fileID: 5623422061307436774, guid: 4b7010f0b38814d6784e0c3af59589d4, type: 3}
   heroSpawnEffectScale: 1
+  heroLandSound: {fileID: 11400000, guid: 00662bdb378e45309422363645de7013, type: 2}
   aimHorizontally: 1
   firstRevealDelay: 0.35
   revealStagger: 0.2

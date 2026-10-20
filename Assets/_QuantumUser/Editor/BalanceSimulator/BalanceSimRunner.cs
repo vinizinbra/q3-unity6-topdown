@@ -464,13 +464,20 @@ namespace QuantumUser.Editor.BalanceSimulator
                 }
             }
 
-            // The Boss fight isn't simulated: assume a Victory, so the Boss's own shard drop counts.
+            // The Boss fight isn't simulated: assume a Victory. The defeat cinematic's burst (BossDefeatSystem) grants
+            // BossDataAsset.DefeatRiftShardReward plus every shard orb still lying on the map, and the Boss's own tier
+            // drop lands in time to be hoovered up with them.
             // Banked = floor(RiftShardsEarned) of the local player (RunResultManager.BankRiftShards).
             double bossShards = 0;
             if (director.BossReached)
             {
                 TierStats bossTier = assets.Tier(EnemyTier.Boss);
                 bossShards = D(bossTier.RiftShardValue) * Math.Clamp(D(bossTier.RiftShardDropChance), 0, 1);
+                bossShards += ResolveBossDefeatReward(assets);
+
+                foreach (var orb in pendingShards)
+                    if (orb.ExpireAt > director.RunTime)
+                        bossShards += orb.Value;
             }
 
             double shardGain = D(party[0].RiftShardGainMultiplier);
@@ -484,6 +491,33 @@ namespace QuantumUser.Editor.BalanceSimulator
             };
 
             return players;
+        }
+
+        // DefeatRiftShardReward of the boss the LAST Boss phase spawns (the one whose death is Victory): phase ->
+        // BossPrototype -> its Enemy component's EnemyData -> BossDataAsset.
+        private static double ResolveBossDefeatReward(BalanceSimAssets assets)
+        {
+            SurvivalPhase[] phases = assets.Survival != null ? assets.Survival.Phases : null;
+
+            for (int i = (phases?.Length ?? 0) - 1; i >= 0; i--)
+            {
+                if (phases[i].Kind != SurvivalPhaseKind.Boss || phases[i].BossPrototype.IsValid == false)
+                    continue;
+
+                EntityPrototype prototype = assets.Resolve(phases[i].BossPrototype);
+                if (prototype == null || prototype.Container.Components == null)
+                    return 0;
+
+                foreach (ComponentPrototype component in prototype.Container.Components)
+                {
+                    if (component is Quantum.Prototypes.EnemyPrototype enemy && assets.Resolve(enemy.EnemyData) is BossDataAsset boss)
+                        return D(boss.DefeatRiftShardReward);
+                }
+
+                return 0;
+            }
+
+            return 0;
         }
 
         private static int PickByShare(SimRng rng, double[] shares)

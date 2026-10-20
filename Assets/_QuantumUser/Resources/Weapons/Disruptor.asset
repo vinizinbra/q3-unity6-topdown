@@ -111,6 +111,7 @@ MonoBehaviour:
     ProjectileGlowScale: {x: 1, y: 1, z: 1}
     EnableProjectileLight: 1
     ProjectileLightColor: {r: 1.8867924, g: 0.7804011, b: 0, a: 1}
+    EnableProjectileDestroyEffect: 1
     ProjectileDestroyColor: {r: 1.8867924, g: 0.856329, b: 0, a: 1}
     ProjectileDestroyGlowColor: {r: 1.8867924, g: 0.856329, b: 0, a: 0.19215687}
     ProjectileDestroyScale: {x: 1, y: 1, z: 1}
@@ -123,7 +124,4 @@ MonoBehaviour:
     Damage/min:
     4435
 
-    Crit dmg/shot: 42 (vs 28 normal) @ 20 % chance, x1.5
-
-    Not in DPS
-    (unmodelled traits): Overload'
+    Crit dmg/shot: 42 (vs 28 normal) @ 20 % chance, x1.5'

@@ -40,7 +40,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             { Col.Budget, "Unspent DirectorBudget - large values mean spawns are capped by MaxAlive/TargetPressure, not budget" },
             { Col.WeaponDps, "Sustained weapon DPS incl. reloads x HitEfficiency, without skill buffs (Max's Overdrive share is in SkillDps). Actual = the recorder's every-shot-lands ceiling x this scenario's HitEfficiency, so the pair compares like for like" },
             { Col.SkillDps, "Expected skill DPS x SkillUseEfficiency, plus the extra weapon damage a skill buff adds averaged over its uptime (Max's Overdrive + Full Throttle, the latter scaled by Skill Damage)" },
-            { Col.RiftShards, "Rift Shards collected so far (shared - every player gets each one). Actual = CharacterStats.RiftShardsEarned. Only Specialist+ kills drop them; the gap to KillsSpecialist+Heavy+Elite is orbs that expired" },
+            { Col.RiftShards, "Rift Shards collected so far (shared - every player gets each one). Actual = CharacterStats.RiftShardsEarned. Every tier can drop them (EnemyTierStatsConfig value/chance - Filler/Normal rarely, Heavy x2, Elite x5); the gap to the drops is orbs that expired" },
             { Col.TotalDps, "Weapon + skill DPS. Actual = damage that landed on enemies (overkill removed) / seconds outside Breathing" },
             { Col.ExpectedDps, "BalanceConfig.ExpectedPlayerDps curve x ExpectedDpsBaseline" },
             { Col.DpsRatio, "TotalDps / ExpectedDps - >1 the player is ahead of the design curve" },
@@ -115,7 +115,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                 EditorGUILayout.LabelField("Hero", EditorStyles.miniBoldLabel, GUILayout.Width(140));
                 EditorGUILayout.LabelField(new GUIContent("Level", "Run level reached at the end (shared XP total)"), EditorStyles.miniBoldLabel, GUILayout.Width(60));
                 EditorGUILayout.LabelField(new GUIContent("Total XP", "Run XP collected, incl. orbs swept in at secured Breaks. The Boss fight isn't simulated"), EditorStyles.miniBoldLabel, GUILayout.Width(80));
-                EditorGUILayout.LabelField(new GUIContent("Rift Shards", "Banked to the account at run end: 1 per collected Specialist+ kill (EnemyTierStatsConfig), every player gets each one; assumes a Victory, so the Boss's shard counts"), EditorStyles.miniBoldLabel, GUILayout.Width(80));
+                EditorGUILayout.LabelField(new GUIContent("Rift Shards", "Banked to the account at run end: per collected drop (EnemyTierStatsConfig value/chance), every player gets each one; assumes a Victory, so the Boss defeat reward (BossDataAsset.DefeatRiftShardReward) + leftover orbs hoovered at the burst count. Medium difficulty (no RiftShardReward multiplier)"), EditorStyles.miniBoldLabel, GUILayout.Width(80));
                 EditorGUILayout.LabelField(new GUIContent("Dropped", "Shards dropped - the gap to Rift Shards is orbs that expired before pickup or a Break sweep"), EditorStyles.miniBoldLabel, GUILayout.Width(70));
             }
 

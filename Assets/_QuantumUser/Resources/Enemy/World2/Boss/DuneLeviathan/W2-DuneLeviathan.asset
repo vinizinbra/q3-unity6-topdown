@@ -2592,6 +2592,12 @@ MonoBehaviour:
     OnBreakForcedAction:
       Id:
         Value: 410914328159082563
+  DefeatSequenceDuration:
+    RawValue: 425984
+  DefeatBurstTime:
+    RawValue: 163840
+  DefeatRiftShardReward:
+    RawValue: 3932160
   ComboChains:
   - TriggerAction:
       Id:

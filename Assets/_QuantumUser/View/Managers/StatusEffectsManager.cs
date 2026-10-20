@@ -101,6 +101,10 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 explodeMarkOffset;
 
+        // Reused by BossDefeatSequenceDirector as the boss's "about to blow" look during its death throes.
+        public ParticleSystem ExplodeMarkParticlePrefab => explodeMarkParticlePrefab;
+        public Vector3 ExplodeMarkOffset => explodeMarkOffset;
+
         private readonly ParentedStatusSlotTracker _burn = new();
         private readonly ParentedStatusSlotTracker _slow = new();
         private readonly StatusSlotTracker _freeze = new();

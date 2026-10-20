@@ -3,6 +3,7 @@ namespace Quantum
     using System;
     using System.Collections.Generic;
     using Photon.Deterministic;
+    using UnityEngine;
 
     // What makes a later BossPhaseData become active - HealthThreshold and Timer are polled every
     // tick by BossSystem; ArenaEvent/AddWaveCleared/Scripted have no existing hook into this
@@ -147,8 +148,20 @@ namespace Quantum
         // button" pool available throughout the fight.
         public List<int> GlobalActionSlots = new();
 
-        // Default (Threshold <= 0) means no stagger mechanic.
+        // Empty ThresholdPercents means no stagger mechanic.
         public StaggerProfileData Stagger;
+
+        // Death cinematic (see BossDefeatSystem/docs/boss-encounter.md): the killing blow hard-pauses
+        // gameplay and clears the arena; the view plays the beats off BossDefeated/BossDefeatBurst.
+        [Header("Defeat Sequence")]
+        [Tooltip("Seconds from the killing blow until the boss is removed and gameplay (and Victory, on the last phase) resumes.")]
+        public FP DefeatSequenceDuration = FP.FromString("6.5");
+
+        [Tooltip("Seconds after the killing blow that the final burst fires - when RiftShardReward is granted and BossDefeatBurst is raised.")]
+        public FP DefeatBurstTime = FP.FromString("2.5");
+
+        [Tooltip("Rift Shards granted to EVERY player at the final burst (each scaled by their own RiftShardGainMultiplier, same as a shard pickup), on top of every uncollected Rift Shard pickup still on the map, which the burst hoovers up too. 0 = only those.")]
+        public FP DefeatRiftShardReward = 45;
 
         // "Repeat this action N times" combos (e.g. triple-charge) - see BossComboChainData's own
         // comment. Empty (default) means BossSystem.TickComboChain no-ops entirely.

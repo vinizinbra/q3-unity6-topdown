@@ -41,6 +41,8 @@ namespace QuantumUser.View.Managers
         private float portalMaxDuration = 12f;
         [SerializeField, Tooltip("Seconds the portal instance is kept alive after Stop() so its live particles can finish. Should cover the prefab's longest particle lifetime.")]
         private float portalDestroyDelay = 3f;
+        [SerializeField, SoundDataPicker, Tooltip("Looping hum at the portal while it's open. Starts when the loading screen lifts (not behind it) and is stopped with the SoundData's own Fade Out when the portal closes - so author Loop on, and a Fade In/Out there. Leave empty for a silent portal.")]
+        private SoundData portalLoopSound;
 
         [Header("Travel (portal -> hero)")]
         [SerializeField, Tooltip("Flies from the portal to each hero before it appears - the hero is revealed (burst + punch) the moment this lands. Moved by this manager every frame, so author it in LOCAL simulation space with a Trail/emission over distance in WORLD space for a streak. Instantiated per hero, not pooled. Leave empty to reveal heroes in place with no flight.")]
@@ -57,6 +59,8 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("One-shot burst at each hero the moment it's revealed - played through EffectsManager's pool, so it must not loop. Its local UP is aimed at the portal (author it pointing up, +Y, and it will fire toward the portal). Leave empty to skip the particle (the body punch-scale still plays).")]
         private ParticleSystem heroSpawnEffectPrefab;
         [SerializeField] private float heroSpawnEffectScale = 1f;
+        [SerializeField, SoundDataPicker, Tooltip("One-shot played at each hero the moment it's revealed - the travel lightning landing. Several heroes land revealStagger apart, so give it pitch variance on the SoundData. Must not loop.")]
+        private SoundData heroLandSound;
         [SerializeField, Tooltip("Aims the burst's UP at the portal along the ground only (Y difference ignored), so it lies flat pointing at it. Off = aim straight at the portal itself - with a portal floating portalOffset.y above heroes standing ~1.5m from its center, that is nearly vertical and barely tilts the effect.")]
         private bool aimHorizontally = true;
         [SerializeField, Tooltip("Delay after the loading screen has fully lifted before the first hero is revealed - lets the player register the portal first.")]
@@ -78,6 +82,7 @@ namespace QuantumUser.View.Managers
         private readonly List<Flight> _flights = new List<Flight>();
 
         private ParticleSystem _portal;
+        private SoundHandle _portalLoop = SoundHandle.None;
         private Vector3 _portalPosition;
         private bool _cameraFocused;
         private bool _finished;
@@ -97,6 +102,8 @@ namespace QuantumUser.View.Managers
 
         private void OnDestroy()
         {
+            _portalLoop.Stop(0f);
+
             if (Instance == this)
                 Instance = null;
         }
@@ -155,6 +162,9 @@ namespace QuantumUser.View.Managers
                 _uncoveredTime = 0f;
                 return;
             }
+
+            if (_portalLoop.IsValid == false && portalLoopSound != null && (portalPrefab == null || _portal != null))
+                _portalLoop = AudioManager.PlayAt(portalLoopSound, _portalPosition);
 
             _uncoveredTime += Time.deltaTime;
 
@@ -245,10 +255,16 @@ namespace QuantumUser.View.Managers
             _hidden.Remove(entity);
             _lastRevealTime = Time.time;
 
-            if (heroSpawnEffectPrefab == null || EffectsManager.Instance == null || frame.Has<Transform3D>(entity) == false)
+            if (frame.Has<Transform3D>(entity) == false)
                 return;
 
             Vector3 position = frame.Get<Transform3D>(entity).Position.ToUnityVector3();
+
+            if (heroLandSound != null)
+                AudioManager.PlayAt(heroLandSound, position);
+
+            if (heroSpawnEffectPrefab == null || EffectsManager.Instance == null)
+                return;
 
             // The prefab's UP points at the portal - the hero reads as having been flung out of it.
             // On top of the authored rotation, so a prefab tilted on purpose keeps that tilt. A hero
@@ -299,6 +315,9 @@ namespace QuantumUser.View.Managers
 
             _hidden.Clear();
             FollowCamera.I?.ClearIdleFocus();
+
+            _portalLoop.Stop();
+            _portalLoop = SoundHandle.None;
 
             if (_portal != null)
             {

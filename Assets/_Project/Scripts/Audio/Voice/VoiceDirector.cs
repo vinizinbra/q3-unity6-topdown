@@ -68,7 +68,6 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
     private GameState _lastState = GameState.Lobby;
     private bool _stateSeeded;
     private bool _wasAreaSecured;
-    private bool _wasBossAlive;
     private readonly HashSet<EntityRef> _knownRevivers = new();
     private readonly HashSet<EntityRef> _activeRevivers = new();
 
@@ -98,6 +97,7 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         QuantumEvent.Subscribe<EventAccessoryBroken>(this, OnAccessoryBroken);
         QuantumEvent.Subscribe<EventAccessoryRestored>(this, OnAccessoryRestored);
         QuantumEvent.Subscribe<EventHealingShrineUsed>(this, OnHealingShrineUsed);
+        QuantumEvent.Subscribe<EventBossDefeatBurst>(this, OnBossDefeatBurst);
     }
 
     // Everything here is a silent no-op when unassigned, so say so once at startup rather than
@@ -152,7 +152,6 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         Frame frame = game.Frames.Predicted;
 
         PollRunFlow(frame);
-        PollBoss(frame);
         PollReviveChannels(game, frame);
     }
 
@@ -219,24 +218,6 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         _wasAreaSecured = secured;
     }
 
-    // Boss defeat has no event, but the boss entity's own disappearance is observable - the same
-    // edge BossWidget already tracks to hide its HP bar.
-    private unsafe void PollBoss(Frame frame)
-    {
-        bool alive = false;
-        var filter = frame.Filter<BossRuntimeState>();
-        while (filter.NextUnsafe(out _, out _))
-        {
-            alive = true;
-            break;
-        }
-
-        if (alive == false && _wasBossAlive && frame.Global->CurrentState != GameState.RunFailed)
-            RaiseForEveryLocalPlayer(frame, VoiceLineTrigger.BossDefeated);
-
-        _wasBossAlive = alive;
-    }
-
     // ------------------------------------------------------------------ event-driven triggers
 
     private void OnPlayerDowned(EventPlayerDowned e)
@@ -248,6 +229,10 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         ForEachLocalPlayerExcept(e.Game, e.Entity, observer =>
             Raise(e.Game, VoiceLineTrigger.TeammateDowned, observer, e.Entity));
     }
+
+    // The defeat cinematic's final burst (BossDefeatSystem) - lands with the "BOSS DEFEATED" banner
+    // instead of when the body is finally removed at the end of the sequence.
+    private void OnBossDefeatBurst(EventBossDefeatBurst e) => RaiseForEveryLocalPlayer(e.Game.Frames.Predicted, VoiceLineTrigger.BossDefeated);
 
     private void OnPlayerKO(EventPlayerKO e) => Raise(e.Game, VoiceLineTrigger.PlayerKO, e.Entity);
 

@@ -383,6 +383,7 @@ namespace QuantumUser.View
             GridButton(player, "Heal Full", CheatActionKind.HealFull);
             GridButton(player, "God Mode", CheatActionKind.ToggleGodMode);
             GridButton(player, "Reset God Mode", CheatActionKind.ResetGodMode);
+            GridButton(player, "10x Damage", CheatActionKind.ToggleDamageBoost);
             GridButton(player, "Revive All", CheatActionKind.Revive);
             GridButton(player, "Damage = 1", CheatActionKind.SetDamageToOne);
             GridButton(player, "Reset Damage", CheatActionKind.ResetDamage);

@@ -27,6 +27,11 @@ public static class ExplorationUpgradesGenerator
         public string levelZero; // CURRENT card text at level 0 (empty = the tab's default)
         public int group, baseCost, costStep;
 
+        // Explicit price per level (-> PermanentUpgradeData.levelCosts). POI/mechanic UNLOCK levels are cheap (a fraction
+        // of one run, like Gunfire Reborn's cheap first talent levels) so a new player opens up the map fast; the
+        // levels that IMPROVE something climb steeply - that's the grind. See docs/talents.md.
+        public int[] costs;
+
         // Unlock requirement (see PermanentUpgradeData): another line at a level, and/or N Exploration levels owned.
         public PermanentUpgradeId requires;
         public int requiresLevel, requiresExplorationLevels;
@@ -46,7 +51,7 @@ public static class ExplorationUpgradesGenerator
 
     private static Line[] Lines() => new[]
     {
-        new Line { id = PermanentUpgradeId.Store, asset = "Store", name = "Store", group = 0, kind = "EQUIPMENT UPGRADE", accent = C(0.992f, 0.765f, 0.02f), iconFrom = "Store",
+        new Line { id = PermanentUpgradeId.Store, asset = "Store", costs = new[] { 5, 150, 250 }, name = "Store", group = 0, kind = "EQUIPMENT UPGRADE", accent = C(0.992f, 0.765f, 0.02f), iconFrom = "Store",
             summary = "A fixed Store per run selling weapons, healing consumables and defensive accessories, bought with Gold.",
             levels = new[]
             {
@@ -54,7 +59,7 @@ public static class ExplorationUpgradesGenerator
                 "Store Restock|The Store restocks every break, offering new things to buy.",
                 "Expanded Arsenal|Adds one extra weapon to the options available in the Store."
             } },
-        new Line { id = PermanentUpgradeId.Gunsmith, requires = PermanentUpgradeId.Store, requiresLevel = 1, asset = "Gunsmith", name = "Gunsmith", group = 0, kind = "EQUIPMENT UPGRADE", accent = C(0f, 0.914f, 0.992f), iconFrom = "Gunsmith",
+        new Line { id = PermanentUpgradeId.Gunsmith, requires = PermanentUpgradeId.Store, requiresLevel = 1, asset = "Gunsmith", costs = new[] { 18, 150, 220, 320 }, name = "Gunsmith", group = 0, kind = "EQUIPMENT UPGRADE", accent = C(0f, 0.914f, 0.992f), iconFrom = "Gunsmith",
             summary = "One Gunsmith per run. Buy 1 Weapon Perk out of 3 options, applied to the weapon you choose.",
             levels = new[]
             {
@@ -63,7 +68,7 @@ public static class ExplorationUpgradesGenerator
                 "Master Craftsman|Higher-rarity perks appear more often at the Gunsmith.",
                 "Gunsmith Reroll|Reroll the 3 perk options once per break, without increasing the purchases allowed."
             } },
-        new Line { id = PermanentUpgradeId.Weapons, requires = PermanentUpgradeId.Store, requiresLevel = 1, asset = "Weapons", name = "Weapons", group = 0, kind = "EQUIPMENT UPGRADE", accent = C(0.984f, 0.067f, 0.616f), iconFrom = "StartingWeaponChest",
+        new Line { id = PermanentUpgradeId.Weapons, requires = PermanentUpgradeId.Store, requiresLevel = 1, asset = "Weapons", costs = new[] { 90, 180, 300, 450, 630 }, name = "Weapons", group = 0, kind = "EQUIPMENT UPGRADE", accent = C(0.984f, 0.067f, 0.616f), iconFrom = "StartingWeaponChest",
             summary = "Every weapon you equip during a run is stronger, and new weapons roll better perks.",
             levels = new[]
             {
@@ -74,14 +79,14 @@ public static class ExplorationUpgradesGenerator
                 "Weapon Level +5|Every weapon you equip this run is 5 levels higher. New weapons roll the rarest perks."
             } },
 
-        new Line { id = PermanentUpgradeId.Challenges, requiresExplorationLevels = 3, asset = "Challenges", name = "Challenges", group = 1, kind = "EXPLORATION UPGRADE", accent = C(1f, 0.416f, 0f), iconFrom = "Challenges",
+        new Line { id = PermanentUpgradeId.Challenges, requiresExplorationLevels = 3, asset = "Challenges", costs = new[] { 26, 40 }, name = "Challenges", group = 1, kind = "EXPLORATION UPGRADE", accent = C(1f, 0.416f, 0f), iconFrom = "Challenges",
             summary = "Unlocks optional activities on the map that reward exploration, execution and combat.",
             levels = new[]
             {
                 "Traversal Challenge|Unlocks movement and platform challenges that reward you on completion.",
                 "Team Challenge|Unlocks combat challenges where the team fights enemies to earn a reward."
             } },
-        new Line { id = PermanentUpgradeId.HealingShrine, requiresExplorationLevels = 3, asset = "HealingShrine", name = "Healing Shrine", group = 1, kind = "EXPLORATION UPGRADE", accent = C(0.271f, 0.925f, 0.216f), iconFrom = "Traversal",
+        new Line { id = PermanentUpgradeId.HealingShrine, requiresExplorationLevels = 3, asset = "HealingShrine", costs = new[] { 20, 110, 180 }, name = "Healing Shrine", group = 1, kind = "EXPLORATION UPGRADE", accent = C(0.271f, 0.925f, 0.216f), iconFrom = "Traversal",
             summary = "A healing point found while exploring. Usable again after a cooldown.",
             levels = new[]
             {
@@ -89,14 +94,14 @@ public static class ExplorationUpgradesGenerator
                 "Improved Healing|Shrine healing rises from 25% to 35% of max HP.",
                 "Faster Recovery|Shrine cooldown is 25% shorter, so it can be used more often."
             } },
-        new Line { id = PermanentUpgradeId.SacrificeRift, requiresExplorationLevels = 5, asset = "SacrificeRift", name = "Sacrifice Rift", group = 1, kind = "EXPLORATION UPGRADE", accent = C(0.388f, 0.008f, 0.973f), iconFrom = "UnlockRift",
+        new Line { id = PermanentUpgradeId.SacrificeRift, requiresExplorationLevels = 5, asset = "SacrificeRift", costs = new[] { 45, 180 }, name = "Sacrifice Rift", group = 1, kind = "EXPLORATION UPGRADE", accent = C(0.388f, 0.008f, 0.973f), iconFrom = "UnlockRift",
             summary = "A risk-and-reward POI: accept a sacrifice in exchange for a benefit.",
             levels = new[]
             {
                 "Unlock Sacrifice Rift|Unlocks the option to accept a sacrifice and receive a reward.",
                 "Sacrifice Choice|Shows 2 sacrifice options instead of 1, so you can pick the one that suits your build."
             } },
-        new Line { id = PermanentUpgradeId.RiftAnchor, asset = "RiftAnchor", name = "Rift Anchor / Base", group = 1, kind = "EXPLORATION UPGRADE", accent = C(0.012f, 0.906f, 0.988f), iconFrom = "StartingGlobalChest",
+        new Line { id = PermanentUpgradeId.RiftAnchor, asset = "RiftAnchor", costs = new[] { 10, 30, 180 }, name = "Rift Anchor / Base", group = 1, kind = "EXPLORATION UPGRADE", accent = C(0.012f, 0.906f, 0.988f), iconFrom = "StartingGlobalChest",
             summary = "Your landing spot at the start of every run. Upgrade it to find gear waiting for you and to fix your Accessory during breaks.",
             levelZero = "Nothing to see here...",
             levels = new[]
@@ -106,7 +111,7 @@ public static class ExplorationUpgradesGenerator
                 "Starter Perk|Every weapon offered by the starting Weapon Chest comes with at least 1 perk."
             } },
 
-        new Line { id = PermanentUpgradeId.StartingGold, asset = "StartingGold", name = "Starting Gold", group = 2, kind = "ECONOMY UPGRADE", accent = C(0.992f, 0.765f, 0.008f), iconFrom = "CoinGain",
+        new Line { id = PermanentUpgradeId.StartingGold, asset = "StartingGold", costs = new[] { 60, 120, 200, 310, 450 }, name = "Starting Gold", group = 2, kind = "ECONOMY UPGRADE", accent = C(0.992f, 0.765f, 0.008f), iconFrom = "CoinGain",
             summary = "Start every run with Gold to buy gear earlier, without relying only on combat income.",
             levels = new[]
             {
@@ -116,7 +121,7 @@ public static class ExplorationUpgradesGenerator
                 "Starting Gold IV|Starting Gold rises to 400.",
                 "Starting Gold V|Starting Gold rises to 500."
             } },
-        new Line { id = PermanentUpgradeId.Rerolls, asset = "Rerolls", name = "Rerolls", group = 2, kind = "ECONOMY UPGRADE", accent = C(0.6f, 0.027f, 0.984f), iconFrom = "RiftEvents",
+        new Line { id = PermanentUpgradeId.Rerolls, asset = "Rerolls", costs = new[] { 90, 220 }, name = "Rerolls", group = 2, kind = "ECONOMY UPGRADE", accent = C(0.6f, 0.027f, 0.984f), iconFrom = "RiftEvents",
             summary = "More chances to find upgrades that fit your build. Independent from the Gunsmith's own reroll.",
             levels = new[]
             {
@@ -124,7 +129,7 @@ public static class ExplorationUpgradesGenerator
                 "Extra Reroll II|Rises to 2 additional rerolls per run."
             } },
 
-        new Line { id = PermanentUpgradeId.Revive, requiresExplorationLevels = 3, asset = "Revive", name = "Revive", group = 3, kind = "SURVIVAL UPGRADE", accent = C(0.988f, 0.039f, 0.306f), iconFrom = "MaxHealth",
+        new Line { id = PermanentUpgradeId.Revive, requiresExplorationLevels = 3, asset = "Revive", costs = new[] { 55, 150, 220, 500 }, name = "Revive", group = 3, kind = "SURVIVAL UPGRADE", accent = C(0.988f, 0.039f, 0.306f), iconFrom = "MaxHealth",
             summary = "Second chances after a death. Recovery bonuses apply to Self-Revive only.",
             levels = new[]
             {
@@ -133,7 +138,7 @@ public static class ExplorationUpgradesGenerator
                 "Revive Guard|Recovers 1 Accessory Guard block after a Self-Revive.",
                 "Extra Revive|Grants a second Self-Revive per run."
             } },
-        new Line { id = PermanentUpgradeId.Coop, requires = PermanentUpgradeId.Store, requiresLevel = 1, asset = "Coop", name = "Co-op", group = 3, kind = "SURVIVAL UPGRADE", accent = C(0.004f, 0.843f, 0.616f), iconFrom = "DamageReduction",
+        new Line { id = PermanentUpgradeId.Coop, requires = PermanentUpgradeId.Store, requiresLevel = 1, asset = "Coop", costs = new[] { 70, 140, 220 }, name = "Co-op", group = 3, kind = "SURVIVAL UPGRADE", accent = C(0.004f, 0.843f, 0.616f), iconFrom = "DamageReduction",
             summary = "Rescue downed teammates faster and keep fighting together. Ally revives stay unlimited.",
             levels = new[]
             {
@@ -190,8 +195,10 @@ public static class ExplorationUpgradesGenerator
             data.category = PermanentUpgradeCategory.Exploration;
             data.group = l.group;
             data.maxLevel = l.levels.Length;
-            data.baseCost = l.baseCost > 0 ? l.baseCost : 150;
-            data.costStep = l.costStep > 0 ? l.costStep : 50;
+            // Escalating 45/90/135/... - priced for the Gunfire Reborn-style Rift Shard flow (docs/talents.md).
+            data.baseCost = l.baseCost > 0 ? l.baseCost : 45;
+            data.costStep = l.costStep > 0 ? l.costStep : 45;
+            data.levelCosts = l.costs;
             data.id = l.id;
             data.levelZeroText = l.levelZero ?? string.Empty;
             data.requiredUpgrade = l.requires;

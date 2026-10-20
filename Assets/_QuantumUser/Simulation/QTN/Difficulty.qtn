@@ -27,6 +27,7 @@ struct DifficultySnapshot
     FP EnemyProjectileSpeed;
     FP EnemyProjectileLead;
     FP EnemyMoveSpeed;
+    FP RiftShardReward;
 }
 
 global

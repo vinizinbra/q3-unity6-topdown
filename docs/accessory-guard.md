@@ -159,6 +159,9 @@ Three deliberate differences from a currency orb:
   `FallRespawnUtility.IsInsideChunkBounds`) are rejected and re-rolled like any other invalid ground
   sample, so a hit taken near the wall can't pop the accessory somewhere the player can no longer
   walk to.
+  The constraint applies while `GameState.Boss` is active **or any `BossRuntimeState` entity is alive**
+  (CurrentState can read Upgrade/Victory while the gates are still shut), and only when the owner is
+  themselves inside the Boss chunk.
 
 ### Spin while airborne
 

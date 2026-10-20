@@ -479,7 +479,10 @@ namespace Quantum
 
             if (enemyPhase.HasValue == true)
             {
-                if (enemyPhase == EnemyActionPhase.Dead && _lastEnemyPhase != EnemyActionPhase.Dead)
+                // A boss in its defeat cinematic stays upright - BossDefeatSequenceDirector owns that death's look
+                // (Dying sprite, shake, Unstable mark, burst), not this generic tip-over-and-fall.
+                if (enemyPhase == EnemyActionPhase.Dead && _lastEnemyPhase != EnemyActionPhase.Dead
+                    && frame.Has<BossDefeatSequence>(_entityRef) == false)
                     TriggerDie();
 
                 _lastEnemyPhase = enemyPhase;

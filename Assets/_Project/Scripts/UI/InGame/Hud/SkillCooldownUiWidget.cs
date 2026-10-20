@@ -39,6 +39,9 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
 
     [SerializeField] private EntityRef _entityRef;
 
+    public EntityRef EntityRef => _entityRef;
+    public SkillSlotId Slot => slot;
+
     private void Start()
     {
         if (autoBindLocalPlayerOne)

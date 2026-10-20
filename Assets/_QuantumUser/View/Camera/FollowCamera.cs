@@ -86,6 +86,12 @@ public class FollowCamera : MonoBehaviour
     // target takes over from it, so it never fights normal framing.
     private Vector3? _idleFocus;
 
+    // While set, _zoom is exactly this value (no zoomLerpSpeed easing) and the camera follows its framed
+    // position rigidly instead of through `speed` smoothing - so a cinematic (BossIntroSequenceDirector's zoom
+    // slam) can animate the zoom frame by frame and have it land with full punch. Cleared = the normal eased
+    // spread-based zoom resumes from wherever the override left it.
+    private float? _zoomOverride;
+
     // The scene this camera was loaded with (QuantumGameScene). Captured in Awake so the guard can
     // tell "still where I belong" apart from "someone moved me into DontDestroyOnLoad".
     private Scene _homeScene;
@@ -267,6 +273,11 @@ public class FollowCamera : MonoBehaviour
     }
 
     // Snaps by default - set behind the loading screen, so the world is revealed already framed.
+    public void SetZoomOverride(float? zoom)
+    {
+        _zoomOverride = zoom;
+    }
+
     public void SetIdleFocus(Vector3 point, bool snap = true)
     {
         _idleFocus = point;
@@ -319,10 +330,12 @@ public class FollowCamera : MonoBehaviour
         _focusPosition = center;
 
         float desiredZoom = Mathf.Clamp(1f + spread / spreadReference, minZoom, maxZoom);
-        _zoom = Mathf.Lerp(_zoom, desiredZoom, Time.deltaTime * zoomLerpSpeed);
+        _zoom = _zoomOverride ?? Mathf.Lerp(_zoom, desiredZoom, Time.deltaTime * zoomLerpSpeed);
 
         Vector3 desiredPosition = center + offset * _zoom;
-        _smoothedPosition = Vector3.Lerp(_smoothedPosition, desiredPosition, Time.deltaTime * speed);
+        _smoothedPosition = _zoomOverride.HasValue
+            ? desiredPosition
+            : Vector3.Lerp(_smoothedPosition, desiredPosition, Time.deltaTime * speed);
         transform.position = _smoothedPosition + ResolveShakeOffset();
     }
 

@@ -351,8 +351,15 @@ namespace Quantum
             // so a hit taken near the wall can never pop the accessory outside the arena the player
             // is now stuck fighting in.
             EntityRef bossArenaChunk = EntityRef.None;
-            bool constrainToBossArena = f.Global->CurrentState == GameState.Boss
-                && LevelGenerationSystem.TryFindBossArenaChunk(f, out bossArenaChunk);
+            // Keyed on "a boss is alive" as well as GameState.Boss: CurrentState is the effective,
+            // presentation-facing state and flips away from Boss (Upgrade, Victory, ...) while the
+            // gates are still shut. Skipped if the owner is outside the arena, so a drop never
+            // gets forced toward a spot unrelated to where the hit happened.
+            bool bossActive = f.Global->CurrentState == GameState.Boss
+                || f.Filter<BossRuntimeState>().Next(out EntityRef _, out BossRuntimeState _);
+            bool constrainToBossArena = bossActive == true
+                && LevelGenerationSystem.TryFindBossArenaChunk(f, out bossArenaChunk)
+                && FallRespawnUtility.IsInsideChunkBounds(f, bossArenaChunk, anchor) == true;
 
             // A steered drop (AccessoryDropHint) samples a cone first; if none of those spots is standable
             // the normal ring below still gets its full set of attempts.

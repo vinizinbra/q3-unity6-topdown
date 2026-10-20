@@ -130,6 +130,27 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
             ExpBarUiWidget.Instance?.Flash();
     }
 
+    // Boss defeat shard shower (BossDefeatSequenceDirector) - one of its shards reaching a hero: the same pickup
+    // flash + Rift Shard collect sound as a real pickup's arrival, but with the pitch climbing step semitones-steps
+    // so the whole shower reads as one ascending payout instead of the same note repeated.
+    public void PlayRiftShardShowerArrival(EntityRef collector, int step, float semitonesPerStep)
+    {
+        Transform target = EntityViewManager.Instance != null ? EntityViewManager.Instance.GetEntityTransform(collector) : null;
+
+        if (target == null)
+            return;
+
+        target.GetComponentInChildren<HitFeedback>()?.FlashPickup(CurrencyType.RiftShard);
+
+        if (riftShardCollectSound == null)
+            return;
+
+        SoundHandle handle = EntitySound.PlayAt(riftShardCollectSound, target.position, collector);
+
+        if (handle.IsValid == true && step > 0)
+            handle.ScalePitch(Mathf.Pow(2f, step * semitonesPerStep / 12f));
+    }
+
     // On ARRIVAL rather than on collection, so it lands with the flash and the bar catching up
     // instead of firing while the orb is still flying across the screen.
     //

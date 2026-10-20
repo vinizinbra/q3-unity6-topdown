@@ -17,13 +17,13 @@ MonoBehaviour:
     Guid:
       Value: 1111018775685746377
   LaunchAngle:
-    RawValue: 2621440
-  Gravity:
     RawValue: 3276800
+  Gravity:
+    RawValue: 2621440
   TargetDistance:
-    RawValue: 655360
+    RawValue: 196608
   PredictionTime:
-    RawValue: 32768
+    RawValue: 19661
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

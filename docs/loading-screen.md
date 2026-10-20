@@ -163,6 +163,10 @@ only decides when each hero becomes *visible* on this client:
   Lobby, or after `portalMaxDuration` since the screen lifted (reveals everyone left).
 - Camera: `FollowCamera.SetIdleFocus` snaps onto the spawn point behind the screen; it is only framed
   while the camera has no targets, so the local hero takes over as soon as its view registers.
+- Audio (2026-10-20): `portalLoopSound` (`Audio/Generated/PortalLoop` - looping SPACE_WARP charge
+  hum) starts at the portal once the screen lifts and stops with its own fade-out when the portal
+  closes; `heroLandSound` (`Audio/Generated/HeroSpawnLand` - Shock Rifle thunder clap) plays one-shot
+  at each hero on reveal (the travel lightning landing). Both optional.
 
 Authoring: add `HeroSpawnIntroManager` next to `EffectsManager` in the gameplay scene; assign a
 **looping** `Portal Prefab` (not pooled) and a **non-looping** `Hero Spawn Effect Prefab` (pooled).

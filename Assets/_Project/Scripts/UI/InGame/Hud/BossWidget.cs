@@ -113,7 +113,7 @@ public class BossWidget : GameStateGatedWidget
     // GetView would return null right then. Retried every QUpdate (via _pendingBossWindowEntity)
     // until the view actually resolves, instead of a one-shot lookup that could silently leave the
     // camera on normal framing for the whole cutaway.
-    private void TryTriggerBossWindow(Frame frame)
+    private unsafe void TryTriggerBossWindow(Frame frame)
     {
         EntityRef bossEntity = _pendingBossWindowEntity;
 
@@ -141,17 +141,21 @@ public class BossWidget : GameStateGatedWidget
         EnemyDataAsset data = frame.FindAsset(enemy.EnemyData);
         BossDataAsset bossData = data as BossDataAsset;
 
+        // What's left of the sim's intro pause - BossIntroSequenceDirector times its zoom slam/hold/release off it.
+        float pauseRemaining = frame.Global->BossPauseTimer.AsFloat;
+
         if (ScreenFadeWidget.Instance == null)
         {
             FollowCamera.I?.SetFocusOverride(bossTransform);
-            ShowBossWindow(bossData);
+            BossIntroSequenceDirector.Play(bossTransform, pauseRemaining, onImpact: () => ShowBossWindow(bossData));
             return;
         }
 
         ScreenFadeWidget.Instance.FadeOut(cameraFadeDuration, onComplete: () =>
         {
             FollowCamera.I?.SetFocusOverride(bossTransform);
-            ShowBossWindow(bossData);
+            // The reveal card waits for the zoom slam's impact (see BossIntroSequenceDirector.Play).
+            BossIntroSequenceDirector.Play(bossTransform, pauseRemaining - cameraFadeDuration, onImpact: () => ShowBossWindow(bossData));
             ScreenFadeWidget.Instance.FadeIn(cameraFadeDuration);
         });
     }

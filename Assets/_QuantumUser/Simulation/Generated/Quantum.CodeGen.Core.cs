@@ -836,7 +836,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct DifficultySnapshot {
-    public const Int32 SIZE = 88;
+    public const Int32 SIZE = 96;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(0)]
     public DifficultyTier Tier;
@@ -848,7 +848,7 @@ namespace Quantum {
     public FP EnemyHpHeavy;
     [FieldOffset(24)]
     public FP EnemyDamage;
-    [FieldOffset(80)]
+    [FieldOffset(88)]
     public FP SpawnDensity;
     [FieldOffset(16)]
     public FP EliteWeight;
@@ -862,6 +862,8 @@ namespace Quantum {
     public FP EnemyProjectileLead;
     [FieldOffset(48)]
     public FP EnemyMoveSpeed;
+    [FieldOffset(80)]
+    public FP RiftShardReward;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 1297;
@@ -877,6 +879,7 @@ namespace Quantum {
         hash = hash * 31 + EnemyProjectileSpeed.GetHashCode();
         hash = hash * 31 + EnemyProjectileLead.GetHashCode();
         hash = hash * 31 + EnemyMoveSpeed.GetHashCode();
+        hash = hash * 31 + RiftShardReward.GetHashCode();
         return hash;
       }
     }
@@ -893,6 +896,7 @@ namespace Quantum {
         FP.Serialize(&p->EnemyProjectileLead, serializer);
         FP.Serialize(&p->EnemyProjectileSpeed, serializer);
         FP.Serialize(&p->RecoverySpeed, serializer);
+        FP.Serialize(&p->RiftShardReward, serializer);
         FP.Serialize(&p->SpawnDensity, serializer);
     }
   }
@@ -1635,7 +1639,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct _globals_ {
-    public const Int32 SIZE = 1792;
+    public const Int32 SIZE = 1800;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(0)]
     public AssetRef<Map> Map;
@@ -2604,6 +2608,48 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct BossDefeatSequence : Quantum.IComponent {
+    public const Int32 SIZE = 48;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(32)]
+    public FP Elapsed;
+    [FieldOffset(24)]
+    public FP Duration;
+    [FieldOffset(16)]
+    public FP BurstTime;
+    [FieldOffset(40)]
+    public FP RiftShardReward;
+    [FieldOffset(8)]
+    public EntityRef Killer;
+    [FieldOffset(0)]
+    public QBoolean ArenaCleared;
+    [FieldOffset(4)]
+    public QBoolean BurstFired;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 16433;
+        hash = hash * 31 + Elapsed.GetHashCode();
+        hash = hash * 31 + Duration.GetHashCode();
+        hash = hash * 31 + BurstTime.GetHashCode();
+        hash = hash * 31 + RiftShardReward.GetHashCode();
+        hash = hash * 31 + Killer.GetHashCode();
+        hash = hash * 31 + ArenaCleared.GetHashCode();
+        hash = hash * 31 + BurstFired.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (BossDefeatSequence*)ptr;
+        QBoolean.Serialize(&p->ArenaCleared, serializer);
+        QBoolean.Serialize(&p->BurstFired, serializer);
+        EntityRef.Serialize(&p->Killer, serializer);
+        FP.Serialize(&p->BurstTime, serializer);
+        FP.Serialize(&p->Duration, serializer);
+        FP.Serialize(&p->Elapsed, serializer);
+        FP.Serialize(&p->RiftShardReward, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct BossRuntimeState : Quantum.IComponent {
     public const Int32 SIZE = 48;
     public const Int32 ALIGNMENT = 8;
@@ -3359,6 +3405,22 @@ namespace Quantum {
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (ChargedDamageBonusUpgrade*)ptr;
         FP.Serialize(&p->DamageMultiplier, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct CheatDamageBoost : Quantum.IComponent {
+    public const Int32 SIZE = 4;
+    public const Int32 ALIGNMENT = 4;
+    [FieldOffset(0)]
+    private fixed Byte _alignment_padding_[4];
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 16253;
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (CheatDamageBoost*)ptr;
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -9355,6 +9417,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.BossArena>();
       BuildSignalsArrayOnComponentAdded<Quantum.BossArenaGate>();
       BuildSignalsArrayOnComponentRemoved<Quantum.BossArenaGate>();
+      BuildSignalsArrayOnComponentAdded<Quantum.BossDefeatSequence>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.BossDefeatSequence>();
       BuildSignalsArrayOnComponentAdded<Quantum.BossRuntimeState>();
       BuildSignalsArrayOnComponentRemoved<Quantum.BossRuntimeState>();
       BuildSignalsArrayOnComponentAdded<Quantum.BotBrain>();
@@ -9381,6 +9445,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.ChargeHitTracking>();
       BuildSignalsArrayOnComponentAdded<Quantum.ChargedDamageBonusUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.ChargedDamageBonusUpgrade>();
+      BuildSignalsArrayOnComponentAdded<Quantum.CheatDamageBoost>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.CheatDamageBoost>();
       BuildSignalsArrayOnComponentAdded<Quantum.CheatDeathGuard>();
       BuildSignalsArrayOnComponentRemoved<Quantum.CheatDeathGuard>();
       BuildSignalsArrayOnComponentAdded<Quantum.Chest>();
@@ -10019,6 +10085,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.BoneBreakerUpgrade), Quantum.BoneBreakerUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.BossArena), Quantum.BossArena.SIZE);
       typeRegistry.Register(typeof(Quantum.BossArenaGate), Quantum.BossArenaGate.SIZE);
+      typeRegistry.Register(typeof(Quantum.BossDefeatSequence), Quantum.BossDefeatSequence.SIZE);
       typeRegistry.Register(typeof(Quantum.BossRuntimeState), Quantum.BossRuntimeState.SIZE);
       typeRegistry.Register(typeof(Quantum.BotBrain), Quantum.BotBrain.SIZE);
       typeRegistry.Register(typeof(Quantum.BotGoal), 1);
@@ -10036,6 +10103,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.CharacterStats), Quantum.CharacterStats.SIZE);
       typeRegistry.Register(typeof(Quantum.ChargeHitTracking), Quantum.ChargeHitTracking.SIZE);
       typeRegistry.Register(typeof(Quantum.ChargedDamageBonusUpgrade), Quantum.ChargedDamageBonusUpgrade.SIZE);
+      typeRegistry.Register(typeof(Quantum.CheatDamageBoost), Quantum.CheatDamageBoost.SIZE);
       typeRegistry.Register(typeof(Quantum.CheatDeathGuard), Quantum.CheatDeathGuard.SIZE);
       typeRegistry.Register(typeof(Quantum.Chest), Quantum.Chest.SIZE);
       typeRegistry.Register(typeof(Quantum.Chunk), Quantum.Chunk.SIZE);
@@ -10328,7 +10396,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 199)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 201)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryDropHint>(Quantum.AccessoryDropHint.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
@@ -10350,6 +10418,7 @@ namespace Quantum {
         .Add<Quantum.BoneBreakerUpgrade>(Quantum.BoneBreakerUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BossArena>(Quantum.BossArena.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BossArenaGate>(Quantum.BossArenaGate.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.BossDefeatSequence>(Quantum.BossDefeatSequence.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BossRuntimeState>(Quantum.BossRuntimeState.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BotBrain>(Quantum.BotBrain.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Breakable>(Quantum.Breakable.Serialize, null, null, ComponentFlags.None)
@@ -10361,6 +10430,7 @@ namespace Quantum {
         .Add<Quantum.CharacterStats>(Quantum.CharacterStats.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ChargeHitTracking>(Quantum.ChargeHitTracking.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ChargedDamageBonusUpgrade>(Quantum.ChargedDamageBonusUpgrade.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.CheatDamageBoost>(Quantum.CheatDamageBoost.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CheatDeathGuard>(Quantum.CheatDeathGuard.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Chest>(Quantum.Chest.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Chunk>(Quantum.Chunk.Serialize, null, null, ComponentFlags.None)

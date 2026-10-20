@@ -19,8 +19,8 @@ MonoBehaviour:
   LaunchAngle:
     RawValue: 5242880
   Gravity:
-    RawValue: 2621440
+    RawValue: 3932160
   TargetDistance:
-    RawValue: 65536
+    RawValue: 98304
   PredictionTime:
     RawValue: 0

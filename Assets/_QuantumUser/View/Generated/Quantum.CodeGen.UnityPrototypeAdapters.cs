@@ -146,6 +146,29 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class BossDefeatSequencePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.BossDefeatSequencePrototype> {
+    public FP Elapsed;
+    public FP Duration;
+    public FP BurstTime;
+    public FP RiftShardReward;
+    public Quantum.QuantumEntityPrototype Killer;
+    public QBoolean ArenaCleared;
+    public QBoolean BurstFired;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.BossDefeatSequencePrototype prototype);
+    public override Quantum.Prototypes.BossDefeatSequencePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.BossDefeatSequencePrototype();
+      converter.Convert(this.Elapsed, out result.Elapsed);
+      converter.Convert(this.Duration, out result.Duration);
+      converter.Convert(this.BurstTime, out result.BurstTime);
+      converter.Convert(this.RiftShardReward, out result.RiftShardReward);
+      converter.Convert(this.Killer, out result.Killer);
+      converter.Convert(this.ArenaCleared, out result.ArenaCleared);
+      converter.Convert(this.BurstFired, out result.BurstFired);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class BotBrainPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.BotBrainPrototype> {
     public Quantum.Prototypes.InputPrototype Data;
     public Quantum.QEnum8<BotGoal> Goal;

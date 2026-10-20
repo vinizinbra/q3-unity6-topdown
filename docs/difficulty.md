@@ -38,6 +38,7 @@ Medium, or having no `DifficultyConfig` assigned, is an exact no-op.
 | EnemyProjectileSpeed | 0.85 | 1 | 1.15 | 1.05 | 1.5 | `ProjectileSpawner.Spawn` (Enemy owners only) |
 | EnemyProjectileLead | 0.5 | 1 | 1.2 | 1.05 | 1.6 | Projectile/Fan/MortarBarrage delivery `LeadFactor`/`MaxLeadDistance` |
 | EnemyMoveSpeed | 0.95 | 1 | 1.05 | 1.03 | 1.25 | `EnemySystem` move speed, `ProjectileAimUtility.ResolveLeadVelocity` cap |
+| **RiftShardReward** (reward) | 0.6 | 1 | 1.4 | 1.10 | 3.0 | `RiftShardUtility.GrantAll` - every Rift Shard (pickups + boss defeat reward). NM1 ×1.54, NM5 ×2.25, NM10 ×3 |
 
 Resolved values: NM1 HpHeavy ×1.81, NM5 ×4.43, NM10 ×13.5. All the capped channels are at their
 cap by NM10. At these placeholder rates HP hits `MaxMultiplier` around NM45, so tune `PerLevel`
@@ -45,6 +46,10 @@ down before deep Nightmare matters.
 
 The speed channels are **tick-rate multipliers** (>1 = shorter windup/recovery). They are consumed
 exactly like `BossPhaseUtility`'s per-phase multipliers, at the same lines, composed with them.
+
+**The one reward channel:** `RiftShardReward` (2026-10-20) - harder tiers pay more META currency (Gunfire
+Reborn-style: their Elite/Nightmare difficulties raise Soul Essence drops ~1.4x/~1.8x). It's the only
+non-enemy channel.
 
 **Deliberately not channels:** XP requirement and in-run coins. A harder tier shouldn't also slow
 the build or starve the Store, because the difficulty should come from the enemies.

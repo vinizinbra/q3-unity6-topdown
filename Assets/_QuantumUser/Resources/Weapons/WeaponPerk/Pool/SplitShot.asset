@@ -19,11 +19,11 @@ MonoBehaviour:
   Icon: {fileID: 737947042, guid: 624ad7d047fd5482799e44bb2e6ad8de, type: 3}
   DisplayName: Split Shot
   Rarity: 1
-  Description: Hits split into <color=#FD3971><b>{0:0}</b></color> shots (<color=#FD3971><b>{1:0}%</b></color>
-    Damage)
+  Description: Hits fork toward <color=#FD3971><b>{0:0}</b></color> nearby enemies
+    (<color=#FD3971><b>{1:0}%</b></color> Damage)
   Count: 2
   DamageMultiplier:
-    RawValue: 32768
+    RawValue: 26214
   ProjectileOverride:
     Id:
       Value: 0

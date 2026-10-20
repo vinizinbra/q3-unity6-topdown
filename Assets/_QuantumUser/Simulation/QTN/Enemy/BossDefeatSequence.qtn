@@ -1,0 +1,16 @@
+// Added to the last living boss by BossDefeatUtility.TryBegin the instant its killing blow lands
+// (DamageUtility.ResolveDeath) - marks the death cinematic in progress. GameplaySystemGroup stays
+// disabled for its whole length; the always-on BossDefeatSystem ticks it, clears the arena on its
+// first tick, fires the final burst (Rift Shard reward + BossDefeatBurst) at BurstTime, then
+// destroys the boss and re-enables the group at Duration - which is what lets VictorySystem see the
+// boss gone. See docs/boss-encounter.md's "Boss defeat sequence".
+component BossDefeatSequence
+{
+    FP Elapsed;
+    FP Duration;
+    FP BurstTime;
+    FP RiftShardReward;
+    EntityRef Killer;
+    Boolean ArenaCleared;
+    Boolean BurstFired;
+}

@@ -24,6 +24,7 @@ namespace Quantum
                 DifficultyChannel.RecoverySpeed => snapshot->RecoverySpeed,
                 DifficultyChannel.EnemyProjectileSpeed => snapshot->EnemyProjectileSpeed,
                 DifficultyChannel.EnemyProjectileLead => snapshot->EnemyProjectileLead,
+                DifficultyChannel.RiftShardReward => snapshot->RiftShardReward,
                 _ => snapshot->EnemyMoveSpeed,
             };
 

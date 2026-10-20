@@ -37,6 +37,8 @@ MonoBehaviour:
       RawValue: 32768
     EnemyMoveSpeed:
       RawValue: 62259
+    RiftShardReward:
+      RawValue: 39322
   Medium:
     EnemyHpLight:
       RawValue: 65536
@@ -57,6 +59,8 @@ MonoBehaviour:
     EnemyProjectileLead:
       RawValue: 65536
     EnemyMoveSpeed:
+      RawValue: 65536
+    RiftShardReward:
       RawValue: 65536
   Hard:
     EnemyHpLight:
@@ -79,6 +83,8 @@ MonoBehaviour:
       RawValue: 78643
     EnemyMoveSpeed:
       RawValue: 68813
+    RiftShardReward:
+      RawValue: 91750
   NightmareGrowth:
   - Channel: 0
     PerLevel:
@@ -130,5 +136,10 @@ MonoBehaviour:
       RawValue: 67502
     Cap:
       RawValue: 81920
+  - Channel: 10
+    PerLevel:
+      RawValue: 72090
+    Cap:
+      RawValue: 196608
   MaxMultiplier:
     RawValue: 655360000

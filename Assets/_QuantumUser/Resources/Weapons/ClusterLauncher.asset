@@ -64,12 +64,12 @@ MonoBehaviour:
   Description: Grenades split into 3 bomblets on impact.
   ShakeTier: 1
   ProjectileVisuals:
-    ProjectileSprite: {fileID: 0}
+    ProjectileSprite: {fileID: -498055188, guid: 8a17d688bdd9e47c68bbdfc6beba17e1, type: 3}
     ProjectileSpriteRotationOffset: 0
-    ProjectileColor: {r: 1, g: 1, b: 1, a: 1}
-    ProjectileScale: {x: 1, y: 1, z: 1}
-    EnableProjectileSparkTrail: 0
-    ProjectileSparkTrailColor: {r: 1, g: 1, b: 1, a: 1}
+    ProjectileColor: {r: 3.9999998, g: 0.7885445, b: 0, a: 1}
+    ProjectileScale: {x: 0.8, y: 0.8, z: 0.8}
+    EnableProjectileSparkTrail: 1
+    ProjectileSparkTrailColor: {r: 2, g: 0.39427227, b: 0, a: 1}
     ProjectileSparkTrailScale: {x: 1, y: 1, z: 1}
     ProjectileSparkTrailLifetimeOverride: 0
     ProjectileSparkTrailRateOverDistanceOverride: 0
@@ -106,30 +106,22 @@ MonoBehaviour:
       m_ColorSpace: -1
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
-    EnableProjectileGlow: 0
-    ProjectileGlowColor: {r: 1, g: 1, b: 1, a: 1}
-    ProjectileGlowScale: {x: 1, y: 1, z: 1}
-    EnableProjectileLight: 0
-    ProjectileLightColor: {r: 1, g: 1, b: 1, a: 1}
+    EnableProjectileGlow: 1
+    ProjectileGlowColor: {r: 3.9999998, g: 0.7885445, b: 0, a: 0.20392157}
+    ProjectileGlowScale: {x: 2, y: 2, z: 2}
+    EnableProjectileLight: 1
+    ProjectileLightColor: {r: 2, g: 0.39427227, b: 0, a: 1}
     EnableProjectileDestroyEffect: 1
     ProjectileDestroyColor: {r: 1, g: 1, b: 1, a: 1}
     ProjectileDestroyGlowColor: {r: 1, g: 1, b: 1, a: 1}
     ProjectileDestroyScale: {x: 1, y: 1, z: 1}
-    ProjectileExtraParticle: {fileID: 198688473503397916, guid: 14a334c03c1cccd458efe9a3d4fbc240, type: 3}
+    ProjectileExtraParticle: {fileID: 2303534806004991678, guid: 090744af9ace74be9a6bd478027920f1, type: 3}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
-  _dpsPreview: 'Burst DPS: 57.7
+  _dpsPreview: 'Burst DPS: 26.3
 
-    Sustained DPS (incl. reload): 49.5
+    Sustained DPS (incl. reload): 22.5
 
     Damage/min:
-    2970
+    1350
 
-    Crit dmg/shot: 82.5 (vs 55 normal) @ 10 % chance, x1.5
-
-    Est. targets/shot:
-    3.5
-
-    Effective Burst DPS (all targets): 202.1
-
-    Effective Sustained DPS
-    (all targets): 173.2'
+    Crit dmg/shot: 37.5 (vs 25 normal) @ 10 % chance, x1.5'
