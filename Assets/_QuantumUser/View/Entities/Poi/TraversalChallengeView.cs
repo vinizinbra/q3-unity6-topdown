@@ -46,6 +46,8 @@ namespace Quantum
         private string failedPromptDescription = "CHALLENGE FAILED";
 
         private TraversalChallengeState? _lastState;
+        private AssetRef<EntityPrototype> _lastRewardPrototype;
+        private InteractionPromptWidget _appliedWidget;
 
         protected override unsafe void QUpdate(QuantumGame game)
         {
@@ -53,6 +55,17 @@ namespace Quantum
 
             if (f.Unsafe.TryGetPointer<TraversalChallenge>(_entityRef, out var challenge) == false)
                 return;
+
+            // The prompt widget can spawn a few frames after this view (see
+            // InteractionPromptPoiView.TrySpawnPrompt's retry) - re-push everything once it appears.
+            if (_appliedWidget != PromptWidget)
+            {
+                _appliedWidget = PromptWidget;
+                _lastState = null;
+                _lastRewardPrototype = default;
+            }
+
+            UpdateRewardPreview(f, challenge);
 
             TraversalChallengeState state = challenge->State;
 
@@ -67,6 +80,52 @@ namespace Quantum
             SetShown(failedVisual, state == TraversalChallengeState.Failed);
 
             PromptWidget?.SetDescriptionOverride(ResolvePromptDescriptionOverride(state));
+        }
+
+        // The reward is rolled by the sim (TraversalChallenge.RolledRewardIndex), not fixed per
+        // instance - preview the rolled prototype's own Chest.Kind through
+        // LevelUpCategoryUtility's chest-reward icon/name, so the prompt always names what
+        // will actually spawn. Falls back to the authored promptRewardIcon/promptRewardText (passed
+        // at Setup) until the roll lands or for a non-Chest reward.
+        private unsafe void UpdateRewardPreview(Frame f, TraversalChallenge* challenge)
+        {
+            if (PromptWidget == null)
+                return;
+
+            AssetRef<EntityPrototype> rolled = TraversalChallengeUtility.GetRolledReward(challenge);
+
+            if (rolled == _lastRewardPrototype)
+                return;
+
+            _lastRewardPrototype = rolled;
+
+            if (TryResolveChestKind(f, rolled, out LevelUpCategory kind) == true)
+                PromptWidget.SetReward(LevelUpCategoryUtility.GetChestRewardIcon(kind), LevelUpCategoryUtility.GetChestRewardName(kind));
+        }
+
+        // Same prototype walk ProjectileGhostTrailManager.ResolvePrefabView uses.
+        private static bool TryResolveChestKind(Frame f, AssetRef<EntityPrototype> prototypeRef, out LevelUpCategory kind)
+        {
+            kind = default;
+
+            if (prototypeRef.IsValid == false)
+                return false;
+
+            EntityPrototype prototype = f.FindAsset(prototypeRef);
+
+            if (prototype == null || prototype.Container.Components == null)
+                return false;
+
+            foreach (ComponentPrototype component in prototype.Container.Components)
+            {
+                if (component is Prototypes.ChestPrototype chest)
+                {
+                    kind = chest.Kind;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private string ResolvePromptDescriptionOverride(TraversalChallengeState state)

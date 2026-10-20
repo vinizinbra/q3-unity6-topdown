@@ -395,6 +395,9 @@
                 // SurvivalProgressionUtility much earlier in this same list. See
                 // docs/traversal-challenge.md.
                 new TraversalChallengeSystem(),
+                // A completed Traversal Challenge's return pad - teleports players back near the
+                // activator. See TraversalChallenge.qtn/docs/traversal-challenge.md.
+                new TraversalReturnTeleportSystem(),
                 // Ticks each Optional Team Challenge POI's own WaitingForTeam/Starting/ChallengeActive
                 // state - same "lives inside this group, own global pause counter" shape as
                 // TraversalChallengeSystem just above. See TeamChallenge.qtn.

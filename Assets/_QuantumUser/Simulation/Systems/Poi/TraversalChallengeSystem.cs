@@ -15,6 +15,25 @@ namespace Quantum
     {
         public override void Update(Frame f, ref Filter filter)
         {
+            // Idle: roll the reward up front so the prompt can preview it (see EnsureRewardRolled).
+            if (filter.TraversalChallenge->State == TraversalChallengeState.Idle)
+            {
+                TraversalChallengeUtility.EnsureRewardRolled(f, filter.TraversalChallenge);
+                return;
+            }
+
+            // Completed: wait for the reward to be collected, then put down the return pad (once).
+            if (filter.TraversalChallenge->State == TraversalChallengeState.Completed)
+            {
+                if (filter.TraversalChallenge->SpawnedReturnTeleport == EntityRef.None
+                    && TraversalChallengeUtility.IsRewardCollected(f, filter.TraversalChallenge) == true)
+                {
+                    TraversalChallengeUtility.SpawnReturnTeleport(f, filter.Entity, filter.TraversalChallenge);
+                }
+
+                return;
+            }
+
             if (filter.TraversalChallenge->State != TraversalChallengeState.Active)
                 return;
 

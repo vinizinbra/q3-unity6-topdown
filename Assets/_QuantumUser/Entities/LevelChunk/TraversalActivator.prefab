@@ -19692,6 +19692,45 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
+    RewardPosition:
+      X:
+        RawValue: 2295726
+      Y:
+        RawValue: 175636
+      Z:
+        RawValue: 384041
+    RewardPrototypeCount: 3
+    RewardPrototypes:
+    - Id:
+        Value: 1329904124162659410
+    - Id:
+        Value: 1369500839011923984
+    - Id:
+        Value: 1321529338188975839
+    - Id:
+        Value: 0
+    RewardRolled:
+      Value: 0
+    RolledRewardIndex: 0
+    SpawnedReward: {fileID: 0}
+    ReturnTeleportPrototype:
+      Id:
+        Value: 1308270549432875187
+    ReturnTeleportPosition:
+      X:
+        RawValue: 2064384
+      Y:
+        RawValue: 65536
+      Z:
+        RawValue: 163840
+    ReturnDestinationPosition:
+      X:
+        RawValue: 104858
+      Y:
+        RawValue: 65536
+      Z:
+        RawValue: 642253
+    SpawnedReturnTeleport: {fileID: 0}
 --- !u!114 &4724026707207944512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19715,8 +19754,8 @@ MonoBehaviour:
   promptAlreadyUsedDescription: ALREADY USED
   promptNotNeededDescription: FULL HEALTH
   promptWorldOffset: {x: 0, y: 2.5, z: 0}
-  promptRewardIcon: {fileID: 793603354, guid: 9500f48424b214942acfffa7912cb6be, type: 3}
-  promptRewardText: Rift Mutation
+  promptRewardIcon: {fileID: 0}
+  promptRewardText: 
   idleVisual: {fileID: 4082201144294158327}
   activeVisual: {fileID: 4082201144294158327}
   completedVisual: {fileID: 557661819088810500}

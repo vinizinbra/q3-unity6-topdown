@@ -7948,34 +7948,55 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct TraversalChallenge : Quantum.IComponent {
-    public const Int32 SIZE = 344;
+    public const Int32 SIZE = 472;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(120)]
+    [FieldOffset(176)]
     public PoiAvailability Availability;
-    [FieldOffset(104)]
+    [FieldOffset(160)]
     public FP Duration;
-    [FieldOffset(112)]
+    [FieldOffset(168)]
     public FP RemainingTime;
-    [FieldOffset(1)]
+    [FieldOffset(3)]
     public TraversalChallengeState State;
-    [FieldOffset(16)]
+    [FieldOffset(56)]
     public EntityRef ActivatedBy;
-    [FieldOffset(24)]
+    [FieldOffset(64)]
     public EntityRef Chunk;
-    [FieldOffset(128)]
+    [FieldOffset(184)]
     public FPVector3 CheckpointPosition;
-    [FieldOffset(96)]
+    [FieldOffset(152)]
     public FP CheckpointRadius;
     [FieldOffset(8)]
     public AssetRef<EntityPrototype> PlatformPrototype;
     [FieldOffset(0)]
     public Byte PlatformCount;
-    [FieldOffset(152)]
+    [FieldOffset(208)]
     [FramePrinter.FixedArrayAttribute(typeof(FPVector3), 8)]
     private fixed Byte _PlatformPositions_[192];
-    [FieldOffset(32)]
+    [FieldOffset(72)]
     [FramePrinter.FixedArrayAttribute(typeof(EntityRef), 8)]
     private fixed Byte _SpawnedPlatforms_[64];
+    [FieldOffset(448)]
+    public FPVector3 RewardPosition;
+    [FieldOffset(1)]
+    public Byte RewardPrototypeCount;
+    [FieldOffset(24)]
+    [FramePrinter.FixedArrayAttribute(typeof(AssetRef<EntityPrototype>), 4)]
+    private fixed Byte _RewardPrototypes_[32];
+    [FieldOffset(4)]
+    public QBoolean RewardRolled;
+    [FieldOffset(2)]
+    public Byte RolledRewardIndex;
+    [FieldOffset(144)]
+    public EntityRef SpawnedReward;
+    [FieldOffset(16)]
+    public AssetRef<EntityPrototype> ReturnTeleportPrototype;
+    [FieldOffset(424)]
+    public FPVector3 ReturnTeleportPosition;
+    [FieldOffset(400)]
+    public FPVector3 ReturnDestinationPosition;
+    [FieldOffset(136)]
+    public EntityRef SpawnedReturnTeleport;
     public readonly FixedArray<FPVector3> PlatformPositions {
       get {
         fixed (byte* p = _PlatformPositions_) { return new FixedArray<FPVector3>(p, 24, 8); }
@@ -7984,6 +8005,11 @@ namespace Quantum {
     public readonly FixedArray<EntityRef> SpawnedPlatforms {
       get {
         fixed (byte* p = _SpawnedPlatforms_) { return new FixedArray<EntityRef>(p, 8, 8); }
+      }
+    }
+    public readonly FixedArray<AssetRef<EntityPrototype>> RewardPrototypes {
+      get {
+        fixed (byte* p = _RewardPrototypes_) { return new FixedArray<AssetRef<EntityPrototype>>(p, 8, 4); }
       }
     }
     public override readonly Int32 GetHashCode() {
@@ -8001,23 +8027,93 @@ namespace Quantum {
         hash = hash * 31 + PlatformCount.GetHashCode();
         hash = hash * 31 + HashCodeUtils.GetArrayHashCode(PlatformPositions);
         hash = hash * 31 + HashCodeUtils.GetArrayHashCode(SpawnedPlatforms);
+        hash = hash * 31 + RewardPosition.GetHashCode();
+        hash = hash * 31 + RewardPrototypeCount.GetHashCode();
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(RewardPrototypes);
+        hash = hash * 31 + RewardRolled.GetHashCode();
+        hash = hash * 31 + RolledRewardIndex.GetHashCode();
+        hash = hash * 31 + SpawnedReward.GetHashCode();
+        hash = hash * 31 + ReturnTeleportPrototype.GetHashCode();
+        hash = hash * 31 + ReturnTeleportPosition.GetHashCode();
+        hash = hash * 31 + ReturnDestinationPosition.GetHashCode();
+        hash = hash * 31 + SpawnedReturnTeleport.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (TraversalChallenge*)ptr;
         serializer.Stream.Serialize(&p->PlatformCount);
+        serializer.Stream.Serialize(&p->RewardPrototypeCount);
+        serializer.Stream.Serialize(&p->RolledRewardIndex);
         serializer.Stream.Serialize((Byte*)&p->State);
+        QBoolean.Serialize(&p->RewardRolled, serializer);
         AssetRef.Serialize(&p->PlatformPrototype, serializer);
+        AssetRef.Serialize(&p->ReturnTeleportPrototype, serializer);
+        FixedArray.Serialize(p->RewardPrototypes, serializer, Statics.SerializeAssetRef);
         EntityRef.Serialize(&p->ActivatedBy, serializer);
         EntityRef.Serialize(&p->Chunk, serializer);
         FixedArray.Serialize(p->SpawnedPlatforms, serializer, Statics.SerializeEntityRef);
+        EntityRef.Serialize(&p->SpawnedReturnTeleport, serializer);
+        EntityRef.Serialize(&p->SpawnedReward, serializer);
         FP.Serialize(&p->CheckpointRadius, serializer);
         FP.Serialize(&p->Duration, serializer);
         FP.Serialize(&p->RemainingTime, serializer);
         Quantum.PoiAvailability.Serialize(&p->Availability, serializer);
         FPVector3.Serialize(&p->CheckpointPosition, serializer);
         FixedArray.Serialize(p->PlatformPositions, serializer, Statics.SerializeFPVector3);
+        FPVector3.Serialize(&p->ReturnDestinationPosition, serializer);
+        FPVector3.Serialize(&p->ReturnTeleportPosition, serializer);
+        FPVector3.Serialize(&p->RewardPosition, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct TraversalReturnTeleport : Quantum.IComponent {
+    public const Int32 SIZE = 112;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(80)]
+    public FP Radius;
+    [FieldOffset(72)]
+    public FP ChargeTime;
+    [FieldOffset(88)]
+    public FPVector3 Destination;
+    [FieldOffset(0)]
+    public EntityRef Challenge;
+    [FieldOffset(8)]
+    [FramePrinter.FixedArrayAttribute(typeof(EntityRef), 4)]
+    private fixed Byte _Charger_[32];
+    [FieldOffset(40)]
+    [FramePrinter.FixedArrayAttribute(typeof(FP), 4)]
+    private fixed Byte _Charge_[32];
+    public readonly FixedArray<EntityRef> Charger {
+      get {
+        fixed (byte* p = _Charger_) { return new FixedArray<EntityRef>(p, 8, 4); }
+      }
+    }
+    public readonly FixedArray<FP> Charge {
+      get {
+        fixed (byte* p = _Charge_) { return new FixedArray<FP>(p, 8, 4); }
+      }
+    }
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 19489;
+        hash = hash * 31 + Radius.GetHashCode();
+        hash = hash * 31 + ChargeTime.GetHashCode();
+        hash = hash * 31 + Destination.GetHashCode();
+        hash = hash * 31 + Challenge.GetHashCode();
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Charger);
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Charge);
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (TraversalReturnTeleport*)ptr;
+        EntityRef.Serialize(&p->Challenge, serializer);
+        FixedArray.Serialize(p->Charger, serializer, Statics.SerializeEntityRef);
+        FixedArray.Serialize(p->Charge, serializer, Statics.SerializeFP);
+        FP.Serialize(&p->ChargeTime, serializer);
+        FP.Serialize(&p->Radius, serializer);
+        FPVector3.Serialize(&p->Destination, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -9755,6 +9851,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Transform3D>();
       BuildSignalsArrayOnComponentAdded<Quantum.TraversalChallenge>();
       BuildSignalsArrayOnComponentRemoved<Quantum.TraversalChallenge>();
+      BuildSignalsArrayOnComponentAdded<Quantum.TraversalReturnTeleport>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.TraversalReturnTeleport>();
       BuildSignalsArrayOnComponentAdded<Quantum.UndertowPull>();
       BuildSignalsArrayOnComponentRemoved<Quantum.UndertowPull>();
       BuildSignalsArrayOnComponentAdded<Quantum.UndertowUpgrade>();
@@ -10358,6 +10456,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Transform3D), Transform3D.SIZE);
       typeRegistry.Register(typeof(Quantum.TraversalChallenge), Quantum.TraversalChallenge.SIZE);
       typeRegistry.Register(typeof(Quantum.TraversalChallengeState), 1);
+      typeRegistry.Register(typeof(Quantum.TraversalReturnTeleport), Quantum.TraversalReturnTeleport.SIZE);
       typeRegistry.Register(typeof(Quantum.UndertowPull), Quantum.UndertowPull.SIZE);
       typeRegistry.Register(typeof(Quantum.UndertowUpgrade), Quantum.UndertowUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.UnstableMixtureUpgrade), Quantum.UnstableMixtureUpgrade.SIZE);
@@ -10396,7 +10495,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 201)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 202)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryDropHint>(Quantum.AccessoryDropHint.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
@@ -10569,6 +10668,7 @@ namespace Quantum {
         .Add<Quantum.TrainingDummySpawner>(Quantum.TrainingDummySpawner.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.TrainingFinish>(Quantum.TrainingFinish.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.TraversalChallenge>(Quantum.TraversalChallenge.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.TraversalReturnTeleport>(Quantum.TraversalReturnTeleport.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UndertowPull>(Quantum.UndertowPull.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UndertowUpgrade>(Quantum.UndertowUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UnstableMixtureUpgrade>(Quantum.UnstableMixtureUpgrade.Serialize, null, null, ComponentFlags.None)

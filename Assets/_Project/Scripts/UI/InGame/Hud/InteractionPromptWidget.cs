@@ -210,10 +210,17 @@ public class InteractionPromptWidget : MonoBehaviour
         _descriptionOverride = description ?? string.Empty;
     }
 
-    // Set once here, never touched again afterward - constant for this POI instance's whole
-    // lifetime, same as SetTitle above (see PoiView.promptRewardIcon/promptRewardText). Shown
-    // whenever either half was actually authored, so a POI kind that never passes these (every kind
-    // besides Optional Team Challenge/Traversal Challenge today) simply never shows this row.
+    // Live replacement for the reward row Setup was given - for a POI whose reward is rolled by the
+    // sim rather than fixed per instance (Traversal Challenge's TraversalChallenge.RolledRewardIndex,
+    // see TraversalChallengeView), so the preview always names the reward that will actually spawn.
+    public void SetReward(Sprite rewardIcon, string rewardText)
+    {
+        ApplyReward(rewardIcon, rewardText);
+    }
+
+    // Set from Setup (constant for most POIs, same as SetTitle above - see
+    // PoiView.promptRewardIcon/promptRewardText) or live via SetReward. Shown whenever either half
+    // is set, so a POI kind that never passes these simply never shows this row.
     private void ApplyReward(Sprite rewardIcon, string rewardText)
     {
         bool hasReward = rewardIcon != null || string.IsNullOrEmpty(rewardText) == false;

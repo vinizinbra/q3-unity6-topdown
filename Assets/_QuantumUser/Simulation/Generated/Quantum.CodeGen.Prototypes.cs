@@ -4380,6 +4380,17 @@ namespace Quantum.Prototypes {
     public FPVector3[] PlatformPositions = new FPVector3[8];
     [ArrayLengthAttribute(8)]
     public MapEntityId[] SpawnedPlatforms = new MapEntityId[8];
+    public FPVector3 RewardPosition;
+    public Byte RewardPrototypeCount;
+    [ArrayLengthAttribute(4)]
+    public AssetRef<EntityPrototype>[] RewardPrototypes = new AssetRef<EntityPrototype>[4];
+    public QBoolean RewardRolled;
+    public Byte RolledRewardIndex;
+    public MapEntityId SpawnedReward;
+    public AssetRef<EntityPrototype> ReturnTeleportPrototype;
+    public FPVector3 ReturnTeleportPosition;
+    public FPVector3 ReturnDestinationPosition;
+    public MapEntityId SpawnedReturnTeleport;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.TraversalChallenge component = default;
         Materialize((Frame)f, ref component, in context);
@@ -4401,6 +4412,47 @@ namespace Quantum.Prototypes {
         }
         for (int i = 0, count = PrototypeValidator.CheckLength(SpawnedPlatforms, 8, in context); i < count; ++i) {
           PrototypeValidator.FindMapEntity(this.SpawnedPlatforms[i], in context, out *result.SpawnedPlatforms.GetPointer(i));
+        }
+        result.RewardPosition = this.RewardPosition;
+        result.RewardPrototypeCount = this.RewardPrototypeCount;
+        for (int i = 0, count = PrototypeValidator.CheckLength(RewardPrototypes, 4, in context); i < count; ++i) {
+          *result.RewardPrototypes.GetPointer(i) = this.RewardPrototypes[i];
+        }
+        result.RewardRolled = this.RewardRolled;
+        result.RolledRewardIndex = this.RolledRewardIndex;
+        PrototypeValidator.FindMapEntity(this.SpawnedReward, in context, out result.SpawnedReward);
+        result.ReturnTeleportPrototype = this.ReturnTeleportPrototype;
+        result.ReturnTeleportPosition = this.ReturnTeleportPosition;
+        result.ReturnDestinationPosition = this.ReturnDestinationPosition;
+        PrototypeValidator.FindMapEntity(this.SpawnedReturnTeleport, in context, out result.SpawnedReturnTeleport);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.TraversalReturnTeleport))]
+  public unsafe class TraversalReturnTeleportPrototype : ComponentPrototype<Quantum.TraversalReturnTeleport> {
+    public FP Radius;
+    public FP ChargeTime;
+    public FPVector3 Destination;
+    public MapEntityId Challenge;
+    [ArrayLengthAttribute(4)]
+    public MapEntityId[] Charger = new MapEntityId[4];
+    [ArrayLengthAttribute(4)]
+    public FP[] Charge = new FP[4];
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.TraversalReturnTeleport component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.TraversalReturnTeleport result, in PrototypeMaterializationContext context = default) {
+        result.Radius = this.Radius;
+        result.ChargeTime = this.ChargeTime;
+        result.Destination = this.Destination;
+        PrototypeValidator.FindMapEntity(this.Challenge, in context, out result.Challenge);
+        for (int i = 0, count = PrototypeValidator.CheckLength(Charger, 4, in context); i < count; ++i) {
+          PrototypeValidator.FindMapEntity(this.Charger[i], in context, out *result.Charger.GetPointer(i));
+        }
+        for (int i = 0, count = PrototypeValidator.CheckLength(Charge, 4, in context); i < count; ++i) {
+          *result.Charge.GetPointer(i) = this.Charge[i];
         }
     }
   }

@@ -31,4 +31,32 @@ public static class LevelUpCategoryUtility
     {
         return SpriteManager.GetSprite(category.ToString());
     }
+
+    // How a CHEST of this category is named/shown as a reward (e.g. Traversal Challenge's prompt
+    // preview) - "Hero Chest", not the category's own "Hero Skill". Icons are SpriteConfigRewards'
+    // own chest entries (HeroChest/WeaponChest/WeaponPerkChest/RiftMutation); a category with no
+    // chest entry falls back to GetIcon.
+    public static string GetChestRewardName(LevelUpCategory category)
+    {
+        switch (category)
+        {
+            case LevelUpCategory.HeroSkill: return "Hero Chest";
+            case LevelUpCategory.GlobalUpgrade: return "Upgrade Chest";
+            case LevelUpCategory.RiftMutation: return "Rift Mutation";
+            case LevelUpCategory.WeaponPerk: return "Weapon Perk Chest";
+            case LevelUpCategory.ChooseWeapon: return "Weapon Chest";
+            default: return "Chest";
+        }
+    }
+
+    public static Sprite GetChestRewardIcon(LevelUpCategory category)
+    {
+        switch (category)
+        {
+            case LevelUpCategory.HeroSkill: return SpriteManager.GetSprite("HeroChest");
+            case LevelUpCategory.WeaponPerk: return SpriteManager.GetSprite("WeaponPerkChest");
+            case LevelUpCategory.ChooseWeapon: return SpriteManager.GetSprite("WeaponChest");
+            default: return GetIcon(category);
+        }
+    }
 }

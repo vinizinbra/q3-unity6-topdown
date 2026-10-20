@@ -958,6 +958,17 @@ event TraversalChallengeFailed
     EntityRef Challenge;
 }
 
+// Fired by TraversalReturnTeleportSystem the tick a player steps onto a Traversal Challenge's
+// return pad and is teleported back near the activator - View-only hook for the departure/arrival
+// VFX (TraversalReturnTeleportView).
+event TraversalReturnTeleported
+{
+    EntityRef Player;
+    EntityRef Teleport;
+    FPVector3 From;
+    FPVector3 To;
+}
+
 // Fired by TeamChallengeUtility.TryReadyUp the instant the FIRST Raider Readies up for an
 // Optional Team Challenge (see TeamChallenge.qtn) - the Available->WaitingForTeam edge only, never
 // re-fired for a 2nd/3rd/4th Raider readying (the X/Y HUD counter handles that). Player is who

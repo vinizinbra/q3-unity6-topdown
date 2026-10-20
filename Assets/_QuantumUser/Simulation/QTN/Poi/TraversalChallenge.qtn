@@ -1,4 +1,4 @@
-// A world POI, timed platform crossing to a reward already sitting on the far side of a gap (see
+// A world POI, timed platform crossing to a reward spawned on the far side of a gap (see
 // docs/traversal-challenge.md) - press-to-activate via the same generic Base-Skill-button redirect
 // every other POI uses (Interactable/ContextInteraction, see ContextInteraction.qtn). Unlike
 // HealingShrine/CursedRift this is deliberately NOT per-player gated (no PoiUsagePolicy/PoiUsage) -
@@ -52,6 +52,48 @@ component TraversalChallenge
     Byte PlatformCount;
     array<FPVector3>[8] PlatformPositions;
     array<EntityRef>[8] SpawnedPlatforms;
+
+    // The reward waiting on the far side. Rolled ONCE up front (RolledRewardIndex - uniform
+    // deterministic roll over RewardPrototypes, the first tick the challenge exists) so the POI's
+    // prompt can preview exactly what will spawn (TraversalChallengeView reads the rolled
+    // prototype's Chest.Kind); spawned on activate, f.Destroy'd on Fail if still unopened, left alone
+    // on Complete - it no longer exists before activation (it used to be baked into the chunk's
+    // ChunkSpawnConfig, which read as "free chest, ignore the challenge"). Chunk-relative, same
+    // frame as CheckpointPosition.
+    FPVector3 RewardPosition;
+    Byte RewardPrototypeCount;
+    array<AssetRef<EntityPrototype>>[4] RewardPrototypes;
+    Boolean RewardRolled;
+    Byte RolledRewardIndex;
+    EntityRef SpawnedReward;
+
+    // Return pad - spawned once the challenge is Completed AND the reward has been collected
+    // (Chest.Opened, or the reward entity is gone), at ReturnTeleportPosition (chunk-relative,
+    // ground-snapped). Stepping on it teleports a player back to ReturnDestinationPosition (chunk-
+    // relative, ground-snapped - authored near the activator) so nobody has to walk back across.
+    // Permanent for the rest of the run (a teammate who was fighting elsewhere may use it later).
+    // Left unassigned, no pad spawns.
+    AssetRef<EntityPrototype> ReturnTeleportPrototype;
+    FPVector3 ReturnTeleportPosition;
+    FPVector3 ReturnDestinationPosition;
+    EntityRef SpawnedReturnTeleport;
+}
+
+// The return pad itself (see TraversalChallenge.ReturnTeleportPrototype). Radius/ChargeTime are
+// authored on the pad prefab; Destination/Challenge are written by
+// TraversalChallengeUtility.SpawnReturnTeleport. Ticked by TraversalReturnTeleportSystem: a player
+// must STAND inside Radius for ChargeTime seconds (stepping out resets them) - brushing past it
+// doesn't warp anyone. Charger[i] owns Charge[i] (parallel keyed arrays, same shape as
+// AreaAllyBudget - no map type in the DSL), sized to the 4-player co-op cap; the View reads the
+// largest Charge for its charging feedback.
+component TraversalReturnTeleport
+{
+    FP Radius;
+    FP ChargeTime;
+    FPVector3 Destination;
+    EntityRef Challenge;
+    array<EntityRef>[4] Charger;
+    array<FP>[4] Charge;
 }
 
 global

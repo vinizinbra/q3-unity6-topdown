@@ -1,10 +1,55 @@
 # Traversal Challenge
 
 An interactable world prop, placed in a `ChunkType.Traversal` chunk, that turns a gap-crossing into
-a timed co-op puzzle instead of a passive backdrop. `TraversalChunk.asset`'s `ChunkSpawnConfig`
-already baked a `GlobalUpgradeChestEntity` at a fixed offset near the far side of the chunk before
-this feature existed - an unfinished scaffold this feature completes: the chest was always going to
-be the reward, it just had no way to actually become reachable.
+a timed co-op puzzle instead of a passive backdrop.
+
+**The reward only exists because of the attempt.** It is ROLLED up front (one of `RewardPrototypes`
+- Weapon Chest / Rift Mutation / Hero Chest, uniform `f.RNG` roll on the challenge's first Idle
+tick, `TraversalChallengeUtility.EnsureRewardRolled` -> `RolledRewardIndex`) so the POI prompt
+previews exactly what will spawn: `TraversalChallengeView` reads the rolled prototype's
+`Chest.Kind` and pushes `LevelUpCategoryUtility.GetChestRewardIcon/Name` into the prompt via
+`InteractionPromptWidget.SetReward` (the activator's own `promptRewardIcon/Text` are left blank -
+they'd only be a fallback). Activating spawns that same rolled prototype on the far side at the
+chunk-relative `RewardPosition` (chunk pos + chunk rot * offset, then `GroundOffsetUtility.Apply` -
+identical placement to the chunk spawner the old baked chest used); failing destroys it (if still
+unopened); completing leaves it. It
+used to be baked into `Traversal1ChunkSpawnConfig` and sat there from level load, which read as a
+free chest next to an optional challenge - that entry and the chunk prefabs' baked chest preview
+are gone, so a `ChunkSpawnBaker` re-bake won't bring it back.
+
+**Return pad.** Once the challenge is `Completed` AND the reward is collected (`Chest.Opened`, or the
+entity is gone - `TraversalChallengeUtility.IsRewardCollected`), `TraversalChallengeSystem` spawns
+`ReturnTeleportPrototype` (`TraversalReturnTeleport.prefab`) once at `ReturnTeleportPosition`. A
+non-incapacitated player must STAND inside its `Radius` (0.95) for `ChargeTime` (1.2s) - stepping
+off resets their charge - and is then teleported to `ReturnDestinationPosition` (next to the
+activator) by `TraversalReturnTeleportSystem`, with the same `KCC.Teleport` + zero-every-velocity
+reset the boss-arena teleport and fall respawn use. Per-player charge lives on the pad
+(`Charger[4]`/`Charge[4]` parallel keyed arrays, AreaAllyBudget-style). Both positions are
+chunk-relative and ground-snapped at spawn. The pad is permanent for the rest of the run (a teammate
+who was fighting elsewhere can use it later); it only appears after the reward is taken so nobody
+warps away from an unopened chest.
+
+Look (blue/white - reads as "safe exit", distinct from the pink challenge UI; 0.7x scale;
+HEXAGONAL to match the brand hex - `HexPrism.asset` base mesh): geometric shapes with soft gradient
+edges - a deliberate middle ground between the generic faded particle blob (rejected as "ugly
+default") and hard flat shapes (rejected as "too geometric"). Generated textures in
+`Art/Textures/`: `SoftDot`, `SoftHex`, `SoftHexRing`, `SoftHexDashed` (gaps at the corners, so its
+spin reads), `HexGlow` (hex-shaped halo), `SoftRay` (soft sides, fades at both ends); materials
+`Particle{SoftDotAdd,SoftHexRingAdd,SoftHexDashedAdd,HexGlowAdd,SoftRayAdd,SoftHexAdd}` (additive)
++ `ParticleSoftHex` (alpha-blended core). Decals are single-particle horizontal billboards (these
+vertex-colour-only shaders can't tint mesh quads). The old `Flat*` textures/materials are unused.
+- Idle: hex base + soft hex core + hex glow halo, hex rim, spinning dashed hex, a few rising soft
+  light rays and dots. Deliberately sparse (an earlier pass with halo/column/pulse rings/motes read
+  as "too many circles").
+- Charging (largest live `Charge / ChargeTime`): the charge emitters (pad rays + dots + an
+  inward-swirling dot vortex, plus the exit's rays) start from zero and grow in rate/speed
+  (Velocity-over-Lifetime speed modifier - their startSpeed is 0)/size (relative to authored),
+  eased in so the last moments are the most intense; the glow group scales up, rings spin faster,
+  a charge ring closes in; `PortalLoop` hums with pitch rising with the charge (faded on step-off).
+- Exit marker (detached onto the destination): hidden at rest, grows in while anyone charges.
+- Teleport (`EventTraversalReturnTeleported`): `DepartFx` on the pad and `ArrivalFx` on the exit -
+  hex pop, soft-ray beam, hex shockwave ring, ray + dot burst - plus `HeroSpawnLand`; the exit then
+  lingers ~0.6s and shrinks away. `DepartFx` also plays once when the pad first appears.
 
 Press the Base Skill button on the activator (same generic redirect every other POI already uses -
 see `docs/breathing-poi.md`) and a set of temporary platforms spawn, bridging the gap toward the
@@ -140,12 +185,22 @@ STARTED/COMPLETE/FAILED announcements already use, for the same dramatic weight.
 ## File map
 
 - `Assets/_QuantumUser/Simulation/QTN/Poi/TraversalChallenge.qtn` - `TraversalChallengeState` enum,
-  `TraversalChallenge` component, `Global.ActiveTraversalChallengeCount`.
+  `TraversalChallenge` component (incl. reward + return-pad fields), `TraversalReturnTeleport`
+  component, `Global.ActiveTraversalChallengeCount`. `EventTraversalReturnTeleported` is in
+  `Events.qtn`.
+- `Assets/_QuantumUser/Simulation/Systems/Poi/TraversalReturnTeleportSystem.cs` - the pad's
+  proximity teleport (registered right after `TraversalChallengeSystem`).
+- `Assets/_QuantumUser/View/Entities/Poi/TraversalReturnTeleportView.cs` +
+  `Assets/_QuantumUser/Entities/LevelChunk/TraversalReturnTeleport.prefab` - the pad (dark disc,
+  pink additive rim/inner ring/glow as single-particle horizontal billboards - mesh quads can't be
+  tinted with the vertex-colour-only `Mobile/Particles/Additive` materials - rising sparkles,
+  light streaks, depart burst). Base material `TraversalReturnPadBase.mat` (URP Unlit).
 - `Assets/_QuantumUser/Simulation/QTN/Poi/ContextInteraction.qtn` - `InteractableKind` gained
   `TraversalChallenge` (appended last, index 4 - never inserted, the existing 0-3 values are already
   baked into shipped prefab YAML).
 - `Assets/_QuantumUser/Simulation/Systems/Poi/TraversalChallengeUtility.cs` -
-  `ResolveInteractionState`/`TryActivate`/`Complete`/`Fail`, same shape as `HealingShrineUtility`,
+  `ResolveInteractionState`/`TryActivate`/`Complete`/`Fail`, `SpawnReward`/`IsRewardCollected`/
+  `SpawnReturnTeleport`, same shape as `HealingShrineUtility`,
   plus `ResolveChunkAnchor`/`ResolveCachedAnchor` (chunk-relative offset resolution, reusing
   `FallRespawnUtility.TryFindNearestChunk`).
 - `Assets/_QuantumUser/Simulation/Systems/Poi/TraversalChallengeSystem.cs` - ticks `RemainingTime`
@@ -243,6 +298,11 @@ Nothing is authored yet, so nothing spawns at runtime until the following is don
    yet, so no countdown banner shows anywhere until this is built.
 
 Not yet manually verified end-to-end in-Editor, solo or co-op.
+
+Reward-on-activate + return pad (2026-10-20): authored on `TraversalActivator.prefab` (RewardPosition =
+the old baked chest offset (35.03, 2.68, 5.86); pad at (31.5, 1, 2.5) on the far block's free corner;
+destination (1.6, 1, 9.8) on the start block ~2.7m from the activator). Compiles; pad look checked
+in a gameplay-camera render; not yet played through.
 
 ## Known simplifications
 

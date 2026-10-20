@@ -32,26 +32,3 @@ MonoBehaviour:
     Requirement: 0
     Chance:
       RawValue: 65536
-  - Prototypes:
-    - Prototype:
-        Id:
-          Value: 1329904124162659410
-      Weight: 1
-    - Prototype:
-        Id:
-          Value: 1369500839011923984
-      Weight: 1
-    - Prototype:
-        Id:
-          Value: 1321529338188975839
-      Weight: 1
-    Offset:
-      X:
-        RawValue: 2295457
-      Y:
-        RawValue: 175636
-      Z:
-        RawValue: 383763
-    Requirement: 0
-    Chance:
-      RawValue: 65536

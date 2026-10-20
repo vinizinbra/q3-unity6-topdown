@@ -64,9 +64,11 @@ namespace Quantum
                 spawned[i] = platform;
             }
 
+            SpawnReward(f, traversalChallenge, anchorPosition, anchorRotation);
+
             f.Events.TraversalChallengeActivated(challenge, player);
 
-            Log.Debug($"[TraversalChallenge] {player} activated {challenge} - {platformCount} platform(s) spawned, {traversalChallenge->Duration.AsFloat}s to reach the checkpoint");
+            Log.Debug($"[TraversalChallenge] {player} activated {challenge} - {platformCount} platform(s) + reward {traversalChallenge->SpawnedReward} spawned, {traversalChallenge->Duration.AsFloat}s to reach the checkpoint");
         }
 
         // Called from TraversalChallengeSystem the tick a player reaches the checkpoint. Platforms
@@ -97,11 +99,123 @@ namespace Quantum
                 spawned[i] = EntityRef.None;
             }
 
+            // The reward only ever existed because of this attempt - a failed crossing takes it with
+            // it. Guarded on Opened: a player who somehow reached the chest without touching the
+            // checkpoint already earned it (its own DestroyAfterTime cleanup is underway).
+            EntityRef reward = traversalChallenge->SpawnedReward;
+
+            if (reward != EntityRef.None && f.Exists(reward) == true
+                && (f.Unsafe.TryGetPointer<Chest>(reward, out var chest) == false || chest->Opened == false))
+            {
+                f.Destroy(reward);
+            }
+
+            traversalChallenge->SpawnedReward = EntityRef.None;
+
             traversalChallenge->State = TraversalChallengeState.Failed;
             Decrement(f);
             f.Events.TraversalChallengeFailed(challenge);
 
-            Log.Debug($"[TraversalChallenge] {challenge} timed out - platforms destroyed, permanently failed");
+            Log.Debug($"[TraversalChallenge] {challenge} timed out - platforms + reward destroyed, permanently failed");
+        }
+
+        // Uniform deterministic roll (f.RNG) over the authored RewardPrototypes - same "pick one of N
+        // chest kinds" the old baked ChunkSpawnConfig entry did with its equal-weight Prototypes
+        // list. Rolled once, up front (TraversalChallengeSystem's first tick, or TryActivate as a
+        // fallback), so the prompt can preview the exact reward before anyone activates - same
+        // "roll early so the prompt is real" idea as TeamChallengeUtility.EnsureChallengeRolled.
+        public static void EnsureRewardRolled(Frame f, TraversalChallenge* traversalChallenge)
+        {
+            if (traversalChallenge->RewardRolled == true)
+                return;
+
+            int count = ResolveRewardCount(traversalChallenge);
+            traversalChallenge->RolledRewardIndex = (byte)(count > 0 ? f.RNG->Next(0, count) : 0);
+            traversalChallenge->RewardRolled = true;
+        }
+
+        // The prototype that will spawn (or did) - invalid when nothing is authored or not yet
+        // rolled. Read by TraversalChallengeView for the prompt's reward preview.
+        public static AssetRef<EntityPrototype> GetRolledReward(TraversalChallenge* traversalChallenge)
+        {
+            int count = ResolveRewardCount(traversalChallenge);
+
+            if (traversalChallenge->RewardRolled == false || traversalChallenge->RolledRewardIndex >= count)
+                return default;
+
+            return traversalChallenge->RewardPrototypes[traversalChallenge->RolledRewardIndex];
+        }
+
+        private static int ResolveRewardCount(TraversalChallenge* traversalChallenge)
+        {
+            int length = traversalChallenge->RewardPrototypes.Length;
+            return traversalChallenge->RewardPrototypeCount < length ? traversalChallenge->RewardPrototypeCount : length;
+        }
+
+        // Called from TryActivate. Same placement as the chunk's own spawner (TalentGateSystem):
+        // chunk position + chunk rotation * offset, then GroundOffsetUtility.Apply so the chest sits
+        // on the floor exactly like the old baked one did.
+        private static void SpawnReward(Frame f, TraversalChallenge* traversalChallenge, FPVector3 anchorPosition, FPQuaternion anchorRotation)
+        {
+            EnsureRewardRolled(f, traversalChallenge);
+            AssetRef<EntityPrototype> prototype = GetRolledReward(traversalChallenge);
+
+            if (prototype.IsValid == false)
+                return;
+
+            EntityRef reward = f.Create(prototype);
+            f.Unsafe.GetPointer<Transform3D>(reward)->Position = anchorPosition + anchorRotation * traversalChallenge->RewardPosition;
+            GroundOffsetUtility.Apply(f, reward);
+            traversalChallenge->SpawnedReward = reward;
+        }
+
+        // True once there's nothing left to collect: no reward authored, the reward entity is gone,
+        // or it's a Chest that's been opened. Read by TraversalChallengeSystem while Completed to
+        // decide when the return pad appears.
+        public static bool IsRewardCollected(Frame f, TraversalChallenge* traversalChallenge)
+        {
+            EntityRef reward = traversalChallenge->SpawnedReward;
+
+            if (reward == EntityRef.None || f.Exists(reward) == false)
+                return true;
+
+            return f.Unsafe.TryGetPointer<Chest>(reward, out var chest) == true && chest->Opened == true;
+        }
+
+        // Called from TraversalChallengeSystem once Completed + IsRewardCollected. Both the pad and
+        // its destination are ground-snapped (same top-down ground raycast RunPhaseUtility.
+        // GroundCorrect uses for boss-arena teleports), so authored Y only has to be roughly right.
+        public static void SpawnReturnTeleport(Frame f, EntityRef challenge, TraversalChallenge* traversalChallenge)
+        {
+            if (traversalChallenge->ReturnTeleportPrototype.IsValid == false)
+                return;
+
+            ResolveCachedAnchor(f, challenge, traversalChallenge, out FPVector3 anchorPosition, out FPQuaternion anchorRotation);
+            int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
+
+            FPVector3 padPosition = SnapToGround(f, anchorPosition + anchorRotation * traversalChallenge->ReturnTeleportPosition, groundLayerMask);
+            FPVector3 destination = SnapToGround(f, anchorPosition + anchorRotation * traversalChallenge->ReturnDestinationPosition, groundLayerMask);
+
+            EntityRef pad = f.Create(traversalChallenge->ReturnTeleportPrototype);
+            f.Unsafe.GetPointer<Transform3D>(pad)->Position = padPosition;
+
+            if (f.Unsafe.TryGetPointer<TraversalReturnTeleport>(pad, out var teleport) == true)
+            {
+                teleport->Destination = destination;
+                teleport->Challenge = challenge;
+            }
+
+            traversalChallenge->SpawnedReturnTeleport = pad;
+
+            Log.Debug($"[TraversalChallenge] {challenge} reward collected - return pad {pad} spawned at {padPosition}, leads to {destination}");
+        }
+
+        private static FPVector3 SnapToGround(Frame f, FPVector3 position, int groundLayerMask)
+        {
+            if (EnemyMovementUtility.TryFindGroundHeight(f, position, groundLayerMask, out FP groundY) == true)
+                return new FPVector3(position.X, groundY, position.Z);
+
+            return position;
         }
 
         // Clamped at 0 as cheap insurance against a future double-decrement bug permanently freezing

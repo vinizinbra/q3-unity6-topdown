@@ -1128,6 +1128,17 @@ namespace Quantum.Prototypes.Unity {
     public FPVector3[] PlatformPositions = new FPVector3[8];
     [ArrayLengthAttribute(8)]
     public Quantum.QuantumEntityPrototype[] SpawnedPlatforms = new Quantum.QuantumEntityPrototype[8];
+    public FPVector3 RewardPosition;
+    public Byte RewardPrototypeCount;
+    [ArrayLengthAttribute(4)]
+    public AssetRef<EntityPrototype>[] RewardPrototypes = new AssetRef<EntityPrototype>[4];
+    public QBoolean RewardRolled;
+    public Byte RolledRewardIndex;
+    public Quantum.QuantumEntityPrototype SpawnedReward;
+    public AssetRef<EntityPrototype> ReturnTeleportPrototype;
+    public FPVector3 ReturnTeleportPosition;
+    public FPVector3 ReturnDestinationPosition;
+    public Quantum.QuantumEntityPrototype SpawnedReturnTeleport;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TraversalChallengePrototype prototype);
     public override Quantum.Prototypes.TraversalChallengePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.TraversalChallengePrototype();
@@ -1143,6 +1154,39 @@ namespace Quantum.Prototypes.Unity {
       converter.Convert(this.PlatformCount, out result.PlatformCount);
       converter.Convert(this.PlatformPositions, out result.PlatformPositions);
       converter.Convert(this.SpawnedPlatforms, out result.SpawnedPlatforms);
+      converter.Convert(this.RewardPosition, out result.RewardPosition);
+      converter.Convert(this.RewardPrototypeCount, out result.RewardPrototypeCount);
+      converter.Convert(this.RewardPrototypes, out result.RewardPrototypes);
+      converter.Convert(this.RewardRolled, out result.RewardRolled);
+      converter.Convert(this.RolledRewardIndex, out result.RolledRewardIndex);
+      converter.Convert(this.SpawnedReward, out result.SpawnedReward);
+      converter.Convert(this.ReturnTeleportPrototype, out result.ReturnTeleportPrototype);
+      converter.Convert(this.ReturnTeleportPosition, out result.ReturnTeleportPosition);
+      converter.Convert(this.ReturnDestinationPosition, out result.ReturnDestinationPosition);
+      converter.Convert(this.SpawnedReturnTeleport, out result.SpawnedReturnTeleport);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class TraversalReturnTeleportPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.TraversalReturnTeleportPrototype> {
+    public FP Radius;
+    public FP ChargeTime;
+    public FPVector3 Destination;
+    public Quantum.QuantumEntityPrototype Challenge;
+    [ArrayLengthAttribute(4)]
+    public Quantum.QuantumEntityPrototype[] Charger = new Quantum.QuantumEntityPrototype[4];
+    [ArrayLengthAttribute(4)]
+    public FP[] Charge = new FP[4];
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.TraversalReturnTeleportPrototype prototype);
+    public override Quantum.Prototypes.TraversalReturnTeleportPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.TraversalReturnTeleportPrototype();
+      converter.Convert(this.Radius, out result.Radius);
+      converter.Convert(this.ChargeTime, out result.ChargeTime);
+      converter.Convert(this.Destination, out result.Destination);
+      converter.Convert(this.Challenge, out result.Challenge);
+      converter.Convert(this.Charger, out result.Charger);
+      converter.Convert(this.Charge, out result.Charge);
       ConvertUser(converter, ref result);
       return result;
     }
