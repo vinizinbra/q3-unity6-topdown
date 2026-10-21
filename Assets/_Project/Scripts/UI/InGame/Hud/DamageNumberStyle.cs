@@ -57,6 +57,10 @@ public enum DamageNumberKind
     ThermalShockDealtByMe = 17,
     OverloadTakenByMe = 18,
     OverloadDealtByMe = 19,
+
+    // EventStatusImmune - a Stun/Freeze/Slow bounced off an immune tier (Boss). Text-only (HideNumber),
+    // shown to everyone, throttled per target in DamageFeedbackManager.OnStatusImmune.
+    StatusImmune = 20,
 }
 
 // The per-kind look, so one DamageNumberUiWidget prefab covers all of them.
@@ -77,4 +81,7 @@ public class DamageNumberStyle
 
     [Tooltip("Appended to the number, e.g. \"!\" for a crit - empty for no suffix.")]
     public string Suffix = "";
+
+    [Tooltip("Show only Prefix + Suffix, no number - for word popups like \"IMMUNE\".")]
+    public bool HideNumber;
 }

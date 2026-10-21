@@ -86,9 +86,11 @@ public class DamageNumberUiWidget : MonoBehaviour
 
         using (SetTextMarker.Auto())
         {
-            valueText.text = style.Prefix + Mathf.RoundToInt(damage).ToString() + style.Suffix;
+            valueText.text = style.HideNumber
+                ? style.Prefix + style.Suffix
+                : style.Prefix + Mathf.RoundToInt(damage).ToString() + style.Suffix;
             valueText.color = style.Color;
-            valueText.fontSize = _restFontSize * style.FontSizeMultiplier * ResolveDamageScale(damage);
+            valueText.fontSize = _restFontSize * style.FontSizeMultiplier * (style.HideNumber ? 1f : ResolveDamageScale(damage));
         }
 
         Launch(style, startDelay);

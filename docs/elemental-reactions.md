@@ -218,7 +218,19 @@ the re-proc/recovery cooldowns (`StunImmunityDuration`/`InterruptImmunityDuratio
 | Specialist | 0.9s | 1.25s | 1.7s | 1.0s |
 | Heavy | 0.8s | 1.75s | 1.4s | 1.5s |
 | Elite | 0.65s | 2.5s | 1.2s | 2.5s |
-| Boss | 0.5s | 4.0s | 1.0s | 4.0s |
+| Boss | immune | - | immune | - |
+
+**Boss immunity (2026-10-21).** `TierStatusResistance.ImmuneToStun`/`ImmuneToFreeze`/`ImmuneToSlow`
+(Boss only, set on `EnemyTierResistanceConfig.asset`) reject the status outright in
+`ApplyStun`/`ApplyFreeze`/`ApplyIce` before any duration math - so the Boss can't be stunned, frozen,
+slowed or Chill-built toward Freeze, and a rejected stun never reaches `TryInterrupt` (no stun
+interrupts either). The Boss's old multipliers/cooldown values stay in the asset but are unreachable
+while the flags are on. Each rejection fires `EventStatusImmune { Target, Position, Kind }` (skipped for a
+self-inflicted stun, e.g. a Charger hitting a wall); `DamageFeedbackManager.OnStatusImmune` shows a grey
+text-only "IMMUNE" popup (`DamageNumberKind.StatusImmune`, `DamageNumberStyle.HideNumber`) to every
+player, at most once per target per `immunePopupCooldown` (1.5s). Not fired for the temporary
+`StunImmunityRemaining`/`FreezeRecoveryRemaining` windows - those are cooldowns, not immunity.
+`ImmuneToHardCC` still gates Root only.
 
 Filler deliberately is NOT identical to Normal here (unlike most other fields on that tier) - it's
 the single easiest tier to hard-CC, both in duration and how soon it can be re-CC'd. Tougher tiers

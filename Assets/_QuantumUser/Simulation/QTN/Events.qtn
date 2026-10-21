@@ -705,6 +705,26 @@ event JoltTriggered
     FPVector3  Position;
 }
 
+// A status was rejected OUTRIGHT because the target's tier is immune to it
+// (TierStatusResistance.ImmuneToStun/ImmuneToFreeze/ImmuneToSlow - Boss only today). NOT fired for
+// the temporary re-proc windows (StunImmunityRemaining/FreezeRecoveryRemaining) - those are a
+// cooldown, not immunity - nor for a self-inflicted stun (a Charger hitting a wall). Drives the
+// "IMMUNE" popup (DamageFeedbackManager, throttled per target in the view, since a fast weapon
+// fires this on nearly every hit).
+enum StatusImmunityKind
+{
+    Stun,
+    Freeze,
+    Slow
+}
+
+event StatusImmune
+{
+    EntityRef           Target;
+    FPVector3           Position;
+    StatusImmunityKind  Kind;
+}
+
 // Fired by StatusEffectUtility.TryTriggerThermalShock (Burn+Chill reaction - see
 // docs/elemental-reactions.md) - a single-target burst, no Radius (unlike an AoE blast). Own
 // dedicated visual (EffectsManager.thermalShockEffectPrefab), falling back to a tinted

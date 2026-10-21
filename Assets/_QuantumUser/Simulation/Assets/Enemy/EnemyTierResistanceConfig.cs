@@ -64,6 +64,15 @@ namespace Quantum
         // own comments and Boss's StunDurationMultiplier/FreezeDurationMultiplier below.
         public bool ImmuneToHardCC = false;
 
+        // Outright immunity to each status (StatusEffectUtility.ApplyStun/ApplyFreeze/ApplyIce) -
+        // rejected before any duration math, and fires EventStatusImmune for the "IMMUNE" popup.
+        // Boss only: a boss is a DPS check, not a CC target. ImmuneToSlow blocks Chill entirely
+        // (no slow, no buildup toward Freeze). A rejected Stun never reaches TryInterrupt, so the
+        // boss can't be interrupted by a stun either.
+        public bool ImmuneToStun = false;
+        public bool ImmuneToFreeze = false;
+        public bool ImmuneToSlow = false;
+
         // A landed Stun always freezes this tier's whole state-machine dispatch (EnemySystem.Update's
         // own IsStunned gate - unconditional, no per-tier lever, since "can this enemy act at all
         // right now" isn't what this flag is about). This is the separate question of whether that
@@ -150,17 +159,18 @@ namespace Quantum
             FreezeRecoveryDuration = FP.FromString("2.5"),
         };
 
-        // Boss: Stun 1.0s * 0.5 = 0.5s, Freeze 2.0s * 0.5 = 1.0s - genuinely stunnable/freezable now
-        // (see ApplyStun/TryConsumeInterruptImmunity, which no longer check ImmuneToHardCC below),
-        // just brief and gated by the longest re-proc cooldown of any tier (4s). ImmuneToHardCC
-        // stays true here for Root's own separate gate only (ApplyRoot) - Boss is still meant to be
-        // immune to being rooted in place, that guarantee is untouched by this Stun/Freeze pass.
+        // Boss: immune to Stun, Freeze and Slow outright (ImmuneToStun/ImmuneToFreeze/ImmuneToSlow,
+        // 2026-10-21) - the multipliers/windows below are kept as data but never reached while those
+        // flags are on. ImmuneToHardCC stays true for Root's own separate gate (ApplyRoot).
         public TierStatusResistance Boss = new TierStatusResistance
         {
             StunDurationMultiplier = FP._0_50,
             StunImmunityDuration = FP._4,
             InterruptImmunityDuration = FP._4,
             ImmuneToHardCC = true,
+            ImmuneToStun = true,
+            ImmuneToFreeze = true,
+            ImmuneToSlow = true,
             StaggerDurationMultiplier = FP.FromString("0.4"),
             ChillForceMultiplier = FP.FromString("0.4"),
             FreezeDurationMultiplier = FP._0_50,

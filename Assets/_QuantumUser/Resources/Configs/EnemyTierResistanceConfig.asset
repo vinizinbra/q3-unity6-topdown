@@ -42,6 +42,9 @@ MonoBehaviour:
     FreezeRecoveryDuration:
       RawValue: 32768
     ImmuneToHardCC: 0
+    ImmuneToStun: 0
+    ImmuneToFreeze: 0
+    ImmuneToSlow: 0
     StunCancelsAction: 1
   Normal:
     KnockbackMultiplier:
@@ -69,6 +72,9 @@ MonoBehaviour:
     FreezeRecoveryDuration:
       RawValue: 49152
     ImmuneToHardCC: 0
+    ImmuneToStun: 0
+    ImmuneToFreeze: 0
+    ImmuneToSlow: 0
     StunCancelsAction: 1
   Specialist:
     KnockbackMultiplier:
@@ -96,6 +102,9 @@ MonoBehaviour:
     FreezeRecoveryDuration:
       RawValue: 65536
     ImmuneToHardCC: 0
+    ImmuneToStun: 0
+    ImmuneToFreeze: 0
+    ImmuneToSlow: 0
     StunCancelsAction: 1
   Heavy:
     KnockbackMultiplier:
@@ -123,6 +132,9 @@ MonoBehaviour:
     FreezeRecoveryDuration:
       RawValue: 98304
     ImmuneToHardCC: 0
+    ImmuneToStun: 0
+    ImmuneToFreeze: 0
+    ImmuneToSlow: 0
     StunCancelsAction: 1
   Elite:
     KnockbackMultiplier:
@@ -150,6 +162,9 @@ MonoBehaviour:
     FreezeRecoveryDuration:
       RawValue: 163840
     ImmuneToHardCC: 0
+    ImmuneToStun: 0
+    ImmuneToFreeze: 0
+    ImmuneToSlow: 0
     StunCancelsAction: 0
   Boss:
     KnockbackMultiplier:
@@ -177,4 +192,7 @@ MonoBehaviour:
     FreezeRecoveryDuration:
       RawValue: 262144
     ImmuneToHardCC: 1
+    ImmuneToStun: 1
+    ImmuneToFreeze: 1
+    ImmuneToSlow: 1
     StunCancelsAction: 0

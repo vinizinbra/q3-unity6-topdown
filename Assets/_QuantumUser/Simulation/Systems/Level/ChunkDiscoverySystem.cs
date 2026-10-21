@@ -41,17 +41,29 @@ namespace Quantum
 
         // X/Z only - Y (height) isn't part of a chunk's footprint, same convention
         // LobbyBoundarySystem's own IsInsideFootprint uses. Camera looks toward +Z, so the view rect
-        // reaches further forward than back.
+        // reaches further forward than back. A chunk counts as seen once one player stands inside it,
+        // or one player's view rect covers at least DiscoveryMinVisibleFraction of the smaller of
+        // (chunk area, view area) - measured against the chunk alone, a chunk bigger than the view
+        // could stay undiscovered with a player standing right in it. Per player, not the union of
+        // several players' views - fine for a "roughly on screen" reveal.
         private static bool IsAnyPlayerViewing(Frame f, OverallGameConfig config, FPVector3 min, FPVector3 max)
         {
+            FP chunkArea = (max.X - min.X) * (max.Z - min.Z);
+            FP viewArea = config.DiscoveryViewHalfWidth * 2 * (config.DiscoveryViewBack + config.DiscoveryViewForward);
+            FP requiredArea = FPMath.Min(chunkArea, viewArea) * config.DiscoveryMinVisibleFraction;
             var players = f.Filter<PlayerLink, Transform3D>();
 
             while (players.Next(out EntityRef _, out PlayerLink _, out Transform3D playerTransform))
             {
                 FPVector3 position = playerTransform.Position;
 
-                if (position.X + config.DiscoveryViewHalfWidth >= min.X && position.X - config.DiscoveryViewHalfWidth <= max.X &&
-                    position.Z + config.DiscoveryViewForward >= min.Z && position.Z - config.DiscoveryViewBack <= max.Z)
+                if (position.X >= min.X && position.X <= max.X && position.Z >= min.Z && position.Z <= max.Z)
+                    return true;
+
+                FP overlapX = FPMath.Min(position.X + config.DiscoveryViewHalfWidth, max.X) - FPMath.Max(position.X - config.DiscoveryViewHalfWidth, min.X);
+                FP overlapZ = FPMath.Min(position.Z + config.DiscoveryViewForward, max.Z) - FPMath.Max(position.Z - config.DiscoveryViewBack, min.Z);
+
+                if (overlapX > FP._0 && overlapZ > FP._0 && overlapX * overlapZ >= requiredArea)
                     return true;
             }
 

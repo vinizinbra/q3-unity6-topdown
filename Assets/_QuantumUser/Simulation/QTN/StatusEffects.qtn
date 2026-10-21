@@ -32,7 +32,7 @@ component StatusEffects
     // Shock/Electrified - Lightning's baseline status (see StatusEffectUtility.ApplyElectrified/
     // IsElectrified), applied the same way Fire->Burn/Ice->Chill are. Plain overwrite-on-reapply, no
     // tier duration scaling - Boss stays vulnerable to this the same way it stays vulnerable to
-    // Burn/Chill. Purely a setup state now - a further Electric hit landing while this is already
+    // Burn (Chill is blocked on Boss - TierStatusResistance.ImmuneToSlow). Purely a setup state now - a further Electric hit landing while this is already
     // active rolls ElementalReactionConfig.ShockStunProcChance to proc the existing, generic Stun
     // (see StatusEffectUtility.ApplyElementBaseline's Lightning case) rather than ticking any
     // periodic effect of its own. See docs/elemental-reactions.md.
@@ -74,10 +74,9 @@ component StatusEffects
     // gate in EnemySystem/PlayerMovementProcessor/WeaponSystem also checks IsFrozen), but stays an
     // independently queryable status of its own - a future system (bonus damage vs a Frozen target,
     // a dedicated Shatter-style payoff) can tell Freeze and Stun apart even though both currently
-    // reuse the same lockout plumbing. Unlike Stun, NOT gated by TierStatusResistance.
-    // ImmuneToHardCC - Boss stays vulnerable to Freeze (just far shorter), its own dedicated
-    // FreezeDurationMultiplier tapering it instead. Plain overwrite-on-reapply, except rejected
-    // outright while FreezeRecoveryRemaining is still counting down just below.
+    // reuse the same lockout plumbing. Rejected outright for a TierStatusResistance.ImmuneToFreeze
+    // tier (Boss); otherwise tapered by FreezeDurationMultiplier. Plain overwrite-on-reapply, except
+    // rejected outright while FreezeRecoveryRemaining is still counting down just below.
     FP FreezeRemaining;
 
     // Anti-permafreeze: while > 0, a NEW Freeze application is rejected outright (Ice buildup can

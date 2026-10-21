@@ -25,7 +25,13 @@ simulation.
   (defaults 12/8/10, derived from `FollowCamera` offset (0,35,-35), 45° pitch, FOV 14, ~16:9).
   It ignores co-op zoom-out (up to 1.5x) and wider phone aspects, so it slightly under-reveals
   rather than revealing chunks that are never shown. Cost is the same as the old containment
-  check: undiscovered chunks × players, one AABB overlap each. Registered in the always-on-per-tick `GameplaySystemGroup` block of
+  check: undiscovered chunks × players, one AABB overlap each. A chunk only flips once one
+  player's rect covers at least `DiscoveryMinVisibleFraction` (default 0.1) of min(chunk area, view
+  area) - against the chunk alone, a chunk bigger than the view could stay undiscovered with a
+  player inside it - or a player stands inside it; so a sliver at the screen edge doesn't reveal it.
+  Per player, not the union of several views. Because a chunk can now flip `Discovered` while it's
+  already the current chunk, `MinimapWidget`'s pass 2 repaints the current chunk too (it used to
+  skip it, leaving its outline unstamped until the player walked out). Registered in the always-on-per-tick `GameplaySystemGroup` block of
   `Assets/_QuantumUser/Simulation/Default/SystemSetup.User.cs`, no ordering dependency on anything
   else.
 - **`MinimapWidget`** (`Assets/_Project/Scripts/UI/InGame/Hud/Minimap/MinimapWidget.cs`) - a

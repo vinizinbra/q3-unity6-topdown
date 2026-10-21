@@ -131,11 +131,14 @@ namespace Quantum
         [Header("Minimap Discovery")]
         // Approximate ground footprint of one player's camera view, relative to the player (FollowCamera
         // offset (0,35,-35), 45 deg pitch, FOV 14, ~16:9). ChunkDiscoverySystem marks a chunk Discovered
-        // as soon as this rect overlaps it, instead of waiting for a player to step inside. Deterministic
+        // once this rect covers enough of it (below), instead of waiting for a player to step inside. Deterministic
         // stand-in for the real per-client camera - see docs/minimap.md.
         public FP DiscoveryViewHalfWidth = 12;
         public FP DiscoveryViewBack = 8;
         public FP DiscoveryViewForward = 10;
+        // Share of min(chunk area, view rect area) one player's view rect must cover before a chunk counts
+        // as seen (standing inside a chunk always counts).
+        public FP DiscoveryMinVisibleFraction = FP.FromString("0.1");
 
         [Header("Prefabs")]
         // Every pickup entity spawned straight from config rather than authored on a

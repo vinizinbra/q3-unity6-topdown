@@ -38,6 +38,11 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
     private int _burstFrame = -1;
     private int _burstIndex;
 
+    [SerializeField, Tooltip("Minimum seconds between two \"IMMUNE\" popups on the same target - a fast weapon fires EventStatusImmune on nearly every hit against a Boss.")]
+    private float immunePopupCooldown = 1.5f;
+
+    private readonly Dictionary<EntityRef, float> _lastImmunePopupTime = new Dictionary<EntityRef, float>();
+
     [SerializeField]
     private List<DamageNumberStyle> styles = new List<DamageNumberStyle>
     {
@@ -75,6 +80,12 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
             FontSizeMultiplier = 1.3f, PunchScaleMultiplier = 1.2f
         },
         new DamageNumberStyle { Kind = DamageNumberKind.OverloadTakenByMe, Color = new Color(0.85f, 0.8f, 0.3f) },
+
+        new DamageNumberStyle
+        {
+            Kind = DamageNumberKind.StatusImmune, Color = new Color(0.78f, 0.8f, 0.86f),
+            FontSizeMultiplier = 0.9f, Prefix = "IMMUNE", HideNumber = true
+        },
     };
 
     private Canvas _canvas;
@@ -104,6 +115,7 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         QuantumEvent.Subscribe<EventEntityDamaged>(this, OnEntityDamaged);
         QuantumEvent.Subscribe<EventEntityHealed>(this, OnEntityHealed);
         QuantumEvent.Subscribe<EventEntityShielded>(this, OnEntityShielded);
+        QuantumEvent.Subscribe<EventStatusImmune>(this, OnStatusImmune);
     }
 
     private void OnDestroy()
@@ -372,6 +384,18 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
         return true;
     }
 
+    // Shown to every player (unlike damage) - "the boss shrugs off CC" is team-wide information -
+    // but at most once per target per immunePopupCooldown, whatever the status kind.
+    private void OnStatusImmune(EventStatusImmune e)
+    {
+        float now = Time.time;
+        if (_lastImmunePopupTime.TryGetValue(e.Target, out float last) && now - last < immunePopupCooldown)
+            return;
+
+        _lastImmunePopupTime[e.Target] = now;
+        Spawn(DamageNumberKind.StatusImmune, 0f, e.Position.ToUnityVector3() + worldOffset);
+    }
+
     private static readonly ProfilerMarker SpawnMarker = new ProfilerMarker("DamageNumber.Spawn");
 
     private void Spawn(DamageNumberKind kind, float damage, Vector3 worldPosition)
@@ -453,6 +477,9 @@ public class DamageFeedbackManager : QuantumGlobalMonoBehaviour
 
     [Button]
     public void TestHealedDealtByMe() => SpawnOnLocalPlayer(DamageNumberKind.HealedDealtByMe);
+
+    [Button]
+    public void TestStatusImmune() => SpawnOnLocalPlayer(DamageNumberKind.StatusImmune);
 
     private void SpawnOnLocalPlayer(DamageNumberKind kind)
     {

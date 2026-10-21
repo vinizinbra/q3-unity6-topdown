@@ -806,8 +806,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (isNew == false && discoveredChanged.Contains(entity) == false && outlineJustComputed == false)
                 continue;
 
-            if (entity != currentChunk)
-                RepaintSingleChunk(entity, currentChunk);
+            // The current chunk is repainted here too (still in currentColor): with view-based
+            // discovery a chunk can flip Discovered while the player is already standing in it, and
+            // skipping it left its outline unstamped until the player walked out.
+            RepaintSingleChunk(entity, currentChunk);
 
             // A discovered chunk lights up any inner hole it borders (see RevealHolesAdjacentTo).
             if (chunk.Discovered)

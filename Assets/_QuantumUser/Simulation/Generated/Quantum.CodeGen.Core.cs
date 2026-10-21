@@ -266,6 +266,11 @@ namespace Quantum {
     Step,
     Timer,
   }
+  public enum StatusImmunityKind : int {
+    Stun,
+    Freeze,
+    Slow,
+  }
   public enum SurvivalPhaseKind : byte {
     Combat,
     Breathing,
@@ -10411,6 +10416,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(SpringJoint), SpringJoint.SIZE);
       typeRegistry.Register(typeof(SpringJoint3D), SpringJoint3D.SIZE);
       typeRegistry.Register(typeof(Quantum.StatusEffects), Quantum.StatusEffects.SIZE);
+      typeRegistry.Register(typeof(Quantum.StatusImmunityKind), 4);
       typeRegistry.Register(typeof(Quantum.StatusSpreadOnDeath), Quantum.StatusSpreadOnDeath.SIZE);
       typeRegistry.Register(typeof(Quantum.Store), Quantum.Store.SIZE);
       typeRegistry.Register(typeof(Quantum.StoreFoodOffer), Quantum.StoreFoodOffer.SIZE);
@@ -10720,6 +10726,7 @@ namespace Quantum {
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SkillState>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SpikeTrapPhase>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SpikeTrapTrigger>();
+      FramePrinter.EnsurePrimitiveNotStripped<Quantum.StatusImmunityKind>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.SurvivalPhaseKind>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.TeamChallengeState>();
       FramePrinter.EnsurePrimitiveNotStripped<Quantum.TraversalChallengeState>();

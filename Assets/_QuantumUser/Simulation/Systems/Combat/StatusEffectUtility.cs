@@ -123,6 +123,12 @@ namespace Quantum
 
             if (GetTierResistance(f, target) is { } resistance)
             {
+                if (resistance.ImmuneToSlow == true)
+                {
+                    FireStatusImmune(f, target, StatusImmunityKind.Slow);
+                    return;
+                }
+
                 duration *= resistance.SlowDurationMultiplier;
                 buildupAmount *= resistance.ChillForceMultiplier;
             }
@@ -163,6 +169,15 @@ namespace Quantum
 
             if (GetTierResistance(f, target) is { } resistance)
             {
+                if (resistance.ImmuneToStun == true)
+                {
+                    // A self-inflicted stun (Charger hitting a wall) is silently ignored - no popup.
+                    if (owner != target)
+                        FireStatusImmune(f, target, StatusImmunityKind.Stun);
+
+                    return false;
+                }
+
                 duration *= resistance.StunDurationMultiplier;
                 immunityWindow = resistance.StunImmunityDuration;
                 stunCancelsAction = resistance.StunCancelsAction;
@@ -321,13 +336,10 @@ namespace Quantum
         // ElementalReactionConfig.IceFreezeThreshold (see ApplyIce above), never applied directly by a
         // weapon/skill. Reuses the exact same total lockout Stun does (every IsStunned gate in
         // EnemySystem/PlayerMovementProcessor/WeaponSystem also checks IsFrozen) but stays
-        // independently queryable - see StatusEffects.FreezeRemaining's own comment. Deliberately
-        // does NOT check TierStatusResistance.ImmuneToHardCC the way ApplyStun does - Boss is meant
-        // to stay vulnerable to Freeze (just far shorter, via its own dedicated
-        // FreezeDurationMultiplier), matching this project's "Boss stays vulnerable, just tapered"
-        // convention rather than Stun's own hard immunity. Returns whether Freeze actually landed
-        // (rejected outright while FreezeRecoveryRemaining is still running - see anti-permafreeze
-        // note on that field).
+        // independently queryable - see StatusEffects.FreezeRemaining's own comment. Rejected
+        // outright for a TierStatusResistance.ImmuneToFreeze tier (Boss), firing EventStatusImmune.
+        // Returns whether Freeze actually landed (also rejected while FreezeRecoveryRemaining is
+        // still running - see anti-permafreeze note on that field).
         public static bool ApplyFreeze(Frame f, EntityRef target, FP duration, EntityRef owner = default)
         {
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == false)
@@ -341,6 +353,12 @@ namespace Quantum
 
             if (GetTierResistance(f, target) is { } resistance)
             {
+                if (resistance.ImmuneToFreeze == true)
+                {
+                    FireStatusImmune(f, target, StatusImmunityKind.Freeze);
+                    return false;
+                }
+
                 duration *= resistance.FreezeDurationMultiplier;
                 freezeCancelsAction = resistance.StunCancelsAction;
                 recoveryWindow = resistance.FreezeRecoveryDuration;
@@ -854,6 +872,13 @@ namespace Quantum
                 return FP._1;
 
             return status->RuptureDamageMultiplier;
+        }
+
+        // EventStatusImmune for the "IMMUNE" popup - see TierStatusResistance.ImmuneToStun & co.
+        private static void FireStatusImmune(Frame f, EntityRef target, StatusImmunityKind kind)
+        {
+            if (f.Has<Transform3D>(target) == true)
+                f.Events.StatusImmune(target, EnemyMovementUtility.ResolveEntityCenter(f, target), kind);
         }
 
         public static bool IsStunned(Frame f, EntityRef entity)

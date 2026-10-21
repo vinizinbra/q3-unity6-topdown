@@ -70,9 +70,9 @@ namespace Quantum
         // Stun applied to the charger itself the instant it slams into a wall mid-dash (Tick's own
         // wall check below) - dazed by its own impact, same StatusEffectUtility.ApplyStun every
         // other stun source uses. 0 opts out (no stun, just stop) with no separate bool needed.
-        // NOTE: no-ops on a Boss-tier charger - EnemyTierResistanceConfig's Boss row zeroes out
-        // StunDurationMultiplier (deliberately stunlock-immune) - see WallExposedDuration below for
-        // the Boss-safe equivalent.
+        // NOTE: no-ops on a Boss-tier charger - EnemyTierResistanceConfig's Boss row is
+        // ImmuneToStun (silently, no IMMUNE popup for a self-inflicted stun) - see
+        // WallExposedDuration below for the Boss-safe equivalent.
         public FP WallStunDuration = FP._1;
 
         // Bonus vulnerability window for baiting a wall collision specifically - applied via

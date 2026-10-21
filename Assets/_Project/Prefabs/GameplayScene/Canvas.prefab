@@ -20439,6 +20439,7 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 1, z: 0}
   burstStaggerStep: 0.03
   maxBurstStaggerDelay: 0.15
+  immunePopupCooldown: 1.5
   styles:
   - Kind: 0
     Color: {r: 0.9716981, g: 0.371262, b: 0.371262, a: 1}
@@ -20446,72 +20447,91 @@ MonoBehaviour:
     PunchScaleMultiplier: 1
     Prefix: 
     Suffix: 
+    HideNumber: 0
   - Kind: 1
     Color: {r: 1, g: 1, b: 1, a: 1}
     FontSizeMultiplier: 1
     PunchScaleMultiplier: 1
     Prefix: 
     Suffix: 
+    HideNumber: 0
   - Kind: 2
     Color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
     FontSizeMultiplier: 1.05
     PunchScaleMultiplier: 1.1
     Prefix: 
     Suffix: <size=25><sprite name="CRITICAL">
+    HideNumber: 0
   - Kind: 4
     Color: {r: 1, g: 0.49842143, b: 0.25943398, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1
     Prefix: 
     Suffix: <sprite name="FIRE">
+    HideNumber: 0
   - Kind: 6
     Color: {r: 0.90760136, g: 0.015686274, b: 1, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1
     Prefix: 
     Suffix: 
+    HideNumber: 0
   - Kind: 7
     Color: {r: 0.16078432, g: 1, b: 0.015686275, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1
     Prefix: +
     Suffix: <sprite name="HEAL">
+    HideNumber: 0
   - Kind: 9
     Color: {r: 0.735849, g: 0.735849, b: 0.735849, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1
     Prefix: 
     Suffix: '*'
+    HideNumber: 0
   - Kind: 10
     Color: {r: 0.07231453, g: 0.49056602, b: 0, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1
     Prefix: +
     Suffix: 
+    HideNumber: 0
   - Kind: 11
     Color: {r: 0, g: 0.8622582, b: 1, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1
     Prefix: +
     Suffix: <sprite name="SHIELD">
+    HideNumber: 0
   - Kind: 12
     Color: {r: 0, g: 0.8622582, b: 1, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1
     Prefix: +
     Suffix: <sprite name="SHIELD">
+    HideNumber: 0
   - Kind: 17
     Color: {r: 0, g: 0.8622582, b: 1, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1.3
     Prefix: +
     Suffix: <sprite name="ICE"><sprite name="FIRE">
+    HideNumber: 0
   - Kind: 19
     Color: {r: 1, g: 0.75650275, b: 0.5613208, a: 1}
     FontSizeMultiplier: 0.7
     PunchScaleMultiplier: 1.3
     Prefix: +
     Suffix: <sprite name="FIRE"><sprite name="LIGHTNING">
+    HideNumber: 0
+  - Kind: 20
+    Color: {r: 0.78, g: 0.8, b: 0.86, a: 1}
+    FontSizeMultiplier: 0.9
+    PunchScaleMultiplier: 1
+    Prefix: IMMUNE
+    Suffix: 
+    HideNumber: 1
 --- !u!1 &1085195648313562841
 GameObject:
   m_ObjectHideFlags: 0
