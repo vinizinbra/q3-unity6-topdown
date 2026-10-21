@@ -284,7 +284,9 @@ Works on ANY enemy with no per-enemy art - everything is procedural or silhouett
   depth-squashed orbit above the head. `StatusEffectsManager` feeds `StatusEffects.StunRemaining` each
   frame (`SetRemainingSeconds`); star *i* stays up while remaining/peak > i/3, so stars pop off (swell +
   `PopBurst` sparkle) as the stun runs down, and the last pops when it ends. A re-stun that raises the
-  remaining time restarts the countdown and re-grows stars.
+  remaining time restarts the countdown and re-grows stars. A `Ring` child (copy of the old prefab's
+  `ETFX_AuraVerticalCentered`/`lightray3_ADD` aura band, warm tint, scale (0.85, 0.6, 0.4)) draws the
+  flat ellipse the stars ride on - keep its Z scale and `StunHaloEffect.orbitDepth` in step.
 - **Bonk** - `Bonk` child (7 outlined stars + flash + spark streaks, t=0 burst) fires on the root's
   `Play()` when a stun starts and again on each re-stun. Rides alongside the existing `EffectsManager`
   Jolt spark and `HitFeedback` Jolt punch-scale.
