@@ -850,15 +850,10 @@ public class CharacterUiWidget : MonoBehaviour
     }
 
     // Own component, not part of StatusEffects - see DamageUtility.TryMarkExplodeOnDeath/ExplodeOnDeath.
-    // Remaining now genuinely counts down toward removal (ExplodeOnDeathTimerSystem), so this reads
-    // as a real countdown, same as every StatusEffects-backed indicator above.
+    // Permanent until death, so there's no countdown to show - presence alone.
     private void UpdateExplodeOnDeath(Frame frame)
     {
-        bool shown = frame.TryGet<ExplodeOnDeath>(_entityRef, out var explode) && explode.Remaining > FP._0;
-        explodeOnDeathIndicator.SetShown(shown);
-
-        if (shown)
-            explodeOnDeathIndicator.SetSeconds(explode.Remaining);
+        explodeOnDeathIndicator.SetShown(frame.Has<ExplodeOnDeath>(_entityRef));
     }
 
     // Own component, not part of StatusEffects - see Vendetta.qtn/MaxVendettaSystem. RevengeMark is

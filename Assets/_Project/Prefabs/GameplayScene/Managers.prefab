@@ -260,6 +260,8 @@ MonoBehaviour:
   centerHeightOffset: 0
   defaultAreaBlastEffect: {fileID: 6350743763286976369, guid: 2dcb44456e58b4eb3823d152a70d114f, type: 3}
   heavyHitAreaEffectPrefab: {fileID: 6350743763286976369, guid: 9133c80be7def462f82f977a497f4bb7, type: 3}
+  explosiveRoundsEffectPrefab: {fileID: 6350743763286976369, guid: 9133c80be7def462f82f977a497f4bb7, type: 3}
+  chainReactionEffectPrefab: {fileID: 8382026758955492198, guid: db3c2720ca93d463ca9b9512197b9025, type: 3}
   shockwaveEffectPrefab: {fileID: 6033865322108255657, guid: 3bb65fec9608f45f9b75e9c42b74b14b, type: 3}
   undertowMarkEffectPrefab: {fileID: 0}
   joltEffectPrefab: {fileID: 5623422061307436774, guid: 5fd4bba02f59349b2b1869ef48499e69, type: 3}

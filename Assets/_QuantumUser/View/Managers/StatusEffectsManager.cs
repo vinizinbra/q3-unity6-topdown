@@ -191,9 +191,8 @@ namespace QuantumUser.View.Managers
             var explodeMarked = frame.Filter<ExplodeOnDeath>();
             while (explodeMarked.Next(out EntityRef entity, out ExplodeOnDeath _))
             {
-                if (IsDeadEnemy(frame, entity))
-                    continue;
-
+                // No dead-enemy skip here - a dead marked enemy is shaking through its detonation fuse
+                // (DamageUtility.TryPrimeExplodeOnDeathFuse), and the mark should stay on it until it pops.
                 Vector3 center = EnemyMovementUtility.ResolveEntityCenter(frame, entity).ToUnityVector3();
                 float scale = EnemyMovementUtility.ResolveEntityRadius(frame, entity).AsFloat * 2f;
 

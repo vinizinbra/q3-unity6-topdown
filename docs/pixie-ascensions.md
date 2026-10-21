@@ -55,13 +55,16 @@ changes `SkillSlot.Upgrades`' shape, so "only available at rank 3" is just an `i
    the un-empowered base value, since Pocket Bombs can trigger off any explosion, not specifically a
    Hot-Fuse-empowered throw). Ranks: Chance 15/25/35%, DamagePercent 35/45/55%. `MiniBombPrototype`/
    `Explosion` still need Editor authoring (see "Current status").
-5. **Unstable Mixture** (`UnstableMixturePassiveUpgradeData`) - merges the old standalone Bigger Boom/
-   Unstable Mixture/Heavy Payload ascensions. Marked-enemy death explosions (Chain Reaction, see "Base
-   passive" below) gain damage and radius; Specialist/Heavy-tier kills get an *additional* fixed +50%
-   radius (`TierRadiusMultiplier`, radius-only - `DamageUtility.TryExplodeOnDeath` was fixed to stop
-   applying this to damage too), and the line also raises the base passive's own `MaxAffectedTier` gate
-   to Heavy so Specialist/Heavy kills can be marked at all (this was Heavy Payload's old role). Ranks:
-   BonusDamageMultiplier +30/60/90%, BonusRadiusMultiplier +15/30/40%.
+5. **Unstable Mixture** (`UnstableMixturePassiveUpgradeData`) - Pixie's Unstable damage line (reworked
+   2026-10-21). A marked enemy's death blast deals `DamagePercent` of its own Max HP -
+   **30/60/90%** - *replacing* the 10% `ExplodeOnDeathConfig.DamagePercent` base (stored on
+   `MarkExplosiveDeath.DamagePercent`, 0 = base, so Max's Berserk is unaffected). Also raises Chain
+   Reaction's `MaxAffectedTier`: Heavy at ranks 1-2, **Elite** at rank 3 (Bosses never). The previous
+   version ("explosion kills store charges that empower her next explosion", +rank 3 delayed second
+   blast via `DelayedBlast`) was removed entirely - `UnstableMixture.qtn`/`UnstableMixtureUpgrade` and
+   `DemolitionMasteryUtility.ResolveExplosionEmpowerment/OnExplosionKill` are gone, and the dead
+   `MarkExplosiveDeath.BonusDamageMultiplier` was replaced by `DamagePercent`. The Balance Simulator doesn't
+   model Unstable damage.
 6. **Unstable Targeting** (`UnstableTargetingPassiveUpgradeData`) - bonus damage against any enemy
    currently marked to explode on death (`MarkExplosiveDeath.DamageBonusVsUnstable`, read live in
    `DamageUtility.ResolveOutgoingDamage` - applies to every Pixie damage source, not just Bunny Bomb).
@@ -73,7 +76,13 @@ changes `SkillSlot.Upgrades`' shape, so "only available at rank 3" is just an `i
    Pocket Bombs/Direct Hit/Unstable Targeting for free. Recursion-safe: the proc is only ever invoked
    directly from the original hitscan/projectile fire path (gated to pellet 0 of a volley), never
    re-entered from `OnWeaponHitLanded`, so its own explosion damage can't re-trigger itself. Ranks:
-   DamageMultiplier 20/30/40%, Radius 2/2.4/2.4.
+   DamageMultiplier 20/30/40%, Radius 1.2/1.5/1.8 (was 2/2.4/2.4 —
+   too wide at rank 1 for a per-hit proc, 2026-10-21).
+   **VFX (2026-10-21):** the proc passes `isExplosiveSequence: true` to `HitEffectUtility.ApplyExplosion`,
+   which raises `ExplosiveRoundDetonated` (instead of the shared `WeaponExplosionReleased`) when the owner has
+   `PixieExplosiveWeapon`, so `EffectsManager.explosiveRoundsEffectPrefab` plays Pixie's pink blast
+   (`PixiePinkExplosion`, same one Heavy Mastery R3 uses) - a non-Pixie Explosive Sequence perk and Cataclysm
+   Round keep the default blast.
 8. **Backblast** (`BackblastSkillAction`, Dash Ascension, `Phase = Begin | End`) - the dash itself is
    offensive: drops a bomb at the dash's start (every rank) and, from rank 2, also at the dash's end -
    **a dropped bomb with a short fuse, not an instant blast** (reworked 2026-08-09; see "Reworked from
@@ -99,7 +108,7 @@ changes `SkillSlot.Upgrades`' shape, so "only available at rank 3" is just an `i
 Dash grants a short-lived charge (`PixieHotFuseCharge`) that empowers only the *next* Bunny Bomb throw
 within `Window` (3s) - not a timed buff applied to every throw for the next few seconds. Re-dashing
 before throwing just refreshes the charge to whatever rank granted it. If Bunny Bomb isn't thrown in
-time, `PixieHotFuseTimerSystem` (same shape as `ExplodeOnDeathTimerSystem`) ticks `Remaining` down and
+time, `PixieHotFuseTimerSystem` (same shape as `JuggernautDischargeCooldownSystem`) ticks `Remaining` down and
 removes the unused charge - no "immortal charge" cleanup gap.
 
 - **Rank 1**: +30% damage on the next throw.
@@ -158,6 +167,34 @@ tier/chance/explosion gate at all - the base Chain Reaction passive already cove
 correctly (gated), so the fix was simply removing that entry; there was never a second, intentionally-
 authored "Explosive Death" ascension to merge. `PixieAscensionAssetGenerator` fully replacing
 `PixieBaseSkill.Actions` (rather than appending) is what makes this fix stick on every re-run.
+
+**VFX + radius (2026-10-21):** a Chain Reaction death blast plays its own, deliberately different-looking
+effect - `Prefabs/Effects/Pixie/PixieChainReactionExplosion` (pink fire/smoke burst whose debris goes dark +
+an expanding pink ground shockwave ring) via `EffectsManager.chainReactionEffectPrefab`, so it never reads as
+one of her bomb/weapon blasts. `OnExplodeOnDeathDetonated` picks it when the owner's
+`MarkExplosiveDeath.RequiresExplosion` is set (Pixie-only); Max's Explosive Death keeps the default blast.
+`ExplodeOnDeathConfig.RadiusMultiplier` raised 1.5 → 2.25 (blast radius = dying enemy's collider radius ×
+this) - it read too small. Shared with Max's Explosive Death, which grows with it.
+
+**Detonation fuse (2026-10-21):** a marked enemy no longer explodes the instant it dies - a kill and its chain
+blast landing on the same frame read as one mixed explosion. Any tier but Boss (Filler/Normal included, which
+otherwise pop instantly) is parked in `EnemyActionPhase.Dead` for `ExplodeOnDeathConfig.DetonationDelay` (0.2s;
+0 = old instant behavior) by `DamageUtility.TryPrimeExplodeOnDeathFuse`, which stores the killer on
+`ExplodeOnDeath.Killer`; `EnemySystem.UpdateDead` then calls `DetonateExplodeOnDeathFuse` (EnemyExploded pop +
+the chain blast) right before destroying it. Kill credit, drops and on-kill signals still resolve at the moment
+of death - only the blast is delayed. During the fuse `EnemyBlobAnimationView` plays `State.UnstableFuse`
+(fast rock + jitter + swell) instead of the hop-and-topple Die, the Unstable mark stays visible
+(`StatusEffectsManager` no longer skips dead marked enemies). Chains now ripple outward one 0.2s beat per link.
+The fuse shakes/swells around the body's middle (`centerPivot` + `scaleAroundCenter` in `ApplyPose`, so it
+doesn't rock from the feet or grow upward), and both the pop (`EnemyExploded`) and the chain blast
+(`ExplodeOnDeathDetonated` + its damage) come from `EnemyMovementUtility.ResolveEntityCenter`, not the enemy
+pivot. `PixieChainReactionExplosion` plays with its own authored rotation; its ring (start size 2.1) ends on
+the real damage radius.
+
+**Mark is permanent (2026-10-21):** once Unstable, an enemy stays Unstable until it dies - the old
+`ExplodeOnDeath.Remaining` countdown, `ExplodeOnDeathTimerSystem` and `ExplodeOnDeathConfig.Duration` were
+removed (the HUD indicator is presence-only now). `MarkExplosiveDeath.ChainReactionMultiplier` used to scale the
+re-mark duration from chained blasts; it's now only an on/off switch (> 0 = chained blasts re-mark).
 
 ## Removed / merged (do not re-add as standalone lines)
 
@@ -300,7 +337,7 @@ Hit *did* move into the Hero Skill pool as specified.
     on, not a bonus.
 - **Explosive Rounds is chance-based.** It forced `ExplosiveSequenceInterval = 1` (literally every
   weapon hit exploded). It still makes every shot *eligible*, but now gates on
-  `PixieExplosiveWeapon.ProcChance` (15% / 22% / 30%). Two new generic fields on
+  `PixieExplosiveWeapon.ProcChance` (25% / 35% / 50% - raised from 15/22/30% on 2026-10-21, it procced too rarely to read as a build). Two new generic fields on
   `WeaponPostImpactProcs` back this: `ExplosiveSequenceChance` and an OPTIONAL
   `ExplosiveSequenceCooldown` — both default to "off", so the Explosive Sequence weapon perk is
   completely unchanged. The cooldown ships at 0 per the brief ("do not hardcode an internal cooldown

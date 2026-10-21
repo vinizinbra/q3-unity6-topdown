@@ -12,8 +12,8 @@
 // multiplies whatever is present - a build holding both gets both, in any order, idempotently.
 // A field left at 0 (its line not picked) is read as 1 - see PixieBombChargeUtility.
 //
-// Remaining ticks down every frame (PixieBombChargeSystem, same shape ExplodeOnDeathTimerSystem uses
-// for ExplodeOnDeath.Remaining) and the whole component is removed at 0, so an unused charge "cures"
+// Remaining ticks down every frame (PixieBombChargeSystem, same shape JuggernautDischargeCooldownSystem uses
+// for its own cooldown) and the whole component is removed at 0, so an unused charge "cures"
 // instead of lingering forever waiting for a throw that never comes - which is also what resets every
 // field back to a clean slate.
 //

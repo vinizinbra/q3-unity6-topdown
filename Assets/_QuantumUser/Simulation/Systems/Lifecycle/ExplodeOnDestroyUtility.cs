@@ -128,9 +128,8 @@ namespace Quantum
 
         // ForceMarkOnDetonate (see that component's own comment) - unconditionally grants/refreshes
         // ExplodeOnDeath on every enemy caught, bypassing MarkExplosiveDeath's own tier-gate/chance
-        // roll entirely (this doesn't go through TryMarkExplodeOnDeath at all). Uses
-        // ExplodeOnDeathConfig.Duration, the same shared balance knob a normal mark uses, so a
-        // guaranteed mark still "cures" after the usual duration rather than lasting forever.
+        // roll entirely (this doesn't go through TryMarkExplodeOnDeath at all). Permanent, like
+        // every mark (see ExplodeOnDeath.qtn).
         private static void ForceMarkEnemiesInRadius(Frame f, FPVector3 center, FP radius)
         {
             if (radius <= FP._0)
@@ -138,15 +137,13 @@ namespace Quantum
 
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
-            ExplodeOnDeathConfig config = f.FindAsset(f.GameConfig.ExplodeOnDeathConfig);
-
             for (int i = 0; i < hits.Count; i++)
             {
                 if (f.Has<Enemy>(hits[i].Entity) == false)
                     continue;
 
-                f.AddOrGet<ExplodeOnDeath>(hits[i].Entity, out var explode);
-                explode->Remaining = config.Duration;
+                if (f.Has<ExplodeOnDeath>(hits[i].Entity) == false)
+                    f.Add<ExplodeOnDeath>(hits[i].Entity);
             }
         }
     }

@@ -4,9 +4,9 @@
 // chosen over spawning a marker entity because there is nothing physical or visual to represent
 // between scheduling and firing.
 //
-// Two consumers today, and neither needed its own copy of this: Pixie's Unstable Mixture rank 3
-// (an empowered explosion splitting into a delayed second blast) and Brute's Aftershock rank 3
-// "Earthquake" (a second shockwave half a second after the first).
+// One consumer today: Brute's Aftershock rank 3 "Earthquake" (a second shockwave half a second after
+// the first). Pixie's old Unstable Mixture rank 3 secondary blast used it too until that line was
+// reworked into a flat Unstable damage upgrade (2026-10-21).
 //
 // Exactly one pending blast per owner - a fresh schedule overwrites whatever was pending rather than
 // queueing, which is also what stops these accumulating under a fast repeat. That cap is fine because
@@ -29,11 +29,11 @@ component DelayedBlast
 
     // Marks this blast as PROC-GENERATED rather than a fresh player action - the generic source tag
     // that stops a payout blast from re-entering the mechanic that spawned it (see
-    // DemolitionMasteryUtility/UnstableMixture.qtn). Only meaningful alongside IsExplosion.
+    // DamageUtility.TryMarkExplodeOnDeath's isChainedExplosion). Only meaningful alongside IsExplosion.
     Boolean IsChainedExplosion;
 
-    // Optional - invalid/default for Pixie's Unstable Mixture (which has no bespoke VFX of its own,
-    // see EffectsManager.OnWeaponExplosionReleased). Set by Brute's Aftershock rank 3 "Earthquake" so
+    // Optional - invalid/default plays the generic blast (EffectsManager.OnWeaponExplosionReleased).
+    // Set by Brute's Aftershock rank 3 "Earthquake" so
     // DelayedBlastSystem can fire the same JuggernautEndExploded event the primary blast uses,
     // resolving AftershockSkillAction.BlastEffectPrefab instead of falling back to the generic
     // default blast VFX - see AftershockSkillAction.View.cs.

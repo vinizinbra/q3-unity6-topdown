@@ -22,10 +22,9 @@ namespace Quantum
         // also hurt them. Change to Both if friendly fire from the chain is ever actually wanted.
         public DamageTargetMask TargetMask = DamageTargetMask.Enemies;
 
-        // How long a fresh ExplodeOnDeath mark lasts before ExplodeOnDeathTimerSystem removes it
-        // unfulfilled - see TryMarkExplodeOnDeath, which refreshes this back to full on every
-        // additional marked hit. One shared knob, same reasoning as DamagePercent/RadiusMultiplier
-        // above.
-        public FP Duration = 5;
+        // Fuse between a marked enemy dying and its explosion going off - the corpse shakes for this long
+        // (EnemyBlobAnimationView's Unstable fuse) instead of playing its normal death, then blows up. Keeps
+        // the killing blow and the chain blast as two readable beats. 0 = explode on the spot (old behavior).
+        public FP DetonationDelay = FP._0_20;
     }
 }

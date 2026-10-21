@@ -153,15 +153,6 @@ namespace Quantum
             DamageTargetMask targetMask = DamageTargetMask.Both, bool isExplosion = false,
             bool isChainedExplosion = false, FP maxHeightDifference = default, byte hitIndex = 0)
         {
-            // Pixie's Unstable Mixture - resolved once for the whole blast, before the overlap query,
-            // so an empowered explosion is bigger for everyone caught rather than per-target. Scoped
-            // to a genuine, non-chained explosion: a chained blast is a payout, never a new link (see
-            // UnstableMixture.qtn). No-op for any other owner.
-            if (isExplosion == true && isChainedExplosion == false)
-            {
-                DemolitionMasteryUtility.ResolveExplosionEmpowerment(f, owner, center, ref damage, ref radius);
-            }
-
             // Over-fetched by maxHeightDifference so a candidate right at the flat radius boundary
             // with a small height offset isn't dropped by the 3D sphere query itself - the real
             // ground-area cutoff is IsWithinFlatGroundArea below, not this query shape.
@@ -354,13 +345,6 @@ namespace Quantum
             DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Both,
             bool isChainedExplosion = false, bool isExplosion = false, EntityRef excludeTarget = default)
         {
-            // Pixie's Unstable Mixture - the effects-free counterpart of ApplyInRadius's own identical
-            // hook. Same non-chained gate, same once-per-blast placement.
-            if (isExplosion == true && isChainedExplosion == false)
-            {
-                DemolitionMasteryUtility.ResolveExplosionEmpowerment(f, owner, center, ref damage, ref radius);
-            }
-
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, ResolveQueryLayerMask(f, targetMask), QueryOptions.HitAll);
 
@@ -439,13 +423,22 @@ namespace Quantum
         // defaultAreaBlastEffect) instead of each needing their own. Fires the event unconditionally,
         // even if nothing was actually caught, so it still reads visually against an empty room -
         // same convention ApplyShockwave/AreaDetonated already follow.
+        //
+        // isExplosiveSequence marks an Explosive Sequence proc - when its owner is a Pixie with Explosive
+        // Rounds (PixieExplosiveWeapon, which takes the whole proc over - see WeaponSystem.ApplyPixieExplosiveWeapon)
+        // it raises ExplosiveRoundDetonated instead, so the view can play her pink blast for it.
         public static void ApplyExplosion(Frame f, FPVector3 center, FP radius, EntityRef owner, FP damage,
-            DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Enemies, EntityRef excludeTarget = default)
+            DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Enemies, EntityRef excludeTarget = default,
+            bool isExplosiveSequence = false)
         {
             // Hardcoded true, not a caller param - anything calling ApplyExplosion at all (weapon-perk
             // explosions) is definitionally a genuine explosion.
             ApplyDamageInRadius(f, center, radius, owner, damage, source, targetMask, isExplosion: true, excludeTarget: excludeTarget);
-            f.Events.WeaponExplosionReleased(owner, center, radius);
+
+            if (isExplosiveSequence == true && f.Has<PixieExplosiveWeapon>(owner) == true)
+                f.Events.ExplosiveRoundDetonated(owner, center, radius);
+            else
+                f.Events.WeaponExplosionReleased(owner, center, radius);
 
             // Demolition Mastery's Pocket Bombs (Pixie's own Hero Trait pool) reacts to this - see
             // AreaHitData.Detonate's own identical call for why this is the other of exactly two

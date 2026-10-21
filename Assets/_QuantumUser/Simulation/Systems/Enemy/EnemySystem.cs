@@ -506,6 +506,9 @@ namespace Quantum
 
             if (filter.Enemy->StateTimer <= FP._0)
             {
+                // A marked enemy's fuse (see DamageUtility.TryPrimeExplodeOnDeathFuse) - blows up right
+                // before the corpse goes away.
+                DamageUtility.DetonateExplodeOnDeathFuse(f, filter.Entity, filter.Enemy);
                 f.Destroy(filter.Entity);
             }
         }

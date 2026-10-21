@@ -14,9 +14,9 @@ namespace Quantum
     public unsafe partial class ExplosiveRoundsPassiveUpgradeData : PassiveUpgradeData
     {
         [Tooltip("Chance per weapon hit that an explosion procs, per rank. Reworked down from the old always-on (100%) behavior, which drowned out Pixie's bomb identity on a fast weapon.")]
-        public FP[] ProcChance = { FP.FromString("0.15"), FP.FromString("0.22"), FP.FromString("0.30") };
+        public FP[] ProcChance = { FP.FromString("0.25"), FP.FromString("0.35"), FP.FromString("0.50") };
 
-        public FP[] Radius = { 2, FP.FromString("2.4"), FP.FromString("2.4") };
+        public FP[] Radius = { FP.FromString("1.2"), FP.FromString("1.5"), FP.FromString("1.8") };
         public FP[] DamageMultiplier = { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
 
         [Tooltip("Optional internal cooldown between procs, in seconds. 0 = off. Left off by default - turn it on from data only if playtesting shows a high-Fire-Rate weapon still procs too often at the chances above.")]

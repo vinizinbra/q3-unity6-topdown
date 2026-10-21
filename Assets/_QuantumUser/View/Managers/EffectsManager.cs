@@ -39,6 +39,12 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Played for Pixie's Heavy Mastery R3 area around a single-target Heavy hit (HeavyHitAreaExpanded) - a pink copy of the default blast, matching her identity. Same radius-1 reference scale as defaultAreaBlastEffect. Falls back to defaultAreaBlastEffect if left empty.")]
         private ParticleSystem heavyHitAreaEffectPrefab;
 
+        [SerializeField, Tooltip("Played for Pixie's Explosive Rounds proc (ExplosiveRoundDetonated) - her pink blast, same radius-1 reference scale as defaultAreaBlastEffect. Falls back to heavyHitAreaEffectPrefab, then defaultAreaBlastEffect, if left empty.")]
+        private ParticleSystem explosiveRoundsEffectPrefab;
+
+        [SerializeField, Tooltip("Played for Pixie's Chain Reaction death explosion (ExplodeOnDeathDetonated whose owner's MarkExplosiveDeath.RequiresExplosion is set) - a deliberately different-looking blast from her bomb/weapon explosions so a chained death reads as its own thing. Same radius-1 reference scale as defaultAreaBlastEffect. Max's Explosive Death keeps defaultAreaBlastEffect. Falls back to defaultAreaBlastEffect if left empty.")]
+        private ParticleSystem chainReactionEffectPrefab;
+
         [Header("Shockwave")]
         [SerializeField, Tooltip("Played whenever a ShockwaveReleased event fires (currently only Empty Chamber, see docs/weapon-perks.md) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Authored at a reference radius of 1, scaled by e.Radius (not diameter) - same convention as the other radius-scaled handlers below.")]
         private ParticleSystem shockwaveEffectPrefab;
@@ -278,6 +284,7 @@ namespace QuantumUser.View.Managers
             QuantumEvent.Subscribe<EventWallSlammed>(this, OnWallSlammed);
             QuantumEvent.Subscribe<EventWeaponExplosionReleased>(this, OnWeaponExplosionReleased);
             QuantumEvent.Subscribe<EventHeavyHitAreaExpanded>(this, OnHeavyHitAreaExpanded);
+            QuantumEvent.Subscribe<EventExplosiveRoundDetonated>(this, OnExplosiveRoundDetonated);
             QuantumEvent.Subscribe<EventJoltTriggered>(this, OnJoltTriggered);
             QuantumEvent.Subscribe<EventThermalShockTriggered>(this, OnThermalShockTriggered);
             QuantumEvent.Subscribe<EventOverloadTriggered>(this, OnOverloadTriggered);
@@ -322,13 +329,24 @@ namespace QuantumUser.View.Managers
         }
 
         // The mark can come from any hero's upgrade (see MarkExplosiveDeath/ExplodeOnDeath) - there's
-        // no single upgrade asset behind it to resolve a bespoke blast prefab from, so this always
-        // plays the shared default area blast effect, using its own authored color like every other
-        // generic blast (see PlayEffect - only OnEnemyExploded's deathEffect/deathDecalEffect tint).
+        // no single upgrade asset behind it to resolve a bespoke blast prefab from. Pixie's Chain Reaction
+        // is told apart by its owner's RequiresExplosion (Pixie-only, see MarkExplosiveDeath.qtn) and plays
+        // chainReactionEffectPrefab; anyone else (Max's Explosive Death) plays the shared default blast.
         private void OnExplodeOnDeathDetonated(EventExplodeOnDeathDetonated e)
         {
             Vector3 position = e.Position.ToUnityVector3();
             Vector3 scale = Vector3.one * e.Radius.AsFloat;
+
+            Frame frame = e.Game.Frames.Predicted;
+
+            // Chain Reaction's prefab keeps its own authored rotation (root tilted 270 on X, like the
+            // VoidFireExplosion it came from) - identity would fire its smoke/fire cones sideways, off center.
+            if (chainReactionEffectPrefab != null && frame != null
+                && frame.TryGet<MarkExplosiveDeath>(e.Owner, out var mark) && mark.RequiresExplosion)
+            {
+                PlayEffect(chainReactionEffectPrefab, position, chainReactionEffectPrefab.transform.rotation, scale);
+                return;
+            }
 
             PlayEffect(defaultAreaBlastEffect, position, Quaternion.identity, scale);
         }
@@ -740,6 +758,15 @@ namespace QuantumUser.View.Managers
         private void OnHeavyHitAreaExpanded(EventHeavyHitAreaExpanded e)
         {
             ParticleSystem prefab = heavyHitAreaEffectPrefab != null ? heavyHitAreaEffectPrefab : defaultAreaBlastEffect;
+            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
+        }
+
+        // Pixie's Explosive Rounds proc (see HitEffectUtility.ApplyExplosion) - her pink blast, same radius
+        // convention as OnWeaponExplosionReleased.
+        private void OnExplosiveRoundDetonated(EventExplosiveRoundDetonated e)
+        {
+            ParticleSystem prefab = explosiveRoundsEffectPrefab != null ? explosiveRoundsEffectPrefab
+                : heavyHitAreaEffectPrefab != null ? heavyHitAreaEffectPrefab : defaultAreaBlastEffect;
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 

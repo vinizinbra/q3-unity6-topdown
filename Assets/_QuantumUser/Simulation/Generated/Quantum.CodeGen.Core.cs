@@ -4427,17 +4427,17 @@ namespace Quantum {
     public const Int32 SIZE = 8;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(0)]
-    public FP Remaining;
+    public EntityRef Killer;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 21023;
-        hash = hash * 31 + Remaining.GetHashCode();
+        hash = hash * 31 + Killer.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (ExplodeOnDeath*)ptr;
-        FP.Serialize(&p->Remaining, serializer);
+        EntityRef.Serialize(&p->Killer, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -5533,11 +5533,11 @@ namespace Quantum {
     public QBoolean HasMarkChance;
     [FieldOffset(40)]
     public FP MarkChance;
-    [FieldOffset(24)]
-    public FP BonusRadiusMultiplier;
     [FieldOffset(16)]
-    public FP BonusDamageMultiplier;
+    public FP BonusRadiusMultiplier;
     [FieldOffset(32)]
+    public FP DamagePercent;
+    [FieldOffset(24)]
     public FP ChainReactionMultiplier;
     [FieldOffset(48)]
     public FP TierRadiusMultiplier;
@@ -5551,7 +5551,7 @@ namespace Quantum {
         hash = hash * 31 + HasMarkChance.GetHashCode();
         hash = hash * 31 + MarkChance.GetHashCode();
         hash = hash * 31 + BonusRadiusMultiplier.GetHashCode();
-        hash = hash * 31 + BonusDamageMultiplier.GetHashCode();
+        hash = hash * 31 + DamagePercent.GetHashCode();
         hash = hash * 31 + ChainReactionMultiplier.GetHashCode();
         hash = hash * 31 + TierRadiusMultiplier.GetHashCode();
         return hash;
@@ -5564,9 +5564,9 @@ namespace Quantum {
         QBoolean.Serialize(&p->HasMarkChance, serializer);
         QBoolean.Serialize(&p->HasTierGate, serializer);
         QBoolean.Serialize(&p->RequiresExplosion, serializer);
-        FP.Serialize(&p->BonusDamageMultiplier, serializer);
         FP.Serialize(&p->BonusRadiusMultiplier, serializer);
         FP.Serialize(&p->ChainReactionMultiplier, serializer);
+        FP.Serialize(&p->DamagePercent, serializer);
         FP.Serialize(&p->MarkChance, serializer);
         FP.Serialize(&p->TierRadiusMultiplier, serializer);
     }
@@ -8166,48 +8166,6 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
-  public unsafe partial struct UnstableMixtureUpgrade : Quantum.IComponent {
-    public const Int32 SIZE = 48;
-    public const Int32 ALIGNMENT = 8;
-    [FieldOffset(8)]
-    public FP DamageBonusPerStack;
-    [FieldOffset(16)]
-    public FP RadiusBonusPerStack;
-    [FieldOffset(0)]
-    public Byte MaxStacks;
-    [FieldOffset(1)]
-    public Byte Stacks;
-    [FieldOffset(24)]
-    public FP SecondaryDamagePercent;
-    [FieldOffset(40)]
-    public FP SecondaryRadiusMultiplier;
-    [FieldOffset(32)]
-    public FP SecondaryDelay;
-    public override readonly Int32 GetHashCode() {
-      unchecked { 
-        var hash = 11437;
-        hash = hash * 31 + DamageBonusPerStack.GetHashCode();
-        hash = hash * 31 + RadiusBonusPerStack.GetHashCode();
-        hash = hash * 31 + MaxStacks.GetHashCode();
-        hash = hash * 31 + Stacks.GetHashCode();
-        hash = hash * 31 + SecondaryDamagePercent.GetHashCode();
-        hash = hash * 31 + SecondaryRadiusMultiplier.GetHashCode();
-        hash = hash * 31 + SecondaryDelay.GetHashCode();
-        return hash;
-      }
-    }
-    public static void Serialize(void* ptr, FrameSerializer serializer) {
-        var p = (UnstableMixtureUpgrade*)ptr;
-        serializer.Stream.Serialize(&p->MaxStacks);
-        serializer.Stream.Serialize(&p->Stacks);
-        FP.Serialize(&p->DamageBonusPerStack, serializer);
-        FP.Serialize(&p->RadiusBonusPerStack, serializer);
-        FP.Serialize(&p->SecondaryDamagePercent, serializer);
-        FP.Serialize(&p->SecondaryDelay, serializer);
-        FP.Serialize(&p->SecondaryRadiusMultiplier, serializer);
-    }
-  }
-  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct UpgradeHistory : Quantum.IComponent {
     public const Int32 SIZE = 512;
     public const Int32 ALIGNMENT = 8;
@@ -9842,8 +9800,6 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.UndertowPull>();
       BuildSignalsArrayOnComponentAdded<Quantum.UndertowUpgrade>();
       BuildSignalsArrayOnComponentRemoved<Quantum.UndertowUpgrade>();
-      BuildSignalsArrayOnComponentAdded<Quantum.UnstableMixtureUpgrade>();
-      BuildSignalsArrayOnComponentRemoved<Quantum.UnstableMixtureUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.UpgradeHistory>();
       BuildSignalsArrayOnComponentRemoved<Quantum.UpgradeHistory>();
       BuildSignalsArrayOnComponentAdded<Quantum.VendettaStrikeHitTracker>();
@@ -10445,7 +10401,6 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.TraversalReturnTeleport), Quantum.TraversalReturnTeleport.SIZE);
       typeRegistry.Register(typeof(Quantum.UndertowPull), Quantum.UndertowPull.SIZE);
       typeRegistry.Register(typeof(Quantum.UndertowUpgrade), Quantum.UndertowUpgrade.SIZE);
-      typeRegistry.Register(typeof(Quantum.UnstableMixtureUpgrade), Quantum.UnstableMixtureUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.UpgradeHistory), Quantum.UpgradeHistory.SIZE);
       typeRegistry.Register(typeof(Quantum.UpgradeHistoryEntry), Quantum.UpgradeHistoryEntry.SIZE);
       typeRegistry.Register(typeof(Quantum.VendettaStrikeHitTracker), Quantum.VendettaStrikeHitTracker.SIZE);
@@ -10481,7 +10436,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 202)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 201)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryDropHint>(Quantum.AccessoryDropHint.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
@@ -10657,7 +10612,6 @@ namespace Quantum {
         .Add<Quantum.TraversalReturnTeleport>(Quantum.TraversalReturnTeleport.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UndertowPull>(Quantum.UndertowPull.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UndertowUpgrade>(Quantum.UndertowUpgrade.Serialize, null, null, ComponentFlags.None)
-        .Add<Quantum.UnstableMixtureUpgrade>(Quantum.UnstableMixtureUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.UpgradeHistory>(Quantum.UpgradeHistory.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.VendettaStrikeHitTracker>(Quantum.VendettaStrikeHitTracker.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.VendettaUpgrade>(Quantum.VendettaUpgrade.Serialize, null, null, ComponentFlags.None)

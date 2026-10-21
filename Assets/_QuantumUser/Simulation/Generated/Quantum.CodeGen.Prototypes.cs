@@ -1706,17 +1706,15 @@ namespace Quantum.Prototypes {
   }
   [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.ExplodeOnDeath))]
-  public unsafe partial class ExplodeOnDeathPrototype : ComponentPrototype<Quantum.ExplodeOnDeath> {
-    public FP Remaining;
-    partial void MaterializeUser(Frame frame, ref Quantum.ExplodeOnDeath result, in PrototypeMaterializationContext context);
+  public unsafe class ExplodeOnDeathPrototype : ComponentPrototype<Quantum.ExplodeOnDeath> {
+    public MapEntityId Killer;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.ExplodeOnDeath component = default;
         Materialize((Frame)f, ref component, in context);
         return f.Set(entity, component) == SetResult.ComponentAdded;
     }
     public void Materialize(Frame frame, ref Quantum.ExplodeOnDeath result, in PrototypeMaterializationContext context = default) {
-        result.Remaining = this.Remaining;
-        MaterializeUser(frame, ref result, in context);
+        PrototypeValidator.FindMapEntity(this.Killer, in context, out result.Killer);
     }
   }
   [System.SerializableAttribute()]
@@ -2628,7 +2626,7 @@ namespace Quantum.Prototypes {
     public QBoolean HasMarkChance;
     public FP MarkChance;
     public FP BonusRadiusMultiplier;
-    public FP BonusDamageMultiplier;
+    public FP DamagePercent;
     public FP ChainReactionMultiplier;
     public FP TierRadiusMultiplier;
     partial void MaterializeUser(Frame frame, ref Quantum.MarkExplosiveDeath result, in PrototypeMaterializationContext context);
@@ -2645,7 +2643,7 @@ namespace Quantum.Prototypes {
         result.HasMarkChance = this.HasMarkChance;
         result.MarkChance = this.MarkChance;
         result.BonusRadiusMultiplier = this.BonusRadiusMultiplier;
-        result.BonusDamageMultiplier = this.BonusDamageMultiplier;
+        result.DamagePercent = this.DamagePercent;
         result.ChainReactionMultiplier = this.ChainReactionMultiplier;
         result.TierRadiusMultiplier = this.TierRadiusMultiplier;
         MaterializeUser(frame, ref result, in context);
@@ -4497,33 +4495,6 @@ namespace Quantum.Prototypes {
         result.HeavyTierMultiplier = this.HeavyTierMultiplier;
         result.BoundDuration = this.BoundDuration;
         result.BoundDamageBonus = this.BoundDamageBonus;
-        MaterializeUser(frame, ref result, in context);
-    }
-  }
-  [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.UnstableMixtureUpgrade))]
-  public unsafe partial class UnstableMixtureUpgradePrototype : ComponentPrototype<Quantum.UnstableMixtureUpgrade> {
-    public FP DamageBonusPerStack;
-    public FP RadiusBonusPerStack;
-    public Byte MaxStacks;
-    public Byte Stacks;
-    public FP SecondaryDamagePercent;
-    public FP SecondaryRadiusMultiplier;
-    public FP SecondaryDelay;
-    partial void MaterializeUser(Frame frame, ref Quantum.UnstableMixtureUpgrade result, in PrototypeMaterializationContext context);
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.UnstableMixtureUpgrade component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.UnstableMixtureUpgrade result, in PrototypeMaterializationContext context = default) {
-        result.DamageBonusPerStack = this.DamageBonusPerStack;
-        result.RadiusBonusPerStack = this.RadiusBonusPerStack;
-        result.MaxStacks = this.MaxStacks;
-        result.Stacks = this.Stacks;
-        result.SecondaryDamagePercent = this.SecondaryDamagePercent;
-        result.SecondaryRadiusMultiplier = this.SecondaryRadiusMultiplier;
-        result.SecondaryDelay = this.SecondaryDelay;
         MaterializeUser(frame, ref result, in context);
     }
   }

@@ -6,7 +6,7 @@ namespace Quantum
 
     // Ticks down ZaraAfterbeat's two independent countdowns (Start/End - see ZaraAfterbeat.qtn, set
     // by AfterbeatSkillAction) and fires each delayed pulse once it hits 0 - same "countdown
-    // component ticked by its own tiny System" shape as ExplodeOnDeathTimerSystem/
+    // component ticked by its own tiny System" shape as
     // JuggernautDischargeCooldownSystem, just two independent slots on one component instead of one.
     [Preserve]
     public unsafe class ZaraAfterbeatSystem : SystemMainThreadFilter<ZaraAfterbeatSystem.Filter>

@@ -23,15 +23,13 @@ namespace Quantum
                 f.AddOrGet<MarkExplosiveDeath>(filter.Entity, out var mark);
                 mark->Stacks++;
 
-                // Defensive seed for a brand-new component - BonusRadiusMultiplier/
-                // BonusDamageMultiplier/TierRadiusMultiplier all default to 0 on a fresh AddOrGet,
-                // which would otherwise zero out TryExplodeOnDeath's own blastRadius/damage
-                // computation (see DamageUtility.TryExplodeOnDeath) the very first time Max's own
-                // Berserk grants this - he never goes through Pixie's ChainReactionPassiveData.Apply,
-                // which is what seeds all three to 1 for her at spawn. No-op for Pixie, whose values
-                // here are always already >0 by the time any skill of hers could run.
+                // Defensive seed for a brand-new component - BonusRadiusMultiplier/TierRadiusMultiplier
+                // both default to 0 on a fresh AddOrGet, which would otherwise zero out
+                // TryExplodeOnDeath's own blastRadius (see DamageUtility.TryExplodeOnDeath) the very
+                // first time Max's own Berserk grants this - he never goes through Pixie's
+                // ChainReactionPassiveData.Apply, which is what seeds both to 1 for her at spawn.
+                // (DamagePercent's 0 default already means "use the shared base".) No-op for Pixie.
                 if (mark->BonusRadiusMultiplier <= FP._0) mark->BonusRadiusMultiplier = FP._1;
-                if (mark->BonusDamageMultiplier <= FP._0) mark->BonusDamageMultiplier = FP._1;
                 if (mark->TierRadiusMultiplier <= FP._0) mark->TierRadiusMultiplier = FP._1;
             }
             // Guarded against underflow - Stacks is an unsigned Byte, so a spurious End with no

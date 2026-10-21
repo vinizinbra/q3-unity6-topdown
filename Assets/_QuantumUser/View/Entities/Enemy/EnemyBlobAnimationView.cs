@@ -73,6 +73,14 @@ namespace Quantum
         [SerializeField, Tooltip("Extra pause after the fall finishes before the shrink (below) begins, so the fallen corpse holds on screen for a beat first.")] private float dieShrinkDelay = 0.5f;
         [SerializeField, Tooltip("Once the fall above finishes (plus the delay above), the corpse shrinks to nothing over this many seconds. Keep dieDuration + dieShrinkDelay + this under EnemyDataAsset.DeathLingerTime or the entity/view gets torn down mid-shrink.")] private float dieShrinkDuration = 0.4f;
 
+        [Header("Unstable fuse (a marked enemy's death - shakes and swells in place, then the sim blows it up)")]
+        [SerializeField, Tooltip("Should match ExplodeOnDeathConfig.DetonationDelay - the swell below ramps over this long. The entity (and this view) is destroyed when the sim's fuse runs out, so this only shapes the ramp, it doesn't hold the pose.")] private float fuseDuration = 0.2f;
+        [SerializeField] private float fuseShakeFrequency = 22f;
+        [SerializeField] private float fuseShakeDegrees = 14f;
+        [SerializeField, Tooltip("Side-to-side world-space jitter, in units, layered on the rock shake.")] private float fuseJitterAmount = 0.06f;
+        [SerializeField, Tooltip("Uniform swell reached by the end of the fuse (0.3 = 30% bigger) - the body puffs up right before it pops.")] private float fuseSwell = 0.3f;
+        [SerializeField] private float fuseSquash = 0.15f;
+
         [Header("Burrow (shrinks/sinks away on dive, holds hidden while Burrowed, grows back on resurface)")]
         [SerializeField] private float burrowSinkDuration = 0.35f;
         [SerializeField] private float burrowRiseDuration = 0.35f;
@@ -100,7 +108,7 @@ namespace Quantum
         [SerializeField, Tooltip("Assign any AttackVisualStep here (e.g. copy one out of an EnemyActionData asset) to preview it with the button below, without a running simulation.")]
         private AttackVisualStep debugTestStep;
 
-        private enum State { Idle, Run, AttackStep, Die, Burrow, Jump }
+        private enum State { Idle, Run, AttackStep, Die, Burrow, Jump, UnstableFuse }
 
         // True while the body is not standing on the ground - burrowed/sinking, hopping, dying, falling,
         // or playing a Jump/Dive attack step. Read by ground props that belong to "the body on the
@@ -450,6 +458,15 @@ namespace Quantum
             UpdatePose(0f);
         }
 
+        // Replaces TriggerDie for an enemy that died carrying ExplodeOnDeath - see DamageUtility.TryPrimeExplodeOnDeathFuse.
+        [Button]
+        public void TriggerUnstableFuse()
+        {
+            _state = State.UnstableFuse;
+            _stateTimer = 0f;
+            UpdatePose(0f);
+        }
+
         [Button, Tooltip("Preview debugTestStep above without a running simulation.")]
         private void PlayDebugTestStep()
         {
@@ -495,9 +512,16 @@ namespace Quantum
             {
                 // A boss in its defeat cinematic stays upright - BossDefeatSequenceDirector owns that death's look
                 // (Dying sprite, shake, Unstable mark, burst), not this generic tip-over-and-fall.
+                // A marked (Unstable) enemy shakes through its detonation fuse instead of hopping over -
+                // the mark stays on the corpse until the sim blows it up (DamageUtility.TryPrimeExplodeOnDeathFuse).
                 if (enemyPhase == EnemyActionPhase.Dead && _lastEnemyPhase != EnemyActionPhase.Dead
                     && frame.Has<BossDefeatSequence>(_entityRef) == false)
-                    TriggerDie();
+                {
+                    if (frame.Has<ExplodeOnDeath>(_entityRef) == true)
+                        TriggerUnstableFuse();
+                    else
+                        TriggerDie();
+                }
 
                 _lastEnemyPhase = enemyPhase;
             }
@@ -627,7 +651,7 @@ namespace Quantum
             // Hard Freeze locks the whole body in place - no breathe/wobble, no stride, no windup -
             // so it reads as encased in ice (HitFeedback swaps in the Sprite Frozen material) rather
             // than a blue enemy idling. Burrow above keeps its own dt so a sink/rise never sticks.
-            bool frozen = _state != State.Die && StatusEffectUtility.IsFrozen(frame, _entityRef) == true;
+            bool frozen = _state != State.Die && _state != State.UnstableFuse && StatusEffectUtility.IsFrozen(frame, _entityRef) == true;
             if (frozen == true)
                 dt = 0f;
 
@@ -668,6 +692,7 @@ namespace Quantum
 
             bool triggerStillPlaying = (_state == State.AttackStep && _currentStep != null && _stateTimer < _currentStep.Duration)
                 || _state == State.Die // holds its final fallen pose once triggered - never reverts on its own
+                || _state == State.UnstableFuse // terminal too - shakes until the sim destroys the entity
                 || (_state == State.Burrow && (isBurrowed == true || _burrowT > 0f)) // holds hidden while still Burrowed, then plays out the rise
                 || (_state == State.Jump && isJumping == true); // reverts to grounded the instant the real hop lands
 
@@ -679,7 +704,7 @@ namespace Quantum
 
             // Real time, not the (possibly frozen/stretched) dt above - a stun's wobble shouldn't
             // stall under a windup stretch, and Freeze already wins via the frozen check.
-            bool dizzy = frozen == false && _state != State.Die && StatusEffectUtility.IsStunned(frame, _entityRef) == true;
+            bool dizzy = frozen == false && _state != State.Die && _state != State.UnstableFuse && StatusEffectUtility.IsStunned(frame, _entityRef) == true;
             _dizzyWeight = Mathf.MoveTowards(_dizzyWeight, dizzy ? 1f : 0f, dizzyBlendSpeed * Time.deltaTime);
             if (_dizzyWeight > 0f)
             {
@@ -708,6 +733,7 @@ namespace Quantum
             float punchScaleTarget = 0f;
             Vector3 worldOffset = Vector3.zero;
             bool centerPivot = false;
+            bool scaleAroundCenter = false;
             float pivotHeightOverride = 0f;
 
             switch (_state)
@@ -1012,6 +1038,26 @@ namespace Quantum
                     break;
                 }
 
+                case State.UnstableFuse:
+                {
+                    // Violent rock + sideways jitter while the body swells toward fuseSwell, so it reads as
+                    // "about to blow" rather than a normal death. Shake ramps in fast so frame one already moves.
+                    float t = fuseDuration > 0f ? Mathf.Clamp01(_stateTimer / fuseDuration) : 1f;
+                    float phase = _stateTimer * fuseShakeFrequency * Mathf.PI * 2f;
+                    float intensity = Mathf.Lerp(0.6f, 1f, t);
+
+                    rockTarget = Mathf.Sin(phase) * fuseShakeDegrees * intensity;
+                    worldOffset = new Vector3(Mathf.Sin(phase * 1.37f + 1.1f), 0f, 0f) * (fuseJitterAmount * intensity);
+                    punchScaleTarget = fuseSwell * t * t;
+                    _squashT = Mathf.Sin(phase * 0.5f) * fuseSquash;
+
+                    // Shake and swell around the body's middle, not the feet - otherwise it rocks like a
+                    // metronome and grows upward, and the pop (fired at the body center) looks off.
+                    centerPivot = true;
+                    scaleAroundCenter = true;
+                    break;
+                }
+
                 case State.Jump:
                 {
                     // Small crouch (compress + sink) through the real anticipation window
@@ -1054,7 +1100,7 @@ namespace Quantum
                 }
             }
 
-            ApplyPose(leanTarget, rockTarget, bobTarget, depthTarget, armRotationTarget, armScaleTarget, punchScaleTarget, centerPivot, pivotHeightOverride, worldOffset);
+            ApplyPose(leanTarget, rockTarget, bobTarget, depthTarget, armRotationTarget, armScaleTarget, punchScaleTarget, centerPivot, pivotHeightOverride, worldOffset, scaleAroundCenter);
         }
 
         // HopStrike's lunge direction - toward the same anchor EnemyAttackVisualsView's
@@ -1161,7 +1207,7 @@ namespace Quantum
             return Mathf.Clamp(elevation, -max, max) * _facingSign;
         }
 
-        private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float depthOffset = 0f, float armRotationDegrees = 0f, float armScaleOffset = 0f, float punchScaleOffset = 0f, bool centerPivot = false, float pivotHeightOverride = 0f, Vector3 worldOffset = default)
+        private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float depthOffset = 0f, float armRotationDegrees = 0f, float armScaleOffset = 0f, float punchScaleOffset = 0f, bool centerPivot = false, float pivotHeightOverride = 0f, Vector3 worldOffset = default, bool scaleAroundCenter = false)
         {
             float verticalMult = Mathf.Clamp(1f - (_squashT + _dizzySquash) * volumePreservation, 0.15f, 3f);
             float horizontalMult = Mathf.Clamp(1f / verticalMult, 0.3f, 3f);
@@ -1266,6 +1312,11 @@ namespace Quantum
                         : _autoCenterPivotHeight;
                     Vector3 pivotOffset = Vector3.Scale(scale, new Vector3(0f, pivotHeight, 0f));
                     localPos += pivotOffset - tiltRotation * pivotOffset;
+
+                    // Rotation-only above; this also pins the center against root's own scale change, so
+                    // a swell/squash grows out from the middle instead of up from the base (Unstable fuse).
+                    if (scaleAroundCenter)
+                        localPos.y -= (scale.y - _rootBaseScale.y) * pivotHeight;
                 }
 
                 root.localPosition = localPos;

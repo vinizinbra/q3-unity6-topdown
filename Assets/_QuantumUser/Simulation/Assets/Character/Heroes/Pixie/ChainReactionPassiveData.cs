@@ -29,7 +29,7 @@ namespace Quantum
             mark->HasMarkChance = true;
             mark->MarkChance = MarkChance;
             mark->BonusRadiusMultiplier = FP._1;
-            mark->BonusDamageMultiplier = FP._1;
+            mark->DamagePercent = FP._0;
             mark->ChainReactionMultiplier = FP._0;
             mark->TierRadiusMultiplier = FP._1;
         }

@@ -491,6 +491,17 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class ExplodeOnDeathPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.ExplodeOnDeathPrototype> {
+    public Quantum.QuantumEntityPrototype Killer;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.ExplodeOnDeathPrototype prototype);
+    public override Quantum.Prototypes.ExplodeOnDeathPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.ExplodeOnDeathPrototype();
+      converter.Convert(this.Killer, out result.Killer);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class FirstStrikeMarkPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.FirstStrikeMarkPrototype> {
     public Quantum.QuantumEntityPrototype MarkedBy;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.FirstStrikeMarkPrototype prototype);

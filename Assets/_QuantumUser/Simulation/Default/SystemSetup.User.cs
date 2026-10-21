@@ -160,8 +160,8 @@
                 // See docs/max-ascensions.md.
                 new MaxVendettaSystem(),
                 // Independent per-tick ticker for every active RevengeMark's own countdown, same
-                // "needs to keep counting down regardless of anything else" reasoning
-                // ExplodeOnDeathTimerSystem's own comment gives.
+                // "needs to keep counting down regardless of anything else" reasoning as
+                // JuggernautDischargeCooldownSystem.
                 new RevengeMarkTimeoutSystem(),
                 // Kai's First Strike rank 3 - banks a one-shot bonus onto his next First Strike when
                 // he kills a First-Strike-marked target. Replaces FirstStrikeMarkTimeoutSystem (the
@@ -276,10 +276,7 @@
                 // No ordering dependency on anything else - just needs to run each tick regardless of
                 // whether Brutus is still nearby or using the skill (see JuggernautDischargeCooldown).
                 new JuggernautDischargeCooldownSystem(),
-                // Same reasoning as JuggernautDischargeCooldownSystem just above - ticks independently of
-                // whoever applied the mark (see ExplodeOnDeath).
-                new ExplodeOnDeathTimerSystem(),
-                // Same shape as ExplodeOnDeathTimerSystem just above - ticks down Pixie's shared
+                // Same shape as JuggernautDischargeCooldownSystem just above - ticks down Pixie's shared
                 // next-Bunny-Bomb charge (Hot Fuse + Blast Jump) regardless of anything else, so an
                 // unused charge expires instead of lingering forever (see PixieBombCharge.qtn).
                 new PixieBombChargeSystem(),

@@ -21,7 +21,7 @@ namespace QuantumUser.Editor
     //
     // Per-rank tuned values (Chance/DamagePercent/etc.) ARE explicitly set here on every run, even
     // though every ranked ascension class already carries a matching C# field-initializer default
-    // (see e.g. UnstableMixturePassiveUpgradeData.BonusDamageMultiplier) - that default only applies
+    // (see e.g. UnstableMixturePassiveUpgradeData.DamagePercent) - that default only applies
     // to a BRAND NEW object (ScriptableObject.CreateInstance). For an asset that already existed
     // before a field's TYPE changed shape (a plain FP becoming FP[], as every one of these did during
     // the rank rework), Unity's deserializer doesn't re-run the C# initializer - it just carries over
@@ -113,20 +113,16 @@ namespace QuantumUser.Editor
             UnstableMixturePassiveUpgradeData unstableMixture = CreateOrUpdate<UnstableMixturePassiveUpgradeData>($"{PassiveUpgradesFolderPath}/UnstableMixture.asset", asset =>
             {
                 asset.DisplayName = "Unstable Mixture";
-                asset.Description = "An explosion kill empowers Pixie's next explosion, from any source.";
+                asset.Description = "Unstable enemies explode harder when they die.";
                 asset.RankDescriptions = new[]
                 {
-                    "Explosion kills store <color=#FD3971>1</color> charge. Pixie's next explosion uses it for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius.",
-                    "Explosion kills store up to <color=#FD3971>2</color> charges. Pixie's next explosion uses them for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius per charge.",
-                    "Explosion kills store up to <color=#FD3971>2</color> charges. Pixie's next explosion uses them for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius per charge. Using <color=#FD3971>2</color> charges adds a second explosion <color=#FD3971>0.5s</color> later.",
+                    "Unstable enemies explode for <color=#FD3971>30%</color> of their Max HP. Specialists and Heavies can become Unstable.",
+                    "Unstable enemies explode for <color=#FD3971>60%</color> of their Max HP. Specialists and Heavies can become Unstable.",
+                    "Unstable enemies explode for <color=#FD3971>90%</color> of their Max HP. Elites can become Unstable.",
                 };
                 asset.MaxRank = 3;
-                asset.DamageBonusPerStack = FP.FromString("0.30");
-                asset.RadiusBonusPerStack = FP.FromString("0.15");
-                asset.MaxStacks = new byte[] { 1, 2, 2 };
-                asset.SecondaryDamagePercent = FP._0_50;
-                asset.SecondaryRadiusMultiplier = FP.FromString("0.75");
-                asset.SecondaryDelay = FP._0_50;
+                asset.DamagePercent = new[] { FP.FromString("0.30"), FP.FromString("0.60"), FP.FromString("0.90") };
+                asset.MaxAffectedTier = new[] { EnemyTier.Heavy, EnemyTier.Heavy, EnemyTier.Elite };
             });
 
             ExplosiveRoundsPassiveUpgradeData explosiveRounds = CreateOrUpdate<ExplosiveRoundsPassiveUpgradeData>($"{PassiveUpgradesFolderPath}/ExplosiveRounds.asset", asset =>
@@ -135,13 +131,13 @@ namespace QuantumUser.Editor
                 asset.Description = "Weapon hits can trigger a small explosion.";
                 asset.RankDescriptions = new[]
                 {
-                    "Weapon hits have a <color=#FD3971>15%</color> chance to trigger a <color=#FD3971>2m</color> explosion dealing <color=#FD3971>+20%</color> Damage.",
-                    "Weapon hits have a <color=#FD3971>22%</color> chance to trigger a <color=#FD3971>2.4m</color> explosion dealing <color=#FD3971>+30%</color> Damage.",
-                    "Weapon hits have a <color=#FD3971>30%</color> chance to trigger a <color=#FD3971>2.4m</color> explosion dealing <color=#FD3971>+40%</color> Damage.",
+                    "Weapon hits have a <color=#FD3971>25%</color> chance to trigger a <color=#FD3971>1.2m</color> explosion dealing <color=#FD3971>+20%</color> Damage.",
+                    "Weapon hits have a <color=#FD3971>35%</color> chance to trigger a <color=#FD3971>1.5m</color> explosion dealing <color=#FD3971>+30%</color> Damage.",
+                    "Weapon hits have a <color=#FD3971>50%</color> chance to trigger a <color=#FD3971>1.8m</color> explosion dealing <color=#FD3971>+40%</color> Damage.",
                 };
                 asset.MaxRank = 3;
-                asset.ProcChance = new[] { FP.FromString("0.15"), FP.FromString("0.22"), FP.FromString("0.30") };
-                asset.Radius = new[] { FP._2, FP.FromString("2.4"), FP.FromString("2.4") };
+                asset.ProcChance = new[] { FP.FromString("0.25"), FP.FromString("0.35"), FP.FromString("0.50") };
+                asset.Radius = new[] { FP.FromString("1.2"), FP.FromString("1.5"), FP.FromString("1.8") };
                 asset.DamageMultiplier = new[] { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
 
                 // Shipped OFF - the per-shot chance above is the primary lever. Turn this on from data

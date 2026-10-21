@@ -327,15 +327,6 @@ namespace Quantum
             // reactions all resolve against the original hit first.
             OverkillUtility.TryDetonate(f, target, owner, source, overkillDamage, isChainedExplosion);
 
-            // Pixie's Unstable Mixture - banks a stack when a GENUINE (non-chained) explosion
-            // gets a kill, empowering her next explosion. Scoped by the same isExplosion/
-            // isChainedExplosion pair every other explosion-source rule here uses, which is what
-            // stops a chain reaction from farming its own stacks (see UnstableMixture.qtn).
-            if (isExplosion == true && isChainedExplosion == false)
-            {
-                DemolitionMasteryUtility.OnExplosionKill(f, owner);
-            }
-
             // An enemy that fell off the level (EnemySystem.CheckFallDeath) dies far below the map
             // with no owner - its XP/Coin/Rift Shard/Chest still drop, just on the nearest platform
             // instead of into the void. Scrap stays owner-only (it needs a Lux killer to credit).
@@ -370,7 +361,13 @@ namespace Quantum
                 // destroys the entity, while its Transform3D is still valid.
                 GroundAreaDeliveryData.TryDetonateOnKilled(f, target, owner, data);
 
-                if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal|| data.Tier == EnemyTier.Heavy|| data.Tier == EnemyTier.Specialist)
+                if (data.Tier != EnemyTier.Boss && TryPrimeExplodeOnDeathFuse(f, owner, target, enemy) == true)
+                {
+                    // A marked (Unstable) enemy - any tier but Boss, whose defeat cinematic owns its own
+                    // death - skips both branches below: it lingers Dead for a short fuse and explodes
+                    // afterwards (EnemySystem.UpdateDead → DetonateExplodeOnDeathFuse).
+                }
+                else if (data.Tier == EnemyTier.Filler || data.Tier == EnemyTier.Normal|| data.Tier == EnemyTier.Heavy|| data.Tier == EnemyTier.Specialist)
                 {
                     FireEnemyExploded(f, target, enemy->EnemyData);
                     TryExplodeOnDeath(f, owner, target, EnemyMovementUtility.ResolveEntityRadius(f, target), maxHealth, enemy->EnemyData);
@@ -505,19 +502,10 @@ namespace Quantum
                 return;
             }
 
-            FP durationMultiplier = FP._1;
-
-            if (isChainedExplosion == true)
-            {
-                // Chain Reaction (Pixie ascension) - a chained/secondary blast only re-marks anyone
-                // it also catches once this has been taken (0 is the base passive's default, off),
-                // and then at reduced effectiveness - a direct hit always marks at full duration
-                // regardless of this ascension.
-                if (mark->ChainReactionMultiplier <= FP._0)
-                    return;
-
-                durationMultiplier = mark->ChainReactionMultiplier;
-            }
+            // Chain Reaction (Pixie ascension) - a chained/secondary blast only re-marks anyone it also
+            // catches once this has been taken (0 is the base passive's default, off).
+            if (isChainedExplosion == true && mark->ChainReactionMultiplier <= FP._0)
+                return;
 
             if (mark->HasTierGate == true)
             {
@@ -534,10 +522,9 @@ namespace Quantum
             if (mark->HasMarkChance == true && RollChance(f, mark->MarkChance) == false)
                 return;
 
-            ExplodeOnDeathConfig config = f.FindAsset(f.GameConfig.ExplodeOnDeathConfig);
-
-            f.AddOrGet<ExplodeOnDeath>(target, out var explode);
-            explode->Remaining = config.Duration * durationMultiplier;
+            // Permanent - stays Unstable until it dies (see ExplodeOnDeath.qtn).
+            if (f.Has<ExplodeOnDeath>(target) == false)
+                f.Add<ExplodeOnDeath>(target);
         }
 
         // Filler-tier death replacement for the lingering die animation - fires the explosion event
@@ -566,6 +553,43 @@ namespace Quantum
         // same way, off the Health component that just hit zero. enemyData just travels through to
         // the event so EffectsManager can tint the shared blast prefab with this enemy type's own
         // ExplosionColor instead of always playing it flat white.
+        // A marked enemy's death, delayed: parks it in EnemyActionPhase.Dead (same corpse state an Elite
+        // lingers in - untargetable, collider off via OnEnemyDied) for ExplodeOnDeathConfig.DetonationDelay,
+        // remembering the killer on the mark. EnemySystem.UpdateDead calls DetonateExplodeOnDeathFuse when
+        // that runs out. Returns false (caller falls back to the normal death) when unmarked or the delay is 0.
+        private static bool TryPrimeExplodeOnDeathFuse(Frame f, EntityRef owner, EntityRef target, Enemy* enemy)
+        {
+            if (f.Unsafe.TryGetPointer<ExplodeOnDeath>(target, out var explode) == false)
+                return false;
+
+            ExplodeOnDeathConfig config = f.FindAsset(f.GameConfig.ExplodeOnDeathConfig);
+            if (config.DetonationDelay <= FP._0)
+                return false;
+
+            explode->Killer = owner;
+            enemy->Phase = EnemyActionPhase.Dead;
+            enemy->StateTimer = config.DetonationDelay;
+
+            f.Signals.OnEnemyDied(target);
+            return true;
+        }
+
+        // The fuse primed above ran out - the corpse pops (EnemyExploded, same death VFX a Filler gets) and
+        // its chain blast goes off, credited to whoever landed the kill. No-op for an ordinary corpse.
+        public static void DetonateExplodeOnDeathFuse(Frame f, EntityRef target, Enemy* enemy)
+        {
+            if (f.Unsafe.TryGetPointer<ExplodeOnDeath>(target, out var explode) == false)
+                return;
+
+            EntityRef killer = explode->Killer;
+            FP maxHealth = f.Unsafe.TryGetPointer<Health>(target, out var health) ? health->MaxHealth : FP._0;
+
+            // Body center, not FireEnemyExploded's pivot - the pop has to come out of the middle of the
+            // shaking sprite, same point the chain blast uses (TryExplodeOnDeath).
+            f.Events.EnemyExploded(target, EnemyMovementUtility.ResolveEntityCenter(f, target), EnemyMovementUtility.ResolveEntityRadius(f, target), enemy->EnemyData);
+            TryExplodeOnDeath(f, killer, target, EnemyMovementUtility.ResolveEntityRadius(f, target), maxHealth, enemy->EnemyData);
+        }
+
         private static void TryExplodeOnDeath(Frame f, EntityRef owner, EntityRef target, FP radius, FP maxHealth, AssetRef<EnemyDataAsset> enemyData)
         {
             if (f.Has<ExplodeOnDeath>(target) == false)
@@ -577,22 +601,24 @@ namespace Quantum
                 return;
             }
 
-            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
+            if (f.Has<Transform3D>(target) == false)
                 return;
 
             ExplodeOnDeathConfig config = f.FindAsset(f.GameConfig.ExplodeOnDeathConfig);
             FP blastRadius = radius * config.RadiusMultiplier;
-            FP damage = maxHealth * config.DamagePercent;
+            FP damagePercent = config.DamagePercent;
 
-            // Unstable Mixture (Pixie ascension) applies unconditionally - BonusRadiusMultiplier/
-            // BonusDamageMultiplier both default to 1, so Max's Berserk is unaffected. TierRadiusMultiplier
-            // only for a Specialist+ kill, RADIUS ONLY (not damage - see MarkExplosiveDeath.qtn's own
-            // comment on why), on top of whatever that tougher enemy's own naturally bigger radius/
+            // Unstable Mixture (Pixie ascension) replaces the shared base DamagePercent with its own
+            // per-rank value (MarkExplosiveDeath.DamagePercent, 0 = keep the base - Max's Berserk never
+            // sets it). BonusRadiusMultiplier defaults to 1. TierRadiusMultiplier only for a Specialist+
+            // kill, RADIUS ONLY, on top of whatever that tougher enemy's own naturally bigger radius/
             // health already contributed.
             if (f.Unsafe.TryGetPointer<MarkExplosiveDeath>(owner, out var mark) == true)
             {
                 blastRadius *= mark->BonusRadiusMultiplier;
-                damage *= mark->BonusDamageMultiplier;
+
+                if (mark->DamagePercent > FP._0)
+                    damagePercent = mark->DamagePercent;
 
                 EnemyDataAsset data = f.FindAsset(enemyData);
 
@@ -602,15 +628,21 @@ namespace Quantum
                 }
             }
 
+            FP damage = maxHealth * damagePercent;
+
             if (damage <= FP._0)
                 return;
 
+            // Body center (position + collider centroid), not the pivot - an enemy's pivot usually sits at its
+            // feet or off to one side, which put both the blast and its VFX visibly off the body.
+            FPVector3 center = EnemyMovementUtility.ResolveEntityCenter(f, target);
+
             // Flags this blast's own hits as chained, so TryMarkExplodeOnDeath only re-marks anyone
             // it also catches if Chain Reaction has been taken (see that method's own comment).
-            HitEffectUtility.ApplyDamageInRadius(f, transform->Position, blastRadius, owner, damage, DamageSource.Skill, config.TargetMask, isChainedExplosion: true);
-            f.Events.ExplodeOnDeathDetonated(owner, transform->Position, blastRadius, enemyData);
+            HitEffectUtility.ApplyDamageInRadius(f, center, blastRadius, owner, damage, DamageSource.Skill, config.TargetMask, isChainedExplosion: true);
+            f.Events.ExplodeOnDeathDetonated(owner, center, blastRadius, enemyData);
 
-            Log.Debug($"[Damage] {target}'s marked death exploded at {transform->Position} radius {blastRadius} for {damage}");
+            Log.Debug($"[Damage] {target}'s marked death exploded at {center} radius {blastRadius} for {damage}");
         }
 
         // Lux's Overload Core Ascension. Fully independent from the enemy MarkExplosiveDeath/

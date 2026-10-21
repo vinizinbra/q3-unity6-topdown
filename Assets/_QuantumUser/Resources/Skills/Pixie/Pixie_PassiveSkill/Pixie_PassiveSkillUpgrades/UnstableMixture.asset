@@ -18,20 +18,17 @@ MonoBehaviour:
       Value: 361478584056376078
   Icon: {fileID: -253230904226967950, guid: fa959022da4dd4afa8c7f67644a87e15, type: 3}
   DisplayName: Unstable Mixture
-  Description: "Pixie's explosion kills empower her next explosion."
+  Description: Unstable enemies explode harder when they die.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - "Explosion kills store <color=#FD3971>1</color> charge. Pixie's next explosion uses it for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius."
-  - "Explosion kills store up to <color=#FD3971>2</color> charges. Pixie's next explosion uses them for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius per charge."
-  - "Explosion kills store up to <color=#FD3971>2</color> charges. Pixie's next explosion uses them for <color=#FD3971>+30%</color> Damage and <color=#FD3971>+15%</color> Radius per charge. Using <color=#FD3971>2</color> charges adds a second explosion <color=#FD3971>0.5s</color> later."
-  DamageBonusPerStack:
-    RawValue: 19661
-  RadiusBonusPerStack:
-    RawValue: 9830
-  MaxStacks: 010202
-  SecondaryDamagePercent:
-    RawValue: 32768
-  SecondaryRadiusMultiplier:
-    RawValue: 49152
-  SecondaryDelay:
-    RawValue: 32768
+  - Unstable enemies explode for <color=#FD3971>30%</color> of their Max HP. Specialists
+    and Heavies can become Unstable.
+  - Unstable enemies explode for <color=#FD3971>60%</color> of their Max HP. Specialists
+    and Heavies can become Unstable.
+  - Unstable enemies explode for <color=#FD3971>90%</color> of their Max HP. Elites
+    can become Unstable.
+  DamagePercent:
+  - RawValue: 19661
+  - RawValue: 39322
+  - RawValue: 58982
+  MaxAffectedTier: 030000000300000004000000

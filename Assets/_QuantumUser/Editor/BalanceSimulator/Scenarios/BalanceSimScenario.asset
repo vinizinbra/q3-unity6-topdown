@@ -29,7 +29,7 @@ MonoBehaviour:
   DurationMinutes: 12
   TickSeconds: 0.5
   Seeds: 50
-  BaseSeed: 58981
+  BaseSeed: 52188
   QuantizeWeaponTimers: 1
   HitEfficiency: 0.7
   SkillUseEfficiency: 0.85

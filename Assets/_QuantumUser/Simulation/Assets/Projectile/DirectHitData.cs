@@ -137,7 +137,7 @@ namespace Quantum
             {
                 FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, projectile->Owner,
-                    projectile->Damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon);
+                    projectile->Damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon, isExplosiveSequence: true);
             }
 
             if (procs->HasSplitShot == true && projectile->SpawnDepth < MaxSplitShotDepth)

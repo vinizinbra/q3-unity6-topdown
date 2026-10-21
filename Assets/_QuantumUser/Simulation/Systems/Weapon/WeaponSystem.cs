@@ -1886,7 +1886,7 @@ namespace Quantum
             {
                 FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, owner,
-                    damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon);
+                    damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon, isExplosiveSequence: true);
             }
         }
 

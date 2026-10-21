@@ -1206,3 +1206,14 @@ event HeavyHitAreaExpanded
     FPVector3  Position;
     FP         Radius;
 }
+
+// Fired by HitEffectUtility.ApplyExplosion in place of WeaponExplosionReleased when the blast is Pixie's
+// Explosive Rounds proc (owner has PixieExplosiveWeapon) - same reasoning as HeavyHitAreaExpanded above: the
+// view plays her pink blast (EffectsManager.explosiveRoundsEffectPrefab) without recoloring Cataclysm Round or
+// a non-Pixie Explosive Sequence perk.
+event ExplosiveRoundDetonated
+{
+    EntityRef  Owner;
+    FPVector3  Position;
+    FP         Radius;
+}

@@ -41,16 +41,16 @@ component MarkExplosiveDeath
     Boolean HasMarkChance;
     FP MarkChance;
 
-    // Pixie-only ascensions on the shared death-explosion math (DamageUtility.TryExplodeOnDeath) -
-    // all "no effect" by default (1/1/0/false) so Max's Berserk is completely unaffected by any of
-    // them. Both are Unstable Mixture's own fields now (Bigger Boom/Heavy Payload were folded into
-    // it - see UnstableMixturePassiveUpgradeData):
+    // Pixie-only modifiers on the shared death-explosion math (DamageUtility.TryExplodeOnDeath) -
+    // "no effect" by default so Max's Berserk is unaffected. BonusRadiusMultiplier: 1 = unchanged.
+    // DamagePercent: Unstable Mixture's per-rank fraction of the dying enemy's MaxHealth, REPLACING
+    // ExplodeOnDeathConfig.DamagePercent (the 10% base) - 0 = use the base.
     FP BonusRadiusMultiplier;
-    FP BonusDamageMultiplier;
+    FP DamagePercent;
 
     // Chain Reaction ascension - 0 (off) means a secondary/chained blast (see
     // DamageUtility.TryExplodeOnDeath's own isChainedExplosion flag) never re-marks anyone it also
-    // catches; above 0, it does, at this fraction of a direct hit's normal mark duration.
+    // catches; above 0, it does (the mark is permanent, so the value only acts as an on/off switch).
     FP ChainReactionMultiplier;
 
     // Unstable Mixture ascension - multiplies a Specialist+/Heavy+ kill's own death-explosion RADIUS
