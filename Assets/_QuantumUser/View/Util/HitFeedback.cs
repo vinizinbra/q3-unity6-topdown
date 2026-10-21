@@ -64,7 +64,7 @@ namespace QuantumUser.View.Util
         private float minFlashDurationScale = 0.5f;
 
         [Header("Jolt")]
-        [SerializeField, Tooltip("Punch-scale strength played on EventJoltTriggered - fired whenever a Stun genuinely lands (StatusEffectUtility.ApplyStun), regardless of source, not tied to Electrified anymore - see docs/elemental-reactions.md. Via EnemyBlobAnimationView.PunchScale (enemy-only - see _enemyBlobAnimationView's own comment). Small by design - a brief flinch, not a big hit reaction. No color flash accompanies it - a landed Stun is already brief enough that a punch-scale reads clearly on its own without a redundant color flash on top.")]
+        [SerializeField, Tooltip("Punch-scale strength played on EventJoltTriggered - fired only when a Lightning-weapon stun lands (Shock's own stun proc, or Disruptor's crit stun) - other stun sources never Jolt - see docs/elemental-reactions.md. Via EnemyBlobAnimationView.PunchScale (enemy-only - see _enemyBlobAnimationView's own comment). Small by design - a brief flinch, not a big hit reaction. No color flash accompanies it - a landed Stun is already brief enough that a punch-scale reads clearly on its own without a redundant color flash on top.")]
         private Vector3 joltPunchScaleStrength = new Vector3(0.08f, 0.08f, 0f);
         [SerializeField] private float joltPunchScaleDuration = 0.15f;
         [SerializeField] private float joltPunchScaleFrequency = 20f;
@@ -282,8 +282,13 @@ namespace QuantumUser.View.Util
             if (frame == null)
                 return;
 
+            UpdateMarkMaterial(frame);
+            // After the material swap - the rest tint is suppressed while a freeze material shows.
             UpdateStatusRestTint(frame);
+        }
 
+        private void UpdateMarkMaterial(Frame frame)
+        {
             MarkState state;
             if (hardFreezeMaterial != null && StatusEffectUtility.IsFrozen(frame, _entityRef) == true)
                 state = MarkState.HardFreeze;
@@ -313,13 +318,20 @@ namespace QuantumUser.View.Util
         // elemental first-hit tint (Burn/Ice/Electrified/Intimidate), which beats the entity's own
         // original rest color - so ending Freeze while, say, Burn is still active correctly falls
         // back to fireRestTint rather than straight to _originalRestColor.
+        //
+        // While a freeze material is showing (_markState != Normal) the material IS the look, so no
+        // tint at all: SpriteRenderer.color.a is mix strength on these shaders, and frozenTint/the
+        // elemental tints are authored at a=1 - a full flat-colour replace that would hide the ice.
+        // frozenTint stays as the fallback for a prefab with no hardFreezeMaterial assigned.
         private void UpdateStatusRestTint(Frame frame)
         {
-            bool frozen = StatusEffectUtility.IsFrozen(frame, _entityRef);
+            bool materialShowing = _markState != MarkState.Normal;
+            bool frozen = materialShowing == false && StatusEffectUtility.IsFrozen(frame, _entityRef);
 
             ElementType element = StatusEffectUtility.GetFirstElementApplied(frame, _entityRef);
             Color? elementTint = element == ElementType.Neutral ? null : ResolveElementRestTint(element);
-            bool elementActive = elementTint.HasValue == true && IsElementStatusActive(frame, _entityRef, element);
+            bool elementActive = materialShowing == false
+                && elementTint.HasValue == true && IsElementStatusActive(frame, _entityRef, element);
 
             if (frozen == _frozenActive && elementActive == _elementalTintActive)
                 return;

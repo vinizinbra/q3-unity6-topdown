@@ -1,6 +1,7 @@
 namespace Quantum
 {
     using System;
+    using Photon.Deterministic;
     using UnityEngine;
 
     // The shared, rarely-changing game tuning in ONE place: every config that's the same for every
@@ -126,6 +127,15 @@ namespace Quantum
         // Hold-to-revive tuning (Downed/KO life-state, revive/self-revive durations, damage-pause,
         // completion heal/invuln) - see ReviveConfig and docs/revive.md.
         public AssetRef<ReviveConfig> ReviveConfig;
+
+        [Header("Minimap Discovery")]
+        // Approximate ground footprint of one player's camera view, relative to the player (FollowCamera
+        // offset (0,35,-35), 45 deg pitch, FOV 14, ~16:9). ChunkDiscoverySystem marks a chunk Discovered
+        // as soon as this rect overlaps it, instead of waiting for a player to step inside. Deterministic
+        // stand-in for the real per-client camera - see docs/minimap.md.
+        public FP DiscoveryViewHalfWidth = 12;
+        public FP DiscoveryViewBack = 8;
+        public FP DiscoveryViewForward = 10;
 
         [Header("Prefabs")]
         // Every pickup entity spawned straight from config rather than authored on a

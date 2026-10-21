@@ -385,6 +385,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   travelDestroyDelay: 1
+  cameraBlendDuration: -1
   heroSpawnEffectPrefab: {fileID: 5623422061307436774, guid: 4b7010f0b38814d6784e0c3af59589d4, type: 3}
   heroSpawnEffectScale: 1
   heroLandSound: {fileID: 11400000, guid: 00662bdb378e45309422363645de7013, type: 2}
@@ -827,10 +828,11 @@ MonoBehaviour:
   slowOffset: {x: 0, y: 0.5, z: 0}
   freezeParticlePrefab: {fileID: 0}
   freezeOffset: {x: 0, y: 0.5, z: 0}
-  stunParticlePrefab: {fileID: 19864276, guid: 0d24b631588b04cc28a12b439cfd653b, type: 3}
+  stunParticlePrefab: {fileID: 1569418539403906762, guid: ffebceaf66fa54d8cabf4601d5243955, type: 3}
   stunOffset: {x: 0, y: 1, z: 0}
-  hardFreezeParticlePrefab: {fileID: 0}
+  hardFreezeParticlePrefab: {fileID: 5000854794330192517, guid: e3a1fcb052fa140409484380e61a7391, type: 3}
   hardFreezeOffset: {x: 0, y: 0, z: 0}
+  hardFreezeShatterPrefab: {fileID: 371804534827403226, guid: 325a5e27129fc4956b2196ad107caa01, type: 3}
   electrifiedParticlePrefab: {fileID: 3148149379074738715, guid: bbf624487600f4da397275a43c6f5761, type: 3}
   electrifiedOffset: {x: 0, y: 0.5, z: 0}
   staggerParticlePrefab: {fileID: 0}

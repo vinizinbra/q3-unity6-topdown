@@ -108,7 +108,7 @@ MonoBehaviour:
       RawValue: 26214
   Heavy:
     MaxHealth:
-      RawValue: 13107200
+      RawValue: 19660800
     Cost:
       RawValue: 393216
     ExpValue:
@@ -138,7 +138,7 @@ MonoBehaviour:
       RawValue: 26214
   Elite:
     MaxHealth:
-      RawValue: 65536000
+      RawValue: 78643200
     Cost:
       RawValue: 524288
     ExpValue:

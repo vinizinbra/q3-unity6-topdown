@@ -32,7 +32,7 @@ namespace Quantum
 
     public class TalentsConfig : AssetObject
     {
-        // One shared step for every leveling Power talent (PlayerDamageLevel, PlayerCooldownLevel,
+        // One shared step for every leveling Power talent (PowerTalents.DamageLevel, SkillCooldownLevel,
         // etc.) - not per-stat, not per-level-index. Level N bonus = N * PercentPerLevel. See
         // TalentUtility.ApplyPerPlayerTalents.
         public FP PercentPerLevel = 5;
@@ -76,7 +76,7 @@ namespace Quantum
         public FP ShrineCooldownMultiplier = FP._0_75;
 
         [Header("Weapons")]
-        // Weapons line (RuntimePlayer.Talents.WeaponLevel) - extra levels on EVERY weapon the player equips
+        // Weapons line (RuntimePlayer.Talents.Exploration.WeaponsLevel) - extra levels on EVERY weapon the player equips
         // this run (starting weapon included), on top of the offer's own SurvivalTime level.
         public int[] WeaponLevelBonusByLevel = { 0, 1, 2, 3, 4, 5 };
 

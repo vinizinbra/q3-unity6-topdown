@@ -83,8 +83,18 @@ public class FollowCamera : MonoBehaviour
 
     // Fallback point framed only while there are NO targets at all - the match-start intro, between
     // the level existing and the local hero's view registering (see HeroSpawnIntroManager). Any
-    // target takes over from it, so it never fights normal framing.
+    // target takes over from it, so it never fights normal framing - unless _idleFocusHold is set,
+    // which keeps framing it even with targets (the intro holds on the portal while the local hero
+    // is registered but still hidden, then releases with a blend as its lightning flies out).
     private Vector3? _idleFocus;
+    private bool _idleFocusHold;
+
+    // Timed glide from _blendFrom to the live desired position, eased with SmoothStep - started by
+    // ClearIdleFocus(blendDuration) so the intro's portal -> hero hand-off has a fixed, authored
+    // length instead of `speed`'s fast exponential catch-up.
+    private Vector3 _blendFrom;
+    private float _blendElapsed;
+    private float _blendDuration;
 
     // While set, _zoom is exactly this value (no zoomLerpSpeed easing) and the camera follows its framed
     // position rigidly instead of through `speed` smoothing - so a cinematic (BossIntroSequenceDirector's zoom
@@ -278,17 +288,30 @@ public class FollowCamera : MonoBehaviour
         _zoomOverride = zoom;
     }
 
-    public void SetIdleFocus(Vector3 point, bool snap = true)
+    public void SetIdleFocus(Vector3 point, bool snap = true, bool hold = false)
     {
         _idleFocus = point;
+        _idleFocusHold = hold;
 
-        if (snap == true && _targets.Count == 0 && _focusOverrideTarget == null)
+        if (snap == true && (hold == true || _targets.Count == 0) && _focusOverrideTarget == null)
             _smoothedPosition = point + offset * _zoom;
     }
 
-    public void ClearIdleFocus()
+    // blendDuration > 0 glides from the current framing to the targets over that many seconds
+    // (only when there is somewhere to go - with no targets the camera just stays put).
+    public void ClearIdleFocus(float blendDuration = 0f)
     {
+        bool wasFraming = _idleFocus.HasValue && (_idleFocusHold == true || _targets.Count == 0);
+
         _idleFocus = null;
+        _idleFocusHold = false;
+
+        if (blendDuration > 0f && wasFraming == true && _targets.Count > 0)
+        {
+            _blendFrom = _smoothedPosition;
+            _blendElapsed = 0f;
+            _blendDuration = blendDuration;
+        }
     }
 
     private void Update()
@@ -306,7 +329,7 @@ public class FollowCamera : MonoBehaviour
             center = _focusOverrideTarget.position;
             spread = 0f;
         }
-        else if (_targets.Count == 0)
+        else if (_targets.Count == 0 || (_idleFocusHold == true && _idleFocus.HasValue == true))
         {
             if (_idleFocus.HasValue == false)
                 return;
@@ -333,9 +356,21 @@ public class FollowCamera : MonoBehaviour
         _zoom = _zoomOverride ?? Mathf.Lerp(_zoom, desiredZoom, Time.deltaTime * zoomLerpSpeed);
 
         Vector3 desiredPosition = center + offset * _zoom;
-        _smoothedPosition = _zoomOverride.HasValue
-            ? desiredPosition
-            : Vector3.Lerp(_smoothedPosition, desiredPosition, Time.deltaTime * speed);
+        // Frame-rate independent (1 - e^-speed*dt) rather than Lerp(dt * speed): the same feel at
+        // normal frame times, but a hitch frame (the first frames after the loading screen) can no
+        // longer push t past 1 and snap the camera in a single step.
+        if (_blendElapsed < _blendDuration)
+        {
+            _blendElapsed += Time.deltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_blendElapsed / _blendDuration));
+            _smoothedPosition = Vector3.Lerp(_blendFrom, desiredPosition, t);
+        }
+        else
+        {
+            _smoothedPosition = _zoomOverride.HasValue
+                ? desiredPosition
+                : Vector3.Lerp(_smoothedPosition, desiredPosition, 1f - Mathf.Exp(-speed * Time.deltaTime));
+        }
         transform.position = _smoothedPosition + ResolveShakeOffset();
     }
 

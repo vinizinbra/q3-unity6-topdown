@@ -45,6 +45,13 @@ namespace Quantum
         [SerializeField] private float idleWobbleDegrees = 2f;
         [SerializeField] private float idleWobbleSpeed = 0.3f;
 
+        [Header("Stunned (dizzy sway)")]
+        [SerializeField, Tooltip("Peak side-to-side tilt while Stunned (StatusEffectUtility.IsStunned) - a woozy rock layered on top of whatever pose is playing. Deliberately the opposite of Freeze, which holds the body perfectly still.")]
+        private float dizzyTiltDegrees = 6f;
+        [SerializeField, Tooltip("Sway cycles per second.")] private float dizzyFrequency = 1.1f;
+        [SerializeField, Tooltip("Squash amplitude riding the sway at twice its frequency (bottoms out on each side).")] private float dizzySquash = 0.05f;
+        [SerializeField, Tooltip("How fast the sway fades in/out (1/seconds).")] private float dizzyBlendSpeed = 6f;
+
         [Header("Movement")]
         [SerializeField] private float runReferenceSpeed = 4f;
         [SerializeField, Tooltip("Above this horizontal speed, idle becomes run.")] private float moveSpeedEpsilon = 0.15f;
@@ -196,6 +203,13 @@ namespace Quantum
         // signed for the facing mirror) folded into ApplyPose's tilt. Eased so the aim tilt doesn't snap.
         private float _alignTilt;
         private float _alignTiltTarget;
+
+        // Stunned sway layer - weight eases 0..1 so it blends in/out, phase only advances while it's
+        // visible. Added in ApplyPose on top of every other tilt/squash source.
+        private float _dizzyWeight;
+        private float _dizzyPhase;
+        private float _dizzyTilt;
+        private float _dizzySquash;
         [SerializeField, Tooltip("How fast (deg/s) the body eases into/out of an AlignBodyToDirection step's tilt.")]
         private float alignTiltSpeed = 720f;
         private float _wobbleSeed;
@@ -610,6 +624,13 @@ namespace Quantum
                     * DifficultyUtility.Get(frame, DifficultyChannel.AnticipationSpeed).AsFloat;
             }
 
+            // Hard Freeze locks the whole body in place - no breathe/wobble, no stride, no windup -
+            // so it reads as encased in ice (HitFeedback swaps in the Sprite Frozen material) rather
+            // than a blue enemy idling. Burrow above keeps its own dt so a sink/rise never sticks.
+            bool frozen = _state != State.Die && StatusEffectUtility.IsFrozen(frame, _entityRef) == true;
+            if (frozen == true)
+                dt = 0f;
+
             // Recovery is the attack's downtime - the enemy just stands there resting, so
             // re-aiming toward a target that keeps moving during this window would spin the sprite
             // right after the strike lands, reading as another attack instead of a rest beat.
@@ -617,7 +638,7 @@ namespace Quantum
             // "no facing changes during downtime" rule explicit at the view layer too. Active
             // (e.g. a dash) is excluded from this freeze - the enemy is genuinely moving toward a
             // real point there, so facing should keep following it.
-            if (enemyPhase != EnemyActionPhase.Recovery)
+            if (enemyPhase != EnemyActionPhase.Recovery && frozen == false)
                 UpdateFacing(frame, velocity, enemy, hasEnemy);
 
             if (_hopStrikeDirPending == true && hasEnemy == true)
@@ -655,6 +676,23 @@ namespace Quantum
 
             _alignTiltTarget = ResolveAlignTilt(frame, hasEnemy);
             _alignTilt = Mathf.MoveTowards(_alignTilt, _alignTiltTarget, alignTiltSpeed * dt);
+
+            // Real time, not the (possibly frozen/stretched) dt above - a stun's wobble shouldn't
+            // stall under a windup stretch, and Freeze already wins via the frozen check.
+            bool dizzy = frozen == false && _state != State.Die && StatusEffectUtility.IsStunned(frame, _entityRef) == true;
+            _dizzyWeight = Mathf.MoveTowards(_dizzyWeight, dizzy ? 1f : 0f, dizzyBlendSpeed * Time.deltaTime);
+            if (_dizzyWeight > 0f)
+            {
+                _dizzyPhase += dizzyFrequency * Time.deltaTime * Mathf.PI * 2f;
+                _dizzyTilt = Mathf.Sin(_dizzyPhase) * dizzyTiltDegrees * _dizzyWeight;
+                _dizzySquash = Mathf.Abs(Mathf.Sin(_dizzyPhase)) * dizzySquash * _dizzyWeight;
+            }
+            else
+            {
+                _dizzyPhase = 0f;
+                _dizzyTilt = 0f;
+                _dizzySquash = 0f;
+            }
 
             UpdatePose(dt);
         }
@@ -1125,7 +1163,7 @@ namespace Quantum
 
         private void ApplyPose(float leanDegrees, float rockDegrees, float bobOffset, float depthOffset = 0f, float armRotationDegrees = 0f, float armScaleOffset = 0f, float punchScaleOffset = 0f, bool centerPivot = false, float pivotHeightOverride = 0f, Vector3 worldOffset = default)
         {
-            float verticalMult = Mathf.Clamp(1f - _squashT * volumePreservation, 0.15f, 3f);
+            float verticalMult = Mathf.Clamp(1f - (_squashT + _dizzySquash) * volumePreservation, 0.15f, 3f);
             float horizontalMult = Mathf.Clamp(1f / verticalMult, 0.3f, 3f);
 
             // Independent shrink sources, multiplied together rather than picking one - Die's is
@@ -1209,7 +1247,7 @@ namespace Quantum
                 scale.y *= rootVerticalMult * shrinkMult * punchScaleMult * (1f + _hitPunchScale.y) * _bodySpriteScale.y;
                 root.localScale = scale;
 
-                float totalTilt = leanDegrees + rockDegrees + _alignTilt;
+                float totalTilt = leanDegrees + rockDegrees + _alignTilt + _dizzyTilt;
                 var tiltRotation = Quaternion.Euler(0f, 0f, totalTilt);
 
                 // AttackVisualStep.CenterPivot (only settable on the rotation-producing step types -

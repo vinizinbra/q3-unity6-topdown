@@ -19,16 +19,23 @@ MonoBehaviour:
   Icon: {fileID: -3304464255229628827, guid: 07442008a909a4b8c844b43a87d69372, type: 3}
   DisplayName: Momentum
   RankDescriptions:
-  - "During Juggernaut, Momentum builds <color=#FD3971>25%</color> faster. While Charged, gain <color=#FD3971>+10%</color> Move Speed. Discharge keeps <color=#FD3971>30%</color> of your Charge."
-  - "During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged, gain <color=#FD3971>+15%</color> Move Speed. Discharge keeps <color=#FD3971>60%</color> of your Charge."
-  - "During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged, gain <color=#FD3971>+20%</color> Move Speed. Discharge costs no Charge, and Juggernaut won't end while fully Charged."
+  - During Juggernaut, Momentum builds <color=#FD3971>25%</color> faster. While Charged,
+    gain <color=#FD3971>+10%</color> Move Speed. Discharge keeps <color=#FD3971>30%</color>
+    of your Charge.
+  - During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged,
+    gain <color=#FD3971>+15%</color> Move Speed. Discharge keeps <color=#FD3971>60%</color>
+    of your Charge.
+  - During Juggernaut, Momentum builds <color=#FD3971>40%</color> faster. While Charged,
+    gain <color=#FD3971>+20%</color> Move Speed. Discharge costs no Charge, and Juggernaut
+    won't end while fully Charged.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: "Juggernaut rewards staying on the move - Charge builds faster, and a discharge no longer drains it all."
+  Description: Juggernaut rewards staying on the move - Charge builds faster, and
+    a discharge no longer drains it all.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0

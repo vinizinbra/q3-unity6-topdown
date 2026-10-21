@@ -12,6 +12,15 @@ level's starting chunk's own footprint - the same chunk (renamed `ChunkType.Lobb
 SpawnConfig` (see below) is where a starter chest gets configured so it spawns there once its
 Talent is earned.
 
+> **Update (2026-10-21): the shared `Has*`/`Can*` booleans are gone.** They predate the menu Upgrades
+> tab and were Inspector-only - `HasWeaponChest` (ticked on MenuScene's slot 0) spawned the starting
+> Weapon Chest regardless of Rift Anchor L1. Removed from `PlayerTalents`, along with
+> `TalentUtility.ComputeSharedTalents` and the six `Global.Shared*` fields. `SharedTalentRequirement`
+> now resolves only against `RuntimeConfig.WorldUnlocks`: `WeaponChest` = Rift Anchor L1,
+> `RepairStation` = Rift Anchor L2, and `HeroChest`/`GlobalUpgradeChest`/`UnlockedRift`/`FindStones`/
+> `Event` have no menu line yet, so they never pass. The enum is kept as-is (append-only - stored by
+> value in `ChunkSpawnConfig` assets). The design notes below about `Has*` flags are historical.
+
 ## Design choices (all explicitly confirmed with the user)
 
 - **Talents are flat named fields, not a generic ID-keyed table.** `RuntimePlayer` carries one
@@ -62,20 +71,14 @@ Talent is earned.
 ## `Talents.qtn`
 
 ```
-enum SharedTalentRequirement : Byte
+enum SharedTalentRequirement : Byte    // append only - stored by value in ChunkSpawnConfig assets
 {
-    None, WeaponChest, HeroChest, GlobalUpgradeChest, UnlockedRift, FindStones, Event
+    None, WeaponChest, HeroChest, GlobalUpgradeChest, UnlockedRift, FindStones, Event, RepairStation
 }
 
 global
 {
     Boolean TalentsResolved;
-    Boolean SharedHasWeaponChest;
-    Boolean SharedHasHeroChest;
-    Boolean SharedHasGlobalUpgradeChest;
-    Boolean SharedHasUnlockedRift;
-    Boolean SharedCanFindStones;
-    Boolean SharedHasEvent;
 }
 ```
 
@@ -155,53 +158,55 @@ computed footprint center.
 
 ## `RuntimePlayer` fields
 
-**Update (2026-08-07): grouped into one nested struct.** Every meta-progression field below now
-lives on `RuntimePlayer.Talents` (`public PlayerTalents Talents;`, a plain nested `struct`, not a
-class - so the field is never null, no separate initialization needed) instead of sitting directly
-on `RuntimePlayer` itself. Every call site reads/writes through that one field (e.g.
-`runtimePlayer.Talents.PlayerDamageLevel`, `RuntimePlayers[i].Talents.HasWeaponChest = ...`) - see
-`RuntimePlayer.User.cs` for the actual struct definition.
+**Update (2026-10-21): grouped by menu section.** `RuntimePlayer.Talents` (`PlayerTalents`, a plain
+nested `struct` - never null) now mirrors the menu Upgrades tab: `Talents.Power` (`PowerTalents`) and
+`Talents.Exploration` (`ExplorationTalents`, per-player lines only - world lines stay on
+`RuntimeConfig.WorldUnlocks`). Field names match `PermanentUpgradeId` + `Level`. Both groups hold
+purchased LEVELS only, written by `TalentSaveMapper.ApplyPlayer`; values come from `TalentsConfig`.
+The old raw Inspector-only extras (`RerollQuantity`, `ShopWeaponOfferCount`, `StartingCoins`) were
+removed - they silently stacked on top of the real lines (MenuScene's slot 0 had `RerollQuantity: 2`,
+giving player 1 two free rerolls on top of the Rerolls line, and `ShopWeaponOfferCount: 1`, one extra
+Store weapon offer on top of Store L3). Each stat now has exactly one source.
 
 ```csharp
 public struct PlayerTalents
 {
-    public byte WeaponLevel;                // not %-scaled - copied 1:1 -> CharacterStats.WeaponTalentLevel
-    public byte RerollQuantity;             // not %-scaled - copied 1:1 -> CharacterStats.RerollQuantity
-    public byte ShopWeaponOfferCount;       // not %-scaled - copied as +1 -> StoreUtility.ResolveWeaponOfferCount (see docs/store-blacksmith.md)
-    public int StartingCoins;               // not %-scaled - copied 1:1 -> CharacterStats.Coins (a currency amount, not a 0-5 level, hence int not byte)
-    public byte PlayerDamageLevel;          // +5%/level -> CharacterStats.DamageMultiplier
-    public byte PlayerCooldownLevel;        // -5%/level -> DashCooldownMultiplier + SkillCooldownMultiplier
-    public byte PlayerFireRateLevel;        // +5%/level -> AttackSpeedMultiplier
-    public byte PlayerReloadSpeedLevel;     // +5%/level -> ReloadSpeedMultiplier
-    public byte PlayerCriticalChanceLevel;  // +5pp/level -> CriticalChance (flat, not relative)
-    public byte PlayerCriticalDamageLevel;  // +5%/level -> CriticalDamageMultiplier
-    public byte PlayerMaxHealthLevel;       // +5%/level -> MaxHealthMultiplier (+ CharacterSystem.RefreshMaxHealth)
-    public byte PlayerMaxShieldLevel;       // +5%/level -> MaxShieldMultiplier (+ CharacterSystem.RefreshMaxShield)
-    public byte PlayerDamageReductionLevel; // +5pp/level -> DamageReduction (flat, not relative)
-    public byte PlayerMoveSpeedLevel;       // +5%/level -> MoveSpeedMultiplier
-    public byte PlayerPickupRangeLevel;     // +5%/level -> PickupRangeMultiplier
-    public byte PlayerExperienceLevel;      // +5%/level -> ExperienceGainMultiplier
-    public bool HasWeaponChest;             // shared - satisfies a SpawnEntityWithRequirement.Requirement == WeaponChest
-    public bool HasHeroChest;               // shared - satisfies a SpawnEntityWithRequirement.Requirement == HeroChest
-    public bool HasGlobalUpgradeChest;      // shared - satisfies a SpawnEntityWithRequirement.Requirement == GlobalUpgradeChest
-    public bool HasUnlockedRift;            // shared - scaffolded only
-    public bool CanFindStones;              // shared - scaffolded only
-    public bool HasEvent;                   // shared - scaffolded only
+    public PowerTalents Power;
+    public ExplorationTalents Exploration;
+}
+
+public struct PowerTalents                  // 0-5, TalentUtility.ApplyPerPlayerTalents at spawn
+{
+    public byte DamageLevel;                // +5%/level -> CharacterStats.DamageMultiplier
+    public byte SkillCooldownLevel;         // -5%/level -> DashCooldownMultiplier + SkillCooldownMultiplier
+    public byte FireRateLevel;              // +5%/level -> AttackSpeedMultiplier
+    public byte ReloadSpeedLevel;           // +5%/level -> ReloadSpeedMultiplier
+    public byte CriticalChanceLevel;        // +5pp/level -> CriticalChance (flat, not relative)
+    public byte CriticalDamageLevel;        // +5%/level -> CriticalDamageMultiplier
+    public byte MaxHealthLevel;             // +5%/level -> MaxHealthMultiplier (+ CharacterSystem.RefreshMaxHealth)
+    public byte MaxShieldLevel;             // +5%/level -> MaxShieldMultiplier (+ CharacterSystem.RefreshMaxShield)
+    public byte DamageReductionLevel;       // +5pp/level -> DamageReduction (flat, not relative)
+    public byte MoveSpeedLevel;             // +5%/level -> MoveSpeedMultiplier
+    public byte PickupRangeLevel;           // +5%/level -> PickupRangeMultiplier
+    public byte XpGainLevel;                // +5%/level -> ExperienceGainMultiplier
+    public byte CoinGainLevel;              // +CoinGainPercentPerLevel/level -> CoinGainMultiplier
+}
+
+public struct ExplorationTalents
+{
+    public byte WeaponsLevel;               // WeaponLevelBonusByLevel / WeaponPerkRarityByLevel; also seeds CharacterStats.WeaponTalentLevel
+    public byte StartingGoldLevel;          // StartingGoldByLevel -> CharacterStats.Coins
+    public byte RerollsLevel;               // RerollsByLevel -> CharacterStats.RerollQuantity
+    public byte ReviveLevel;                // SelfReviveChargesByLevel + MetaUnlockLevels.Revive*
+    public byte CoopLevel;                  // MetaUnlockLevels.Coop*
 }
 ```
 
-Same "seeded once from outside, never written by the simulation" contract every field here follows
-- see `PlayerTalents`' own comment in `RuntimePlayer.User.cs`. `WeaponLevel`/`RerollQuantity` are
-NOT `Player*Level`-shaped (`TalentUtility.ApplyPerPlayerTalents` never touches either) - both are
-raw flat counts copied 1:1 into their matching `CharacterStats` field (`WeaponTalentLevel`/
-`RerollQuantity` respectively) rather than a %-per-level multiplier, since "percent bonus" of a
-count doesn't mean anything the way it does for e.g. `MoveSpeedMultiplier`. `RerollQuantity`
-specifically is deliberately a pre-run talent rather than an in-run-pickable Global Upgrade -
 `CharacterStats.RerollQuantity` only ever decreases for the rest of a match, as
-`LevelUpUtility.RerollOptionsFor` spends it to redraw the current level-up/Chest screen. Persisted
-the same way as `WeaponLevel` - its own `PlayerPrefInt` (`MatchMakingConfig.RerollQuantityPref`,
-key `"reroll_quantity"`), read in `StartRunner` right before `AddPlayer`. See
-`docs/level-up-upgrades.md`'s "Reroll" section for the in-match spend side.
+`LevelUpUtility.RerollOptionsFor` spends it to redraw the current level-up/Chest screen - see
+`docs/level-up-upgrades.md`'s "Reroll" section. `CharacterStats.ShopWeaponOfferCount` is no longer
+seeded by anything (always 0 -> 1 Store weapon offer, +1 with Store L3) - a candidate for removal from
+`CharacterStats.qtn`.
 
 ## `TalentsConfig`
 
@@ -214,13 +219,8 @@ Just the leveling-talent tuning now - chest prototype/offset/chance moved onto
 
 ## `TalentUtility.cs`
 
-- `ComputeSharedTalents(f)` - loops `0..f.PlayerCount`, skipping any slot with no `RuntimePlayer`
-  data (`f.PlayerCount` is the session's fixed max slot count, not how many players actually
-  joined - `f.GetPlayerData(i)` returns `null` for an unjoined slot, same guard
-  `LevelGenerationSystem.SpawnPendingPlayers` uses), OR-ing every connected player's `Has*`/`Can*`
-  fields into the six `Global.Shared*` fields.
-- `IsSatisfied(f, requirement)` - resolves a `SharedTalentRequirement` against the matching
-  `Global.Shared*` field. Does NOT roll `Chance` - `TalentGateSystem` does that separately.
+- `IsSatisfied(f, requirement)` - resolves a `SharedTalentRequirement` against
+  `RuntimeConfig.WorldUnlocks` (Rift Anchor levels); requirements with no menu line return false. Does NOT roll `Chance` - `TalentGateSystem` does that separately.
 - `ApplyPerPlayerTalents(f, entity, runtimePlayer, stats)` - reads
   `TalentsConfig.PercentPerLevel`, then one call per stat through three tiny helpers
   (`ApplyBonus`/`ApplyReduction`/`ApplyFlat`), mirroring how compact
@@ -247,13 +247,12 @@ visible to that system's own filter this same tick). Each tick, while `!Global.T
    `TalentsResolved` for good, and swept a world containing one chunk. `LobbyStart`, which is where
    a `ChunkSpawnConfig` is normally authored, is deliberately placed LAST of all, so its chests
    never spawned at all.
-2. Waits for every connected player (same null-slot-skipping loop as `ComputeSharedTalents`) to have
+2. Waits for every connected player (skipping slots with no `RuntimePlayer` data) to have
    spawned (`PlayerSpawnUtility.HasSpawned`) - the earliest tick every client is guaranteed identical,
    fully-populated `RuntimePlayer` data for all players, avoiding a determinism hazard from resolving
    the shared mask before a remote player's join has replicated.
 
-Once both hold: calls
-`ComputeSharedTalents`, sets `TalentsResolved = true`, then filters every `Chunk + Transform3D`
+Once both hold: sets `TalentsResolved = true`, then filters every `Chunk + Transform3D`
 entity in the level (`ResolveSpawners`) - for each with a valid `SpawnConfig` assigned, resolves
 that `ChunkSpawnConfig` asset and iterates every entry in its `Spawns` array (`ResolveSpawn`).
 For each entry: checks `TalentUtility.IsSatisfied` against its `Requirement`, rolls `Chance`
@@ -370,9 +369,8 @@ carried into the match, and every level has an effect. Three layers, each value 
 - **`TalentSaveMapper`** is the one place save levels become match data: `ApplyPlayer(ref PlayerTalents)`
   (Power + Weapons/StartingGold/Rerolls/Revive/Coop levels) and `BuildWorld()` (Store/Gunsmith/Challenges/
   HealingShrine/SacrificeRift/RiftAnchor). It replaced `TalentSaveData` and the five scalar prefs in
-  `MatchMakingConfig` (`weapon_talent_level`, `reroll_quantity`, ...). The raw count fields on `PlayerTalents`
-  (`RerollQuantity`, `StartingCoins`, `SelfReviveCharges`, `WeaponLevel`, `ShopWeaponOfferCount`) are no longer
-  written by the menu - they stay as Inspector test extras that add on top.
+  `MatchMakingConfig` (`weapon_talent_level`, `reroll_quantity`, ...). The old raw Inspector test extras on
+  `PlayerTalents` were removed (2026-10-21) - each stat has exactly one source, its menu line.
 - **World lines come from the party leader**: `SyncMatchRoom` carries `"unlocks"` (packed bytes) next to
   difficulty/world; `StartRunner` uses it once (else the local save); offline uses the local save. World levels
   are on `RuntimeConfig` (not `RuntimePlayer`) because level generation runs from frame 0, before any
@@ -390,7 +388,7 @@ carried into the match, and every level has an effect. Three layers, each value 
 | Power (12) | `TalentUtility.ApplyPerPlayerTalents` - `PercentPerLevel` (5%); Coin Gain uses `CoinGainPercentPerLevel` (10%). | `TalentUtility` |
 | Store | L1 chunk generated (rolled once per run) · L2 restock every Break · L3 +1 weapon offer | `LevelConfig.ChunkPoolEntry.Unlock`, `StoreUtility.EnsureInventoryRolled/ResolveWeaponOfferCount` |
 | Gunsmith | L1 chunk, 1 purchase per run · L2 per-Break offer + purchase · L3 rarity rows read `GunsmithRarityBreakOffset` Breaks ahead · L4 1 reroll per Break (`RerollBlacksmithCommand`, ChooseWindow Reroll button) | `BlacksmithUtility.ResolveUsagePolicy/Reroll` |
-| Weapons (per player, = `Talents.WeaponLevel`) | Lv N: EVERY weapon the player equips this run gets `WeaponLevelBonusByLevel` (+N) extra levels - starting weapon (applied at spawn), Choose Weapon, chests, Store, cheats (`WeaponSystem.ApplyMetaWeaponLevels` inside `Equip`; offer cards show the total). Perk rarity: `TalentsConfig.WeaponPerkRarityByLevel` (level 0 = the perk pool's own weights). There is ONE weapon roll for every source - Store offers call the same `LevelUpUtility.RollWeaponOption` as Choose Weapon/chests, so a chest at minute N = the Store at minute N (level, perk count, rarity, perk conflicts). `StoreConfig.TalentRarityTuning`/`RollStorePerks` were removed | `WeaponSystem.Equip`, `LevelUpUtility.RollWeaponOption`, `StoreUtility.RollWeaponOffers` |
+| Weapons (per player, = `Talents.Exploration.WeaponsLevel`) | Lv N: EVERY weapon the player equips this run gets `WeaponLevelBonusByLevel` (+N) extra levels - starting weapon (applied at spawn), Choose Weapon, chests, Store, cheats (`WeaponSystem.ApplyMetaWeaponLevels` inside `Equip`; offer cards show the total). Perk rarity: `TalentsConfig.WeaponPerkRarityByLevel` (level 0 = the perk pool's own weights). There is ONE weapon roll for every source - Store offers call the same `LevelUpUtility.RollWeaponOption` as Choose Weapon/chests, so a chest at minute N = the Store at minute N (level, perk count, rarity, perk conflicts). `StoreConfig.TalentRarityTuning`/`RollStorePerks` were removed | `WeaponSystem.Equip`, `LevelUpUtility.RollWeaponOption`, `StoreUtility.RollWeaponOffers` |
 | Challenges | L1 Traversal chunk · L2 Team Challenge chunk | `ChunkPoolEntry.Unlock` |
 | Healing Shrine | L1 chunk · L2 +`ShrineImprovedHealBonus` heal · L3 cooldown × `ShrineCooldownMultiplier` | `HealingShrineUtility.TryInteract` |
 | Sacrifice Rift | L1 chunk · L2 two sacrifice cards for the same mutation (`AltSacrifice`, `ConfirmCursedRiftCommand.OptionIndex`) | `CursedRiftUtility` |

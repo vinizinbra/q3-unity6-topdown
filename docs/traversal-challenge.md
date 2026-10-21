@@ -4,7 +4,7 @@ An interactable world prop, placed in a `ChunkType.Traversal` chunk, that turns 
 a timed co-op puzzle instead of a passive backdrop.
 
 **The reward only exists because of the attempt.** It is ROLLED up front (one of `RewardPrototypes`
-- Weapon Chest / Rift Mutation / Hero Chest, uniform `f.RNG` roll on the challenge's first Idle
+- Weapon Chest / Rift Mutation / Hero Chest / Weapon Perk Stone (prompt label "Perk Stone"; 4 = the array cap), uniform `f.RNG` roll on the challenge's first Idle
 tick, `TraversalChallengeUtility.EnsureRewardRolled` -> `RolledRewardIndex`) so the POI prompt
 previews exactly what will spawn: `TraversalChallengeView` reads the rolled prototype's
 `Chest.Kind` and pushes `LevelUpCategoryUtility.GetChestRewardIcon/Name` into the prompt via
@@ -20,7 +20,7 @@ are gone, so a `ChunkSpawnBaker` re-bake won't bring it back.
 **Return pad.** Once the challenge is `Completed` AND the reward is collected (`Chest.Opened`, or the
 entity is gone - `TraversalChallengeUtility.IsRewardCollected`), `TraversalChallengeSystem` spawns
 `ReturnTeleportPrototype` (`TraversalReturnTeleport.prefab`) once at `ReturnTeleportPosition`. A
-non-incapacitated player must STAND inside its `Radius` (0.95) for `ChargeTime` (1.2s) - stepping
+non-incapacitated player must STAND inside its `Radius` (0.7) for `ChargeTime` (1.2s) - stepping
 off resets their charge - and is then teleported to `ReturnDestinationPosition` (next to the
 activator) by `TraversalReturnTeleportSystem`, with the same `KCC.Teleport` + zero-every-velocity
 reset the boss-arena teleport and fall respawn use. Per-player charge lives on the pad
@@ -29,23 +29,25 @@ chunk-relative and ground-snapped at spawn. The pad is permanent for the rest of
 who was fighting elsewhere can use it later); it only appears after the reward is taken so nobody
 warps away from an unopened chest.
 
-Look (blue/white - reads as "safe exit", distinct from the pink challenge UI; 0.7x scale;
-HEXAGONAL to match the brand hex - `HexPrism.asset` base mesh): geometric shapes with soft gradient
-edges - a deliberate middle ground between the generic faded particle blob (rejected as "ugly
-default") and hard flat shapes (rejected as "too geometric"). Generated textures in
-`Art/Textures/`: `SoftDot`, `SoftHex`, `SoftHexRing`, `SoftHexDashed` (gaps at the corners, so its
-spin reads), `HexGlow` (hex-shaped halo), `SoftRay` (soft sides, fades at both ends); materials
-`Particle{SoftDotAdd,SoftHexRingAdd,SoftHexDashedAdd,HexGlowAdd,SoftRayAdd,SoftHexAdd}` (additive)
-+ `ParticleSoftHex` (alpha-blended core). Decals are single-particle horizontal billboards (these
-vertex-colour-only shaders can't tint mesh quads). The old `Flat*` textures/materials are unused.
-- Idle: hex base + soft hex core + hex glow halo, hex rim, spinning dashed hex, a few rising soft
-  light rays and dots. Deliberately sparse (an earlier pass with halo/column/pulse rings/motes read
-  as "too many circles").
+Look: the pad itself is the `TeleportDock-Minimal` SPRITE (Art/Sprites/Environment, in
+`GameplaySprites.spriteatlas`), set up like the other sprite POIs - `Sprite-Unlit-Default`, tilted 45deg
+to face the 45deg gameplay camera, **sorting order -1** so heroes (sprites, order 0) and every
+particle (order 1) draw over it. The importer pivot is the dock floor's centre; the sprite is lifted
+so its bottom edge sits on the ground and pulled toward the camera by the same amount (at a 45deg
+camera, ground offset == lift) so the drawn floor centre lands on the entity origin / trigger.
+Shadow = the shared pooled blob (`HasShadow` on `Visual` -> `GroundBlobManager`, order -4):
+`baseScale` 8.4 nudged 0.2m toward the camera - at the smaller size it sat exactly under the art and
+was fully hidden. The whole pad (Visual) is at 0.49 = 70% of the first sprite pass (user call,
+2026-10-21) - dock ~2.2m wide, trigger `Radius` 0.7, `DepartFx` 0.56; uniform scaling keeps the
+floor centred on the trigger and the shadow (HasShadow follows lossyScale). Verified in renders on grass and sand with a real hero (QMax) standing on it.
+Particles/FX keep the soft-geometric style (generated soft textures, additive): `SoftDot`,
+`SoftHex*`, `HexGlow`, `SoftRay`; the exit marker (no sprite) still uses the soft hex decals.
+- Idle: the dock sprite + a soft blue glow over its cyan centre ring, a few rising soft light rays
+  and dots. Deliberately sparse.
 - Charging (largest live `Charge / ChargeTime`): the charge emitters (pad rays + dots + an
   inward-swirling dot vortex, plus the exit's rays) start from zero and grow in rate/speed
   (Velocity-over-Lifetime speed modifier - their startSpeed is 0)/size (relative to authored),
-  eased in so the last moments are the most intense; the glow group scales up, rings spin faster,
-  a charge ring closes in; `PortalLoop` hums with pitch rising with the charge (faded on step-off).
+  eased in so the last moments are the most intense; the centre glow swells; `PortalLoop` hums with pitch rising with the charge (faded on step-off).
 - Exit marker (detached onto the destination): hidden at rest, grows in while anyone charges.
 - Teleport (`EventTraversalReturnTeleported`): `DepartFx` on the pad and `ArrivalFx` on the exit -
   hex pop, soft-ray beam, hex shockwave ring, ray + dot burst - plus `HeroSpawnLand`; the exit then

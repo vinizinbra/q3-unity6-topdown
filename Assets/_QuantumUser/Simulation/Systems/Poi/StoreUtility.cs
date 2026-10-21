@@ -61,7 +61,7 @@ namespace Quantum
         // Rolls this Breathing Break's WeaponOffers/FoodOffers exactly once, regardless of which
         // (or how many) players trigger it - idempotent re-check against RolledAtBreathingIndex, so
         // a second/third player opening the same Store this same Break is a no-op here. The
-        // triggering player's own RuntimePlayer.Talents.WeaponLevel drives the weapon offers'
+        // triggering player's own RuntimePlayer.Talents.Exploration.WeaponsLevel drives the weapon offers'
         // quality (see RollWeaponOffers) - whoever opens the Store first this Break sets it for
         // every player until the next restock, an accepted consequence of the inventory itself
         // being shared rather than per-player. Deterministic across clients: f.Filter/f.RNG both

@@ -50,7 +50,6 @@ namespace Quantum
                     return;
             }
 
-            TalentUtility.ComputeSharedTalents(f);
             f.Global->TalentsResolved = true;
 
             ResolveSpawners(f);

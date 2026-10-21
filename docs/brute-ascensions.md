@@ -89,6 +89,11 @@ deflected shot never reaches `DamageUtility` (no Accessory/Free Hit Guard/Shield
 > at the end of this doc, and `docs/accessory-guard.md`.
 
 **1. Momentum** (`MomentumSkillAction` → `MomentumUpgrade`, absorbs old Momentum + Unstoppable)
+- Move speed tuning (2026-10-21, user: Juggernaut felt too slow): base Juggernaut is +5% while active
+  and **+20%** once Charged (asset `ChargedMoveSpeedBonus`, was 15%); Momentum adds +10/+15/+20%
+  (a +5/+12/+20 split was tried and reverted - rank 1 needs to feel impactful), so the totals while
+  Charged are **20 / 30 / 35 / 40%** (none / R1 / R2 / R3). Asset values override the code
+  defaults in `JuggernautSkillData`/`MomentumSkillAction`.
 - Rank 1: Momentum builds 25% faster while running during Juggernaut (`GenerationMultiplier` scales
   `SkillSlot.LastStepDistance` before it's added toward the next Charge point - see
   `JuggernautSkillData.AdvanceCharge`); +10% Move Speed while Charged (`ChargedMoveSpeedBonus`, folded

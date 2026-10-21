@@ -511,8 +511,6 @@ MonoBehaviour:
       RawValue: 0
     LostTimer:
       RawValue: 0
-    Faction:
-      Value: 0
     FleeDirection:
       X:
         RawValue: 0
@@ -612,31 +610,6 @@ MonoBehaviour:
     OverloadCooldownRemaining:
       RawValue: 0
     ShatterCooldownRemaining:
-      RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
       RawValue: 0
     IceRemaining:
       RawValue: 0
@@ -833,6 +806,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -886,7 +862,8 @@ MonoBehaviour:
       LandSquash: 0.3
     Dive:
       JumpHeight: 0.3
-      RotateDegrees: 90
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
       SinkAmount: 0.3
     HopStrike:
       Distance: 0.4
@@ -938,6 +915,9 @@ MonoBehaviour:
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.2
+  fullFlashHealthFraction: 0.1
+  minFlashStrength: 0.15
+  minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
   joltPunchScaleFrequency: 20
@@ -953,8 +933,8 @@ MonoBehaviour:
   iceRestTint: {r: 0.4, g: 0.9, b: 1, a: 1}
   lightningRestTint: {r: 1, g: 0.9, b: 0.3, a: 1}
   frozenTint: {r: 0.55, g: 0.85, b: 1, a: 1}
-  freezeMaterial: {fileID: 2100000, guid: b153b2878790f4feab0589455e95ac70, type: 2}
-  hardFreezeMaterial: {fileID: 0}
+  freezeMaterial: {fileID: 2100000, guid: a89baa09e419a4abb90a3fc0f5101568, type: 2}
+  hardFreezeMaterial: {fileID: 2100000, guid: fc86fd245576d4a6d9dc7868b6edb6bd, type: 2}
 --- !u!114 &1460262746628902169
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1006,6 +986,7 @@ MonoBehaviour:
   Prototype:
     StaggerMeter:
       RawValue: 0
+    StaggerBreakCount: 0
     LastObservedHealth:
       RawValue: 0
     CurrentPhaseIndex: 0

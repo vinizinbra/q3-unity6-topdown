@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SpriteFrostbite
+  m_Shader: {fileID: 4800000, guid: e18cd48b3aff9447ab944fab3e6e3287, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BodyLift: 0.3
+    - _CrackAmount: 0
+    - _CrackWidth: 0.018
+    - _FacetContrast: 0.2
+    - _FacetSize: 170
+    - _GlintPeriod: 7
+    - _GlintSpeed: 0.3
+    - _GlintWidth: 0.07
+    - _IceAmount: 0.72
+    - _InkThreshold: 0.07
+    - _LumaContrast: 1.15
+    - _RimIntensity: 1.1
+    - _RimWidth: 22
+    - _SparkleDensity: 0.08
+    - _SparkleSize: 0.22
+    - _SparkleSpeed: 0.6
+    m_Colors:
+    - _CrackColor: {r: 0.85, g: 0.97, b: 1, a: 1}
+    - _GlintColor: {r: 1.4, g: 1.5, b: 1.6, a: 1}
+    - _IceDeep: {r: 0.02, g: 0.049999982, b: 0.16999996, a: 1}
+    - _IceLight: {r: 0.88, g: 0.96999997, b: 1, a: 1}
+    - _IceMid: {r: 0.29999998, g: 0.65999997, b: 0.97999996, a: 1}
+    - _RimColor: {r: 0.92, g: 0.99, b: 1, a: 1}
+    - _SparkleColor: {r: 2, g: 2, b: 2, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

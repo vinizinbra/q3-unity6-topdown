@@ -10,25 +10,31 @@ public static class TalentSaveMapper
 {
     public static void ApplyPlayer(ref PlayerTalents talents)
     {
-        talents.PlayerDamageLevel = Level(PermanentUpgradeId.Damage);
-        talents.PlayerCooldownLevel = Level(PermanentUpgradeId.SkillCooldown);
-        talents.PlayerFireRateLevel = Level(PermanentUpgradeId.FireRate);
-        talents.PlayerReloadSpeedLevel = Level(PermanentUpgradeId.ReloadSpeed);
-        talents.PlayerCriticalChanceLevel = Level(PermanentUpgradeId.CriticalChance);
-        talents.PlayerCriticalDamageLevel = Level(PermanentUpgradeId.CriticalDamage);
-        talents.PlayerMaxHealthLevel = Level(PermanentUpgradeId.MaxHealth);
-        talents.PlayerMaxShieldLevel = Level(PermanentUpgradeId.MaxShield);
-        talents.PlayerDamageReductionLevel = Level(PermanentUpgradeId.DamageReduction);
-        talents.PlayerMoveSpeedLevel = Level(PermanentUpgradeId.MoveSpeed);
-        talents.PlayerPickupRangeLevel = Level(PermanentUpgradeId.PickupRange);
-        talents.PlayerExperienceLevel = Level(PermanentUpgradeId.XpGain);
-        talents.PlayerCoinGainLevel = Level(PermanentUpgradeId.CoinGain);
+        talents.Power = new PowerTalents
+        {
+            DamageLevel = Level(PermanentUpgradeId.Damage),
+            SkillCooldownLevel = Level(PermanentUpgradeId.SkillCooldown),
+            FireRateLevel = Level(PermanentUpgradeId.FireRate),
+            ReloadSpeedLevel = Level(PermanentUpgradeId.ReloadSpeed),
+            CriticalChanceLevel = Level(PermanentUpgradeId.CriticalChance),
+            CriticalDamageLevel = Level(PermanentUpgradeId.CriticalDamage),
+            MaxHealthLevel = Level(PermanentUpgradeId.MaxHealth),
+            MaxShieldLevel = Level(PermanentUpgradeId.MaxShield),
+            DamageReductionLevel = Level(PermanentUpgradeId.DamageReduction),
+            MoveSpeedLevel = Level(PermanentUpgradeId.MoveSpeed),
+            PickupRangeLevel = Level(PermanentUpgradeId.PickupRange),
+            XpGainLevel = Level(PermanentUpgradeId.XpGain),
+            CoinGainLevel = Level(PermanentUpgradeId.CoinGain),
+        };
 
-        talents.WeaponLevel = Level(PermanentUpgradeId.Weapons);
-        talents.StartingGoldLevel = Level(PermanentUpgradeId.StartingGold);
-        talents.RerollsLevel = Level(PermanentUpgradeId.Rerolls);
-        talents.ReviveLevel = Level(PermanentUpgradeId.Revive);
-        talents.CoopLevel = Level(PermanentUpgradeId.Coop);
+        talents.Exploration = new ExplorationTalents
+        {
+            WeaponsLevel = Level(PermanentUpgradeId.Weapons),
+            StartingGoldLevel = Level(PermanentUpgradeId.StartingGold),
+            RerollsLevel = Level(PermanentUpgradeId.Rerolls),
+            ReviveLevel = Level(PermanentUpgradeId.Revive),
+            CoopLevel = Level(PermanentUpgradeId.Coop),
+        };
     }
 
     public static WorldUnlocks BuildWorld()

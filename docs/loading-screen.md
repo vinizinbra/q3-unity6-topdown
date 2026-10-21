@@ -149,6 +149,13 @@ only decides when each hero becomes *visible* on this client:
 
 - Every `CharView` registers in `Initialize`; only heroes registered while `GameState.Lobby` and
   before the intro finished are held, so a mid-run reconnect never replays an arrival.
+- On register (same frame the view is instantiated) every active top-level **Play On Awake**
+  ParticleSystem under the hero view is stopped + cleared and replayed on reveal - most of them
+  (Max `MagicBuffGreen`, Zara `Shockwave`, Brute `SmokeWhiteTrail (1)`...) sit outside the hidden
+  body roots, so they used to play at the invisible hero before it arrived.
+- While any LOCAL hero is hidden, the manager blocks this client's gameplay input through
+  `UiInputGate` (registered in `Awake`) - the sim would otherwise let it walk off unseen and pop in
+  elsewhere. Buttons held through the arrival stay latched until released; movement resumes on reveal.
 - Held heroes are hidden like a pending fall-respawn (`BlobAnimationView` roots,
   `WeaponViewController` socket, `CharacterUiWidget`) via `HeroSpawnIntroManager.IsHidden`.
 - While `WaterShoreBaker.IsLoadingScreenUp`, nothing reveals. After it drops: first reveal after
@@ -161,8 +168,14 @@ only decides when each hero becomes *visible* on this client:
 - Portal closes (stop emitting, destroy after `portalDestroyDelay`) once every player with
   RuntimePlayer data has spawned and been revealed + `portalLingerAfterLastHero`, or on leaving
   Lobby, or after `portalMaxDuration` since the screen lifted (reveals everyone left).
-- Camera: `FollowCamera.SetIdleFocus` snaps onto the spawn point behind the screen; it is only framed
-  while the camera has no targets, so the local hero takes over as soon as its view registers.
+- Camera: `FollowCamera.SetIdleFocus(spawnPoint, hold: true)` snaps onto the spawn point behind the
+  screen and *holds* there even after the (still hidden) local hero registers as a target. When the
+  last local hero's travel effect leaves the portal, `ClearIdleFocus(blend)` glides the camera to the
+  heroes over `cameraBlendDuration` (default = `travelDuration`, SmoothStep), so camera and lightning
+  land together; `Finish` releases it the same way if that never happened. (2026-10-21: before this
+  the camera chased the invisible hero the instant its view registered - the "flicker".)
+  `FollowCamera`'s follow smoothing is also frame-rate independent now (`1 - e^(-speed*dt)`), so a
+  hitch frame can't snap it.
 - Audio (2026-10-20): `portalLoopSound` (`Audio/Generated/PortalLoop` - looping SPACE_WARP charge
   hum) starts at the portal once the screen lifts and stops with its own fade-out when the portal
   closes; `heroLandSound` (`Audio/Generated/HeroSpawnLand` - Shock Rifle thunder clap) plays one-shot

@@ -89,10 +89,21 @@ namespace Quantum
 
             // Disruptor's signature (CritStunWeaponPerkData, baked via WeaponDataAsset.BaseTraits) -
             // a crit briefly stuns its target, via the same StatusEffectUtility.ApplyStun every
-            // other stun source calls.
-            if (reactions->CritStunDuration > FP._0)
+            // other stun source calls. A Lightning weapon's stun crackles: Jolt fires when it lands,
+            // same as Shock's own stun proc (StatusEffectUtility.ApplyElementBaseline) - every other
+            // stun source stays Jolt-free.
+            if (reactions->CritStunDuration > FP._0
+                && StatusEffectUtility.ApplyStun(f, target, reactions->CritStunDuration, owner) == true
+                && f.FindAsset(weapon->WeaponData)?.Element == ElementType.Lightning
+                && f.Has<Transform3D>(target) == true)
             {
-                StatusEffectUtility.ApplyStun(f, target, reactions->CritStunDuration, owner);
+                f.Events.JoltTriggered(target, EnemyMovementUtility.ResolveEntityCenter(f, target));
+            }
+
+            // Frostbite's Deep Freeze (CritFreezeWeaponPerkData) - same shape, but the true Freeze.
+            if (reactions->CritFreezeDuration > FP._0)
+            {
+                StatusEffectUtility.ApplyFreeze(f, target, reactions->CritFreezeDuration, owner);
             }
         }
 

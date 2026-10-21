@@ -1,22 +1,18 @@
+// Serialized by value on SpawnEntityWithRequirement (ChunkSpawnConfig assets) - append only, never
+// reorder. Resolved by TalentUtility.IsSatisfied against RuntimeConfig.WorldUnlocks.
 enum SharedTalentRequirement : Byte
 {
     None,               // unconditional - always satisfied
-    WeaponChest,
-    HeroChest,
-    GlobalUpgradeChest,
-    UnlockedRift,       // scaffolded - Global.SharedHasUnlockedRift is never set true yet
-    FindStones,         // scaffolded - Global.SharedCanFindStones is never set true yet
-    Event,              // scaffolded - Global.SharedHasEvent is never set true yet
+    WeaponChest,        // Rift Anchor L1 (RuntimeConfig.WorldUnlocks) - the Base's starting Weapon Chest
+    HeroChest,          // no menu line yet - never satisfied
+    GlobalUpgradeChest, // no menu line yet - never satisfied
+    UnlockedRift,       // no menu line yet - never satisfied
+    FindStones,         // no menu line yet - never satisfied
+    Event,              // no menu line yet - never satisfied
     RepairStation       // Rift Anchor L2 (RuntimeConfig.WorldUnlocks) - the Base's Repair Station
 }
 
 global
 {
     Boolean TalentsResolved;
-    Boolean SharedHasWeaponChest;
-    Boolean SharedHasHeroChest;
-    Boolean SharedHasGlobalUpgradeChest;
-    Boolean SharedHasUnlockedRift;      // scaffolded only - not yet consumed anywhere
-    Boolean SharedCanFindStones;        // scaffolded only - not yet consumed anywhere
-    Boolean SharedHasEvent;             // scaffolded only - not yet consumed anywhere
 }

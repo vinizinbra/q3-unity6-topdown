@@ -68,7 +68,7 @@ namespace Quantum
             FP progressRate = FP._1;
             TalentsConfig talents = TalentUtility.GetConfig(f);
             if (talents != null && reviver != target && TalentUtility.TryGetTalents(f, reviver, out PlayerTalents rescuer)
-                && rescuer.CoopLevel >= MetaUnlockLevels.CoopFastRescue)
+                && rescuer.Exploration.CoopLevel >= MetaUnlockLevels.CoopFastRescue)
                 progressRate += talents.CoopRescueSpeedBonus;
 
             targetLifeState->ReviveProgress += f.DeltaTime * progressRate;

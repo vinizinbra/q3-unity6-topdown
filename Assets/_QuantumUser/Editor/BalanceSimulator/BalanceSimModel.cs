@@ -267,6 +267,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                     ExplosiveSequenceDamageMultiplier = Math.Max(ExplosiveSequenceDamageMultiplier, D(p.DamageMultiplier));
                     break;
                 case CritStunWeaponPerkData: break; // crowd control only - no DPS contribution to quantify
+                case CritFreezeWeaponPerkData: break; // same - Frostbite's Deep Freeze
                 case StormChainWeaponPerkData p:
                     ChainShotInterval = ChainShotInterval <= 0 ? p.Interval : Math.Min(ChainShotInterval, p.Interval);
                     ChainShotBounces += p.Bounces;

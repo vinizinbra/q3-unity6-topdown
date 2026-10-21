@@ -4968,6 +4968,7 @@ namespace Quantum.Prototypes {
     public FP CriticalExplosionRadius;
     public FP CriticalExplosionDamageMultiplier;
     public FP CritStunDuration;
+    public FP CritFreezeDuration;
     partial void MaterializeUser(Frame frame, ref Quantum.WeaponOnCritReactions result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.WeaponOnCritReactions component = default;
@@ -4985,6 +4986,7 @@ namespace Quantum.Prototypes {
         result.CriticalExplosionRadius = this.CriticalExplosionRadius;
         result.CriticalExplosionDamageMultiplier = this.CriticalExplosionDamageMultiplier;
         result.CritStunDuration = this.CritStunDuration;
+        result.CritFreezeDuration = this.CritFreezeDuration;
         MaterializeUser(frame, ref result, in context);
     }
   }

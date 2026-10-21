@@ -19,9 +19,13 @@ simulation.
   `LevelGenerationSystem.MinCornerOffsetWorld`/`SwapsAxes` (accounts for rotation - see "Known
   simplification" below for why the offset is needed, not just the axis swap) and
   `ChunkSizeWidth`/`ChunkSizeDepth` (already world-space units, not grid cells), then checks every
-  player for containment - same X/Z-only footprint-containment idea `LobbyBoundarySystem` already
-  uses for the LobbyStart chunk, duplicated locally rather than shared (that check is only 3
-  lines). Registered in the always-on-per-tick `GameplaySystemGroup` block of
+  player's approximate camera view for overlap (changed 2026-10-21 from "player stands inside the
+  chunk" to "chunk appears on camera"). The real camera is per-client View state, so the sim uses a
+  fixed X/Z rect around each player from `OverallGameConfig.DiscoveryViewHalfWidth`/`Back`/`Forward`
+  (defaults 12/8/10, derived from `FollowCamera` offset (0,35,-35), 45° pitch, FOV 14, ~16:9).
+  It ignores co-op zoom-out (up to 1.5x) and wider phone aspects, so it slightly under-reveals
+  rather than revealing chunks that are never shown. Cost is the same as the old containment
+  check: undiscovered chunks × players, one AABB overlap each. Registered in the always-on-per-tick `GameplaySystemGroup` block of
   `Assets/_QuantumUser/Simulation/Default/SystemSetup.User.cs`, no ordering dependency on anything
   else.
 - **`MinimapWidget`** (`Assets/_Project/Scripts/UI/InGame/Hud/Minimap/MinimapWidget.cs`) - a

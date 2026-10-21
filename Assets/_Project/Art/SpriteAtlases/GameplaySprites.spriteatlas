@@ -113,6 +113,7 @@ SpriteAtlas:
     - {fileID: 2800000, guid: 934d9047300684655a9ea6150a989d3b, type: 3}
     - {fileID: 2800000, guid: c3f3c3c5a44474dec9a7faa717fbf41d, type: 3}
     - {fileID: 2800000, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+    - {fileID: 2800000, guid: 3ae565d5efcfc462d872eb3a4846e059, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -221,6 +222,7 @@ SpriteAtlas:
     - 75497725b64e94e598821aa684265654: -1625532976
     - eda5b8655ed784c759e37da9c720d68e: 21300000
     - c3f3c3c5a44474dec9a7faa717fbf41d: -333926240
+    - 3ae565d5efcfc462d872eb3a4846e059: 21300000
     - 414c7fe531867433e9e397ec12cedb2e: -2200405082034451777
     - 414c7fe531867433e9e397ec12cedb2e: 2969079090545882148
     - 414c7fe531867433e9e397ec12cedb2e: 3791912869728078214
@@ -562,6 +564,7 @@ SpriteAtlas:
   - {fileID: -1625532976, guid: 75497725b64e94e598821aa684265654, type: 3}
   - {fileID: 21300000, guid: eda5b8655ed784c759e37da9c720d68e, type: 3}
   - {fileID: -333926240, guid: c3f3c3c5a44474dec9a7faa717fbf41d, type: 3}
+  - {fileID: 21300000, guid: 3ae565d5efcfc462d872eb3a4846e059, type: 3}
   - {fileID: -2200405082034451777, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
   - {fileID: 2969079090545882148, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
   - {fileID: 3791912869728078214, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
@@ -902,6 +905,7 @@ SpriteAtlas:
   - RukkFiller
   - ProjectRingFaded
   - BottomSand_0
+  - TeleportDock-Minimal
   - Rukk_01
   - Rukk_03
   - Rukk_02

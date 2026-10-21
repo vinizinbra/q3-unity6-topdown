@@ -45,7 +45,7 @@ namespace Quantum
             // Co-op L2 "Last Stand" (this player's own meta progression) - a longer bleed-out.
             TalentsConfig talents = TalentUtility.GetConfig(f);
             if (talents != null && TalentUtility.TryGetTalents(f, target, out PlayerTalents targetTalents)
-                && targetTalents.CoopLevel >= MetaUnlockLevels.CoopLastStand)
+                && targetTalents.Exploration.CoopLevel >= MetaUnlockLevels.CoopLastStand)
                 lifeState->BleedOutRemaining *= FP._1 + talents.CoopBleedOutBonus;
             lifeState->ReviveProgress = FP._0;
             lifeState->ReviveHolder = EntityRef.None;
@@ -136,7 +136,7 @@ namespace Quantum
 
             // Revive L3 "Revive Guard" (meta progression) - a self-revive also restores 1 Accessory Guard block.
             if (reviver == target && TalentUtility.TryGetTalents(f, target, out PlayerTalents selfTalents)
-                && selfTalents.ReviveLevel >= MetaUnlockLevels.ReviveGuard)
+                && selfTalents.Exploration.ReviveLevel >= MetaUnlockLevels.ReviveGuard)
                 AccessoryGuardUtility.RestorePoints(f, target, 1);
 
             f.Events.PlayerRevived(target, reviver);
@@ -156,13 +156,13 @@ namespace Quantum
             if (reviver == target)
             {
                 return TalentUtility.TryGetTalents(f, target, out PlayerTalents self)
-                       && self.ReviveLevel >= MetaUnlockLevels.ReviveRecovery
+                       && self.Exploration.ReviveLevel >= MetaUnlockLevels.ReviveRecovery
                     ? talents.SelfReviveHealthBonus
                     : FP._0;
             }
 
             return TalentUtility.TryGetTalents(f, reviver, out PlayerTalents rescuer)
-                   && rescuer.CoopLevel >= MetaUnlockLevels.CoopRescueRecovery
+                   && rescuer.Exploration.CoopLevel >= MetaUnlockLevels.CoopRescueRecovery
                 ? talents.CoopRescueHealthBonus
                 : FP._0;
         }

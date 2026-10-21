@@ -19699,7 +19699,7 @@ MonoBehaviour:
         RawValue: 175636
       Z:
         RawValue: 384041
-    RewardPrototypeCount: 3
+    RewardPrototypeCount: 4
     RewardPrototypes:
     - Id:
         Value: 1329904124162659410
@@ -19708,7 +19708,7 @@ MonoBehaviour:
     - Id:
         Value: 1321529338188975839
     - Id:
-        Value: 0
+        Value: 1373803110666495336
     RewardRolled:
       Value: 0
     RolledRewardIndex: 0

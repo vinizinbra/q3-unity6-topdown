@@ -43,7 +43,7 @@ public static class LevelUpCategoryUtility
             case LevelUpCategory.HeroSkill: return "Hero Chest";
             case LevelUpCategory.GlobalUpgrade: return "Upgrade Chest";
             case LevelUpCategory.RiftMutation: return "Rift Mutation";
-            case LevelUpCategory.WeaponPerk: return "Weapon Perk Chest";
+            case LevelUpCategory.WeaponPerk: return "Perk Stone";
             case LevelUpCategory.ChooseWeapon: return "Weapon Chest";
             default: return "Chest";
         }

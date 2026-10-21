@@ -75,7 +75,7 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: 'Discharge also deals {0} damage to enemies hit.'
+  Description: Discharge also deals {0} damage to enemies hit.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -175,7 +175,8 @@ MonoBehaviour:
   Interval:
     RawValue: 0
   Activated: 1
-  Description: 'On channel end: {0} damage in {1} units, pushing enemies out over {2}s.'
+  Description: 'On channel end: {0} damage in {1} units, pushing enemies out over
+    {2}s.'
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -289,24 +290,28 @@ MonoBehaviour:
   - Id:
       Value: 291462109882006022
   Icon: {fileID: 99700747, guid: 09ab27b92d44c4a54a95d6d0d0b9c281, type: 3}
-  Description: 'Channel {0}s: {1}% less damage taken, full Shield. Ram enemies to launch them. Run to recharge.'
+  Description: 'Channel {0}s: {1}% less damage taken, full Shield. Ram enemies to
+    launch them. Run to recharge.'
   Duration:
     RawValue: 524288
   DamageReductionBonus:
     RawValue: 32768
+  MaxDeflectTier: 3
   DistancePerCharge:
     RawValue: 65536
   MaxCharge: 10
   ActiveMoveSpeedBonus:
     RawValue: 3277
   ChargedMoveSpeedBonus:
-    RawValue: 9830
+    RawValue: 13107
   KnockbackRadius:
     RawValue: 98304
   KnockbackForce:
     RawValue: 262144
   KnockbackUpwardForce:
     RawValue: 262144
+  HeavyLaunchScale:
+    RawValue: 49152
   Damage:
     RawValue: 7864320
   AftershockRadius:
@@ -319,5 +324,7 @@ MonoBehaviour:
     RawValue: 65536
   ShieldGainPerHit:
     RawValue: 0
+  ShieldOnCastFraction:
+    RawValue: 65536
   DischargeEffectPrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}
   DischargeHitEffectPrefab: {fileID: 2507896006552451473, guid: 378bc48cbdf5a4df3bd70135d583790d, type: 3}

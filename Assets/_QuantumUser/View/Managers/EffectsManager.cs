@@ -47,7 +47,7 @@ namespace QuantumUser.View.Managers
         private ParticleSystem undertowMarkEffectPrefab;
 
         [Header("Stun (Jolt)")]
-        [SerializeField, Tooltip("Played on JoltTriggered - a one-shot spark every time a target is ACTUALLY Stunned (StatusEffectUtility.ApplyStun), regardless of source (Shock's own proc, Shatter's primary, any future Stun source) - never fired just because Shock/Electrified was applied or refreshed (see docs/elemental-reactions.md). Distinct from StatusEffectsManager's own ambient stunParticlePrefab tracker (which only shows the status is currently active, not the instant it landed). Falls back to defaultAreaBlastEffect, tinted joltFallbackColor, at joltScaleMultiplier, if left empty.")]
+        [SerializeField, Tooltip("Played on JoltTriggered - a one-shot spark when a Lightning-weapon stun ACTUALLY lands (Shock's own stun proc, Disruptor's crit stun - see WeaponPerkReactionSystem.OnCriticalHit); other stun sources (Shatter, slams, stagger...) never fire it, and neither does merely applying/refreshing Shock (see docs/elemental-reactions.md). Distinct from StatusEffectsManager's own ambient stunParticlePrefab tracker (which only shows the status is currently active, not the instant it landed). Falls back to defaultAreaBlastEffect, tinted joltFallbackColor, at joltScaleMultiplier, if left empty.")]
         private ParticleSystem joltEffectPrefab;
         [SerializeField, Tooltip("Local position offset added to e.Position before playing joltEffectPrefab (or its fallback) - e.g. to nudge the spark up toward chest/head height instead of the entity's feet-level Transform3D.")]
         private Vector3 joltPositionOffset;
@@ -743,9 +743,9 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // One-shot spark every time a target is ACTUALLY Stunned (StatusEffectUtility.ApplyStun) -
-        // regardless of source (Shock's own proc, Shatter's primary, any future Stun source), never
-        // fired just because a status was applied/refreshed (see docs/elemental-reactions.md's
+        // One-shot spark when a Lightning-weapon stun ACTUALLY lands (Shock's own stun proc,
+        // Disruptor's crit stun) - other Stun sources never fire it, and it's never fired just
+        // because a status was applied/refreshed (see docs/elemental-reactions.md's
         // "Shock (Electrified)" section) - distinct from StatusEffectsManager's own ambient
         // stunParticlePrefab tracker, which only shows the status is currently active rather than
         // marking the instant it landed.

@@ -154,13 +154,10 @@ choosing an upgrade FOR). `RollOptionsFor` resolves this once per roll, then:
 
 A player can redraw their own current `LevelUpChoice.Options` in place, spending one charge from a
 new persistent per-character stat, `CharacterStats.RerollQuantity`. **Not a Global Upgrade** -
-sourced the same way as `WeaponTalentLevel`/Choose-Weapon's own meta-progression seed: a pre-run
-talent (`RuntimePlayer.Talents.RerollQuantity`, its own `PlayerPrefInt` in `MatchMakingConfig`, key
-`"reroll_quantity"`) copied 1:1 into `CharacterStats.RerollQuantity` once at spawn
-(`PlayerSpawnUtility.Spawn`). Starts at 0 for a fresh save, same as `WeaponLevel`. Deliberately kept
-out of `TalentUtility.ApplyPerPlayerTalents`'s `Player*Level` block (`docs/talents.md`) - those are
-all 0-5 percent-scaled multipliers, and a "percent bonus" of a flat charge count doesn't mean
-anything the way it does for e.g. `MoveSpeedMultiplier`. See `docs/talents.md`'s own `RuntimePlayer`
+sourced only from the menu's Exploration "Rerolls" line: `RuntimePlayer.Talents.Exploration.RerollsLevel`
+resolved through `TalentsConfig.RerollsByLevel` into `CharacterStats.RerollQuantity` once at spawn
+(`TalentUtility.ApplyPerPlayerTalents`). Starts at 0 for a fresh save. (The old raw
+`Talents.RerollQuantity` Inspector field was removed 2026-10-21 - it stacked on top of the line.) See `docs/talents.md`'s own `RuntimePlayer`
 fields section for the full meta-progression side; this section only covers the in-match spend.
 
 Flow, mirroring `SelectLevelUpUpgradeCommand`'s shape end to end:

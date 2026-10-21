@@ -49,10 +49,7 @@ namespace Quantum
             // isn't set until the block above, after f.Create already returned.
             if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats))
             {
-                stats->WeaponTalentLevel = runtimePlayer.Talents.WeaponLevel;
-                stats->RerollQuantity = runtimePlayer.Talents.RerollQuantity;
-                stats->ShopWeaponOfferCount = runtimePlayer.Talents.ShopWeaponOfferCount;
-                stats->Coins = (FP)runtimePlayer.Talents.StartingCoins;
+                stats->WeaponTalentLevel = runtimePlayer.Talents.Exploration.WeaponsLevel;
                 TalentUtility.ApplyPerPlayerTalents(f, entity, runtimePlayer, stats);
             }
 

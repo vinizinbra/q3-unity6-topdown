@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2af90d9f22225f3aaf95cef62e5b3f99, type: 3}
+  m_Script: {fileID: 11500000, guid: a9ec4eb6816d94b16809a43eae34a786, type: 3}
   m_Name: FrostbiteCritFreeze
-  m_EditorClassIdentifier: Quantum.Simulation::Quantum.CritStunWeaponPerkData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.CritFreezeWeaponPerkData
   Identifier:
     Path: _QuantumUser/Resources/Weapons/WeaponPerk/BaseTraits/FrostbiteCritFreeze
     Guid:
@@ -19,6 +19,6 @@ MonoBehaviour:
   Icon: {fileID: 0}
   DisplayName: Deep Freeze
   Rarity: 1
-  Description: Crits stun for <color=#FD3971><b>{0:0.#}s</b></color>
-  StunDuration:
+  Description: Crits freeze for <color=#FD3971><b>{0:0.#}s</b></color>
+  FreezeDuration:
     RawValue: 65536

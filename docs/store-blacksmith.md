@@ -110,8 +110,9 @@ config both paths reference):
   `RolledAtBreathingIndex`) fills that gap - buying resets to "available" automatically the next
   time that same offer slot gets rerolled with something new.
 - **How many of the shared weapon offers a player can actually buy from** is a separate,
-  per-player concept: `CharacterStats.ShopWeaponOfferCount` (seeded once at spawn from
-  `RuntimePlayer.Talents.ShopWeaponOfferCount`, a meta-progression talent - see `docs/talents.md`).
+  per-player concept: `CharacterStats.ShopWeaponOfferCount` (no longer seeded by anything since the old
+  raw `PlayerTalents.ShopWeaponOfferCount` Inspector field was removed 2026-10-21 - always 0; the meta
+  source is Store L3, see `docs/talents.md`).
   Confirmed with the user: rank 0 -> 1 offer, rank 1 -> 2, rank 2 -> 3
   (`StoreUtility.ResolveWeaponOfferCount` = `Clamp(ShopWeaponOfferCount + 1, 1, MaxWeaponOfferSlots)`,
   also capped by however many the shared inventory actually rolled).
@@ -275,11 +276,7 @@ Choice Window already locks input - movement/weapon/Dash/Hero-Skill gated, `Game
   sweep - simpler than that one since neither POI ever has a "paid, reward still pending" multi-tick
   window, every purchase/pick is one atomic command).
 - `Assets/_QuantumUser/Simulation/Default/RuntimeConfig.User.cs` - `StoreConfig`/`BlacksmithConfig`
-  fields. `RuntimePlayer.User.cs` - `PlayerTalents.ShopWeaponOfferCount`.
-  `Assets/_Project/Scripts/MatchMakingConfig.cs` - `shop_weapon_offer_count` PlayerPrefInt, same
-  shape as `weapon_talent_level`/`reroll_quantity`.
-  `Assets/_QuantumUser/Simulation/Systems/Player/PlayerSpawnUtility.cs` - seeds
-  `CharacterStats.ShopWeaponOfferCount` from the talent at spawn.
+  fields.
 - `Assets/_QuantumUser/Simulation/Commands/BuyStoreWeaponCommand.cs`/`BuyStoreFoodCommand.cs`/
   `BuyStoreWeaponLevelCommand.cs`/`CloseStoreCommand.cs`/`SelectBlacksmithPerkCommand.cs`/
   `CancelBlacksmithCommand.cs`.

@@ -39,7 +39,7 @@ component Weapon
     // (WeaponSystem.AddLevel), same compounding idiom DamageMultiplierWeaponPerkData.Apply already
     // uses for a rolled perk - Level itself is never read back into live damage math. Distinct from
     // BOTH CharacterStats.WeaponTalentLevel (pure bookkeeping now, no longer drives perk-count rolls
-    // - see LevelUpConfig.WeaponOfferCurve) and RuntimePlayer.Talents.WeaponLevel (permanent
+    // - see LevelUpConfig.WeaponOfferCurve) and RuntimePlayer.Talents.Exploration.WeaponsLevel (permanent
     // meta-progression that seeds the former at spawn) - this one only affects the specific Weapon
     // instance currently equipped, resets on any re-equip.
     Byte  Level;

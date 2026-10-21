@@ -254,6 +254,10 @@ component WeaponOnCritReactions
     FP      CriticalExplosionDamageMultiplier;
 
     FP      CritStunDuration;
+
+    // Frostbite's Deep Freeze (CritFreezeWeaponPerkData) - a crit applies the true hard-CC Freeze
+    // (StatusEffectUtility.ApplyFreeze), not a Stun, so the Freeze visuals/anti-permafreeze recovery apply.
+    FP      CritFreezeDuration;
 }
 
 // -- Element Infusion (ElementInfusionWeaponPerkData) --

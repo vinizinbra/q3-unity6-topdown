@@ -13,7 +13,7 @@ alongside it - see "Why `LevelUpScreenOpen` wasn't replaced" below.
   zeroed). Only `Lobby`/`Survival`/`Upgrade` are actually wired today - `Event`/`Boss` are
   scaffolded (declared, documented, nothing transitions into or out of them yet), matching this
   codebase's own convention for reserved-for-later fields (`BalanceConfig`'s
-  `ExpectedPlayerDps`/`EliteFrequency`, `RuntimePlayer.HasUnlockedRift`/`CanFindStones`/`HasEvent`).
+  `ExpectedPlayerDps`/`EliteFrequency`, the `SharedTalentRequirement.UnlockedRift`/`FindStones`/`Event` gates).
 - **"Pause time" means different things per state, deliberately not centralized in one
   mechanism.** `Lobby` must NOT pause `GameplaySystemGroup` (players need to move to ever leave
   the lobby) - only `CombatDirectorSystem` (the Survival Director / `Global.SurvivalTime`) stays
@@ -110,8 +110,8 @@ as a side effect of this refactor.
 ## Editor/design work needed
 
 - `Event`/`Boss` states are pure vocabulary right now - nothing transitions into or out of
-  either. `Event` mirrors the already-scaffolded `RuntimePlayer.HasEvent`/
-  `Global.SharedHasEvent` (`docs/talents.md`), but no actual "Event" system/encounter exists yet
+  either. `Event` mirrors the scaffolded `SharedTalentRequirement.Event` gate
+  (`docs/talents.md`), but no actual "Event" system/encounter exists yet
   to trigger it. `Boss` would need a hook into the existing `BossSystem`'s own encounter
   entry/exit (not investigated as part of this pass).
 - Undecided: does `Event` pause the whole `GameplaySystemGroup` (like `Upgrade`) or just the
@@ -130,7 +130,7 @@ The code compiles once codegen picks up the new `GameState.qtn`/`Events.qtn` fie
   vocabulary-only "wired later" state fired once every connected player is simultaneously down with
   no way back - see `docs/revive.md`).
 - **`Event` is still pure vocabulary only** - it mirrors the already-scaffolded
-  `RuntimePlayer.HasEvent`, with no system transitioning into or out of it.
+  `SharedTalentRequirement.Event`, with no system transitioning into or out of it.
 - **`Boss` is no longer vocabulary-only, as of 2026-08-17.** `CombatDirectorSystem.ApplyPhaseGameState`
   now routes `SurvivalPhaseKind.Boss` to `GameState.Boss` and triggers a one-shot
   `RunPhaseUtility.BeginBossEncounter` (teleport every player to the Boss Arena chunk, enable

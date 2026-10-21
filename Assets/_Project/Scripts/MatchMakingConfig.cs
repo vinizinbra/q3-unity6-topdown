@@ -953,9 +953,8 @@ public class MatchMakingConfig : PgSingleton<MatchMakingConfig>, IInRoomCallback
    // setup is identical either way, only how the session itself is started differs.
    //
    // Talents: TalentSaveMapper writes this device's saved per-player meta-progression LEVELS onto every
-   // local slot (bots included - one save per device, same as before). The raw count fields on
-   // PlayerTalents (RerollQuantity, StartingCoins, ...) are left alone, so values
-   // hand-set on RuntimePlayers[i].Talents in the Inspector for testing still add on top.
+   // local slot (bots included - one save per device, same as before), overwriting whatever Power/
+   // Exploration levels were authored on RuntimePlayers[i].Talents in the Inspector.
    private void AddLocalPlayers(QuantumRunner runner)
    {
       AssetRef<EntityPrototype> localCharacterAvatar = PartyManager.Instance.ResolveLocalCharacterAvatar();

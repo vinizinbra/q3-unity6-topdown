@@ -85,11 +85,14 @@ can key off `IsElectrified`.
 ## Jolt now means Stun, not Shock
 
 `JoltTriggered { Target, Position }` used to fire from Electrified's own periodic tick (see history
-above). It's now fired from exactly one place: the Lightning branch of
-`StatusEffectUtility.ApplyElementBaseline`, when the Electric weapon's Shock Stun proc genuinely LANDS
-(`ApplyStun` returns `true`). `ApplyStun` itself no longer fires it, so every other Stun source
-(Shatter's primary, Brute/Kai/melee/skill stuns, Crit Stun...) stays Jolt-free - Jolt reads as "the
-Electric proc Stunned this target", never a generic stun, and never "this target was Shocked" -
+above). It's now fired from exactly two places, both "a Lightning weapon's stun genuinely LANDED"
+(`ApplyStun` returns `true`): the Lightning branch of `StatusEffectUtility.ApplyElementBaseline` (Shock's
+own Stun proc), and `WeaponPerkReactionSystem.OnCriticalHit`'s crit stun when the weapon's
+`WeaponDataAsset.Element` is Lightning (Disruptor's `DisruptorCritStun`, added 2026-10-21 - its crit
+stuns used to land silently, so Jolt looked random). `ApplyStun` itself never fires it, so every other
+Stun source (Shatter's primary, Brute/Kai/melee/skill stuns, weapon stagger, a non-Lightning Crit
+Stun...) stays Jolt-free - Jolt reads as "an electric weapon Stunned this target", never a generic
+stun (those get the Stun halo's bonk instead), and never "this target was Shocked" -
 Shock applying or refreshing never fires it. `EffectsManager.joltEffectPrefab` (the VFX itself) is untouched; only who
 triggers it changed.
 
@@ -242,9 +245,57 @@ class default would read as a permanent lock rather than a CC.
 `freezeIndicator`/`hardFreezeParticlePrefab` are the new View slots for this status - deliberately
 NOT `deepFreezeIndicator`/`freezeParticlePrefab`, which are an unrelated, older mechanic
 (`AnticipationSlowRemaining`, a windup-stretch applied by the standalone `FreezeEffectData` skill
-effect) that happened to already claim the "Freeze" name before this status existed. No dedicated
-Freeze VFX authored yet - "code's ready, needs Editor authoring", same gap this project's other
-systems already carry.
+effect) that happened to already claim the "Freeze" name before this status existed.
+
+### Freeze visuals (2026-10-21)
+
+Works on ANY enemy with no per-enemy art - everything is procedural or silhouette-driven:
+
+- **`Sprites/Sprite Frozen` shader** (`Assets/3rd-party/PachaGames/Shaders/SpriteFrozen.shader`),
+  swapped onto every rig sprite by `HitFeedback`'s material slots. Source luminance remapped onto a
+  Deep/Mid/Light ice ramp (black ink outline kept; `_BodyLift` keeps dark-bodied enemies icy instead
+  of navy), two overlapping triangle lattices in texel space for crystal facets + hash-gated cracks,
+  8-tap frost rim, world-space glint sweep (coherent across multi-sprite rigs), twinkling facet
+  sparkles. No loops, sin-free hashes, lattice/glint math per vertex. Hit flash still via
+  `SpriteRenderer.color.a`; color RGB is ignored (so `frozenTint` is harmless under it).
+- Materials (`Assets/3rd-party/PachaGames/Materials/`): **`SpriteFrozenSolid`** = `hardFreezeMaterial`
+  (true Freeze); **`SpriteFrostbite`** (lighter: less ice, no cracks) = `freezeMaterial`
+  (AnticipationSlow) - replaced `SpriteFreezeGlow` (kept on disk) on Generic/Target/World1Boss/
+  W2-DuneLeviathan enemy prefabs.
+- **Particles**: `hardFreezeParticlePrefab` = `Prefabs/Effects/Stats/HardFreeze` (sparkles + cold mist
+  + flakes), now on `ParentedStatusSlotTracker` so the sparkle Shape conforms to the body sprite.
+  New `hardFreezeShatterPrefab` = `HardFreezeShatter` (tumbling faceted diamond shards - `IceShardDiamond` texture/`IceShardDiamond_AB` material - + flash + glints + snow
+  puff), played by `StatusEndBurstTracker` where Freeze ends - thaw OR death while frozen.
+- `EnemyBlobAnimationView` zeroes its animation dt and skips facing while `IsFrozen`, so the body
+  holds its pose instead of breathing/wobbling under the ice.
+- **Shader colour contract = `Sprites/SpriteColor`** (the enemies' base material): `color.rgb` is a mix
+  colour, `color.a` its strength. `HitFeedback.UpdateStatusRestTint` therefore suppresses
+  `frozenTint`/elemental rest tints (authored at a=1 = full flat replace) while a freeze material is
+  showing - otherwise the whole enemy renders as one flat colour. `frozenTint` remains the fallback for
+  a HitFeedback with no `hardFreezeMaterial` (heroes today).
+- Freeze sources: Chill buildup (above) and Frostbite's Deep Freeze crit (`CritFreezeWeaponPerkData`,
+  see docs/weapon-perks.md). `ApplyFreeze` is rejected during `FreezeRecoveryRemaining`, so a crit
+  right after a Freeze ends won't re-freeze until recovery clears.
+
+### Stun visuals (2026-10-21)
+
+- **Halo** - `stunParticlePrefab` = `Prefabs/Effects/Stats/StunHalo` (replaced `StunnedCirclingStars`, kept
+  on disk). `StunHaloEffect` on its root hand-drives 3 outlined stars (`SetParticles`, emission off) on a
+  depth-squashed orbit above the head. `StatusEffectsManager` feeds `StatusEffects.StunRemaining` each
+  frame (`SetRemainingSeconds`); star *i* stays up while remaining/peak > i/3, so stars pop off (swell +
+  `PopBurst` sparkle) as the stun runs down, and the last pops when it ends. A re-stun that raises the
+  remaining time restarts the countdown and re-grows stars.
+- **Bonk** - `Bonk` child (7 outlined stars + flash + spark streaks, t=0 burst) fires on the root's
+  `Play()` when a stun starts and again on each re-stun. Rides alongside the existing `EffectsManager`
+  Jolt spark and `HitFeedback` Jolt punch-scale.
+- **Dizzy sway** - `EnemyBlobAnimationView` blends in a ±`dizzyTiltDegrees` (6) rock at `dizzyFrequency`
+  (1.1 Hz) plus a small squash while `IsStunned`, added on top of every other pose source; Freeze wins
+  (its still pose suppresses the sway).
+- **Known gap (next pass)** - Stun still uses the unparented `StatusSlotTracker`: position = collider
+  center + `stunOffset` × collider diameter, scale = diameter. Wrong height on wide/tall sprites, oversized
+  on big colliders, and doesn't follow view-only body motion (hops, knockback). Planned fix: parent to
+  `HitFeedback.BodyRoot`, anchor at the measured sprite top (`EnemyView.ResolveWidgetOffset`), size from
+  sprite width with a clamp.
 
 ## Reaction dispatch and priority
 
@@ -625,11 +676,8 @@ collide - `MarkState` now has 3 states: `Normal`/`AnticipationFreeze`/`HardFreez
 onto `PlayerFxConfig.FrozenTint` for hero-shared tuning.
 
 **Not done yet / known simplifications:**
-- **No dedicated Freeze VFX authored** - `hardFreezeParticlePrefab` (`StatusEffectsManager`)/
-  `freezeIndicator` (`CharacterUiWidget`)/`hardFreezeMaterial` (`HitFeedback`) are all wired into
-  the existing pipeline but left empty/untinted-material, same "code's ready, needs Editor
-  authoring" gap as everything else in this file - `frozenTint` is the only piece with an actual
-  authored default (a pale icy blue), since it needs no external asset.
+- Freeze VFX now authored for enemies (see "Freeze visuals" above); `freezeIndicator`
+  (`CharacterUiWidget`) and hero `HitFeedback.hardFreezeMaterial` are still unassigned.
 - **No bonus-damage-vs-Frozen, Shatter-style Freeze payoff, or Freeze-specific cross-element
   reaction** - out of scope for this pass by design; Freeze is deliberately just the shared
   movement/action lockout today, independently queryable (`IsFrozen`) for a future system to build

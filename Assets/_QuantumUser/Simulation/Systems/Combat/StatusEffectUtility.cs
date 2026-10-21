@@ -1069,7 +1069,8 @@ namespace Quantum
                     // so a fresh (non-refresh) application never rolls. Uses the existing
                     // Stun primitive rather than a bespoke "Electric Stun". Jolt is fired HERE, only
                     // when this Electric proc's Stun genuinely lands - never from ApplyStun itself, so
-                    // every other Stun source (Shatter, melee/skill stuns...) stays Jolt-free.
+                    // other Stun sources (Shatter, melee/skill stuns...) stay Jolt-free. The only other
+                    // Jolt source is a Lightning weapon's crit stun (WeaponPerkReactionSystem).
                     bool wasAlreadyShocked = IsElectrified(f, target);
 
                     ApplyElectrified(f, target, config.ElectrifiedDuration);

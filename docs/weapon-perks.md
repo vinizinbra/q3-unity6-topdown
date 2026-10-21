@@ -544,7 +544,7 @@ naming it. Offer cards don't read `Description` yet.
 | Weapon | Element / Family | Signature (BaseTraits asset) |
 |---|---|---|
 | Hell Piercer (`HellPiercer`) | Fire / Shotgun | Scorching Pellets, +1 Pierce (`HellPiercerPierce`, a `PiercingRoundsWeaponPerkData`) |
-| Frostbite (`Frostbite`) | Ice / Sniper | Deep Freeze, crit stuns 1s (`FrostbiteCritFreeze`, a `CritStunWeaponPerkData`, mechanically a stun) |
+| Frostbite (`Frostbite`) | Ice / Sniper | Deep Freeze, crit freezes 1s (`FrostbiteCritFreeze`, a `CritFreezeWeaponPerkData` -> `WeaponOnCritReactions.CritFreezeDuration` -> `StatusEffectUtility.ApplyFreeze`: the true hard-CC Freeze, so tier `FreezeDurationMultiplier` + anti-permafreeze recovery apply and the Freeze visuals show; was a `CritStunWeaponPerkData` stun until 2026-10-21) |
 | Ember SMG (`EmberSMG`) | Fire / SMG | Kindling, +30% vs Burning (`EmberSMGKindling`, **new** `KindlingWeaponPerkData`) |
 | Flare Pistol (`FlarePistol`) | Fire / Pistol | Flare Burst, every 3rd shot explodes for 100% within 2.5m (`FlarePistolBurst`, an `ExplosiveSequenceWeaponPerkData`); Damage 25 (Pistol is 30) so sustained DPS matches Frost Revolver (88) |
 | Napalm Launcher (existing, now pooled) | Fire / Grenade Launcher | Burning ground from its own `NapalmAreaHit` (no perk) |

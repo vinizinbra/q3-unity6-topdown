@@ -55,6 +55,10 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Seconds the travel instance is kept after landing (emission stopped) so its trail/particles can fade out.")]
         private float travelDestroyDelay = 1f;
 
+        [Header("Camera")]
+        [SerializeField, Tooltip("The camera holds on the portal while the local hero is still hidden, then glides to it over this many seconds, starting when that hero's travel effect leaves the portal - so camera and lightning arrive together. <= 0 = match travelDuration.")]
+        private float cameraBlendDuration = -1f;
+
         [Header("Hero reveal")]
         [SerializeField, Tooltip("One-shot burst at each hero the moment it's revealed - played through EffectsManager's pool, so it must not loop. Its local UP is aimed at the portal (author it pointing up, +Y, and it will fire toward the portal). Leave empty to skip the particle (the body punch-scale still plays).")]
         private ParticleSystem heroSpawnEffectPrefab;
@@ -71,6 +75,12 @@ namespace QuantumUser.View.Managers
         private readonly List<EntityRef> _pending = new List<EntityRef>();
         private readonly HashSet<EntityRef> _hidden = new HashSet<EntityRef>();
 
+        // Play On Awake particles a held hero's prefab started the moment its view was instantiated
+        // (an arrival flash, an aura...). Most sit OUTSIDE the body roots BlobAnimationView hides, so
+        // nothing would hide them - they'd play at an invisible hero. Stopped + cleared on register,
+        // replayed on reveal.
+        private readonly Dictionary<EntityRef, List<ParticleSystem>> _deferredEffects = new Dictionary<EntityRef, List<ParticleSystem>>();
+
         private struct Flight
         {
             public EntityRef Entity;
@@ -85,6 +95,7 @@ namespace QuantumUser.View.Managers
         private SoundHandle _portalLoop = SoundHandle.None;
         private Vector3 _portalPosition;
         private bool _cameraFocused;
+        private bool _cameraReleased;
         private bool _finished;
         private float _nextRevealTime;
         private float _lastRevealTime;
@@ -98,6 +109,23 @@ namespace QuantumUser.View.Managers
         private void Awake()
         {
             Instance = this;
+
+            // The sim lets a hero move the moment it spawns; hidden here, it would walk off unseen and
+            // pop in somewhere else. Empty input until our own hero has landed - same gate the UI uses,
+            // so a button held through the arrival stays muted until released (movement resumes at once).
+            UiInputGate.Register(this, IsLocalHeroHidden);
+        }
+
+        private bool IsLocalHeroHidden()
+        {
+            if (MyLocalPlayer.Instance == null)
+                return false;
+
+            foreach (EntityRef entity in _hidden)
+                if (MyLocalPlayer.Instance.IsLocalEntity(entity) == true)
+                    return true;
+
+            return false;
         }
 
         private void OnDestroy()
@@ -108,20 +136,25 @@ namespace QuantumUser.View.Managers
                 Instance = null;
         }
 
-        // From CharView.Initialize - every hero view, local, remote or bot.
-        public unsafe void RegisterHero(Frame frame, EntityRef entity)
+        // From CharView.Initialize - every hero view, local, remote or bot. Same frame the view was
+        // instantiated, so its Play On Awake particles can still be stopped before they ever render.
+        public unsafe void RegisterHero(Frame frame, EntityRef entity, Transform viewRoot)
         {
             if (_finished == true || frame == null || frame.Global->CurrentState != GameState.Lobby)
                 return;
 
-            if (_hidden.Add(entity) == true)
-                _pending.Add(entity);
+            if (_hidden.Add(entity) == false)
+                return;
+
+            _pending.Add(entity);
+            DeferAwakeEffects(entity, viewRoot);
         }
 
         public void UnregisterHero(EntityRef entity)
         {
             _hidden.Remove(entity);
             _pending.Remove(entity);
+            _deferredEffects.Remove(entity);
 
             for (int i = _flights.Count - 1; i >= 0; i--)
                 if (_flights[i].Entity == entity)
@@ -144,7 +177,7 @@ namespace QuantumUser.View.Managers
             // framed on the portal rather than wherever the scene's camera happened to be authored.
             if (_cameraFocused == false && FollowCamera.I != null)
             {
-                FollowCamera.I.SetIdleFocus(spawnPoint);
+                FollowCamera.I.SetIdleFocus(spawnPoint, hold: true);
                 _cameraFocused = true;
             }
 
@@ -191,6 +224,7 @@ namespace QuantumUser.View.Managers
         private void Launch(Frame frame, EntityRef entity)
         {
             _pending.Remove(entity);
+            ReleaseCameraIfLocalLaunched(entity);
 
             if (travelEffectPrefab == null || travelDuration <= 0f || frame.Has<Transform3D>(entity) == false)
             {
@@ -203,8 +237,48 @@ namespace QuantumUser.View.Managers
             _flights.Add(new Flight { Entity = entity, Instance = instance, Start = _portalPosition });
         }
 
-        // Homes on the hero's LIVE position every frame - a local player can already be walking
-        // (invisibly) by the time the flight lands, and the burst must still land on them.
+        // Only top-level systems (Play/Stop already cascade to children). Body-root ones are included:
+        // they're hidden anyway, and re-enabling the root replays them by itself.
+        private void DeferAwakeEffects(EntityRef entity, Transform viewRoot)
+        {
+            if (viewRoot == null)
+                return;
+
+            List<ParticleSystem> deferred = null;
+            foreach (ParticleSystem ps in viewRoot.GetComponentsInChildren<ParticleSystem>(false))
+            {
+                // Not gated on isPlaying - straight after Instantiate it can still read false for a
+                // system that will start this frame; an active Play On Awake one is playing either way.
+                if (ps.main.playOnAwake == false)
+                    continue;
+
+                Transform parent = ps.transform.parent;
+                if (parent != null && parent != viewRoot && parent.GetComponentInParent<ParticleSystem>() != null)
+                    continue;
+
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                (deferred ??= new List<ParticleSystem>()).Add(ps);
+            }
+
+            if (deferred != null)
+                _deferredEffects[entity] = deferred;
+        }
+
+        // A system whose object is inactive right now (under a body root that BlobAnimationView hasn't
+        // re-enabled yet) is skipped - its own Play On Awake fires when that root comes back on.
+        private void PlayDeferredEffects(EntityRef entity)
+        {
+            if (_deferredEffects.Remove(entity, out List<ParticleSystem> deferred) == false)
+                return;
+
+            foreach (ParticleSystem ps in deferred)
+                if (ps != null && ps.gameObject.activeInHierarchy == true)
+                    ps.Play(true);
+        }
+
+        // Homes on the hero's LIVE position every frame - our own hero is input-gated while hidden, but
+        // a remote teammate can already be walking (their client reveals on its own schedule), and the
+        // burst must still land on them.
         private void UpdateFlights(Frame frame)
         {
             for (int i = _flights.Count - 1; i >= 0; i--)
@@ -238,6 +312,29 @@ namespace QuantumUser.View.Managers
             }
         }
 
+        // Hands the camera from the portal to the heroes once the LAST local hero (couch co-op can
+        // have several) leaves the portal - a remote teammate's arrival never moves our camera.
+        private void ReleaseCameraIfLocalLaunched(EntityRef entity)
+        {
+            if (_cameraFocused == false || _cameraReleased == true || MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalEntity(entity) == false)
+                return;
+
+            foreach (EntityRef pending in _pending)
+                if (MyLocalPlayer.Instance.IsLocalEntity(pending) == true)
+                    return;
+
+            FollowCamera.I?.ClearIdleFocus(ResolveCameraBlendDuration());
+            _cameraReleased = true;
+        }
+
+        private float ResolveCameraBlendDuration()
+        {
+            if (cameraBlendDuration > 0f)
+                return cameraBlendDuration;
+
+            return travelEffectPrefab != null && travelDuration > 0f ? travelDuration : 0.6f;
+        }
+
         private void EndFlight(int index)
         {
             ParticleSystem instance = _flights[index].Instance;
@@ -254,6 +351,7 @@ namespace QuantumUser.View.Managers
         {
             _hidden.Remove(entity);
             _lastRevealTime = Time.time;
+            PlayDeferredEffects(entity);
 
             if (frame.Has<Transform3D>(entity) == false)
                 return;
@@ -314,7 +412,12 @@ namespace QuantumUser.View.Managers
             }
 
             _hidden.Clear();
-            FollowCamera.I?.ClearIdleFocus();
+
+            // Every hero above went through Reveal, but never leave a hero's effects switched off.
+            foreach (EntityRef entity in new List<EntityRef>(_deferredEffects.Keys))
+                PlayDeferredEffects(entity);
+            if (_cameraFocused == true && _cameraReleased == false)
+                FollowCamera.I?.ClearIdleFocus(ResolveCameraBlendDuration());
 
             _portalLoop.Stop();
             _portalLoop = SoundHandle.None;

@@ -69,7 +69,7 @@ namespace Quantum
             if (talents == null || TalentUtility.TryGetTalents(f, owner, out PlayerTalents ownerTalents) == false)
                 return 0;
 
-            return TalentsConfig.Resolve(talents.WeaponLevelBonusByLevel, ownerTalents.WeaponLevel);
+            return TalentsConfig.Resolve(talents.WeaponLevelBonusByLevel, ownerTalents.Exploration.WeaponsLevel);
         }
 
         // Runs inside Equip (right after SeedStats reset Level to 0), so every equip path - Choose Weapon,

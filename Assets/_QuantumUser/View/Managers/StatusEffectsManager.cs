@@ -19,7 +19,7 @@ namespace QuantumUser.View.Managers
     // entity with StatusEffects, not just enemies - e.g. ShieldRegen/Haste are ally buffs.
     //
     // Two positioning schemes coexist here:
-    //  - Burn/Slow/Electrified use ParentedStatusSlotTracker: the instance becomes an actual child
+    //  - Burn/Slow/Electrified/hard Freeze use ParentedStatusSlotTracker: the instance becomes an actual child
     //    of the entity's own HitFeedback.BodyRoot (EnemyViewRig.EnemyRoot for an enemy, the hero's
     //    own transform for a player), and its Shape module points at HitFeedback.MainBodySprite (a
     //    rig's ReferenceSprite / a hero's hand-wired Torso sprite) so the particle conforms to that
@@ -51,15 +51,17 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 freezeOffset;
 
-        [SerializeField, Tooltip("StatusEffects.StunRemaining - see StatusEffectUtility.IsStunned.")]
+        [SerializeField, Tooltip("StatusEffects.StunRemaining - see StatusEffectUtility.IsStunned. A StunHaloEffect on the root (StunHalo prefab) gets fed the remaining seconds each frame so its stars pop off as the stun runs down.")]
         private ParticleSystem stunParticlePrefab;
         [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
         private Vector3 stunOffset;
 
-        [SerializeField, Tooltip("StatusEffects.FreezeRemaining - see StatusEffectUtility.IsFrozen. The TRUE hard-CC Freeze (Ice/Chill buildup reaching threshold) - distinct from the older AnticipationSlow-driven freezeParticlePrefab above, which is a windup-stretch, not a lockout. No dedicated Freeze VFX authored yet - this slot just plugs it into the existing pipeline.")]
+        [SerializeField, Tooltip("StatusEffects.FreezeRemaining - see StatusEffectUtility.IsFrozen. The TRUE hard-CC Freeze (Ice/Chill buildup reaching threshold) - distinct from the older AnticipationSlow-driven freezeParticlePrefab above, which is a windup-stretch, not a lockout. Frost sparkles + cold mist, parented onto the entity's own HitFeedback.BodyRoot (Shape conforms to its silhouette) - see ParentedStatusSlotTracker. Pairs with HitFeedback.hardFreezeMaterial (Sprites/Sprite Frozen).")]
         private ParticleSystem hardFreezeParticlePrefab;
-        [SerializeField, Tooltip("Local offset from the entity center, in reference-diameter-1 units (scaled by the entity's own scale, same convention as the prefab itself).")]
+        [SerializeField, Tooltip("Local offset from HitFeedback.BodyRoot's own pivot (bottom-pivoted for an enemy - NOT collider center like the unparented statuses below).")]
         private Vector3 hardFreezeOffset;
+        [SerializeField, Tooltip("One-shot ice-shatter burst played where a hard Freeze ENDS - thawed out, or the frozen enemy died (death reads as smashing the ice). Played at the entity's last collider center, scaled by its diameter (reference-diameter-1 authoring, same as the unparented statuses). See StatusEndBurstTracker.")]
+        private ParticleSystem hardFreezeShatterPrefab;
 
         [SerializeField, Tooltip("StatusEffects.ElectrifiedRemaining - see StatusEffectUtility.IsElectrified. Lightning's baseline (Shock) - a persistent setup state with no periodic effect of its own; a further Electric hit on an already-Shocked target rolls a chance to proc the existing Stun instead (see docs/elemental-reactions.md). Parented onto the entity's own HitFeedback.BodyRoot - see ParentedStatusSlotTracker.")]
         private ParticleSystem electrifiedParticlePrefab;
@@ -109,7 +111,8 @@ namespace QuantumUser.View.Managers
         private readonly ParentedStatusSlotTracker _slow = new();
         private readonly StatusSlotTracker _freeze = new();
         private readonly StatusSlotTracker _stun = new();
-        private readonly StatusSlotTracker _hardFreeze = new();
+        private readonly ParentedStatusSlotTracker _hardFreeze = new();
+        private readonly StatusEndBurstTracker _hardFreezeShatter = new();
         private readonly ParentedStatusSlotTracker _electrified = new();
         private readonly StatusSlotTracker _stagger = new();
         private readonly StatusSlotTracker _root = new();
@@ -166,8 +169,15 @@ namespace QuantumUser.View.Managers
                 _burn.Update(burnParticlePrefab, entity, StatusEffectUtility.IsBurning(frame, entity), host, burnOffset);
                 _slow.Update(slowParticlePrefab, entity, StatusEffectUtility.IsSlowed(frame, entity), host, slowOffset);
                 _freeze.Update(freezeParticlePrefab, entity, StatusEffectUtility.IsAnticipationSlowed(frame, entity), center, scale, freezeOffset);
-                _stun.Update(stunParticlePrefab, entity, StatusEffectUtility.IsStunned(frame, entity), center, scale, stunOffset);
-                _hardFreeze.Update(hardFreezeParticlePrefab, entity, StatusEffectUtility.IsFrozen(frame, entity), center, scale, hardFreezeOffset);
+                bool stunned = StatusEffectUtility.IsStunned(frame, entity);
+                _stun.Update(stunParticlePrefab, entity, stunned, center, scale, stunOffset);
+                // Halo counts the stun down one star at a time - see StunHaloEffect.
+                if (stunned && _stun.TryGetInstance(entity, out ParticleSystem stunInstance)
+                    && stunInstance.TryGetComponent(out StunHaloEffect halo))
+                    halo.SetRemainingSeconds(frame.Get<StatusEffects>(entity).StunRemaining.AsFloat);
+                bool frozen = StatusEffectUtility.IsFrozen(frame, entity);
+                _hardFreeze.Update(hardFreezeParticlePrefab, entity, frozen, host, hardFreezeOffset);
+                _hardFreezeShatter.Update(entity, frozen, center, scale);
                 _electrified.Update(electrifiedParticlePrefab, entity, StatusEffectUtility.IsElectrified(frame, entity), host, electrifiedOffset);
                 _stagger.Update(staggerParticlePrefab, entity, StatusEffectUtility.IsStaggered(frame, entity), center, scale, staggerOffset);
                 _root.Update(rootParticlePrefab, entity, StatusEffectUtility.IsRooted(frame, entity), center, scale, rootOffset);
@@ -195,6 +205,7 @@ namespace QuantumUser.View.Managers
             _freeze.EndFrame(freezeParticlePrefab);
             _stun.EndFrame(stunParticlePrefab);
             _hardFreeze.EndFrame(hardFreezeParticlePrefab);
+            _hardFreezeShatter.EndFrame(hardFreezeShatterPrefab);
             _electrified.EndFrame(electrifiedParticlePrefab);
             _stagger.EndFrame(staggerParticlePrefab);
             _root.EndFrame(rootParticlePrefab);
@@ -272,6 +283,11 @@ namespace QuantumUser.View.Managers
             private readonly HashSet<EntityRef> _seenThisFrame = new();
             private List<EntityRef> _staleBuffer;
 
+            public bool TryGetInstance(EntityRef entity, out ParticleSystem instance)
+            {
+                return _instances.TryGetValue(entity, out instance) && instance != null;
+            }
+
             public void Update(ParticleSystem prefab, EntityRef entity, bool active, Vector3 center, float scale, Vector3 offset)
             {
                 if (active == false)
@@ -310,6 +326,50 @@ namespace QuantumUser.View.Managers
                 {
                     foreach (var entity in _staleBuffer)
                         _instances.Remove(entity);
+
+                    _staleBuffer.Clear();
+                }
+
+                _seenThisFrame.Clear();
+            }
+        }
+
+        // Plays a one-shot burst at the spot a status ENDS - including the entity dying while it's
+        // active (QUpdate skips dead enemies, so they simply stop being seen). Remembers each
+        // affected entity's last center/scale every frame since the entity itself may already be
+        // gone by the time EndFrame notices.
+        private class StatusEndBurstTracker
+        {
+            private readonly Dictionary<EntityRef, (Vector3 Center, float Scale)> _active = new();
+            private readonly HashSet<EntityRef> _seenThisFrame = new();
+            private List<EntityRef> _staleBuffer;
+
+            public void Update(EntityRef entity, bool active, Vector3 center, float scale)
+            {
+                if (active == false)
+                    return;
+
+                _seenThisFrame.Add(entity);
+                _active[entity] = (center, scale);
+            }
+
+            public void EndFrame(ParticleSystem burstPrefab)
+            {
+                foreach (var pair in _active)
+                {
+                    if (_seenThisFrame.Contains(pair.Key))
+                        continue;
+
+                    if (burstPrefab != null)
+                        EffectsManager.Instance.PlayEffect(burstPrefab, pair.Value.Center, Quaternion.identity, Vector3.one * pair.Value.Scale);
+
+                    (_staleBuffer ??= new List<EntityRef>()).Add(pair.Key);
+                }
+
+                if (_staleBuffer != null)
+                {
+                    foreach (var entity in _staleBuffer)
+                        _active.Remove(entity);
 
                     _staleBuffer.Clear();
                 }
