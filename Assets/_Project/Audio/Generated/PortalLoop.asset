@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PortalLoop
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
-  - clip: {fileID: 8300000, guid: e893649295b7dfb469850d4dc795124c, type: 3}
+  - clip: {fileID: 8300000, guid: 38fa730ebc563864098b9c9eafe0d34b, type: 3}
     overrideTrim: 0
     startAt: 0
     endAt: 0
