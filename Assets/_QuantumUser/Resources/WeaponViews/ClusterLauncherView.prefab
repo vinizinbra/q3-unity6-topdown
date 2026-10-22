@@ -4985,7 +4985,7 @@ MonoBehaviour:
   flipPivotOffset: {x: 0, y: 0, z: 0}
   muzzleParticle: {fileID: 6476436190943326946}
   projectileSpawnPoint: {fileID: 0}
-  fireSound: {fileID: 0}
+  fireSound: {fileID: 11400000, guid: 4c1a7e2b9d3f4a68b5e0c7d1f2a93b64, type: 2}
   reloadStartSound: {fileID: 0}
   reloadReadySound: {fileID: 0}
 --- !u!1001 &1522051199770171963
