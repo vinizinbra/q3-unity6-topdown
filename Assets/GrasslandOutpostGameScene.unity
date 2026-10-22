@@ -838,6 +838,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -853,6 +857,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -1956,6 +1966,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -1971,6 +1985,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -8131,6 +8151,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -8146,6 +8170,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -26456,6 +26486,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -26471,6 +26505,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -28759,6 +28799,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -28774,6 +28818,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -29853,6 +29903,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -29868,6 +29922,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -30883,8 +30943,8 @@ MonoBehaviour:
   LocalPlayers:
   - PlayerAvatar:
       Id:
-        Value: 1427283638148129588
-    PlayerNickname: Max
+        Value: 1271619087951089254
+    PlayerNickname: Pixie
     test:
       RawValue: 0
     IsBot: 0
@@ -31466,6 +31526,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -31481,6 +31545,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -32709,6 +32779,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -32724,6 +32798,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -39436,6 +39516,10 @@ MonoBehaviour:
   idleBreatheAmount: 0.05
   idleWobbleDegrees: 2
   idleWobbleSpeed: 0.3
+  dizzyTiltDegrees: 6
+  dizzyFrequency: 1.1
+  dizzySquash: 0.05
+  dizzyBlendSpeed: 6
   runReferenceSpeed: 4
   moveSpeedEpsilon: 0.15
   runStrideFrequency: 2.2
@@ -39451,6 +39535,12 @@ MonoBehaviour:
   dieGroundOffsetZ: 0
   dieShrinkDelay: 1
   dieShrinkDuration: 0.1
+  fuseDuration: 0.2
+  fuseShakeFrequency: 22
+  fuseShakeDegrees: 14
+  fuseJitterAmount: 0.06
+  fuseSwell: 0.3
+  fuseSquash: 0.15
   burrowSinkDuration: 0.35
   burrowRiseDuration: 0.35
   burrowSquash: 0.5
@@ -41164,6 +41254,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 48010458000497825, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
+      propertyPath: m_text
+      value: 750
+      objectReference: {fileID: 0}
+    - target: {fileID: 48010458000497825, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
+      propertyPath: m_fontSize
+      value: 36.05
+      objectReference: {fileID: 0}
     - target: {fileID: 74807977166849286, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -42600,6 +42698,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6897986382500256663, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
+      propertyPath: m_Padding.m_Left
+      value: 17
+      objectReference: {fileID: 0}
     - target: {fileID: 6947840809470581082, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -42671,6 +42773,10 @@ PrefabInstance:
     - target: {fileID: 7117115551592775601, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7189561592018470064, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -358
       objectReference: {fileID: 0}
     - target: {fileID: 7305034668710925636, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_AnchorMax.x
@@ -42983,6 +43089,18 @@ PrefabInstance:
     - target: {fileID: 8737199187412530465, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_Name
       value: Canvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 8766922837253491246, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -497
+      objectReference: {fileID: 0}
+    - target: {fileID: 8791776419021114152, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 145.53
+      objectReference: {fileID: 0}
+    - target: {fileID: 8791776419021114152, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -215.99951
       objectReference: {fileID: 0}
     - target: {fileID: 8800354666550475834, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_LocalScale.x

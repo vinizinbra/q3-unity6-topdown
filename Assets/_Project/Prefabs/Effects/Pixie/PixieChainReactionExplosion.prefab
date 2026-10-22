@@ -4899,6 +4899,7 @@ GameObject:
   - component: {fileID: 3141262229862408250}
   - component: {fileID: 8382026758955492198}
   - component: {fileID: 8653164801877738643}
+  - component: {fileID: 358252680145436297}
   m_Layer: 0
   m_Name: PixieChainReactionExplosion
   m_TagString: Untagged
@@ -9784,6 +9785,26 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &358252680145436297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6034832149079047372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 287b1faaa056b45cfb4b4da18b45fa5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ParticleSound
+  mode: 0
+  sound: {fileID: 11400000, guid: d4f4bad08f653475a936b703eaaedbb8, type: 2}
+  loop:
+    intro: {fileID: 0}
+    loop: {fileID: 0}
+    tail: {fileID: 0}
+  volumeScale: 1
+  source: {fileID: 0}
 --- !u!1001 &8599439051708023504
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9940,7 +9961,8 @@ PrefabInstance:
       propertyPath: ColorModule.gradient.maxGradient.m_ColorSpace
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 82989916210452030, guid: f407b02e7947b9143969a306aee2b85c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

@@ -1,0 +1,74 @@
+[
+  {
+    "file": "01-backboard-600x800mm.pdf",
+    "trim_mm": [
+      600,
+      800
+    ],
+    "bleed_mm": 3,
+    "status": "Confirm artwork resolution and stable mounting; rectangular trim"
+  },
+  {
+    "file": "02-play-sign-A4.pdf",
+    "trim_mm": [
+      210,
+      297
+    ],
+    "bleed_mm": 3,
+    "status": "printer-review RGB PDF"
+  },
+  {
+    "file": "03-take-a-sticker-A5.pdf",
+    "trim_mm": [
+      148,
+      210
+    ],
+    "bleed_mm": 3,
+    "status": "printer-review RGB PDF"
+  },
+  {
+    "file": "04-table-runner-500x1800mm-DRAFT.pdf",
+    "trim_mm": [
+      500,
+      1800
+    ],
+    "bleed_mm": 0,
+    "status": "DRAFT: supplier template, hems and table dimensions required"
+  },
+  {
+    "file": "05-character-card-front-55x85mm.pdf",
+    "trim_mm": [
+      55,
+      85
+    ],
+    "bleed_mm": 3,
+    "status": "printer-review RGB PDF"
+  },
+  {
+    "file": "06-character-card-back-55x85mm.pdf",
+    "trim_mm": [
+      55,
+      85
+    ],
+    "bleed_mm": 3,
+    "status": "printer-review RGB PDF"
+  },
+  {
+    "file": "07-standee-panel-300x450mm.pdf",
+    "trim_mm": [
+      300,
+      450
+    ],
+    "bleed_mm": 3,
+    "status": "Rectangular print panel; supplier must add rear easel; no contour dieline"
+  },
+  {
+    "file": "08-sticker-art-70x90mm.pdf",
+    "trim_mm": [
+      70,
+      90
+    ],
+    "bleed_mm": 3,
+    "status": "Artwork only; printer must create and approve white-border contour dieline"
+  }
+]
