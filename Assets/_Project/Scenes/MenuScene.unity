@@ -15935,7 +15935,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 663306052}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.82222223
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -16867,33 +16867,26 @@ MonoBehaviour:
       RawValue: 0
     IsBot: 0
     Talents:
-      WeaponLevel: 1
-      RerollQuantity: 2
-      ShopWeaponOfferCount: 1
-      StartingCoins: 0
-      PlayerDamageLevel: 0
-      PlayerCooldownLevel: 0
-      PlayerFireRateLevel: 0
-      PlayerReloadSpeedLevel: 0
-      PlayerCriticalChanceLevel: 0
-      PlayerCriticalDamageLevel: 0
-      PlayerMaxHealthLevel: 0
-      PlayerMaxShieldLevel: 0
-      PlayerDamageReductionLevel: 0
-      PlayerMoveSpeedLevel: 0
-      PlayerPickupRangeLevel: 0
-      PlayerExperienceLevel: 0
-      HasWeaponChest: 1
-      HasHeroChest: 0
-      HasGlobalUpgradeChest: 0
-      HasUnlockedRift: 0
-      CanFindStones: 0
-      HasEvent: 0
-      PlayerCoinGainLevel: 0
-      StartingGoldLevel: 0
-      RerollsLevel: 0
-      ReviveLevel: 0
-      CoopLevel: 0
+      Power:
+        DamageLevel: 0
+        SkillCooldownLevel: 0
+        FireRateLevel: 0
+        ReloadSpeedLevel: 0
+        CriticalChanceLevel: 0
+        CriticalDamageLevel: 0
+        MaxHealthLevel: 0
+        MaxShieldLevel: 0
+        DamageReductionLevel: 0
+        MoveSpeedLevel: 0
+        PickupRangeLevel: 0
+        XpGainLevel: 0
+        CoinGainLevel: 0
+      Exploration:
+        WeaponsLevel: 0
+        StartingGoldLevel: 0
+        RerollsLevel: 0
+        ReviveLevel: 0
+        CoopLevel: 0
   OverwritePlayerCount: 4
   DisableChecksumsForRelease: 0
   TrainingZoneMap:
@@ -52856,7 +52849,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.11764706, g: 0.1254902, b: 0.16470589, a: 1}
+  m_Color: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

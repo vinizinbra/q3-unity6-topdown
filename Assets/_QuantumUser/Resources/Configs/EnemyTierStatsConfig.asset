@@ -174,7 +174,7 @@ MonoBehaviour:
     ExpValue:
       RawValue: 6553600
     ScaleMultiplier:
-      RawValue: 98304
+      RawValue: 117965
     RiftShardValue:
       RawValue: 65536
     RiftShardDropChance:

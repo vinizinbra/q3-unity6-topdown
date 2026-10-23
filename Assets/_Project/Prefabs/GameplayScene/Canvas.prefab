@@ -17617,7 +17617,7 @@ RectTransform:
   m_GameObject: {fileID: 554469057844582995}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7010639612962002764}
@@ -35967,7 +35967,7 @@ RectTransform:
   m_GameObject: {fileID: 2611074160397793849}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2217572257351621389}
@@ -52152,7 +52152,7 @@ RectTransform:
   m_GameObject: {fileID: 3647458510845891122}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1554779759260092729}
@@ -52601,7 +52601,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3858090353316324385
 RectTransform:
   m_ObjectHideFlags: 0
@@ -52642,7 +52642,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.8627451}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.015686275}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -79559,7 +79559,7 @@ RectTransform:
   m_Father: {fileID: 8286297397047989599}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -82656,6 +82656,7 @@ MonoBehaviour:
   collapseButtons:
   - {fileID: 0}
   toggleKey: 109
+  hideDuringBoss: 1
   undiscoveredColor: {r: 0.12, g: 0.12, b: 0.12, a: 0}
   discoveredColor: {r: 0.14943041, g: 0.2275801, b: 0.4339623, a: 1}
   currentColor: {r: 0.30397826, g: 0.39903718, b: 0.6509434, a: 1}
@@ -83684,7 +83685,7 @@ RectTransform:
   m_GameObject: {fileID: 5820010788432572627}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1741707840962643257}
@@ -109996,7 +109997,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6704052648128945263
 RectTransform:
   m_ObjectHideFlags: 0
@@ -110098,7 +110099,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 60401412644691290}
   m_HandleRect: {fileID: 2168489513660058568}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -120359,7 +120360,7 @@ RectTransform:
   m_GameObject: {fileID: 8967077542304812947}
   m_LocalRotation: {x: -0, y: -0, z: 0.9746306, w: 0.22381976}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6247205408790701070}
@@ -137179,7 +137180,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5654272580116543856, guid: a94b20e03f2ed49a89a7ab7abae3ee68, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7314048646933959678, guid: a94b20e03f2ed49a89a7ab7abae3ee68, type: 3}
       propertyPath: m_Pivot.x

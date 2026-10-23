@@ -98,6 +98,8 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private UnityEngine.UI.Button[] collapseButtons;
     [SerializeField, Tooltip("Keyboard key that toggles expanded/collapsed.")]
     private KeyCode toggleKey = KeyCode.M;
+    [SerializeField, Tooltip("Hide the whole minimap (frameRect) once the boss fight starts (GameState.Boss), for the rest of the match - the boss fight ends the run either way (boss dies or the team does), so there is nothing left to navigate to.")]
+    private bool hideDuringBoss = true;
 
     [Header("Colors")]
     [SerializeField] private Color undiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
@@ -430,6 +432,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         if (frame == null)
             return;
 
+        if (TryHideForBoss(frame))
+            return;
+
         UpdateChunks(frame);
         RetryPendingPoiLinks(frame);
         UpdateIconTints(frame);
@@ -487,6 +492,29 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     {
         float u = t - 1f;
         return 1f + u * u * ((overshoot + 1f) * u + overshoot);
+    }
+
+    // ---- Boss-fight hide -----------------------------------------------------------------------
+
+    // One-way (see hideDuringBoss): deactivating frameRect also deactivates this widget, which
+    // lives under it, so QUpdate simply stops for the rest of the match - nothing ever needs to
+    // bring the map back.
+    private unsafe bool TryHideForBoss(Frame frame)
+    {
+        if (hideDuringBoss == false || frame.Global->CurrentState != GameState.Boss)
+            return false;
+
+        // Collapse first so the expanded-only extras (showWhileExpanded - e.g. a dim backdrop that
+        // may live outside frameRect) go away too.
+        _expandTarget = false;
+        SetShowWhileExpanded(false, instant: true);
+
+        if (frameRect != null)
+            frameRect.gameObject.SetActive(false);
+        else
+            gameObject.SetActive(false);
+
+        return true;
     }
 
     // ---- Expand / collapse -------------------------------------------------------------------

@@ -380,3 +380,11 @@ player's own marker needs positioning that early) and is fully overwritten, neve
 still fix `_textureResolution` up front) - if the real level is simply larger than the authored
 `worldExtent*2` allows, centering only distributes the overflow evenly instead of eliminating it;
 `worldExtent` still needs to be authored generously enough to fit the real level.
+
+## Hidden during the boss fight (2026-10-23)
+
+`MinimapWidget.hideDuringBoss` (default on) hides the whole minimap the moment `Global.CurrentState`
+becomes `GameState.Boss`, and it never comes back: the boss fight ends the run either way (boss dies
+or the team does). It's a plain `frameRect.SetActive(false)`. The widget lives under `frameRect`, so
+its `QUpdate` stops too, which is fine since nothing has to bring it back. Expanded-only extras
+(`showWhileExpanded`) are hidden at the same time.

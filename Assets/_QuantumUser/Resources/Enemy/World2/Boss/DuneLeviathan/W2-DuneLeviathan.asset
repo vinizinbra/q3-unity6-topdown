@@ -2267,7 +2267,7 @@ MonoBehaviour:
       Id:
         Value: 3283391172210422552
     Radius:
-      RawValue: 131072
+      RawValue: 98304
     ShieldMultiplier:
       RawValue: 65536
     HealthMultiplier:
@@ -3104,10 +3104,10 @@ MonoBehaviour:
       Value: 328023934639680547
   - Id:
       Value: 328023934639680547
-  MaxEnemiesP1: 3
-  MaxEnemiesP2: 4
-  MaxEnemiesP3: 5
-  MaxEnemiesP4: 6
+  MaxEnemiesP1: 8
+  MaxEnemiesP2: 10
+  MaxEnemiesP3: 12
+  MaxEnemiesP4: 15
 --- !u!114 &5750087482151576182
 MonoBehaviour:
   m_ObjectHideFlags: 0
