@@ -495,7 +495,10 @@ namespace Quantum
 
             for (int i = 0; i < contactHits.Count; i++)
             {
-                if (f.Has<Enemy>(contactHits[i].Entity) == true)
+                // An enemy still on its per-enemy cooldown doesn't count as contact - otherwise standing
+                // against an Elite fired the whole Discharge (pulse VFX + sound) every tick with no
+                // hit landing, which read as "discharging many times in a row".
+                if (f.Has<Enemy>(contactHits[i].Entity) == true && f.Has<JuggernautDischargeCooldown>(contactHits[i].Entity) == false)
                 {
                     touchedEnemy = true;
                     break;
@@ -514,10 +517,13 @@ namespace Quantum
             // fully resetting to 0 (rank 1: 30%, rank 2: 60%, rank 3: 100% - discharging no longer
             // resets Charge at all). 0 with no upgrade at all reproduces the original full-reset
             // behavior exactly.
-            FP retention = FP._0;
+            // PLAYTEST (always-charged): baseline retention is 100% so a plain Juggernaut behaves like
+            // Momentum rank 3 - only DischargeCooldownPerEnemy gates repeat hits. Revert to FP._0 to
+            // restore the earn-it-by-running loop.
+            FP retention = FP._1;
 
             if (f.Unsafe.TryGetPointer<MomentumUpgrade>(filter.Entity, out var momentum) == true)
-                retention = momentum->DischargeRetentionFraction;
+                retention = FPMath.Max(retention, momentum->DischargeRetentionFraction);
 
             byte previousChargePoints = charge->ChargePoints;
 

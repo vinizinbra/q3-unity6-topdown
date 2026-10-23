@@ -777,6 +777,7 @@ MonoBehaviour:
   executeOnlyOnLocal: 0
   isLocal: 0
   deflectSound: {fileID: 0}
+  deflectEffect: {fileID: 6350743763286976369, guid: 6d7eb58d7b574c76b0c81decf962bb5d, type: 3}
 --- !u!1 &4314684724655487034
 GameObject:
   m_ObjectHideFlags: 0

@@ -56,7 +56,6 @@ public class ChooseWindow : UiWindow
     // WeaponCardWidget placed wherever you like) to control the position.
     [Header("Current Weapon (comparison)")]
     [SerializeField] private WeaponCardWidget currentWeaponCard;
-    [SerializeField] private string currentWeaponLabel = "CURRENT WEAPON";
     [SerializeField, Tooltip("Gap between the auto-created current-weapon card and the offer row. Only used when currentWeaponCard is not assigned.")]
     private float currentWeaponCardGap = 40f;
 
@@ -656,9 +655,6 @@ public class ChooseWindow : UiWindow
 
         if (data.HasOption == false)
             return;
-
-        if (string.IsNullOrEmpty(currentWeaponLabel) == false)
-            data.WeaponName = $"<size=60%>{currentWeaponLabel}</size>\n{data.WeaponName}";
 
         currentWeaponCard.Setup(data, interactable: false);
     }

@@ -111,8 +111,9 @@ MonoBehaviour:
     ProjectileGlowScale: {x: 2, y: 2, z: 2}
     EnableProjectileLight: 0
     ProjectileLightColor: {r: 1, g: 1, b: 1, a: 1}
+    EnableProjectileDestroyEffect: 1
     ProjectileDestroyColor: {r: 1, g: 0.85166717, b: 0.48627448, a: 1}
-    ProjectileDestroyGlowColor: {r: 1, g: 0.9019826, b: 0.7764706, a: 1}
+    ProjectileDestroyGlowColor: {r: 1, g: 0.9019826, b: 0.7764706, a: 0.4745098}
     ProjectileDestroyScale: {x: 1, y: 1, z: 1}
     ProjectileExtraParticle: {fileID: 0}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}

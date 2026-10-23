@@ -326,5 +326,5 @@ MonoBehaviour:
     RawValue: 0
   ShieldOnCastFraction:
     RawValue: 65536
-  DischargeEffectPrefab: {fileID: 3308319309734866876, guid: 73f6ab46adf6f4923899d8a01e54f72c, type: 3}
+  DischargeEffectPrefab: {fileID: 3308319309734866876, guid: bba02e4d7ba641a4ae9ac5091164ce54, type: 3}
   DischargeHitEffectPrefab: {fileID: 2507896006552451473, guid: 378bc48cbdf5a4df3bd70135d583790d, type: 3}

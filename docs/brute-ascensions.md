@@ -78,7 +78,7 @@ still detonate on Brutus and only get the channel's Damage Reduction. Check sits
 `DirectHitData.ApplyHit` before `ApplyEffects` via `BruteAscensionUtility.TryDeflectProjectile`, so a
 deflected shot never reaches `DamageUtility` (no Accessory/Free Hit Guard/Shield spent, no
 `OnHostileHitConnected`). VFX is the shot's own `ProjectileDestroyed` impact (the deflect returns "spent", so the normal
-`Destroy` path runs). Sound: `JuggernautProjectileDeflected` → `JuggernautDeflectSoundView` on the shared
+`Destroy` path runs), plus a dedicated `JuggernautDeflect.prefab` (duplicate of `GenericProjectileDestroy`) played at the contact point via `deflectEffect` on `JuggernautDeflectSoundView`. Sound: `JuggernautProjectileDeflected` → `JuggernautDeflectSoundView` on the shared
 `CharFeedbacks.prefab` (`deflectSound` SoundData, played at the contact point). No haptics by design. Hitscan enemy attacks (if any) are not covered.
 
 > **Superseded in detail, unchanged in shape.** This was originally an **Overshield** (above-Max, 1.5x

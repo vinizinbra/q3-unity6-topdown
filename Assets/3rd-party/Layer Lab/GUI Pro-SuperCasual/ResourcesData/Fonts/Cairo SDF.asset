@@ -20,7 +20,7 @@ MonoBehaviour:
     m_PointSize: 87
     m_Scale: 1
     m_UnitsPerEM: 1000
-    m_LineHeight: 163.038
+    m_LineHeight: 90
     m_AscentLine: 113.361
     m_CapLine: 59
     m_MeanLine: 44
@@ -5681,7 +5681,7 @@ Material:
     m_Floats:
     - _ColorMask: 15
     - _CullMode: 0
-    - _FaceDilate: 0
+    - _FaceDilate: -0.1
     - _GradientScale: 10
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0
@@ -5690,7 +5690,7 @@ Material:
     - _PerspectiveFilter: 0.875
     - _ScaleRatioA: 0.9
     - _ScaleRatioB: 1
-    - _ScaleRatioC: 0.73125
+    - _ScaleRatioC: 0.82124996
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0

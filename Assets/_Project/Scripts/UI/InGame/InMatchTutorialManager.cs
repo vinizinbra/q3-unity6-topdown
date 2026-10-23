@@ -1,5 +1,6 @@
 using Quantum;
 using QuantumUser.View;
+using QuantumUser.View.Managers;
 using UnityEngine;
 
 // Solo-only tutorial popups (HowToPlayPopup/FirstBreakPopup/HeroIntroPopup) - pure local/View
@@ -44,13 +45,35 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
     private const float FirstBreakDelaySeconds = 2f;
     private float _firstBreakDelayTimer;
 
+    // The Hero Intro opens right after the local hero lands from the spawn portal (HeroSpawnIntroManager
+    // .HeroRevealed) plus this delay - portal, landing, see the hero, THEN the intro. The Lobby->Survival
+    // flip stays as the fallback (no intro manager in the scene, reconnect, or the hero was never hidden);
+    // _heroIntroArmed makes sure only the first trigger wins.
+    private const float HeroIntroAfterRevealSeconds = 0.5f;
+    private bool _heroIntroArmed;
+    private float _heroIntroDelayTimer;
+
     private void Awake()
     {
         QuantumEvent.Subscribe<EventGameStateChanged>(this, OnGameStateChanged);
+        HeroSpawnIntroManager.HeroRevealed += OnHeroRevealed;
+    }
+
+    private unsafe void OnHeroRevealed(EntityRef entity)
+    {
+        if (_heroIntroArmed || _game == null || MyLocalPlayer.Instance == null || MyLocalPlayer.Instance.IsLocalEntity(entity) == false)
+            return;
+
+        if (IsSolo(_game.Frames.Predicted) == false)
+            return;
+
+        _heroIntroArmed = true;
+        _heroIntroDelayTimer = HeroIntroAfterRevealSeconds;
     }
 
     private void OnDestroy()
     {
+        HeroSpawnIntroManager.HeroRevealed -= OnHeroRevealed;
         QuantumEvent.UnsubscribeListener(this);
     }
 
@@ -94,7 +117,16 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
         {
             _heroIntroPending = _howToPlayPending = _firstBreakPending = false;
             _firstBreakDelayTimer = 0f;
+            _heroIntroDelayTimer = 0f;
             return;
+        }
+
+        if (_heroIntroDelayTimer > 0f)
+        {
+            _heroIntroDelayTimer -= Time.unscaledDeltaTime;
+
+            if (_heroIntroDelayTimer <= 0f)
+                _heroIntroPending = true;
         }
 
         bool upgradePending = frame.Global->CurrentState == GameState.Upgrade
@@ -141,7 +173,12 @@ public class InMatchTutorialManager : QuantumGlobalMonoBehaviour
         if (IsSolo(_game.Frames.Predicted) == false)
             return;
 
-        _heroIntroPending = true;
+        if (_heroIntroArmed == false)
+        {
+            _heroIntroArmed = true;
+            _heroIntroPending = true;
+        }
+
         _howToPlayPending = true;
     }
 

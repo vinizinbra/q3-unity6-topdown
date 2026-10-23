@@ -29,6 +29,10 @@ namespace QuantumUser.View.Managers
 
         public static HeroSpawnIntroManager Instance;
 
+        // Raised the moment a hero becomes visible on this client (after the portal/travel effect lands).
+        // InMatchTutorialManager uses it to open the Hero Intro popup right after the local hero arrives.
+        public static event System.Action<EntityRef> HeroRevealed;
+
         [Header("Portal")]
         [SerializeField, Tooltip("Looping effect played at the LobbyStart chunk (Global.PlayerSpawnPosition) from the moment the level is generated until every hero has arrived. Instantiated once per match, NOT pooled - EffectsManager's pool only takes non-looping one-shots. Leave empty to skip the portal (heroes still reveal with their burst).")]
         private ParticleSystem portalPrefab;
@@ -352,6 +356,7 @@ namespace QuantumUser.View.Managers
             _hidden.Remove(entity);
             _lastRevealTime = Time.time;
             PlayDeferredEffects(entity);
+            HeroRevealed?.Invoke(entity);
 
             if (frame.Has<Transform3D>(entity) == false)
                 return;
