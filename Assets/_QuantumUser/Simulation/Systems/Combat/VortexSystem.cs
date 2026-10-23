@@ -114,7 +114,10 @@ namespace Quantum
                 // trick a one-shot knockback pop uses to escape ground friction, since this reapplies
                 // every pulse regardless. ApplyPull, not ApplyKnockback - this must not stagger the
                 // enemy (see the class comment above for why).
-                DamageUtility.ApplyPull(f, target, pullDirection, filter.Vortex->Force);
+                // Rank 3's gravity pulse owns the pull (it holds enemies in place); the additive base
+                // impulse on top of it is what flung them past the center.
+                if (f.Has<VortexGravityPulse>(filter.Entity) == false)
+                    DamageUtility.ApplyPull(f, target, pullDirection, filter.Vortex->Force);
 
                 Log.Debug($"[Vortex] {filter.Entity} pulsed {target} with force {filter.Vortex->Force} (radius {radius})");
             }
@@ -290,6 +293,8 @@ namespace Quantum
         // Kai's Singularity rank 3 - a periodic, stronger, independently-paced pull layered on top of
         // the base Vortex.Force pull above (own TickTimer/Interval so it doesn't disturb the base
         // pull's own cadence). No-ops without VortexGravityPulse (ranks 1-2, or no upgrade at all).
+        private static readonly FP GravityHoldRadius = FP._0_50;
+
         private static void TryGravityPulse(Frame f, ref Filter filter)
         {
             if (f.Unsafe.TryGetPointer<VortexGravityPulse>(filter.Entity, out var pulse) == false)
@@ -314,7 +319,16 @@ namespace Quantum
             if (radius <= FP._0)
                 return;
 
-            PullAllInRadius(f, filter.Transform3D->Position, radius, pulse->Force);
+            FPVector3 center = filter.Transform3D->Position;
+            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, Shape3D.CreateSphere(radius), EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                if (f.Has<Enemy>(hits[i].Entity) == false)
+                    continue;
+
+                DamageUtility.ApplyHoldingPull(f, hits[i].Entity, center, pulse->Force, GravityHoldRadius, pulse->Interval);
+            }
 
             Log.Debug($"[Vortex] {filter.Entity} gravity-pulsed with force {pulse->Force} (radius {radius})");
         }

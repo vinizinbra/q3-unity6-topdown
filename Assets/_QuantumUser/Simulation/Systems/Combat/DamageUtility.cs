@@ -1368,6 +1368,48 @@ namespace Quantum
             }
         }
 
+        // Singularity rank 3's "stuck" pull. ApplyPull ADDS a velocity impulse of `force` m/s with no regard
+        // for how far the target actually is, so a 36 m/s gravity pulse repeated 3x/second hurled enemies
+        // straight past the center and out the far side (and stacked on itself between pulses). This
+        // instead SETS the horizontal velocity toward the center, capped so the target can at most reach
+        // the center by the next pulse (maxTravelTime), and pins anything within holdRadius in place.
+        // Vertical velocity is left alone. Kinematic bodies (mid-charge/leap) stay immovable.
+        public static void ApplyHoldingPull(Frame f, EntityRef target, FPVector3 center, FP force, FP holdRadius, FP maxTravelTime)
+        {
+            if (force <= FP._0)
+                return;
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(target, out var transform) == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<PhysicsBody3D>(target, out var body) == false || body->IsKinematic == true)
+                return;
+
+            FPVector3 flat = new FPVector3(center.X - transform->Position.X, FP._0, center.Z - transform->Position.Z);
+            FP distance = flat.Magnitude;
+
+            body->WakeUp();
+
+            if (distance <= holdRadius)
+            {
+                body->Velocity = new FPVector3(FP._0, body->Velocity.Y, FP._0);
+                return;
+            }
+
+            FP speed = force;
+
+            if (maxTravelTime > FP._0)
+            {
+                FP arrivalSpeed = (distance - holdRadius) / maxTravelTime;
+
+                if (arrivalSpeed < speed)
+                    speed = arrivalSpeed;
+            }
+
+            FPVector3 velocity = flat.Normalized * speed;
+            body->Velocity = new FPVector3(velocity.X, body->Velocity.Y, velocity.Z);
+        }
+
         // Y on the incoming direction is dropped rather than normalized along with X/Z: callers pass
         // raw position deltas (attacker->target, radial from a blast center, a charge's momentum),
         // so a height difference between the two would otherwise tilt the push and spend force on
