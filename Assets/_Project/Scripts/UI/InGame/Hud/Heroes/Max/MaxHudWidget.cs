@@ -40,12 +40,21 @@ public class MaxHudWidget : HeroHudWidget
 
     private void UpdateTimer(Frame frame, EntityRef entity)
     {
-        if (TryGetActiveSkill(frame, entity, out BerserkSkillData _, out FP remaining, out FP duration) == false)
+        if (TryGetActiveSkill(frame, entity, out BerserkSkillData skillData, out FP remaining, out FP duration) == false)
         {
             timer.Hide();
             return;
         }
 
+        // The last seconds move to the big countdown by the hero's head (CharacterUiWidget
+        // .UpdateSkillCountdown), so the badge steps aside for that window instead of duplicating it.
+        if (IsUrgent(remaining))
+        {
+            timer.Hide();
+            return;
+        }
+
+        timer.SetIcon(skillData.Icon);
         timer.Show(duration > FP._0 ? (remaining / duration).AsFloat : 0f, FormatSeconds(remaining));
     }
 

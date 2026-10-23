@@ -1,4 +1,5 @@
 using Photon.Deterministic;
+using PrimeTween;
 using Quantum;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,6 +31,13 @@ public class ZaraHudWidget : HeroHudWidget
     [SerializeField, Tooltip("Optional - shown only while Flow is ACTIVE (a glow, an icon, a label). Left unassigned, the fill colour carries the state on its own.")]
     private GameObject activeRoot;
 
+    [SerializeField, Tooltip("Punch-scale on activeRoot the moment Flow becomes ACTIVE, so landing it reads as an event. 0 turns it off."), Min(0f)]
+    private float activePopStrength = 0.35f;
+
+    private Tween _popTween;
+    private Vector3 _activeRestScale = Vector3.one;
+    private bool _activeRestScaleCaptured;
+
     protected override bool TryRefresh(Frame frame, EntityRef entity)
     {
         if (frame.TryGet<ZaraFlow>(entity, out var flow) == false)
@@ -48,9 +56,36 @@ public class ZaraHudWidget : HeroHudWidget
         }
 
         if (activeRoot != null && activeRoot.activeSelf != flow.IsActive)
+        {
             activeRoot.SetActive(flow.IsActive);
 
+            if (flow.IsActive)
+                PlayActivePop();
+        }
+
         return true;
+    }
+
+    // Reset-then-punch, same idiom as HeroHudWidget.Section - PunchScale is relative, so an
+    // interrupted pop must not leave the glow permanently bigger.
+    private void PlayActivePop()
+    {
+        if (activePopStrength <= 0f)
+            return;
+
+        Transform target = activeRoot.transform;
+
+        if (_activeRestScaleCaptured == false)
+        {
+            _activeRestScale = target.localScale;
+            _activeRestScaleCaptured = true;
+        }
+
+        if (_popTween.isAlive)
+            _popTween.Stop();
+
+        target.localScale = _activeRestScale;
+        _popTween = Tween.PunchScale(target, Vector3.one * activePopStrength, 0.35f, 2, useUnscaledTime: true);
     }
 
     protected override void HideSections()

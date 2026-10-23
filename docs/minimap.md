@@ -52,6 +52,11 @@ simulation.
   from real chunks; standing on one still paints `currentColor`. Steady state (nothing changed) costs just a handful of comparisons,
   not per-frame pixel work.
 
+  **Current-chunk blink** (`UpdateCurrentBlink`): the current chunk (or hole) lightens toward white
+  and back to `currentColor` at `currentBlinkSpeed` Hz, up to `currentBlinkLighten` (unscaled time).
+  The pulse is quantized to 12 steps, so the chunk is only repainted when the visible color changes.
+  `_currentPaintColor` is what current-chunk/hole paints use instead of raw `currentColor`.
+
   **Level outline** (`ComputeLevelOutline`): computed exactly once, gated on `Global.LevelGenerated`
   (not "we just saw a new chunk" - `game.Frames.Predicted` could observe the level mid-populate,
   and computing from a partial chunk set would permanently lock in a wrong, single-chunk-looking

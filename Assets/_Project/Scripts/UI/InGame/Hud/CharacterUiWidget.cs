@@ -138,8 +138,21 @@ public class CharacterUiWidget : MonoBehaviour
     [SerializeField, Tooltip("Per-hero resource readouts (Brute/Max/Zara/Lux) authored as children of this widget - left empty, auto-populated via GetComponentsInChildren in Setup. Each one self-hides unless the entity this widget follows actually carries that hero's own components, so the single shared prefab keeps serving every hero AND every enemy. This is the only place they live: the party HUD deliberately shows none of them.")]
     private HeroHudWidget[] heroWidgets;
 
+    [SerializeField, Tooltip("Off (default): the per-hero hexagon next to the nameplate (Max Rage/Overdrive, Brute Juggernaut, Zara Flow, Lux Scrap) is switched off entirely - the foot ring (fill + shine) and the big last-seconds countdown by the head (see HeroSkillStateUtility) carry that information instead. On brings the hexagons back exactly as they were.")]
+    private bool showHeroHexBadges = false;
+
     [SerializeField, Tooltip("Floating \"Skill not ready\"/\"Skill ready\"/\"Dash ready\" callout - event-driven, see SkillStatusLabelWidget. Auto-resolved from children if left unassigned; left absent entirely (e.g. on an enemy-only prefab), this feature is simply off.")]
     private SkillStatusLabelWidget skillStatusLabel;
+
+    [Header("Skill countdown")]
+    [SerializeField, Tooltip("Where the big last-seconds countdown of a timed hero skill (Overdrive, Juggernaut) sits, from this widget's centre in canvas units. Negative Y moves it down toward the hero's head; the default sits in the gap between the health bars and the head so it never covers the hero. Built at runtime, so nothing needs authoring on the prefab.")]
+    private Vector2 skillCountdownPosition = new Vector2(0f, -90f);
+    [SerializeField, Min(8f)] private float skillCountdownFontPx = 30f;
+
+    [SerializeField, Tooltip("On: the countdown digits take the hero's own ring colour (CharacterData.RingColor), tying them to the foot ring. Off: plain white. Either way they keep a dark outline.")]
+    private bool skillCountdownUsesRingColor = true;
+
+    private SkillUrgentCountdownWidget _skillCountdown;
 
     private Canvas _canvas;
     private Camera _worldCamera;
@@ -198,6 +211,18 @@ public class CharacterUiWidget : MonoBehaviour
         if (heroWidgets == null || heroWidgets.Length == 0)
             heroWidgets = GetComponentsInChildren<HeroHudWidget>(true);
 
+        // The four hero widgets share one overlay GameObject whose only children are the hexagons, so
+        // switching that object off removes every hexagon (plates included - a Section can only hide
+        // what it was authored to).
+        if (showHeroHexBadges == false)
+        {
+            foreach (HeroHudWidget widget in heroWidgets)
+            {
+                if (widget != null && widget.gameObject.activeSelf)
+                    widget.gameObject.SetActive(false);
+            }
+        }
+
         if (skillStatusLabel == null)
             skillStatusLabel = GetComponentInChildren<SkillStatusLabelWidget>(true);
 
@@ -221,6 +246,9 @@ public class CharacterUiWidget : MonoBehaviour
     public void ResetForPool()
     {
         QuantumEvent.UnsubscribeListener(this);
+
+        if (_skillCountdown != null)
+            _skillCountdown.Hide();
 
         if (skillStatusLabel != null)
             skillStatusLabel.ResetForPool();
@@ -508,11 +536,58 @@ public class CharacterUiWidget : MonoBehaviour
         if (heroWidgets == null)
             return;
 
+        // Hexagons off: nothing to refresh (the objects are inactive), only the head countdown.
+        if (showHeroHexBadges == false)
+        {
+            UpdateSkillCountdown(frame);
+            return;
+        }
+
         foreach (HeroHudWidget widget in heroWidgets)
         {
             if (widget != null)
                 widget.Refresh(frame, _entityRef);
         }
+
+        UpdateSkillCountdown(frame);
+    }
+
+    // The hero's own ring colour (same source MovementRingView tints the foot ring from), or white.
+    private Color ResolveCountdownColor(Frame frame)
+    {
+        if (skillCountdownUsesRingColor && frame.TryGet<CharacterStats>(_entityRef, out var stats))
+        {
+            CharacterData data = frame.FindAsset(stats.CharacterData);
+
+            if (data != null)
+                return new Color(data.RingColor.r, data.RingColor.g, data.RingColor.b, 1f);
+        }
+
+        return Color.white;
+    }
+
+    // The last seconds of a timed hero skill, shown big near the head instead of on the badge (which
+    // hides itself for that window - see MaxHudWidget/BruteHudWidget). Created the first time a
+    // hero actually enters the window, so enemy widgets and idle heroes never build one.
+    private void UpdateSkillCountdown(Frame frame)
+    {
+        bool urgent = HeroSkillStateUtility.TryGet(frame, _entityRef, out HeroSkillState state) && state.IsUrgent;
+
+        if (urgent == false)
+        {
+            if (_skillCountdown != null)
+                _skillCountdown.Hide();
+
+            return;
+        }
+
+        if (_skillCountdown == null)
+        {
+            _skillCountdown = SkillUrgentCountdownWidget.Create(selfRect, nameText, skillCountdownPosition, skillCountdownFontPx);
+            _skillCountdown.SetColor(ResolveCountdownColor(frame));
+        }
+
+        _skillCountdown.Show(state.SecondsLeft);
     }
 
     // Lazily adds a CanvasGroup to selfRect the first time it's needed, so no prefab needs

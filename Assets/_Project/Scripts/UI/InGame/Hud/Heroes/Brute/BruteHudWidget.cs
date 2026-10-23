@@ -35,6 +35,15 @@ public class BruteHudWidget : HeroHudWidget
 
         UpdateStacks(frame, entity, charge);
 
+        // The last seconds move to the big countdown by the hero's head (CharacterUiWidget
+        // .UpdateSkillCountdown), so the badge steps aside for that window instead of duplicating it.
+        if (IsUrgent(remaining))
+        {
+            timer.Hide();
+            return true;
+        }
+
+        timer.SetIcon(skill.Icon);
         timer.Show(duration > FP._0 ? (remaining / duration).AsFloat : 0f, FormatSeconds(remaining));
         return true;
     }

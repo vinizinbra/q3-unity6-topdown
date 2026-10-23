@@ -229,7 +229,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 1185
-        width: 237
+        width: 244
         height: 237
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -249,9 +249,9 @@ TextureImporter:
       name: Emoji_Brute_Angry
       rect:
         serializedVersion: 2
-        x: 237
+        x: 248
         y: 1185
-        width: 237
+        width: 226
         height: 237
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -317,8 +317,8 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 948
-        width: 237
-        height: 237
+        width: 251
+        height: 248
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -337,10 +337,10 @@ TextureImporter:
       name: Emoji_Pixie_Angry
       rect:
         serializedVersion: 2
-        x: 237
+        x: 256
         y: 948
-        width: 237
-        height: 237
+        width: 218
+        height: 250
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -362,7 +362,7 @@ TextureImporter:
         x: 474
         y: 948
         width: 237
-        height: 237
+        height: 245
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -384,7 +384,7 @@ TextureImporter:
         x: 711
         y: 948
         width: 237
-        height: 237
+        height: 250
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -404,9 +404,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 711
+        y: 735
         width: 237
-        height: 237
+        height: 213
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -426,7 +426,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 237
-        y: 711
+        y: 712
         width: 237
         height: 237
       alignment: 0
@@ -492,9 +492,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 474
-        width: 237
-        height: 237
+        y: 490
+        width: 256
+        height: 247
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -513,10 +513,10 @@ TextureImporter:
       name: Emoji_Zara_Angry
       rect:
         serializedVersion: 2
-        x: 237
-        y: 474
-        width: 237
-        height: 237
+        x: 256
+        y: 486
+        width: 225
+        height: 249
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -535,10 +535,10 @@ TextureImporter:
       name: Emoji_Zara_Cry
       rect:
         serializedVersion: 2
-        x: 474
-        y: 474
-        width: 237
-        height: 237
+        x: 481
+        y: 484
+        width: 230
+        height: 253
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -560,7 +560,7 @@ TextureImporter:
         x: 711
         y: 474
         width: 237
-        height: 237
+        height: 261
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -580,9 +580,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 237
-        width: 237
-        height: 237
+        y: 257
+        width: 246
+        height: 231
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -601,10 +601,10 @@ TextureImporter:
       name: Emoji_Kai_Angry
       rect:
         serializedVersion: 2
-        x: 237
-        y: 237
-        width: 237
-        height: 237
+        x: 251
+        y: 264
+        width: 223
+        height: 219
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -624,9 +624,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 474
-        y: 237
+        y: 263
         width: 237
-        height: 237
+        height: 220
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -646,9 +646,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 711
-        y: 237
+        y: 264
         width: 237
-        height: 237
+        height: 214
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -670,7 +670,7 @@ TextureImporter:
         x: 0
         y: 0
         width: 237
-        height: 237
+        height: 255
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -692,7 +692,7 @@ TextureImporter:
         x: 237
         y: 0
         width: 237
-        height: 237
+        height: 255
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -714,7 +714,7 @@ TextureImporter:
         x: 474
         y: 0
         width: 237
-        height: 237
+        height: 245
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -736,7 +736,7 @@ TextureImporter:
         x: 711
         y: 0
         width: 237
-        height: 237
+        height: 245
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}

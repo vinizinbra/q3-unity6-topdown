@@ -1,4 +1,5 @@
 using Photon.Deterministic;
+using PrimeTween;
 using Quantum;
 using TMPro;
 using UnityEngine;
@@ -78,9 +79,23 @@ public abstract class HeroHudWidget : MonoBehaviour
         return true;
     }
 
+    // Whole seconds while there's plenty left, decimals only in the last HeroSkillStateUtility
+    // .UrgentSeconds - "9.6s" at the start of a 10s skill is noise, the tenths only matter once the
+    // skill is about to end. Ceil so the label never reads 0s while the skill is still running.
     protected static string FormatSeconds(FP remaining)
     {
-        return $"{Mathf.Max(0f, remaining.AsFloat):F1}s";
+        float seconds = Mathf.Max(0f, remaining.AsFloat);
+
+        if (seconds <= HeroSkillStateUtility.UrgentSeconds)
+            return $"{seconds:F1}s";
+
+        return $"{Mathf.CeilToInt(seconds)}s";
+    }
+
+    // The "about to end" window for a timed section - drives Section.Show's urgent blink.
+    protected static bool IsUrgent(FP remaining)
+    {
+        return remaining.AsFloat <= HeroSkillStateUtility.UrgentSeconds;
     }
 
     private static void SetShown(GameObject go, bool shown)
@@ -116,6 +131,19 @@ public abstract class HeroHudWidget : MonoBehaviour
         [SerializeField, Tooltip("The gauge graphic, driven via Image.fillAmount - its Image Type MUST be set to Filled in the Inspector or nothing moves. Optional; leave unassigned for a text-only row.")]
         private Image fillImage;
         [SerializeField] private TMP_Text valueText;
+        [SerializeField, Tooltip("Optional skill icon shown beside the gauge/countdown, painted from the active skill's own SkillData.Icon by the hero widget - so the badge says WHICH skill is running, not just a number. Left unassigned the section simply has no icon.")]
+        private Image iconImage;
+
+        [Header("Activation pop")]
+        [SerializeField, Tooltip("Punch-scale the root once when this section appears (a skill just went on), so the state change reads as an event instead of a silent swap. 0 turns it off.")]
+        private float popStrength = 0.35f;
+        [SerializeField, Min(0.05f)] private float popDuration = 0.35f;
+
+        [Header("Urgent (about to end)")]
+        [SerializeField, Tooltip("Color the fill/text blink toward during the last HeroSkillStateUtility.UrgentSeconds of a timed skill.")]
+        private Color urgentColor = new Color(1f, 0.25f, 0.2f, 1f);
+        [SerializeField, Tooltip("Blinks per second while urgent."), Min(0.5f)]
+        private float urgentBlinkRate = 4f;
 
         [Header("Full Glow")]
         [SerializeField, Tooltip("On: the fill (and its value text) pulse while this section's own resource is full/ready - Rage at max, Juggernaut Charged, Zara at Max Flow, Scrap at its free-cast threshold. Off: full looks exactly like any other value.")]
@@ -133,17 +161,82 @@ public abstract class HeroHudWidget : MonoBehaviour
         private Color _baseFillColor;
         private Color _baseTextColor;
         private bool _baseColorsCaptured;
+        private bool _wasShown;
+        private bool _wasFull;
+        private Vector3 _restScale = Vector3.one;
+        private bool _restScaleCaptured;
+        private Tween _popTween;
+
+        // The object toggled for this section. Authored sections that leave root empty (Max's and
+        // Brute's countdown badge today - only the text is wired) would otherwise be impossible to
+        // hide, leaving the badge plate up with stale text. So when root is unassigned and the text
+        // sits on background graphics (badge plates, not a plain layout container), the outermost
+        // plate IS the badge.
+        private GameObject EffectiveRoot
+        {
+            get
+            {
+                if (root != null)
+                    return root;
+
+                if (_resolvedRoot == null && valueText != null)
+                {
+                    // Climbs through EVERY stacked plate (the number sits on a background that sits on
+                    // the radial fill plate) and stops at the first plain container.
+                    Transform plate = null;
+                    Transform parent = valueText.transform.parent;
+
+                    while (parent != null && parent.GetComponent<Graphic>() != null)
+                    {
+                        plate = parent;
+                        parent = parent.parent;
+                    }
+
+                    if (plate != null)
+                        _resolvedRoot = plate.gameObject;
+                }
+
+                return _resolvedRoot;
+            }
+        }
+
+        private GameObject _resolvedRoot;
 
         public void Hide()
         {
-            SetShown(root, false);
+            SetShown(EffectiveRoot, false);
             RestoreBaseColors();
+            _wasShown = false;
+            _wasFull = false;
+
+            if (iconImage != null)
+                iconImage.enabled = false;
         }
 
-        public void Show(float fill, string value, bool full = false)
+        // Painted every frame the section is driven; a null sprite hides the icon rather than
+        // leaving the previous skill's art on a badge that now belongs to something else.
+        public void SetIcon(Sprite sprite)
         {
-            SetShown(root, true);
+            if (iconImage == null)
+                return;
+
+            iconImage.sprite = sprite;
+            iconImage.enabled = sprite != null;
+        }
+
+        public void Show(float fill, string value, bool full = false, bool urgent = false)
+        {
+            // Pops on appearing AND on a meter reaching full (Lux's banked free cast, Rage at max) -
+            // both are "something just became true" moments, not steady states.
+            bool justAppeared = _wasShown == false || (full && _wasFull == false);
+            _wasShown = true;
+            _wasFull = full;
+
+            SetShown(EffectiveRoot, true);
             CaptureBaseColors();
+
+            if (justAppeared)
+                PlayPop();
 
             if (fillImage != null)
                 fillImage.fillAmount = Mathf.Clamp01(fill);
@@ -151,10 +244,51 @@ public abstract class HeroHudWidget : MonoBehaviour
             if (valueText != null)
                 valueText.text = value;
 
-            if (full && glowWhenFull)
+            if (urgent)
+                ApplyUrgentBlink();
+            else if (full && glowWhenFull)
                 ApplyGlow();
             else
                 RestoreBaseColors();
+        }
+
+        // Reset to the authored rest scale before punching again - PunchScale is relative to the
+        // current scale, so an interrupted pop would otherwise leave the badge permanently bigger
+        // (same idiom CurrencyUiWidget uses).
+        private void PlayPop()
+        {
+            GameObject popRoot = EffectiveRoot;
+
+            if (popStrength <= 0f || popRoot == null)
+                return;
+
+            Transform target = popRoot.transform;
+
+            if (_restScaleCaptured == false)
+            {
+                _restScale = target.localScale;
+                _restScaleCaptured = true;
+            }
+
+            if (_popTween.isAlive)
+                _popTween.Stop();
+
+            target.localScale = _restScale;
+            _popTween = Tween.PunchScale(target, Vector3.one * popStrength, popDuration, 2, useUnscaledTime: true);
+        }
+
+        // Same unscaled-time, stateless approach as ApplyGlow: blinks between the authored color and
+        // urgentColor for as long as the caller keeps passing urgent, and RestoreBaseColors undoes
+        // it the frame it stops.
+        private void ApplyUrgentBlink()
+        {
+            float t = 0.5f - 0.5f * Mathf.Cos(Time.unscaledTime * 2f * Mathf.PI * urgentBlinkRate);
+
+            if (fillImage != null)
+                fillImage.color = Color.Lerp(_baseFillColor, urgentColor, t);
+
+            if (valueText != null)
+                valueText.color = Color.Lerp(_baseTextColor, urgentColor, t);
         }
 
         // Runs before anything below ever writes a color, so what's captured is always the color the

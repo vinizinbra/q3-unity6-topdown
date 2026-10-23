@@ -82661,7 +82661,7 @@ MonoBehaviour:
   discoveredColor: {r: 0.14943041, g: 0.2275801, b: 0.4339623, a: 1}
   currentColor: {r: 0.30397826, g: 0.39903718, b: 0.6509434, a: 1}
   holeUndiscoveredColor: {r: 0.12, g: 0.12, b: 0.12, a: 0}
-  holeDiscoveredColor: {r: 0.1759968, g: 0.21824114, b: 0.3301887, a: 1}
+  holeDiscoveredColor: {r: 0.06043077, g: 0.07861238, b: 0.13207549, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0}
   outlineColor: {r: 1, g: 1, b: 1, a: 1}
   outlineTexels: 2

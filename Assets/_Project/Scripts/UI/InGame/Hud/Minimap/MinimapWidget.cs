@@ -103,6 +103,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [SerializeField] private Color undiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
     [SerializeField] private Color discoveredColor = new Color(0.55f, 0.55f, 0.55f, 1f);
     [SerializeField] private Color currentColor = new Color(1f, 0.85f, 0.2f, 1f);
+    [SerializeField, Tooltip("Blinks per second of the current chunk's highlight (lightens toward white and back to currentColor). 0 disables the blink.")]
+    private float currentBlinkSpeed = 1f;
+    [SerializeField, Range(0f, 1f), Tooltip("How far toward white the current chunk lightens at the peak of each blink (0 = no blink).")]
+    private float currentBlinkLighten = 0.3f;
     [SerializeField, Tooltip("Enclosed inner holes the gap-filler fills (see ComputeHoleRegions), before any bordering chunk is Discovered.")]
     private Color holeUndiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
     [SerializeField, Tooltip("Enclosed inner holes the gap-filler fills, once revealed by a bordering Discovered chunk. Standing on one still uses currentColor.")]
@@ -318,6 +322,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private readonly Dictionary<EntityRef, RectInt> _chunkTexelRects = new();
     private readonly Dictionary<EntityRef, bool> _lastDiscovered = new();
     private EntityRef _lastCurrentChunk;
+    // What the current chunk/hole is painted with right now: currentColor lightened by the blink.
+    private Color _currentPaintColor;
+    private int _currentBlinkStep = -1;
 
     // Precomputed once (see class comment) - true at a texel that lies on the level's static
     // outline. Null until ComputeLevelOutline has run.
@@ -758,6 +765,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             EnsureCentered(frame);
         }
 
+        if (_currentBlinkStep < 0)
+            _currentPaintColor = currentColor;
+
         EntityRef currentChunk = ResolveCurrentChunk(frame);
 
         // Pass 1: cache every newly-seen chunk's rect (and detect a Discovered flip on an
@@ -841,11 +851,41 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         // are computed, and cheap when the region hasn't changed.
         UpdateCurrentHole(frame);
 
+        UpdateCurrentBlink(currentChunk);
+
         if (_textureDirty)
         {
             _texture.Apply(false);
             _textureDirty = false;
         }
+    }
+
+    // Blinks the current chunk (or hole): currentColor lightened toward white and back, on unscaled
+    // time so it keeps going while the sim is paused. The pulse is quantized to a few steps so the
+    // chunk is only repainted (and the texture re-applied) when the visible color actually changes.
+    private void UpdateCurrentBlink(EntityRef currentChunk)
+    {
+        const int Steps = 12;
+        int step = 0;
+        if (currentBlinkSpeed > 0f && currentBlinkLighten > 0f)
+        {
+            float pulse01 = 0.5f - 0.5f * Mathf.Cos(Time.unscaledTime * currentBlinkSpeed * Mathf.PI * 2f);
+            step = Mathf.RoundToInt(pulse01 * Steps);
+        }
+
+        if (step == _currentBlinkStep)
+            return;
+
+        _currentBlinkStep = step;
+        _currentPaintColor = Color.Lerp(currentColor, Color.white, currentBlinkLighten * step / Steps);
+
+        if (currentChunk != EntityRef.None)
+            RepaintSingleChunk(currentChunk, currentChunk);
+
+        if (_currentHoleRegion != null)
+            PaintHoleRegion(_currentHoleRegion, _currentPaintColor);
+
+        _textureDirty = true;
     }
 
     // Computes the level's static outline exactly once, entirely independent of Discovered state.
@@ -1197,7 +1237,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         if (current != null)
         {
             current.Revealed = true; // standing on it counts as discovering it
-            PaintHoleRegion(current, currentColor);
+            PaintHoleRegion(current, _currentPaintColor);
         }
 
         _textureDirty = true;
@@ -1248,7 +1288,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             return;
 
         bool discovered = _lastDiscovered.TryGetValue(entity, out bool d) && d;
-        Color fill = entity == currentChunk ? currentColor : (discovered ? discoveredColor : undiscoveredColor);
+        Color fill = entity == currentChunk ? _currentPaintColor : (discovered ? discoveredColor : undiscoveredColor);
 
         PaintRect(texelRect, fill);
 

@@ -118,3 +118,7 @@ InitTestScene*.unity*
 
 # Unity Profiler captures (hundreds of MB, local only)
 ProfilerCaptures/
+
+# Local screen recordings / renders
+/Assets/Recordings/
+/Assets/Recordings.meta

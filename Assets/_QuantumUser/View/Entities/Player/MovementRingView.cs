@@ -47,6 +47,34 @@ namespace Quantum
         [SerializeField]
         private Ease glowPulseEase = Ease.InOutSine;
 
+        [Header("Hero skill state (see HeroSkillStateUtility)")]
+        [SerializeField, Tooltip("Hue shift (0-1 around the colour wheel) from the hero's own RingColor to the colour of the skill fill ring - small values stay ANALOGOUS (an adjacent colour, e.g. yellow -> orange) so the fill reads as part of the same ring instead of a different UI. Ignored when skillFillColor has alpha.")]
+        private float skillFillHueShift = 0.07f;
+        [SerializeField, Tooltip("Optional explicit colour for the fill ring. Leave alpha at 0 to derive it from the ring colour via skillFillHueShift.")]
+        private Color skillFillColor = new Color(0f, 0f, 0f, 0f);
+        [SerializeField, Tooltip("Gap (world units) between the authored ring's outer edge and the fill ring.")]
+        private float skillFillGap = 0.04f;
+        [SerializeField, Tooltip("Thickness (world units) of the fill ring.")]
+        private float skillFillWidth = 0.12f;
+        [SerializeField, Range(24, 180), Tooltip("Segments the fill ring is built from - the arc drains in steps of 360/this degrees (the boundary segment fades, so it looks smooth).")]
+        private int skillFillSegments = 96;
+        [SerializeField, Tooltip("Revolutions per second of the shine that sweeps around the fill ring while a PASSIVE is at its payoff - Lux's banked free cast (Scavenge full), Zara's Flow active. Timed skills (Overdrive, Juggernaut) don't shine, they drain. 0 turns the shine off.")]
+        private float skillShineSpeed = 0.9f;
+        [SerializeField, Range(0.02f, 0.5f), Tooltip("Width of the shine as a fraction of the full circle.")]
+        private float skillShineWidth = 0.16f;
+        [SerializeField, Range(0f, 1f), Tooltip("How far the shine pushes the fill colour toward white at its centre.")]
+        private float skillShineStrength = 0.9f;
+        [SerializeField, Range(0f, 1f), Tooltip("Opacity of the unfilled remainder (the track), so the drain reads against something.")]
+        private float skillFillTrackAlpha = 0.18f;
+        [SerializeField, Tooltip("Seconds for the fill ring to fade in/out when a skill starts/ends."), Min(0.01f)]
+        private float skillBlendDuration = 0.15f;
+        [SerializeField, Tooltip("Optional extra glow scale while a skill is on (shrinks with a timed skill as it drains). 0 (default) keeps the glow size fixed - the fill ring is the drain cue.")]
+        private float skillGlowScaleBoost = 0f;
+        [SerializeField, Tooltip("Punch-scale on the ring the moment a skill turns on. 0 turns it off.")]
+        private float skillPopStrength = 0.3f;
+        [SerializeField, Tooltip("Fill ring / glow blinks per second during the last HeroSkillStateUtility.UrgentSeconds of a timed skill.")]
+        private float skillUrgentBlinkRate = 4f;
+
         [Header("Movement arrow")]
         [SerializeField, FormerlySerializedAs("arrowSprite"), Tooltip("Arrow sprite shown only while moving, rotated to face the current movement direction.")]
         private SpriteRenderer moveArrowSprite;
@@ -129,6 +157,22 @@ namespace Quantum
         private float _glowPulseAlpha;
         private Tween _glowTween;
 
+        private float _skillBlend;
+        private float _skillFill;
+        private bool _skillTimed;
+        private bool _skillUrgent;
+        private bool _skillFull;
+        private float _skillFullBlend;
+        private bool _wasSkillFull;
+        private Vector3 _baseRingScale = Vector3.one;
+        private Vector3 _baseGlowScale = Vector3.one;
+        private Tween _ringPopTween;
+
+        private Mesh _fillMesh;
+        private MeshRenderer _fillRenderer;
+        private Color32[] _fillColors;
+        private Color _fillBaseColor;
+
         private Vector3 _baseMoveArrowLocalPosition;
         private Vector3 _baseMoveArrowTrailLocalPosition;
         private float _currentMoveHeading;
@@ -193,6 +237,8 @@ namespace Quantum
             // the ceiling each sprite fades/pulses toward, so per-hero opacity choices survive.
             _baseRingAlpha = ringSprite.color.a;
             _baseGlowAlpha = ringGlowSprite.color.a;
+            _baseRingScale = ringSprite.transform.localScale;
+            _baseGlowScale = ringGlowSprite.transform.localScale;
             _baseMoveArrowAlpha = moveArrowSprite.color.a;
             _baseMoveArrowTrailAlpha = moveArrowTrailSprite.color.a;
             // Not tinted from RingColor, so its full authored color is already final - only the
@@ -249,6 +295,9 @@ namespace Quantum
             SetActiveIfPresent(accessoryIconSprite, isLocalPlayer);
 
             _ringAlpha = 0f;
+            _skillBlend = 0f;
+            _wasSkillFull = false;
+            _skillFullBlend = 0f;
             _hasAccessoryHeading = false;
 
             if (isLocalPlayer == false)
@@ -274,6 +323,7 @@ namespace Quantum
             // WHICH sprite ended up on the renderer.
             ResolveAccessoryIconLayout();
 
+            BuildFillRing(_baseRingColor);
             StartGlowPulse();
         }
 
@@ -283,12 +333,21 @@ namespace Quantum
                 sprite.gameObject.SetActive(active);
         }
 
+        private void OnDestroy()
+        {
+            if (_fillMesh != null)
+                Destroy(_fillMesh);
+        }
+
         public override void DeInitialize(QuantumGame game)
         {
             base.DeInitialize(game);
 
             if (_glowTween.isAlive)
                 _glowTween.Stop();
+
+            if (_ringPopTween.isAlive)
+                _ringPopTween.Stop();
 
             // Same reason the glow tween is stopped: these drive a Transform that is about to be
             // pooled/destroyed, and a live tween writing into it afterwards is a stale-target error.
@@ -338,6 +397,7 @@ namespace Quantum
                 return;
 
             var kcc = frame.Get<KCC>(_entityRef);
+            UpdateSkillState(frame);
             UpdateRing(kcc.Data.IsGrounded);
 
             Vector3 velocity = kcc.Data.RealVelocity.ToUnityVector3();
@@ -346,6 +406,152 @@ namespace Quantum
 
             UpdateTargetArrow(frame);
             UpdateAccessoryArrow(frame);
+        }
+
+        // Reads the same HeroSkillState the nameplate badges use, so the ring and the badge can never
+        // disagree about whether a skill is on. Blend is time-based rather than snapped so a skill
+        // starting/ending eases the colour instead of flashing it.
+        private void UpdateSkillState(Frame frame)
+        {
+            bool shown = HeroSkillStateUtility.TryGet(frame, _entityRef, out HeroSkillState state);
+
+            _skillTimed = shown && state.IsTimed;
+            _skillUrgent = shown && state.IsUrgent;
+            _skillFill = shown ? state.Fill : 0f;
+            _skillFull = shown && state.Full;
+
+            float step = Time.deltaTime / skillBlendDuration;
+            _skillBlend = Mathf.MoveTowards(_skillBlend, shown ? 1f : 0f, step);
+            _skillFullBlend = Mathf.MoveTowards(_skillFullBlend, _skillFull ? 1f : 0f, step);
+
+            // The payoff moment: a timed skill turning on, or a passive meter (Flow, Scavenge)
+            // reaching full.
+            if (_skillFull && _wasSkillFull == false)
+                PlaySkillPop();
+
+            _wasSkillFull = _skillFull;
+        }
+
+        // Reset to the authored scale first - PunchScale is relative, so an interrupted pop would
+        // otherwise leave the ring permanently bigger.
+        private void PlaySkillPop()
+        {
+            if (skillPopStrength <= 0f)
+                return;
+
+            if (_ringPopTween.isAlive)
+                _ringPopTween.Stop();
+
+            ringSprite.transform.localScale = _baseRingScale;
+            _ringPopTween = Tween.PunchScale(ringSprite.transform, Vector3.one * skillPopStrength, 0.35f, 2);
+        }
+
+        // The skill fill is its own radial ring in an adjacent hue (see BuildFillRing) - the authored
+        // ring and glow keep the hero's own colour so the "this is you" marker never changes identity.
+        private void BuildFillRing(Color ringColor)
+        {
+            if (_fillMesh != null || ringSprite.sprite == null)
+                return;
+
+            Color.RGBToHSV(ringColor, out float h, out float sat, out float v);
+            _fillBaseColor = skillFillColor.a > 0f
+                ? skillFillColor
+                : Color.HSVToRGB(Mathf.Repeat(h + skillFillHueShift, 1f), Mathf.Max(sat, 0.85f), 1f);
+
+            int n = Mathf.Max(8, skillFillSegments);
+            float ringRadius = ringSprite.sprite.bounds.extents.x * ringSprite.transform.localScale.x;
+            float inner = ringRadius + skillFillGap;
+            float outer = inner + skillFillWidth;
+
+            var vertices = new Vector3[n * 4];
+            var triangles = new int[n * 6];
+
+            for (int i = 0; i < n; i++)
+            {
+                // Clockwise from 12 o'clock as seen from above (local +Y becomes world +Z once the
+                // ring root lies flat, same convention as the sprites above).
+                float a0 = (i / (float)n) * Mathf.PI * 2f;
+                float a1 = ((i + 1) / (float)n) * Mathf.PI * 2f;
+                int v0 = i * 4;
+
+                vertices[v0] = new Vector3(Mathf.Sin(a0) * inner, Mathf.Cos(a0) * inner, 0f);
+                vertices[v0 + 1] = new Vector3(Mathf.Sin(a0) * outer, Mathf.Cos(a0) * outer, 0f);
+                vertices[v0 + 2] = new Vector3(Mathf.Sin(a1) * inner, Mathf.Cos(a1) * inner, 0f);
+                vertices[v0 + 3] = new Vector3(Mathf.Sin(a1) * outer, Mathf.Cos(a1) * outer, 0f);
+
+                int t = i * 6;
+                triangles[t] = v0; triangles[t + 1] = v0 + 1; triangles[t + 2] = v0 + 2;
+                triangles[t + 3] = v0 + 2; triangles[t + 4] = v0 + 1; triangles[t + 5] = v0 + 3;
+            }
+
+            _fillMesh = new Mesh { name = "SkillFillRing" };
+            _fillMesh.MarkDynamic();
+            _fillMesh.vertices = vertices;
+            _fillMesh.triangles = triangles;
+            _fillMesh.bounds = new Bounds(Vector3.zero, new Vector3(outer * 2f, outer * 2f, 0.1f));
+            _fillColors = new Color32[n * 4];
+
+            var go = new GameObject("SkillFillRing", typeof(MeshFilter), typeof(MeshRenderer));
+            go.transform.SetParent(ringSprite.transform.parent, false);
+            go.transform.localPosition = ringSprite.transform.localPosition;
+            go.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            go.GetComponent<MeshFilter>().sharedMesh = _fillMesh;
+
+            // The ring sprite's own material draws vertex colours the same way (sprite shaders
+            // multiply by them) and its texture slot is empty here, i.e. white - so the fill is a
+            // flat colour with no Shader.Find (which a build can strip).
+            _fillRenderer = go.GetComponent<MeshRenderer>();
+            _fillRenderer.sharedMaterial = ringSprite.sharedMaterial;
+            _fillRenderer.sortingLayerID = ringSprite.sortingLayerID;
+            _fillRenderer.sortingOrder = ringSprite.sortingOrder + 1;
+            _fillRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            _fillRenderer.receiveShadows = false;
+            _fillRenderer.enabled = false;
+        }
+
+        // Paints segment alphas instead of rebuilding geometry: filled segments take the fill colour,
+        // the boundary segment fades by the remainder (smooth drain), the rest show as a faint track.
+        private void UpdateFillRing(float blinkScale)
+        {
+            if (_fillRenderer == null)
+                return;
+
+            float visibility = _skillBlend * _ringAlpha;
+            _fillRenderer.enabled = visibility > 0.001f;
+
+            if (_fillRenderer.enabled == false)
+                return;
+
+            int n = _fillColors.Length / 4;
+            float filled = Mathf.Clamp01(_skillFill) * n;
+
+            // A passive at its payoff (free cast banked / Flow active) shines: a bright band travelling
+            // around the ring - the "you can spend this for free" cue, with no counter needed. Faded in
+            // by _skillFullBlend so it eases on/off with the state.
+            bool shine = _skillFull && _skillTimed == false && skillShineSpeed > 0f;
+            float shineHead = Mathf.Repeat(Time.unscaledTime * skillShineSpeed, 1f);
+
+            for (int i = 0; i < n; i++)
+            {
+                float segment = Mathf.Clamp01(filled - i);
+                float alpha = Mathf.Max(segment, skillFillTrackAlpha) * visibility * (segment > 0f ? blinkScale : 1f);
+                Color tint = _fillBaseColor;
+
+                if (shine)
+                {
+                    // Circular distance from this segment's centre to the band's centre, in turns.
+                    float d = Mathf.Abs(Mathf.Repeat((i + 0.5f) / n - shineHead + 0.5f, 1f) - 0.5f);
+                    float band = Mathf.Clamp01(1f - d / skillShineWidth) * skillShineStrength * _skillFullBlend;
+                    tint = Color.Lerp(tint, Color.white, band);
+                    alpha = Mathf.Min(1f, alpha * (1f + band * 0.5f));
+                }
+
+                Color32 c = new Color(tint.r, tint.g, tint.b, alpha);
+                int v = i * 4;
+                _fillColors[v] = c; _fillColors[v + 1] = c; _fillColors[v + 2] = c; _fillColors[v + 3] = c;
+            }
+
+            _fillMesh.colors32 = _fillColors;
         }
 
         private void UpdateRing(bool isGrounded)
@@ -361,10 +567,28 @@ namespace Quantum
             // _glowPulseAlpha is driven by StartGlowPulse's PrimeTween loop - composed here rather
             // than tweening color.a directly, so the grounded fade and the pulse don't fight over
             // the same channel.
+            // Last seconds of a timed skill: the (already running) breathing pulse is replaced by a
+            // fast full-range blink - the ring's own "about to end" warning.
+            float pulse = _glowPulseAlpha;
+            float blinkScale = 1f;
+
+            if (_skillUrgent)
+            {
+                blinkScale = Mathf.Lerp(0.25f, 1f, 0.5f - 0.5f * Mathf.Cos(Time.unscaledTime * 2f * Mathf.PI * skillUrgentBlinkRate));
+                pulse = blinkScale;
+            }
+
+            UpdateFillRing(blinkScale);
+
             Color glowColor = _baseGlowColor;
-            glowColor.a = _baseGlowColor.a * _ringAlpha * _glowPulseAlpha;
+            glowColor.a = _baseGlowColor.a * _ringAlpha * pulse;
             ringGlowSprite.color = glowColor;
             ringGlowSprite.enabled = glowColor.a > 0f;
+
+            // A timed skill starts with a bigger glow that shrinks to its authored size as the clock
+            // drains - the diegetic countdown. Untimed states (Flow, Scavenge) hold the boosted size.
+            float boost = skillGlowScaleBoost * _skillFullBlend * (_skillTimed ? _skillFill : 1f);
+            ringGlowSprite.transform.localScale = _baseGlowScale * (1f + boost);
         }
 
         private void UpdateMoveArrow(Vector3 velocity)

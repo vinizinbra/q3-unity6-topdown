@@ -80,6 +80,7 @@ which one to open.
 ## UI / View / presentation
 
 - **Announcer** — shared `AnnouncerManager` slide-in title banner (fade+slide, hold, fade+slide out) for rare whole-team moments (Area Secured, Survival Started, Team Challenge Started/Complete/Failed), replacing three near-duplicate copies of the same animation. → `docs/announcer.md`
+- **Hero Skill State** — `HeroSkillStateUtility` resolves Overdrive/Juggernaut (timed) and Flow/Scavenge (passive meters) once; foot ring gets an analogous-hue radial fill ring + shine at payoff, big 3-2-1 countdown by the head in the last 3s, badge pops/icon. → `docs/hero-skill-state.md`
 - **Hero Info Popup (Tab-hold)** — `HeroInfoPopupWidget` shows a full "what I'm running" readout by composing existing widgets. → `docs/hero-info-popup.md`
 - **Minimap** — node-based minimap baked into one painted `Texture2D`: per-chunk fills, level outline, POI icons, player/enemy markers; one surface that expands (click/M/R2) from the panned corner view to a whole-level view. → `docs/minimap.md`
 - **In-Match Settings Popup** — Escape-toggled pause-style popup: SFX/Music/Voice sliders (`AudioManager` category multipliers), Disconnect, offline-only Restart (`RestartOfflineMatch` shuts the runner down and restarts the offline session, reloading the scene). → `docs/in-match-settings.md`
