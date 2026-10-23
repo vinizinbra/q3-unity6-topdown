@@ -1369,12 +1369,16 @@ namespace Quantum
         }
 
         // Singularity rank 3's "stuck" pull. ApplyPull ADDS a velocity impulse of `force` m/s with no regard
-        // for how far the target actually is, so a 36 m/s gravity pulse repeated 3x/second hurled enemies
-        // straight past the center and out the far side (and stacked on itself between pulses). This
-        // instead SETS the horizontal velocity toward the center, capped so the target can at most reach
-        // the center by the next pulse (maxTravelTime), and pins anything within holdRadius in place.
-        // Vertical velocity is left alone. Kinematic bodies (mid-charge/leap) stay immovable.
-        public static void ApplyHoldingPull(Frame f, EntityRef target, FPVector3 center, FP force, FP holdRadius, FP maxTravelTime)
+        // for how far the target actually is, so a 36 m/s gravity pulse hurled enemies straight past the
+        // center and out the far side. This instead SETS the horizontal velocity toward the center - a
+        // spring (distance * stiffness) capped at `force` - and pins anything within holdRadius.
+        // Meant to be called EVERY tick, after EnemySystem: it then fully owns the enemy's horizontal
+        // movement (the AI's own chase velocity is overwritten before physics integrates it), and since
+        // nothing accumulates, a crowd converging on the center settles into a clump instead of being
+        // flung apart. One tick's travel (speed * dt) stays shorter than the remaining distance while
+        // stiffness * dt < 1, so it never overshoots. Vertical velocity is left alone. Kinematic bodies
+        // (mid-charge/leap) stay immovable.
+        public static void ApplyHoldingPull(Frame f, EntityRef target, FPVector3 center, FP force, FP holdRadius, FP stiffness)
         {
             if (force <= FP._0)
                 return;
@@ -1396,15 +1400,7 @@ namespace Quantum
                 return;
             }
 
-            FP speed = force;
-
-            if (maxTravelTime > FP._0)
-            {
-                FP arrivalSpeed = (distance - holdRadius) / maxTravelTime;
-
-                if (arrivalSpeed < speed)
-                    speed = arrivalSpeed;
-            }
+            FP speed = FPMath.Min(force, (distance - holdRadius) * stiffness);
 
             FPVector3 velocity = flat.Normalized * speed;
             body->Velocity = new FPVector3(velocity.X, body->Velocity.Y, velocity.Z);

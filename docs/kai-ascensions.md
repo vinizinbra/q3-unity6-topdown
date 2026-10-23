@@ -356,3 +356,20 @@ Cost: a **vanilla (non-Singularity) vortex is completely unaffected** — it sti
 overlap query per pulse, via an early-out when there is no `VortexInterruptConfig` and this isn't a
 pulse tick. Only a Singularity-empowered vortex pays for the per-tick sweep, and `TryInterrupt` is a
 cheap no-op on any enemy not currently in Preparation/Telegraph/Active.
+
+---
+
+# 2026-10-23 — Singularity R3 flung enemies instead of holding them
+
+R1/R2 were fine; only rank 3 (gravity pulse) misbehaved. `ApplyHoldingPull` *set* velocity toward the
+center, but only once per `VortexGravityPulse.Interval` (1/3s). On every tick in between, the AI
+(`EnemySystem`) took movement back and walked enemies out; a staggered enemy (AI parked) instead kept
+the full ~36 m/s; and the crowd aimed at one 0.5m point got shoved apart by collisions.
+
+**Fix:** the hold now runs **every tick** from `VortexSystem.Update`'s per-tick sweep
+(`TryHoldCaughtEnemy`), which already runs after `EnemySystem`, so the vortex owns caught enemies'
+horizontal velocity outright. Speed is a spring, `min(Force, distance × 8/s)`, so it never overshoots
+and nothing accumulates. Tier-gated like the interrupt (`MaxEligibleTierIndex`, Elite at R3) — Bosses
+are not pinned. Kinematic (mid-charge/leap) and Dead enemies are skipped. `VortexGravityPulse.Interval`/
+`Timer` and `SingularitySkillAction.GravityPulseInterval` are no longer read (left in place to avoid a
+codegen pass).

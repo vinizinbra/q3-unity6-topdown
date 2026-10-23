@@ -28,7 +28,6 @@ namespace Quantum
             // an expiring vortex should still get to explode even if it wasn't pulling anything.
             TryExplodeOnDestroy(f, ref filter);
             TryHomingProjectile(f, ref filter);
-            TryGravityPulse(f, ref filter);
 
             if (filter.Collider->Shape.Type != Shape3DType.Sphere)
             {
@@ -51,6 +50,10 @@ namespace Quantum
             }
 
             f.Unsafe.TryGetPointer<VortexInterruptConfig>(filter.Entity, out var interruptConfig);
+            f.Unsafe.TryGetPointer<VortexGravityPulse>(filter.Entity, out var gravityHold);
+
+            if (gravityHold != null && gravityHold->Force <= FP._0)
+                gravityHold = null;
 
             // The PULL is a periodic pulse (TickInterval, ~0.5s), but Singularity's INTERRUPT is not -
             // it is checked every tick.
@@ -79,7 +82,7 @@ namespace Quantum
 
             // Nothing to do on an off-pulse tick unless this vortex actually has an interrupt to run -
             // a vanilla (non-Singularity) vortex costs exactly what it did before, one overlap per pulse.
-            if (isPullPulse == false && interruptConfig == null)
+            if (isPullPulse == false && interruptConfig == null && gravityHold == null)
                 return;
 
             FPVector3 center = filter.Transform3D->Position;
@@ -102,6 +105,12 @@ namespace Quantum
                     TryInterruptCaughtEnemy(f, filter.Entity, target, interruptConfig);
                 }
 
+                // Rank 3 holds every tick, not once per pulse - see TryHoldCaughtEnemy.
+                if (gravityHold != null)
+                {
+                    TryHoldCaughtEnemy(f, target, center, gravityHold, interruptConfig);
+                }
+
                 if (isPullPulse == false)
                     continue;
 
@@ -114,9 +123,9 @@ namespace Quantum
                 // trick a one-shot knockback pop uses to escape ground friction, since this reapplies
                 // every pulse regardless. ApplyPull, not ApplyKnockback - this must not stagger the
                 // enemy (see the class comment above for why).
-                // Rank 3's gravity pulse owns the pull (it holds enemies in place); the additive base
+                // Rank 3's gravity hold owns the pull (it holds enemies in place); the additive base
                 // impulse on top of it is what flung them past the center.
-                if (f.Has<VortexGravityPulse>(filter.Entity) == false)
+                if (gravityHold == null)
                     DamageUtility.ApplyPull(f, target, pullDirection, filter.Vortex->Force);
 
                 Log.Debug($"[Vortex] {filter.Entity} pulsed {target} with force {filter.Vortex->Force} (radius {radius})");
@@ -290,51 +299,33 @@ namespace Quantum
         // flat damage hit. Kept as its own component/method rather than folding into
         // VortexExplodeOnDestroy - "pull in then explode" and "push out instead" are different enough
         // shapes to keep the per-asset Source typing unambiguous for the view.
-        // Kai's Singularity rank 3 - a periodic, stronger, independently-paced pull layered on top of
-        // the base Vortex.Force pull above (own TickTimer/Interval so it doesn't disturb the base
-        // pull's own cadence). No-ops without VortexGravityPulse (ranks 1-2, or no upgrade at all).
+        // Kai's Singularity rank 3 - pins every eligible caught enemy at the vortex's center. Runs EVERY
+        // tick from Update's sweep (which runs after EnemySystem), so the vortex owns the enemy's
+        // horizontal velocity outright - the AI's own chase velocity never reaches physics. It used to
+        // fire once per GravityPulse.Interval (1/3s): between pulses the AI walked enemies back out, a
+        // staggered enemy (AI parked) kept sliding at the full 36 m/s, and the whole crowd aimed at one
+        // point got shoved apart by collisions - read as enemies being thrown everywhere.
+        // VortexGravityPulse.Interval/Timer are no longer read. Same tier gate as the interrupt
+        // (MaxEligibleTierIndex - Elite at rank 3), so Bosses are never pinned. No-ops without
+        // VortexGravityPulse (ranks 1-2, or no upgrade at all).
         private static readonly FP GravityHoldRadius = FP._0_50;
 
-        private static void TryGravityPulse(Frame f, ref Filter filter)
+        // Spring rate toward the center (1/s) - capped by VortexGravityPulse.Force. Must stay below the
+        // tick rate (stiffness * dt < 1) or a tick's travel could overshoot the center.
+        private static readonly FP GravityHoldStiffness = 8;
+
+        private static void TryHoldCaughtEnemy(Frame f, EntityRef target, FPVector3 center, VortexGravityPulse* hold, VortexInterruptConfig* config)
         {
-            if (f.Unsafe.TryGetPointer<VortexGravityPulse>(filter.Entity, out var pulse) == false)
+            if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false || enemy->Phase == EnemyActionPhase.Dead)
                 return;
 
-            if (pulse->Force <= FP._0)
+            if (config != null && (byte)f.FindAsset(enemy->EnemyData).Tier > config->MaxEligibleTierIndex)
                 return;
 
-            if (pulse->Timer > FP._0)
-            {
-                pulse->Timer -= f.DeltaTime;
-                return;
-            }
-
-            pulse->Timer = pulse->Interval;
-
-            if (filter.Collider->Shape.Type != Shape3DType.Sphere)
-                return;
-
-            FP radius = filter.Collider->Shape.Sphere.Radius;
-
-            if (radius <= FP._0)
-                return;
-
-            FPVector3 center = filter.Transform3D->Position;
-            var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, Shape3D.CreateSphere(radius), EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
-
-            for (int i = 0; i < hits.Count; i++)
-            {
-                if (f.Has<Enemy>(hits[i].Entity) == false)
-                    continue;
-
-                DamageUtility.ApplyHoldingPull(f, hits[i].Entity, center, pulse->Force, GravityHoldRadius, pulse->Interval);
-            }
-
-            Log.Debug($"[Vortex] {filter.Entity} gravity-pulsed with force {pulse->Force} (radius {radius})");
+            DamageUtility.ApplyHoldingPull(f, target, center, hold->Force, GravityHoldRadius, GravityHoldStiffness);
         }
 
-        // Shared by Vortex Collapse's pre-explosion pull (TryExplodeOnDestroy) and Singularity's own
-        // gravity pulse (TryGravityPulse) - a plain "pull every enemy in radius toward center" sweep,
+        // Vortex Collapse's pre-explosion pull (TryExplodeOnDestroy) - a plain "pull every enemy in radius toward center" sweep,
         // same ApplyPull (never ApplyKnockback) idiom the base pull in Update uses.
         private static void PullAllInRadius(Frame f, FPVector3 center, FP radius, FP force)
         {
