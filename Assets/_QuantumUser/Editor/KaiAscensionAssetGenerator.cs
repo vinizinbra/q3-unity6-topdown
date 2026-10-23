@@ -211,12 +211,12 @@ namespace QuantumUser.Editor
                 asset.Description = "Dashing reflects nearby enemy projectiles back toward their attackers.";
                 asset.RankDescriptions = new[]
                 {
-                    "While Dashing, enemy projectiles within <color=#FD3971>3m</color> are reflected at their owner for <color=#FD3971>40%</color> Skill Damage.",
-                    "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected at their owner. Normal and weaker enemies die instantly; others take <color=#FD3971>60%</color> Skill Damage.",
-                    "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected. Specialist and weaker enemies die instantly; others take <color=#FD3971>100%</color> Skill Damage. Each reflect cuts Vortex cooldown by <color=#FD3971>0.5s</color>.",
+                    "While Dashing, enemy projectiles within <color=#FD3971>3m</color> are reflected at their owner, dealing <color=#FD3971>40%</color> of its max Health.",
+                    "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected at their owner. Normal and weaker enemies die instantly; others take <color=#FD3971>60%</color> of their max Health.",
+                    "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected. Specialist and weaker enemies die instantly; others take <color=#FD3971>80%</color> of their max Health. Each reflect cuts Vortex cooldown by <color=#FD3971>0.5s</color>.",
                 };
                 asset.Radius = new[] { FP._3, FP.FromString("4.50"), FP.FromString("4.50") };
-                asset.DamagePercent = new[] { FP.FromString("0.40"), FP.FromString("0.60"), FP._1 };
+                asset.ShooterHealthPercent = new[] { FP.FromString("0.40"), FP.FromString("0.60"), FP.FromString("0.80") };
                 asset.ReflectedRangeMultiplier = FP._1_50;
                 asset.CooldownReductionPerReflect = new[] { FP._0, FP._0, FP._0_50 };
                 asset.MaxCooldownReductionPerDash = FP._2;
