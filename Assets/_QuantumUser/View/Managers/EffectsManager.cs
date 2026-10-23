@@ -218,6 +218,8 @@ namespace QuantumUser.View.Managers
         private ParticleSystem projectileReflectedEffectPrefab;
         [SerializeField, Tooltip("Uniform scale used for projectileReflectedEffectPrefab (or its fallback) - this effect has no radius of its own to derive a scale from.")]
         private float projectileReflectedEffectScale = 1f;
+        [SerializeField, SoundDataPicker, Tooltip("Played with every ProjectileReflected event, at the reflected projectile's position. Routed through EntitySound (Quieter When Remote applies to a teammate's reflects). Keep the cooldown/voice limit on the SoundData, because one dash can reflect a whole volley. The effect prefab must NOT carry its own AudioSource, which would bypass AudioManager's SFX volume. Leave empty for a silent reflect.")]
+        private SoundData projectileReflectedSound;
 
         [Header("Revive")]
         [SerializeField, Tooltip("Played at the target's position whenever EventPlayerRevived fires (teammate-hold, self-revive, or the auto-revive-on-secure sweep - see docs/revive.md) - generic and source-agnostic, the same for every hero, so it lives here rather than per-view (see BlobAnimationView.OnPlayerRevived for that same event's own punch-scale reaction). Leave empty to skip the particle.")]
@@ -1197,7 +1199,12 @@ namespace QuantumUser.View.Managers
         {
             ParticleSystem prefab = projectileReflectedEffectPrefab ?? defaultAreaBlastEffect;
 
-            PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * projectileReflectedEffectScale);
+            Vector3 position = e.Position.ToUnityVector3();
+
+            PlayEffect(prefab, position, Quaternion.identity, Vector3.one * projectileReflectedEffectScale);
+
+            if (projectileReflectedSound != null)
+                EntitySound.PlayAt(projectileReflectedSound, position, e.Entity);
         }
 
         // Generic - fires for every DamageUtility.ApplyDamage hit, both enemy- and player-dealt.

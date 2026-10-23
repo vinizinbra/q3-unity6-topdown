@@ -24,12 +24,12 @@ namespace Quantum
     {
         public FP[] Radius = { FP._3, FP.FromString("4.50"), FP.FromString("4.50") };
 
-        // A reflected bolt no longer inherits the enemy shot's own Damage - it deals a fixed amount
-        // off Kai's own Vortex Skill Damage baseline (KaiAscensionUtility.ResolveVortexSkillDamage),
-        // same "DamagePercent[index] * Resolve<Hero>SkillDamage" idiom every other damage-dealing
-        // Ascension in this roster uses, so a Kai build invested in Skill Damage actually benefits
-        // from reflecting instead of just replaying whatever the enemy's own shot happened to hit for.
-        public FP[] DamagePercent = { FP.FromString("0.40"), FP.FromString("0.60"), FP._1 };
+        // A reflected bolt deals a fraction of the SHOOTER's own MaxHealth - not the enemy shot's own
+        // Damage, and deliberately not Kai's Skill Damage either (scaling off Vortex Skill Damage made
+        // reflects hit far too hard). Reading the shooter's MaxHealth means it already follows the run
+        // curves/co-op/difficulty HP scaling for free: "a reflect takes 60% of that enemy" stays true
+        // at minute 1 and minute 20.
+        public FP[] ShooterHealthPercent = { FP.FromString("0.40"), FP.FromString("0.60"), FP.FromString("0.80") };
 
         // Multiplies the reflected bolt's refreshed Lifetime and travel-distance cap (see
         // RefreshFlightBudget) - both "reset the budget so a late-flight bullet doesn't expire the
@@ -81,7 +81,7 @@ namespace Quantum
 
             // Skill Area - see StatUtility.GetAreaMultiplier.
             FP radius = Radius[index] * StatUtility.GetAreaMultiplier(f, filter.Entity);
-            FP damagePercent = DamagePercent[index];
+            FP healthPercent = ShooterHealthPercent[index];
             FPVector3 position = filter.Transform3D->Position;
             var projectiles = f.Filter<Projectile, Transform3D>();
 
@@ -114,8 +114,8 @@ namespace Quantum
                 live->Owner = filter.Entity;
                 live->Source = DamageSource.Skill;
                 live->Damage = IsInstantKillTier(index, ownerTier)
-                    ? ExecuteDamage
-                    : damagePercent * KaiAscensionUtility.ResolveVortexSkillDamage(f, filter.Entity);
+                    ? ResolveExecuteDamage(f, originalOwner)
+                    : ResolveShooterMaxHealth(f, originalOwner) * healthPercent;
 
                 RefreshFlightBudget(f, live);
 
@@ -184,11 +184,33 @@ namespace Quantum
             };
         }
 
-        // Flat sentinel rather than reading the target's own Health - simpler, and it still routes
-        // through DamageUtility.ApplyDamage's normal death branch (events/drops/OnEntityKilled)
-        // completely unmodified, since to that call this is just an unusually large Damage value like
-        // any other lethal hit.
-        private static readonly FP ExecuteDamage = FP.FromString("999999");
+        // Basis for the reflect damage. 0 if the shooter has no Health (already gone) - the bolt still
+        // flies, it just can't hurt anything.
+        private static FP ResolveShooterMaxHealth(Frame f, EntityRef shooter)
+        {
+            if (f.Unsafe.TryGetPointer<Health>(shooter, out var health) == false)
+                return FP._0;
+
+            return health->MaxHealth;
+        }
+
+        // The instant kill is a hit for 100% of the shooter's effective HP rather than a 999999
+        // sentinel, so the damage number shown/recorded is honest. Shield.Max and Armor are added on
+        // top of MaxHealth because ApplyDamage subtracts both before Health - exactly 100% MaxHealth
+        // would leave a shielded/armored shooter alive. Still routes through ApplyDamage's normal
+        // death branch (events/drops/OnEntityKilled) unmodified.
+        private static FP ResolveExecuteDamage(Frame f, EntityRef shooter)
+        {
+            FP damage = ResolveShooterMaxHealth(f, shooter);
+
+            if (f.Unsafe.TryGetPointer<Shield>(shooter, out var shield) == true)
+                damage += shield->Max;
+
+            if (f.Unsafe.TryGetPointer<Armor>(shooter, out var armor) == true)
+                damage += armor->Amount;
+
+            return damage;
+        }
 
         // Refreshes the reflected bolt's remaining flight budget. RemainingLifetime/TraveledDistance
         // were left wherever the enemy's own shot happened to be when it got caught - reflecting one

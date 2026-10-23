@@ -19,9 +19,9 @@ MonoBehaviour:
   Icon: {fileID: -6012258710592717756, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
   DisplayName: Mirror Step
   RankDescriptions:
-  - "While Dashing, enemy projectiles within <color=#FD3971>3m</color> are reflected at their owner for <color=#FD3971>40%</color> Skill Damage."
-  - "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected at their owner. Normal and weaker enemies die instantly; others take <color=#FD3971>60%</color> Skill Damage."
-  - "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected. Specialist and weaker enemies die instantly; others take <color=#FD3971>100%</color> Skill Damage. Each reflect cuts Vortex cooldown by <color=#FD3971>0.5s</color>."
+  - "While Dashing, enemy projectiles within <color=#FD3971>3m</color> are reflected at their owner, dealing <color=#FD3971>40%</color> of its max Health."
+  - "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected at their owner. Normal and weaker enemies die instantly; others take <color=#FD3971>60%</color> of their max Health."
+  - "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected. Specialist and weaker enemies die instantly; others take <color=#FD3971>80%</color> of their max Health. Each reflect cuts Vortex cooldown by <color=#FD3971>0.5s</color>."
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 3
@@ -57,10 +57,10 @@ MonoBehaviour:
   - RawValue: 196608
   - RawValue: 294912
   - RawValue: 294912
-  DamagePercent:
-  - RawValue: 327680
-  - RawValue: 458752
-  - RawValue: 655360
+  ShooterHealthPercent:
+  - RawValue: 26214
+  - RawValue: 39322
+  - RawValue: 52429
   ReflectedRangeMultiplier:
     RawValue: 98304
   ReflectedMovement:

@@ -373,3 +373,18 @@ and nothing accumulates. Tier-gated like the interrupt (`MaxEligibleTierIndex`, 
 are not pinned. Kinematic (mid-charge/leap) and Dead enemies are skipped. `VortexGravityPulse.Interval`/
 `Timer` and `SingularitySkillAction.GravityPulseInterval` are no longer read (left in place to avoid a
 codegen pass).
+
+# 2026-10-23 — Mirror Step damage now % of the shooter's max Health
+
+The authored `DamagePercent` was 5× / 7× / 10× Vortex Skill Damage, so reflects hit far too hard, and
+the instant kill was a flat `999999` sentinel. Reflect damage no longer uses Skill Damage at all:
+
+- `ShooterHealthPercent` (renamed from `DamagePercent`) = **40% / 60% / 80%** of the *original
+  shooter's* `Health.MaxHealth`. That already follows run-curve/co-op/difficulty HP scaling.
+- Instant kill (R2 ≤ Normal, R3 ≤ Specialist) = **100% of the shooter's effective HP**:
+  `MaxHealth + Shield.Max + Armor.Amount` (ApplyDamage subtracts shield/armor before Health, so plain
+  MaxHealth could leave a shielded shooter alive).
+- Damage still goes through `ApplyDamage` as Kai's Skill-source hit, so his outgoing multipliers (crit,
+  damage bonuses) still apply on top, and a `FrontalDamageReduction` enemy hit from the front can
+  still survive an "instant kill".
+- Rank description text updated to match.

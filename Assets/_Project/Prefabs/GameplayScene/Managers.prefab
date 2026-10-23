@@ -320,7 +320,8 @@ MonoBehaviour:
   shieldBreakEffectPrefab: {fileID: 6350743763286976369, guid: ee68c48d0ca2e4981b79417a4c7ea2e5, type: 3}
   quantumRoundsEffectScale: 1
   damageEchoEffectScale: 1
-  projectileReflectedEffectPrefab: {fileID: 19879788, guid: 625165fb93553b14f8ed057807ed752a, type: 3}
+  projectileReflectedEffectPrefab: {fileID: 19879788, guid: 7b4f15292d34475ba28f150ddaa8bc1f, type: 3}
+  projectileReflectedSound: {fileID: 11400000, guid: e37c3e871a72459bb7e3ceecb10c2e02, type: 2}
   projectileReflectedEffectScale: 1
   reviveEffectPrefab: {fileID: 0}
   reviveEffectScale: 1
