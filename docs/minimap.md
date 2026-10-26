@@ -381,6 +381,15 @@ still fix `_textureResolution` up front) - if the real level is simply larger th
 `worldExtent*2` allows, centering only distributes the overflow evenly instead of eliminating it;
 `worldExtent` still needs to be authored generously enough to fit the real level.
 
+## Percentage explored (2026-10-25)
+
+`MinimapWidget.exploredText` (TMP_Text, optional) shows `exploredFormat` (default `"{0}% explored"`)
+with `floor(100 × Discovered chunks / placed chunks)`. `UpdateExploredText` counts over the
+`_lastDiscovered` cache and runs only on a tick where a chunk was added or flipped. Every `Chunk`
+counts equally (LobbyStart, Boss and POI chunks included; inner-hole gap-fillers are not chunks and
+don't count). **Editor authoring needed:** add a TMP text under `frameRect` (so it hides with the map
+during the boss fight) and assign it to `exploredText`.
+
 ## Hidden during the boss fight (2026-10-23)
 
 `MinimapWidget.hideDuringBoss` (default on) hides the whole minimap the moment `Global.CurrentState`
@@ -388,3 +397,19 @@ becomes `GameState.Boss`, and it never comes back: the boss fight ends the run e
 or the team does). It's a plain `frameRect.SetActive(false)`. The widget lives under `frameRect`, so
 its `QUpdate` stops too, which is fine since nothing has to bring it back. Expanded-only extras
 (`showWhileExpanded`) are hidden at the same time.
+
+## Unexplored doors (2026-10-25)
+
+Every door between a Discovered chunk and a not-yet-Discovered neighbour gets a **gradient** into the
+unknown (`showUnexploredDoors`, default on) - nothing else (an earlier gate bar and pointing chevron were
+removed, and so was tinting the whole neighbour chunk, which leaked its size). Neighbours come from
+`Chunk.ConnectedChunks` (final once `LevelGenerated`), cached per chunk in `_chunkNeighbors` on first sight;
+the shared edge of the two snapped texel rects (`TryComputeSharedEdge`) gives the door's centre, direction
+and length. The gradient (`GetFadeSprite`, exponential: `e^(-doorFadeFalloff*d)` rescaled to hit 0 at the end, default 3) is `doorFadeCoverage` x the door's width and reaches
+`doorFadeTexels` into the unexplored chunk, drawn in mapRect space so it zooms with the map. Its RGB is the
+owning Discovered chunk's own fill - `_currentPaintColor` (blinking) when the local player stands in it,
+`discoveredColor` otherwise - and its alpha is `doorFadeAlpha`, pulsing 70-100% at `doorPulseSpeed`
+(`UpdateUnexploredDoorPulse`, unscaled time). Rebuilt by `RebuildUnexploredDoors` only on a tick where a
+chunk was added or flipped Discovered.
+**Trap:** the door tuning fields are serialized on the scene instance - changing a code default does not
+update an already-saved MinimapWidget; edit the values in the Inspector.

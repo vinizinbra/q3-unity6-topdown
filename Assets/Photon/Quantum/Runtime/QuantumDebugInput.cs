@@ -81,7 +81,7 @@ namespace Quantum {
         y = stick.y;
       }
       bool shiftHeld = GamepadControls.DashHeld || CF2Input.GetKey(UnityEngine.KeyCode.LeftShift) || CF2Input.GetKey(UnityEngine.KeyCode.RightShift);
-      bool jump = CF2Input.GetKey(UnityEngine.KeyCode.Space);
+      bool jump = false; // Space no longer jumps
       bool fire = UnityEngine.Input.GetMouseButton(0);
       bool switchTarget = GamepadControls.SwitchTargetHeld || CF2Input.GetKey(UnityEngine.KeyCode.Tab);
       bool ping = GamepadControls.PingHeld || UnityEngine.Input.GetMouseButton(2);

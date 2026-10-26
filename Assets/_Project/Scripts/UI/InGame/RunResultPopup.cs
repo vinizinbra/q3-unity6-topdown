@@ -67,11 +67,16 @@ public class RunResultPopup : UiPopup
         if (loseRoot != null)
             loseRoot.SetActive(won == false);
 
-        if (won && clearTimeText != null)
-            clearTimeText.text = FormatTime(runTime);
+        // Fill both regardless of outcome: in the Canvas prefab the shared visible "Timer" is the one
+        // wired to timeSurvivedText (the clearTimeText "Timer (1)" is inactive), so gating on `won`
+        // left the win screen showing the prefab placeholder.
+        string runTimeText = FormatTime(runTime);
 
-        if (won == false && timeSurvivedText != null)
-            timeSurvivedText.text = FormatTime(runTime);
+        if (clearTimeText != null)
+            clearTimeText.text = runTimeText;
+
+        if (timeSurvivedText != null)
+            timeSurvivedText.text = runTimeText;
 
         if (enemiesKilledText != null)
             enemiesKilledText.text = enemiesKilled.ToString();

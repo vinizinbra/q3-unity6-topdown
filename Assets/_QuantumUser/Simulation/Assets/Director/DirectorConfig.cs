@@ -53,7 +53,7 @@ namespace Quantum
         // Two players farther apart than this (flat XZ) are treated as separate combat fronts;
         // closer, they share one. Keep >= SpawnRingRadiusMax + RelevantRange so a single centroid
         // still reaches both before they count as split.
-        public FP ClusterDistance = 30;
+        public FP ClusterDistance = 50;
 
         // Radius around a cluster's center within which an active enemy counts toward THAT cluster's
         // local pressure (the per-front analogue of the global TargetPressure gate). ~RelevantRange.

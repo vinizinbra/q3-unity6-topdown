@@ -372,7 +372,7 @@ unchanged despite more enemies); the shipped defaults 0.25/0.10 give a small ris
 +4% coins at the 1.40 cap). Applied per orb in `CurrencyOrbSystem.Grant`; Rift Shards unscaled.
 
 **Cluster detection:** deterministic union-find over `PlayerLink` entities by flat XZ
-`ClusterDistance` (30). Anti-flicker is a hysteresis on the cohesive<->split *mode* only
+`ClusterDistance` (50). Anti-flicker is a hysteresis on the cohesive<->split *mode* only
 (`DirectorSplitActive`/`DirectorSplitTimer`, `ClusterSplitDelay` 2s / `ClusterMergeDelay` 1s), so
 wandering near the boundary doesn't thrash the scalars; within split mode the anchors follow players
 live. Single-front (solo/cohesive) uses the exact pre-cluster global pressure gate, so non-split

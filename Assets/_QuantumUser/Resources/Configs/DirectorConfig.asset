@@ -29,7 +29,7 @@ MonoBehaviour:
   MaxGroupSpawnAttempts: 8
   ForbiddenSpawnChunkTypes: 0400
   ClusterDistance:
-    RawValue: 1966080
+    RawValue: 3276800
   ClusterPressureRadius:
     RawValue: 1048576
   MaxSplitThreatMultiplier:

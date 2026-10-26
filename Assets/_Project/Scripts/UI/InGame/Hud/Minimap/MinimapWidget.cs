@@ -101,6 +101,26 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Hide the whole minimap (frameRect) once the boss fight starts (GameState.Boss), for the rest of the match - the boss fight ends the run either way (boss dies or the team does), so there is nothing left to navigate to.")]
     private bool hideDuringBoss = true;
 
+    [Header("Explored")]
+    [SerializeField, Tooltip("Shows the percentage of the level's chunks that are Discovered. Leave unassigned to disable. Put it under frameRect so it hides with the minimap.")]
+    private TMPro.TMP_Text exploredText;
+    [SerializeField, Tooltip("string.Format pattern for exploredText; {0} is the whole-number percent.")]
+    private string exploredFormat = "{0}% explored";
+
+    [Header("Unexplored doors")]
+    [SerializeField, Tooltip("Marks every door between a Discovered chunk and a not-yet-Discovered neighbour with a door-wide gradient, tinted like its chunk, reaching into the unknown. Off = no markers.")]
+    private bool showUnexploredDoors = true;
+    [SerializeField, Range(0f, 1f), Tooltip("Peak opacity of the door gradient at the door itself (it pulses between ~70% and 100% of this). Its colour is the chunk the door belongs to: currentColor (blinking, like the chunk) while you stand in it, discoveredColor otherwise.")]
+    private float doorFadeAlpha = 1f;
+    [SerializeField, Range(0.2f, 1f), FormerlySerializedAs("doorBarCoverage"), Tooltip("Fraction of the shared edge (the door's width) the gradient covers.")]
+    private float doorFadeCoverage = 0.8f;
+    [SerializeField, Tooltip("Pulses per second of the door markers (unscaled time).")]
+    private float doorPulseSpeed = 1.4f;
+    [SerializeField, Tooltip("How far (in map texels) the door's fade reaches into the unexplored chunk. The fade is only as wide as the door itself, so it never reveals the chunk's size.")]
+    private float doorFadeTexels = 7f;
+    [SerializeField, Range(0.5f, 8f), Tooltip("Exponential falloff rate of the door gradient: opacity ~ e^(-k*distance), rescaled so it still reaches 0 at the far end. Higher = brighter right at the door and a faster drop; ~0.5 is almost linear. Read when the sprite is first built (restart Play after changing).")]
+    private float doorFadeFalloff = 3f;
+
     [Header("Colors")]
     [SerializeField] private Color undiscoveredColor = new Color(0.12f, 0.12f, 0.12f, 1f);
     [SerializeField] private Color discoveredColor = new Color(0.55f, 0.55f, 0.55f, 1f);
@@ -320,6 +340,20 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
 
     public bool IsExpanded => _expandTarget;
 
+    // Unexplored doors: one marker per (Discovered chunk, undiscovered neighbour) pair. Neighbours come
+    // from Chunk.ConnectedChunks (final once LevelGenerated), cached on first sight; the markers are
+    // rebuilt only when a chunk is added or flips Discovered.
+    private sealed class DoorMarker
+    {
+        public RectTransform Fade;
+        public Image FadeImage;
+        public EntityRef Owner;
+    }
+
+    private readonly Dictionary<EntityRef, EntityRef[]> _chunkNeighbors = new();
+    private readonly Dictionary<(EntityRef, EntityRef), DoorMarker> _doors = new();
+    private bool _doorsDirty;
+
     // Cached per-chunk texel rect (computed once, on first sight) plus last-known Discovered value.
     private readonly Dictionary<EntityRef, RectInt> _chunkTexelRects = new();
     private readonly Dictionary<EntityRef, bool> _lastDiscovered = new();
@@ -448,6 +482,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         CenterOnLocalPlayer(frame);
         PinActiveIconsToViewportEdge();
         UpdatePingRadars();
+        UpdateUnexploredDoorPulse();
     }
 
     // Shifts the whole content layer (mapRect - texture, icons, and markers all live under it) so
@@ -776,6 +811,23 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         _centered = true;
     }
 
+    // Share of placed chunks that are Discovered, from the _lastDiscovered cache (already kept current
+    // by UpdateChunks' pass 1). Only called when a chunk was added or flipped, so it costs nothing in
+    // steady state.
+    private void UpdateExploredText()
+    {
+        if (exploredText == null || _lastDiscovered.Count == 0)
+            return;
+
+        int discovered = 0;
+        foreach (bool d in _lastDiscovered.Values)
+            if (d)
+                discovered++;
+
+        int percent = Mathf.FloorToInt(100f * discovered / _lastDiscovered.Count);
+        exploredText.text = string.Format(exploredFormat, percent);
+    }
+
     private unsafe void UpdateChunks(Frame frame)
     {
         // Nothing is cached or painted until the level is centered (see EnsureCentered) - every
@@ -812,12 +864,23 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
                 _chunkTexelRects[entity] = ComputeTexelRect(chunk, transform);
                 _lastDiscovered[entity] = chunk.Discovered;
                 newlySeen.Add(entity);
+
+                var neighbors = new EntityRef[chunk.ConnectedChunkCount];
+                for (int i = 0; i < neighbors.Length; i++)
+                    neighbors[i] = chunk.ConnectedChunks[i];
+                _chunkNeighbors[entity] = neighbors;
             }
             else if (_lastDiscovered[entity] != chunk.Discovered)
             {
                 _lastDiscovered[entity] = chunk.Discovered;
                 discoveredChanged.Add(entity);
             }
+        }
+
+        if (newlySeen.Count > 0 || discoveredChanged.Count > 0)
+        {
+            UpdateExploredText();
+            _doorsDirty = true;
         }
 
         // Gated on Global.LevelGenerated (set true only once LevelGenerationSystem has placed
@@ -880,6 +943,12 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         UpdateCurrentHole(frame);
 
         UpdateCurrentBlink(currentChunk);
+
+        if (_doorsDirty)
+        {
+            _doorsDirty = false;
+            RebuildUnexploredDoors();
+        }
 
         if (_textureDirty)
         {
@@ -2144,6 +2213,135 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         }
 
         _seenClearEnemiesThisFrame.Clear();
+    }
+
+    // Rebuilds the doors: every Discovered chunk's undiscovered neighbour is a "door" - a gate bar on
+    // the shared edge (exact length, so it's drawn IN the map, not on top of it) plus a door-wide
+    // gradient reaching into the unknown. Cheap: only runs when a chunk was added or flipped Discovered.
+    private void RebuildUnexploredDoors()
+    {
+        var wanted = new Dictionary<(EntityRef, EntityRef), (Vector2 Pos, Vector2 Dir, float Length)>();
+        float uiScale = mapRect.rect.width / _textureResolution;
+
+        if (showUnexploredDoors)
+        {
+            foreach (var pair in _chunkNeighbors)
+            {
+                if (_lastDiscovered.TryGetValue(pair.Key, out bool aDiscovered) == false || aDiscovered == false)
+                    continue;
+
+                RectInt a = _chunkTexelRects[pair.Key];
+                foreach (EntityRef neighbor in pair.Value)
+                {
+                    if (_lastDiscovered.TryGetValue(neighbor, out bool bDiscovered) == false || bDiscovered)
+                        continue;
+                    if (_chunkTexelRects.TryGetValue(neighbor, out RectInt b) == false)
+                        continue;
+                    if (TryComputeSharedEdge(a, b, out Vector2 edgeCenter, out Vector2 dir, out float edgeLength) == false)
+                        continue;
+
+                    Vector2 pos = new Vector2((edgeCenter.x - _textureResolution * 0.5f) * uiScale,
+                        (edgeCenter.y - _textureResolution * 0.5f) * uiScale);
+                    wanted[(pair.Key, neighbor)] = (pos, dir, edgeLength * uiScale);
+                }
+            }
+        }
+
+        var stale = new List<(EntityRef, EntityRef)>();
+        foreach (var key in _doors.Keys)
+            if (wanted.ContainsKey(key) == false)
+                stale.Add(key);
+        foreach (var key in stale)
+        {
+            DoorMarker gone = _doors[key];
+            Destroy(gone.Fade.gameObject);
+            _doors.Remove(key);
+        }
+
+        foreach (var kv in wanted)
+        {
+            if (_doors.TryGetValue(kv.Key, out DoorMarker door) == false)
+            {
+                door = CreateDoorMarker();
+                _doors[kv.Key] = door;
+            }
+
+            door.Owner = kv.Key.Item1;
+            // Fade: door-wide strip starting on the edge and reaching into the unknown chunk. Its sprite
+            // is bright on the left and transparent on the right, so rotate it to face the direction.
+            float fadeDepth = uiScale * doorFadeTexels;
+            door.Fade.anchoredPosition = kv.Value.Pos + kv.Value.Dir * (fadeDepth * 0.5f);
+            door.Fade.sizeDelta = new Vector2(fadeDepth, kv.Value.Length * doorFadeCoverage);
+            door.Fade.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(kv.Value.Dir.y, kv.Value.Dir.x) * Mathf.Rad2Deg);
+        }
+    }
+
+    // Shared border of two touching texel rects (snapped, so the boundaries match exactly): its midpoint in
+    // texel coordinates, the unit direction from A toward B, and its length in texels.
+    private static bool TryComputeSharedEdge(RectInt a, RectInt b, out Vector2 center, out Vector2 dir, out float length)
+    {
+        center = default;
+        dir = default;
+        length = 0f;
+
+        int yLo = Mathf.Max(a.y, b.y), yHi = Mathf.Min(a.yMax, b.yMax);
+        int xLo = Mathf.Max(a.x, b.x), xHi = Mathf.Min(a.xMax, b.xMax);
+
+        if (yHi > yLo && a.xMax == b.x) { center = new Vector2(a.xMax, (yLo + yHi) * 0.5f); dir = Vector2.right; length = yHi - yLo; return true; }
+        if (yHi > yLo && b.xMax == a.x) { center = new Vector2(a.x, (yLo + yHi) * 0.5f); dir = Vector2.left; length = yHi - yLo; return true; }
+        if (xHi > xLo && a.yMax == b.y) { center = new Vector2((xLo + xHi) * 0.5f, a.yMax); dir = Vector2.up; length = xHi - xLo; return true; }
+        if (xHi > xLo && b.yMax == a.y) { center = new Vector2((xLo + xHi) * 0.5f, a.y); dir = Vector2.down; length = xHi - xLo; return true; }
+        return false;
+    }
+
+    private DoorMarker CreateDoorMarker()
+    {
+        var fadeGo = new GameObject("DoorFade", typeof(RectTransform), typeof(Image));
+        var fade = fadeGo.GetComponent<RectTransform>();
+        fade.SetParent(mapRect, false);
+        var fadeImage = fadeGo.GetComponent<Image>();
+        fadeImage.raycastTarget = false;
+        fadeImage.sprite = GetFadeSprite();
+
+        return new DoorMarker { Fade = fade, FadeImage = fadeImage };
+    }
+
+    private Sprite _fadeSprite;
+
+    // 1D gradient, opaque on the left to transparent on the right (exponential falloff, see doorFadeFalloff).
+    private Sprite GetFadeSprite()
+    {
+        if (_fadeSprite != null)
+            return _fadeSprite;
+
+        const int W = 64;
+        var tex = new Texture2D(W, 1, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+        for (int x = 0; x < W; x++)
+        {
+            float u = x / (W - 1f);
+            float end = Mathf.Exp(-doorFadeFalloff);
+            float a = (Mathf.Exp(-doorFadeFalloff * u) - end) / (1f - end);
+            tex.SetPixel(x, 0, new Color(1f, 1f, 1f, a));
+        }
+        tex.Apply(false);
+        _fadeSprite = Sprite.Create(tex, new Rect(0, 0, W, 1), new Vector2(0.5f, 0.5f), W);
+        return _fadeSprite;
+    }
+
+    // Breathing: the gradient fades in/out. Unscaled time, so it keeps going while the sim is paused.
+    private void UpdateUnexploredDoorPulse()
+    {
+        if (_doors.Count == 0)
+            return;
+
+        float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * doorPulseSpeed * Mathf.PI * 2f);
+        float fadeAlpha = doorFadeAlpha * Mathf.Lerp(0.7f, 1f, wave);
+        foreach (DoorMarker door in _doors.Values)
+        {
+            Color fade = door.Owner == _lastCurrentChunk ? _currentPaintColor : discoveredColor;
+            fade.a = fadeAlpha;
+            door.FadeImage.color = fade;
+        }
     }
 
     private Vector2Int WorldToTexel(Vector2 worldXZ)
