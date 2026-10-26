@@ -134,6 +134,11 @@ namespace Quantum
                 status->ReviveImmunityRemaining = invulnDuration;
             }
 
+            // The reviver (a teammate hold, not a self-revive/auto-revive) gets a brief grace window
+            // too - they stood still channeling next to enemies for the whole hold.
+            if (reviver != EntityRef.None && reviver != target)
+                GrantGraceInvulnerability(f, reviver, config != null ? config.ReviverInvulnerabilityDuration : FP._1);
+
             // Revive L3 "Revive Guard" (meta progression) - a self-revive also restores 1 Accessory Guard block.
             if (reviver == target && TalentUtility.TryGetTalents(f, target, out PlayerTalents selfTalents)
                 && selfTalents.Exploration.ReviveLevel >= MetaUnlockLevels.ReviveGuard)
@@ -201,6 +206,69 @@ namespace Quantum
             }
 
             Log.Debug($"[Revive] Breathing area secured - auto-revived {toRevive.Count} incapacitated player(s)");
+        }
+
+        // Level-up (see LevelUpUtility.OpenUpgradeScreen) revives every DOWNED player - KO stays a
+        // dead end until the area is secured, same as every other non-area-secured path.
+        public static void ReviveAllDowned(Frame f)
+        {
+            var filtered = f.Filter<PlayerLifeState, PlayerLink>();
+            List<EntityRef> toRevive = null;
+
+            while (filtered.Next(out EntityRef entity, out PlayerLifeState lifeState, out PlayerLink _))
+            {
+                if (lifeState.State == PlayerLifeStateKind.Downed)
+                {
+                    toRevive ??= new List<EntityRef>();
+                    toRevive.Add(entity);
+                }
+            }
+
+            if (toRevive == null)
+                return;
+
+            for (int i = 0; i < toRevive.Count; i++)
+            {
+                Revive(f, toRevive[i], EntityRef.None);
+            }
+
+            Log.Debug($"[Revive] level-up - auto-revived {toRevive.Count} downed player(s)");
+        }
+
+        // Brief Invulnerable window for an ALIVE player (post-pick grace, reviver grace). Reuses
+        // StatusEffects.ReviveImmunityRemaining as the timer (strongest-wins, never shortens an
+        // existing window) - TickReviveImmunity removes the tag once it lapses. No-op for a
+        // Downed/KO player, whose Invulnerable tag is owned by their life state.
+        public static void GrantGraceInvulnerability(Frame f, EntityRef entity, FP duration)
+        {
+            if (duration <= FP._0)
+                return;
+
+            if (f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<PlayerLifeState>(entity, out var lifeState) == true
+                && lifeState->State != PlayerLifeStateKind.Alive)
+                return;
+
+            if (f.Has<Invulnerable>(entity) == false)
+                f.Add<Invulnerable>(entity);
+
+            if (duration > status->ReviveImmunityRemaining)
+                status->ReviveImmunityRemaining = duration;
+        }
+
+        // Invulnerable is shared by Downed/KO, Cheat Death and the grace window above - an expiring
+        // timer only removes the tag when none of the other reasons still holds.
+        public static void RemoveInvulnerableIfUnjustified(Frame f, EntityRef entity, StatusEffects* status)
+        {
+            if (status->CheatDeathImmunityRemaining > FP._0 || status->ReviveImmunityRemaining > FP._0)
+                return;
+
+            if (IsIncapacitated(f, entity) == true)
+                return;
+
+            f.Remove<Invulnerable>(entity);
         }
 
         public static ReviveConfig GetConfig(Frame f)

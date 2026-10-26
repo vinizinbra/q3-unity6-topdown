@@ -196,14 +196,10 @@
                 // decides whether to tick this tick) AND processes this player's own
                 // SelfReviveCommand (a separate, instant press/confirm - no channel/hold involved).
                 // ReviveChannelSystem ticks every actively-holding TEAMMATE reviver's own channel,
-                // right after it for the same same-tick-consistency reason. ReviveDamageInterruptSystem
-                // is signal-driven (OnHealthDamageApplied/OnShieldDamageApplied fire synchronously
-                // from wherever DamageUtility.ApplyDamage is actually called, not from this position
-                // in the list) - grouped here purely for discoverability. RunFailureSystem is last
+                // right after it for the same same-tick-consistency reason. RunFailureSystem is last
                 // so it reads this tick's fully-resolved life-state.
                 new PlayerLifeStateSystem(),
                 new ReviveChannelSystem(),
-                new ReviveDamageInterruptSystem(),
                 new RunFailureSystem(),
                 // Debug-only command processor for LevelUpPoolKind.PassiveUpgrade (see
                 // PassiveUpgradeSystem's own comment) - before VoidFieldSystem so a same-tick-granted

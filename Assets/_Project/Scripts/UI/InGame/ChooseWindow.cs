@@ -73,6 +73,16 @@ public class ChooseWindow : UiWindow
     [SerializeField] private TMP_Text nextSurvivalValueText;
     [SerializeField, Tooltip("Row label on a timed Level-Up/Chest pick.")]
     private string chooseInLabel = "Choose in:";
+    [Header("Timeout urgency (timed Level-Up/Chest pick)")]
+    [SerializeField, Tooltip("Seconds left at which the countdown turns urgent (label swap, colour, per-second pulse).")]
+    private int urgentSeconds = 5;
+    [SerializeField, Tooltip("Row label once urgent on an upgrade pick - a random option is taken when it hits 0.")]
+    private string upgradeTimeoutLabel = "Random pick in:";
+    [SerializeField, Tooltip("Row label once urgent on a Choose-Weapon pick - the current weapon is kept when it hits 0.")]
+    private string weaponTimeoutLabel = "Keeping current in:";
+    [SerializeField] private Color urgentColor = new Color(1f, 0.25f, 0.25f, 1f);
+    [SerializeField] private float urgentPulseScale = 1.3f;
+    [SerializeField] private float urgentPulseDuration = 0.4f;
     [SerializeField, Tooltip("Row position (from the window's top centre) on POI screens - right of the balance.")]
     private Vector2 rowPositionBesideBalance = new Vector2(200f, -180f);
     [SerializeField, Tooltip("Row position on a timed Level-Up/Chest pick - centred between the subtitle strip and the cards.")]
@@ -588,7 +598,7 @@ public class ChooseWindow : UiWindow
         RefreshCurrentWeaponCard(currentWeapon);
         RefreshTitle(title);
         RefreshSubtitle(subtitle);
-        RefreshCountdown(timeRemaining);
+        RefreshCountdown(timeRemaining, false);
         SetSecondaryButtonActive(allowCancel, "CANCEL");
         SetRerollButtonActive(allowReroll);
 
@@ -625,7 +635,7 @@ public class ChooseWindow : UiWindow
         RefreshCurrentWeaponCard(currentWeapon);
         RefreshTitle(title);
         RefreshSubtitle(subtitle);
-        RefreshCountdown(timeRemaining);
+        RefreshCountdown(timeRemaining, true);
         SetSecondaryButtonActive(true, "KEEP CURRENT");
         SetRerollButtonActive(true);
 
@@ -780,6 +790,16 @@ public class ChooseWindow : UiWindow
         _rowPopped = false;
         _balancePopTween.Stop();
         _rowPopTween.Stop();
+        _urgencyPulseTween.Stop();
+        _lastUrgentSecond = -1;
+
+        if (_valueRestColor.HasValue)
+        {
+            if (nextSurvivalValueText != null)
+                nextSurvivalValueText.color = _valueRestColor.Value;
+            if (nextSurvivalLabelText != null)
+                nextSurvivalLabelText.color = _valueRestColor.Value;
+        }
 
         if (currencyBalance != null)
             currencyBalance.transform.localScale = _balanceRestScale;
@@ -794,7 +814,11 @@ public class ChooseWindow : UiWindow
             nextSurvivalRoot.SetActive(false);
     }
 
-    private void RefreshCountdown(float timeRemaining)
+    private int _lastUrgentSecond = -1;
+    private Color? _valueRestColor;
+    private Tween _urgencyPulseTween;
+
+    private void RefreshCountdown(float timeRemaining, bool weaponPick)
     {
         int seconds = Mathf.CeilToInt(Mathf.Max(timeRemaining, 0f));
 
@@ -802,8 +826,52 @@ public class ChooseWindow : UiWindow
             countdownText.text = seconds.ToString();
 
         // A timed pick (Level-Up/Chest) says so up top; POI screens pass 0 and set their own row.
-        if (timeRemaining > 0f)
-            SetHeaderRow(chooseInLabel, seconds, besideBalance: false);
+        if (timeRemaining <= 0f)
+        {
+            _lastUrgentSecond = -1;
+            return;
+        }
+
+        bool urgent = seconds <= urgentSeconds;
+        string label = urgent ? (weaponPick ? weaponTimeoutLabel : upgradeTimeoutLabel) : chooseInLabel;
+        SetHeaderRow(label, seconds, besideBalance: false);
+        ApplyUrgency(urgent, seconds);
+    }
+
+    // Last few seconds: the value (and label) turn red and the row pulses once per second so the
+    // auto-resolve (random upgrade / keep current weapon) isn't a surprise. Unscaled time - the
+    // Level-Up screen ramps Time.timeScale down.
+    private void ApplyUrgency(bool urgent, int seconds)
+    {
+        if (nextSurvivalValueText == null)
+            return;
+
+        _valueRestColor ??= nextSurvivalValueText.color;
+        Color color = urgent ? urgentColor : _valueRestColor.Value;
+        nextSurvivalValueText.color = color;
+
+        if (nextSurvivalLabelText != null)
+            nextSurvivalLabelText.color = color;
+
+        if (urgent == false)
+        {
+            _lastUrgentSecond = -1;
+            return;
+        }
+
+        if (seconds == _lastUrgentSecond || nextSurvivalRoot == null)
+            return;
+
+        _lastUrgentSecond = seconds;
+
+        // Don't fight the one-shot header pop-in for the row's scale.
+        if (_rowPopTween.isAlive)
+            return;
+
+        _urgencyPulseTween.Stop();
+        Transform row = nextSurvivalRoot.transform;
+        _urgencyPulseTween = Tween.Scale(row, _rowRestScale * urgentPulseScale, _rowRestScale, urgentPulseDuration,
+            Ease.OutQuad, useUnscaledTime: true);
     }
 
     // showCards/showWeaponCards are independently settable (not one boolean, unlike the old
@@ -837,7 +905,7 @@ public class ChooseWindow : UiWindow
         SetCardFamilyActive(showCards: true, showWeaponCards: true);
         RefreshTitle(title);
         RefreshSubtitle(subtitle);
-        RefreshCountdown(0f);
+        RefreshCountdown(0f, false);
         SetSecondaryButtonActive(true, "CLOSE");
         SetRerollButtonActive(false);
 

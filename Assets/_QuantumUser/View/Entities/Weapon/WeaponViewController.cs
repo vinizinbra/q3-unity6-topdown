@@ -50,6 +50,9 @@ namespace Quantum
         // component decoupled from having to know when a weapon swap happens.
         public WeaponView CurrentWeaponView => currentWeaponView;
 
+        // The spawned weapon prefab root - HitFeedback's immunity pulse tints its sprites too.
+        public GameObject CurrentWeaponInstance => currentWeaponInstance;
+
         private Transform Socket => weaponSocket != null ? weaponSocket : transform;
 
         public override void Awake()

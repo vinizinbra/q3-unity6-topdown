@@ -123,6 +123,10 @@ namespace Quantum
             if (forcedCategory == null)
                 f.Global->PendingLevelUpScreen = false;
 
+            // A real level-up (not a Chest) revives every Downed teammate before options are rolled.
+            if (forcedCategory == null)
+                PlayerLifeStateUtility.ReviveAllDowned(f);
+
             bool anyRolled = false;
             int level = f.Global->Level + 1;
 
@@ -729,6 +733,15 @@ namespace Quantum
             if (choice->Confirmed == true || choice->OptionCount == 0)
                 return;
 
+            // Timing out on a Choose-Weapon screen keeps the current weapon (same as pressing
+            // "Keep Current") instead of swapping to a random one. Bots/disconnects go through here
+            // too, but bots auto-pick earlier (AutoPickForBots) so they never reach it.
+            if (choice->Category == LevelUpCategory.ChooseWeapon)
+            {
+                ConfirmKeepCurrent(f, entity, choice);
+                return;
+            }
+
             choice->SelectedIndex = (byte)f.RNG->Next(0, choice->OptionCount);
             choice->Confirmed = true;
 
@@ -759,6 +772,11 @@ namespace Quantum
                 }
 
                 f.Remove<LevelUpChoice>(entity);
+
+                // Grace window so nobody resumes into a hit while still reading their pick.
+                ReviveConfig reviveConfig = PlayerLifeStateUtility.GetConfig(f);
+                PlayerLifeStateUtility.GrantGraceInvulnerability(f, entity,
+                    reviveConfig != null ? reviveConfig.PostChoiceInvulnerabilityDuration : FP._1);
             }
 
             f.Global->LevelUpScreenOpen = false;

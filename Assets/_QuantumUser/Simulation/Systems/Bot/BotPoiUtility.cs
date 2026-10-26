@@ -78,8 +78,8 @@ namespace Quantum
         {
             int breathingIndex = f.Global->BreathingIndex;
 
-            // Mid-Survival only the Shrine is worth leaving the fight for.
-            if (f.Global->CurrentState == GameState.Survival && kind != InteractableKind.HealingShrine)
+            // Mid-Survival only the Shrine (and Team Challenge Ready-up) is worth leaving the fight for.
+            if (f.Global->CurrentState == GameState.Survival && kind != InteractableKind.HealingShrine && kind != InteractableKind.TeamChallenge)
                 return false;
 
             switch (kind)
@@ -108,9 +108,24 @@ namespace Quantum
                         && brain->CursedRiftAttemptedAtBreathingIndex != breathingIndex
                         && CursedRiftUtility.ResolveInteractionState(f, self, poi) == ContextInteractionState.Available;
 
+                // Only the Ready-up press (Available/WaitingForTeam) - a human can claim the reward.
+                // Already-Ready resolves to AlreadyUsed, so the bot stops wanting it once pressed.
+                case InteractableKind.TeamChallenge:
+                    return settings.DisableTeamChallenge == false
+                        && f.Unsafe.TryGetPointer<TeamChallenge>(poi, out var challenge) == true
+                        && (challenge->State == TeamChallengeState.Available || challenge->State == TeamChallengeState.WaitingForTeam)
+                        && TeamChallengeUtility.ResolveInteractionState(f, self, poi) == ContextInteractionState.Available;
+
                 default:
                     return false;
             }
+        }
+
+        // The Team Challenge POI this bot is Ready for, or None. A Ready bot holds near it (see
+        // BotInputSystem.TrySelectInteract) - TeamChallengeSystem cancels Ready outside ReadyCancelRadius.
+        public static EntityRef GetReadiedTeamChallenge(Frame f, EntityRef self)
+        {
+            return f.Unsafe.TryGetPointer<TeamChallengeReady>(self, out var ready) == true ? ready->Poi : EntityRef.None;
         }
 
         // Called once the bot stands inside the POI's radius. Marks the kind attempted for this
@@ -141,6 +156,10 @@ namespace Quantum
                 case InteractableKind.CursedRift:
                     brain->CursedRiftAttemptedAtBreathingIndex = breathingIndex;
                     UseCursedRift(f, self, poi);
+                    break;
+
+                case InteractableKind.TeamChallenge:
+                    TeamChallengeUtility.TryInteract(f, self, poi);
                     break;
             }
         }

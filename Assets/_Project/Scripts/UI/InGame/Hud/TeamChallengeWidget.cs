@@ -22,6 +22,7 @@ public class TeamChallengeWidget : GameStateGatedWidget
     {
         base.Awake();
         QuantumEvent.Subscribe<EventTeamChallengeActivated>(this, OnActivated);
+        QuantumEvent.Subscribe<EventTeamChallengeReadyCanceled>(this, OnReadyCanceled);
         QuantumEvent.Subscribe<EventTeamChallengeStarted>(this, OnStarted);
         QuantumEvent.Subscribe<EventTeamChallengeCompleted>(this, OnCompleted);
         QuantumEvent.Subscribe<EventTeamChallengeFailed>(this, OnFailed);
@@ -37,8 +38,8 @@ public class TeamChallengeWidget : GameStateGatedWidget
     {
         if (IsMyLocalPlayer(e.Player) == true)
         {
-            // A solo player (no other connected, non-incapacitated Raider - bots auto-ready too,
-            // see TeamChallengeUtility.AutoReadyBots) is ALREADY the whole team the instant they
+            // A solo player (no other connected, non-incapacitated Raider - bots must walk over and
+            // Ready themselves, see BotPoiUtility) is ALREADY the whole team the instant they
             // press Ready - TryBeginStarting (ticked every frame) moves straight to Starting with
             // nothing left to wait on. No toast needed there anymore ("Challenge starting..." read
             // as noisy - the STARTING countdown/CHALLENGE STARTED banner already cover it a moment
@@ -111,6 +112,12 @@ public class TeamChallengeWidget : GameStateGatedWidget
             return true;
 
         return TeamChallengeUtility.CountReady(frame, poi) >= TeamChallengeUtility.CountRequiredRaiders(frame);
+    }
+
+    private void OnReadyCanceled(EventTeamChallengeReadyCanceled e)
+    {
+        if (IsMyLocalPlayer(e.Player) == true)
+            ToastManager.Instance?.Show("Team Challenge canceled - too far away");
     }
 
     private static bool IsMyLocalPlayer(EntityRef player)

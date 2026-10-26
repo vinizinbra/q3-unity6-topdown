@@ -16,9 +16,9 @@ namespace Quantum
         public FP ReviveMoveSpeedMultiplier = FP.FromString("0.30");
 
         // How many seconds of banked ReviveProgress decay per real second while nobody is actively
-        // channeling it (see PlayerLifeStateSystem) - taking damage or drifting out of range now
-        // INTERRUPTS a hold outright (ReviveDamageInterruptSystem/ReviveChannelSystem) rather than
-        // merely pausing it, but the progress itself isn't lost - it just isn't held forever either.
+        // channeling it (see PlayerLifeStateSystem) - drifting out of range (e.g. knockback)
+        // INTERRUPTS a hold (ReviveChannelSystem); taking damage alone does not. The
+        // interrupted progress isn't lost, but the progress itself isn't lost - it just isn't held forever either.
         // 0.5 - half the rate progress builds at - means an interrupted hold stays roughly half-banked
         // for as long as it took to build, giving a teammate resuming it a real head start without
         // making the timer meaningless.
@@ -27,5 +27,13 @@ namespace Quantum
         public FP ReviveHealthPercent = FP.FromString("0.40");
         public FP ReviveInvulnerabilityDuration = 2;
         public FP ReviveInteractionRange = 3;
+
+        // Brief grace window for the teammate who just completed a revive hold (the revived player
+        // gets ReviveInvulnerabilityDuration above).
+        public FP ReviverInvulnerabilityDuration = 1;
+
+        // Grace window for every player once a level-up/chest pick (upgrade or weapon) resolves and
+        // gameplay resumes - see LevelUpUtility.Resolve.
+        public FP PostChoiceInvulnerabilityDuration = 1;
     }
 }

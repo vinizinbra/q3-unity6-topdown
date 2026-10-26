@@ -116,6 +116,7 @@ config both paths reference):
   Confirmed with the user: rank 0 -> 1 offer, rank 1 -> 2, rank 2 -> 3
   (`StoreUtility.ResolveWeaponOfferCount` = `Clamp(ShopWeaponOfferCount + 1, 1, MaxWeaponOfferSlots)`,
   also capped by however many the shared inventory actually rolled).
+  **Beta (2026-10-25):** `MetaProgressionPlaytestConfig` has Store (id 100) at L3, so beta builds get 2 weapon offers.
 - No `PoiUsagePolicy` on `Store` itself (unlike Healing Shrine/Cursed Rift/Blacksmith) - the POI is
   unconditionally re-browsable while Available; `PoiActivationSystem` resolves its `PoiActivation`
   against `PoiUsagePolicy.Reusable` for this reason.

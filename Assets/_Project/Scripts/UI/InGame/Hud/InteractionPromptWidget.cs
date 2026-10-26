@@ -587,6 +587,16 @@ public class InteractionPromptWidget : MonoBehaviour
             }
         }
 
+        // Team Challenge: the moment anyone has Readied up (WaitingForTeam), every local player inside
+        // the larger Ready/Cancel Area sees this prompt right away, even before they reach the small
+        // Interaction Area - so the rest of the team can see the roster and walk in to accept.
+        if ((state == ContextInteractionState.None || state == ContextInteractionState.PhaseUnavailable)
+            && TryResolveTeamChallengeBroadcast(out EntityRef nearbyPlayer) == true)
+        {
+            state = ContextInteractionState.Available;
+            player = nearbyPlayer;
+        }
+
         // Edge-triggered (only on a change), so standing near a POI logs a couple of lines, not one
         // per frame. A POI that never logs a transition out of None while the player is on top of it
         // means the sim never resolved it as this player's ActiveTarget.
@@ -625,6 +635,45 @@ public class InteractionPromptWidget : MonoBehaviour
         }
 
         SetShown(shown);
+    }
+
+    // True (and the first qualifying local player) while this is a TeamChallenge POI in WaitingForTeam
+    // and a local player stands within TeamChallengeConfig.ReadyCancelRadius of it.
+    private unsafe bool TryResolveTeamChallengeBroadcast(out EntityRef player)
+    {
+        player = EntityRef.None;
+
+        if (_game == null || MyLocalPlayer.Instance == null)
+            return false;
+
+        Frame frame = _game.Frames.Predicted;
+
+        if (frame.Unsafe.TryGetPointer<TeamChallenge>(_entityRef, out var challenge) == false
+            || challenge->State != TeamChallengeState.WaitingForTeam
+            || challenge->Config.Id.IsValid == false
+            || frame.Unsafe.TryGetPointer<Transform3D>(_entityRef, out var poiTransform) == false)
+            return false;
+
+        TeamChallengeConfig config = frame.FindAsset(challenge->Config);
+        if (config == null)
+            return false;
+
+        FP radiusSqr = config.ReadyCancelRadius * config.ReadyCancelRadius;
+        var slots = MyLocalPlayer.Instance.Slots;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            if (slots[i].IsSet == false || frame.Unsafe.TryGetPointer<Transform3D>(slots[i].EntityRef, out var playerTransform) == false)
+                continue;
+
+            if (EnemyMovementUtility.FlatSqrDistance(poiTransform->Position, playerTransform->Position) <= radiusSqr)
+            {
+                player = slots[i].EntityRef;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private unsafe string ResolveDescription(ContextInteractionState state, EntityRef player)

@@ -810,3 +810,15 @@ Beyond the missing assets/wiring:
   `GlobalUpgradeDebugTrigger` still send their commands, but `WeaponSystem`/`SkillSystem`/
   `PassiveUpgradeSystem`/`GlobalUpgradeSystem` are paused (inside `GameplaySystemGroup`) so the
   commands are silently dropped that tick - resumes working the instant the screen closes.
+
+## Post-pick grace & Downed revive (2026-10-25)
+
+`Resolve` grants each player a 1s `Invulnerable` window (`ReviveConfig.PostChoiceInvulnerabilityDuration`);
+a real level-up (not a Chest) first revives every Downed player. See `docs/revive.md`.
+
+## Timeout behaviour & urgency feedback (2026-10-25)
+
+- Timeout on a **Choose Weapon** screen now keeps the current weapon (`AutoConfirm` → `ConfirmKeepCurrent`);
+  other categories still auto-pick a random option.
+- `ChooseWindow`: in the last `urgentSeconds` (5) the "Choose in:" row swaps to "Random pick in:" /
+  "Keeping current in:", turns red and pulses each second (unscaled time).

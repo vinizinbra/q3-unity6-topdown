@@ -840,7 +840,7 @@ MonoBehaviour:
     Kind:
       Value: 5
     Radius:
-      RawValue: 196608
+      RawValue: 393216
     Priority: 0
 --- !u!114 &3508141609643263758
 MonoBehaviour:

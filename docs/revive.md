@@ -203,18 +203,12 @@ progress builds at) whenever `ReviveHolder == EntityRef.None`, i.e. whenever nob
 holding. A teammate resuming the hold later picks up roughly where an interrupted attempt left off,
 provided they get back to it before it fully decays away, instead of always restarting from zero.
 
-**Damage now interrupts (cancels) outright, not pauses.** `ReviveDamageInterruptSystem` (renamed
-from `ReviveDamagePauseSystem`) reacts to `Combat.qtn`'s `OnHealthDamageApplied`/
-`OnShieldDamageApplied` - the exact same signal-driven shape `BruteProtectorReactionSystem` already
-uses - and calls `ReviveUtility.Cancel` directly on whichever entity just took the hit, ending the
-hold (the reviver has to press-and-hold again to resume) rather than freezing it in place for a
-fixed window. Since `ReviveChannel` only ever exists on a reviver's own entity, `target` here is
-always the **reviver**, never the person being revived (who is `Invulnerable` while Downed/KO -
-`DamageUtility.ApplyDamage`'s `Invulnerable` gate returns before either signal would ever fire for
-them). **Free emergent property, not extra code: a self-revive channel can never be
-damage-interrupted**, since the self-reviver is by definition Downed (self-revive no longer applies
-to KO either, see below) and therefore always Invulnerable - moot anyway, since self-revive is an
-instant press/confirm, not a hold (see below).
+**Damage no longer interrupts a hold (2026-10-25).** `ReviveDamageInterruptSystem` was deleted: the
+reviver keeps channeling through hits. A hold now only breaks if the reviver is pushed beyond
+`ReviveInteractionRange` (e.g. knockback), the target is no longer Downed, or the reviver is
+incapacitated. The out-of-range case also raises `EventReviveCanceled` (Events.qtn) from
+`ReviveChannelSystem`; `ReviveToastDirector` (self-installed, UI/InGame) shows a "Revive canceled"
+`ToastManager` toast to the local owner of that reviver. A deliberate button release cancels silently.
 
 **KO revival was ultimately removed rather than tuned further.** Even after the decay/interrupt
 rework above, a full 5s KO hold remained fragile under sustained fire - the user's explicit call was
@@ -547,7 +541,7 @@ The code compiles once codegen picks up every changed/new `.qtn` file (`PlayerLi
 KO revival was cut, see "Life state" above - `ContextInteraction.qtn`'s new `Revive`/`Occupied`
 values, `StatusEffects.qtn`'s `ReviveImmunityRemaining`, `GameState.qtn`'s `RunFailed`,
 `CharacterStats.qtn`'s `SelfReviveCharges`, `Events.qtn`'s 3 new events), and `SystemSetup.User.cs`
-registers `PlayerLifeStateSystem`/`ReviveChannelSystem`/`ReviveDamageInterruptSystem`/
+registers `PlayerLifeStateSystem`/`ReviveChannelSystem`/
 `RunFailureSystem` right after `SkillSystem`; `CommandSetup.User.cs` registers the new
 `SelfReviveCommand`.
 `DamageUtility.RespawnPlayer` (the old instant-respawn behavior) is deleted entirely - a genuine,
@@ -591,3 +585,22 @@ Not yet manually verified end-to-end in-Editor, solo or co-op.
 ## Meta progression hooks (2026-10-12)
 
 Two menu Upgrades lines feed this (see `docs/talents.md`, "Meta progression"). Revive: L1/L4 set self-revive charges through `TalentsConfig.SelfReviveChargesByLevel`; L2 adds `SelfReviveHealthBonus` HP on a self-revive; L3 restores 1 Accessory Guard block on a self-revive (`PlayerLifeStateUtility.Revive`). Co-op: L1 makes the reviver's hold progress run faster (`ReviveChannelSystem`); L2 lengthens the player's own bleed-out (`EnterDowned`); L3 gives allies this player revives `CoopRescueHealthBonus` extra HP.
+
+## Grace windows & level-up revive (2026-10-25)
+
+- **Reviver grace**: `Revive()` gives a teammate reviver `ReviveConfig.ReviverInvulnerabilityDuration` (1s)
+  via `PlayerLifeStateUtility.GrantGraceInvulnerability` (the revived keeps `ReviveInvulnerabilityDuration`).
+- **Post-pick grace**: `LevelUpUtility.Resolve` grants every player `PostChoiceInvulnerabilityDuration` (1s)
+  after a level-up/chest upgrade or weapon pick.
+- **Level-up revives Downed** teammates (`ReviveAllDowned`, called from `OpenUpgradeScreen` for real
+  level-ups only, not chests). KO is untouched (still a dead end until the area is secured).
+- Grace reuses `StatusEffects.ReviveImmunityRemaining` (strongest-wins, no `.qtn` change). `Invulnerable` removal
+  on any timer's expiry goes through `RemoveInvulnerableIfUnjustified` (skips while the other timer runs or the
+  player is Downed/KO).
+
+### Grace-window feedback
+
+`HitFeedback.UpdateImmunityPulse`: while `StatusEffects.ReviveImmunityRemaining > 0` (Alive players only), the
+hero's tint pulses (`immunityColor`, white, 2 Hz, 4 Hz in the last 0.3s; hero + equipped weapon sprites on the same flash shader). The sprite shaders tint via
+`SpriteRenderer.color` (alpha = mix strength), so it is a tint pulse, not an alpha fade. Yields to any playing
+flash tween; skipped for Max's Cheat Death (`MaxImmortalView` aura) and Downed/KO.

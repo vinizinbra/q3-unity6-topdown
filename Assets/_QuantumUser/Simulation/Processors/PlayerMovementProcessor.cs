@@ -332,15 +332,27 @@ namespace Quantum
             return default;
         }
 
+        // Level colliders are axis-aligned cubes, so the move direction alone says how the wall is
+        // approached: along X or Z is straight on, anything else is angled. A component under this
+        // counts as zero (about 3 degrees off-axis), so a slightly wobbly stick still reads as straight.
+        private static readonly FP MantleAxisAlignedTolerance = FP.FromString("0.05");
+
         // Ankle-height probe blocked + ledge-height probe clear => climbable obstacle.
+        //
+        // One ray per height. An angled approach gets the longer MantleAngledProbeDistance: a ray from
+        // the capsule centre at a shallow angle needs the extra length to get past the capsule radius
+        // to the wall the player is sliding along.
         private static bool TryDetectMantle(KCCContext context, MovementDataAsset data, FPVector3 position, FPVector3 direction)
         {
             QueryOptions queryOptions = QueryOptions.HitStatics | QueryOptions.HitKinematics;
 
+            bool axisAligned = FPMath.Abs(direction.X) <= MantleAxisAlignedTolerance || FPMath.Abs(direction.Z) <= MantleAxisAlignedTolerance;
+            FP reach = axisAligned == true ? data.MantleProbeDistance : data.MantleAngledProbeDistance;
+
             FPVector3 ankleOrigin = position + FPVector3.Up * data.AnkleProbeHeight;
 
             KCCShapeCastInfo ankleCast = KCCShapeCastInfo.Get();
-            bool ankleBlocked = context.KCC->RayCast(context, ankleCast, ankleOrigin, direction, data.MantleProbeDistance, queryOptions);
+            bool ankleBlocked = context.KCC->RayCast(context, ankleCast, ankleOrigin, direction, reach, queryOptions);
             KCCShapeCastInfo.Return(ankleCast);
 
             if (ankleBlocked == false)
@@ -350,14 +362,14 @@ namespace Quantum
             // like a wall) but must never be mantled, regardless of height - checked directly against
             // Physics3D rather than the ledge probe below, since a short GroundNotJumpable obstacle
             // would otherwise still read as a climbable ledge.
-            bool ankleBlockedByNotJumpable = context.Frame.Physics3D.Raycast(ankleOrigin, direction, data.MantleProbeDistance, GetNotJumpableLayerMask(context.Frame), queryOptions).HasValue;
+            bool ankleBlockedByNotJumpable = context.Frame.Physics3D.Raycast(ankleOrigin, direction, reach, GetNotJumpableLayerMask(context.Frame), queryOptions).HasValue;
             if (ankleBlockedByNotJumpable == true)
                 return false;
 
             FPVector3 ledgeOrigin = position + FPVector3.Up * data.MaxLedgeHeight;
 
             KCCShapeCastInfo ledgeCast = KCCShapeCastInfo.Get();
-            bool ledgeBlocked = context.KCC->RayCast(context, ledgeCast, ledgeOrigin, direction, data.MantleProbeDistance, queryOptions);
+            bool ledgeBlocked = context.KCC->RayCast(context, ledgeCast, ledgeOrigin, direction, reach, queryOptions);
             KCCShapeCastInfo.Return(ledgeCast);
 
             return ledgeBlocked == false;

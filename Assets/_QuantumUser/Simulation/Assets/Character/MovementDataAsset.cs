@@ -46,6 +46,8 @@ namespace Quantum
         // Auto-mantle
         public FP MaxLedgeHeight = 1;
         public FP MantleProbeDistance = FP._0_75;
+        // Reach when the wall is hit at an angle (see PlayerMovementProcessor.TryDetectMantle).
+        public FP MantleAngledProbeDistance = 1;
         public FP AnkleProbeHeight = FP._0_25;
 
         // Auto-hop (predictive edge check, done while still grounded)

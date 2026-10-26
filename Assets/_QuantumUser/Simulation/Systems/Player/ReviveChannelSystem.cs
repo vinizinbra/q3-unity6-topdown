@@ -4,9 +4,9 @@ namespace Quantum
     using UnityEngine.Scripting;
 
     // Ticks every actively-holding reviver's own ReviveChannel (see docs/revive.md) - validity,
-    // progress accumulation and completion. Taking damage is handled entirely by
-    // ReviveDamageInterruptSystem (a signal-driven Cancel, not something this system polls for) -
-    // by the time this runs again after a hit, the ReviveChannel is simply gone. Always a TEAMMATE
+    // progress accumulation and completion. Taking damage does NOT interrupt a hold anymore; only
+    // being pushed out of ReviveInteractionRange (knockback) does, which also raises
+    // ReviveCanceled for the toast. Always a TEAMMATE
     // revive of a DOWNED player - KO has no revive path at all anymore, teammate or self (see
     // PlayerLifeStateUtility.EnterKO) - and self-revive is a separate, unrelated instant path
     // (ReviveUtility.TryPerformSelfRevive via SelfReviveCommand) that never creates a ReviveChannel
@@ -50,6 +50,7 @@ namespace Quantum
                 if (sqrDistance > range * range)
                 {
                     ReviveUtility.Cancel(f, reviver);
+                    f.Events.ReviveCanceled(reviver, target);
                     return;
                 }
             }

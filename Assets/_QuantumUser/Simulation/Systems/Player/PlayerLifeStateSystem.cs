@@ -8,7 +8,7 @@ namespace Quantum
     // PlayerLifeStateUtility.EnterDowned). Does NOT drive Alive -> Downed - that's synchronous,
     // triggered directly from DamageUtility.ApplyDamage's own lethal-damage branch. Also decays a
     // Downed/KO player's own banked ReviveProgress while nobody currently holds ReviveHolder (an
-    // interrupted revive - ReviveDamageInterruptSystem/ReviveUtility.Cancel - no longer resets
+    // interrupted revive - ReviveUtility.Cancel - no longer resets
     // progress to 0 outright, it just stops advancing and drifts back down over time instead), and
     // processes this player's own SelfReviveCommand (a deliberate single press/confirm, sent from a
     // dedicated View window - see docs/revive.md) - both folded in here rather than separate

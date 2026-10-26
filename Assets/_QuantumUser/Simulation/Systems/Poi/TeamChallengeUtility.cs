@@ -196,30 +196,6 @@ namespace Quantum
             return count;
         }
 
-        // A bot has nobody at the keyboard to walk it into the Ready/Cancel Area and press Interact,
-        // so (unless opted out) it Readies up unconditionally the instant WaitingForTeam begins -
-        // same "take the bot out of a waiting-for-all-players gate" precedent
-        // RunPhaseUtility.ProcessSkipVotes already establishes for the Breathing skip vote, so a
-        // human party's own Ready presses alone are enough to reach unanimity. Called every tick
-        // from TeamChallengeSystem while WaitingForTeam - a freshly-connected/freshly-spawned bot is
-        // picked up the very next tick, not just once.
-        public static void AutoReadyBots(Frame f, EntityRef poi)
-        {
-            if (f.RuntimeConfig.Bots.DisableAutoTeamChallengeReady == true)
-                return;
-
-            var filtered = f.Filter<PlayerLink, BotBrain>();
-
-            while (filtered.Next(out EntityRef entity, out PlayerLink _, out BotBrain _))
-            {
-                if (f.Has<TeamChallengeReady>(entity) == true)
-                    continue;
-
-                f.Add<TeamChallengeReady>(entity, out var ready);
-                ready->Poi = poi;
-            }
-        }
-
         // View-only enumeration for InteractionPromptWidget's own per-player "challenge area" ready
         // icons - fills `readyStates` with one bool per currently-required Raider (same live
         // connected/non-incapacitated recount as CountRequiredRaiders) and returns how many were

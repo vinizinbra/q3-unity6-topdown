@@ -112,7 +112,7 @@ namespace Quantum
 
             if (status->CheatDeathImmunityRemaining <= FP._0)
             {
-                f.Remove<Invulnerable>(entity);
+                PlayerLifeStateUtility.RemoveInvulnerableIfUnjustified(f, entity, status);
             }
         }
 
@@ -128,7 +128,7 @@ namespace Quantum
 
             if (status->ReviveImmunityRemaining <= FP._0)
             {
-                f.Remove<Invulnerable>(entity);
+                PlayerLifeStateUtility.RemoveInvulnerableIfUnjustified(f, entity, status);
             }
         }
 

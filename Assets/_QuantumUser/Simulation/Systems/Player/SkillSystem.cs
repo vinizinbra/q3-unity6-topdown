@@ -406,7 +406,13 @@ namespace Quantum
         // progress - it only (re)starts fresh once a finishing activation finds nothing recovering.
         private static void TickCooldown(Frame f, EntityRef owner, SkillSlotId slotId, SkillSlot* slot)
         {
-            if (slot->State != SkillState.Ready)
+            // Mid-activation the timer is normally unarmed (0, see above), so ticking would
+            // misread it as "recovered". But a multi-charge slot can already have ANOTHER stack
+            // recovering (CooldownTimer > 0) when a cast starts - that recovery must keep running
+            // through the channel instead of freezing until it ends.
+            bool active = slot->State != SkillState.Ready;
+
+            if (active == true && slot->CooldownTimer <= FP._0)
                 return;
 
             // Recovery stops at the EFFECTIVE ceiling, so a capped slot never quietly refills past
@@ -425,6 +431,14 @@ namespace Quantum
 
             if (slot->CurrentStacks == 1)
                 f.Events.SkillReady(owner, slotId);
+
+            // Mid-activation the stack still being spent has not started recovering yet - leave
+            // the timer unarmed so FinishSkill arms it when the activation actually ends.
+            if (active == true)
+            {
+                slot->CooldownTimer = FP._0;
+                return;
+            }
 
             if (slot->Skill != default && slot->CurrentStacks < effectiveMax)
             {

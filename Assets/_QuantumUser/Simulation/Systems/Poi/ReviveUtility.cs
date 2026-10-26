@@ -78,7 +78,7 @@ namespace Quantum
         }
 
         // Called on any cancel (release, out of range, target invalidated, reviver themselves
-        // incapacitated, or a fresh hit via ReviveDamageInterruptSystem). Deliberately does NOT
+        // incapacitated; damage no longer cancels). Deliberately does NOT
         // reset the target's own banked ReviveProgress anymore - PlayerLifeStateSystem decays it
         // back toward 0 gradually instead (ReviveConfig.ReviveProgressDecayRate), so an interrupted
         // hold leaves real partial credit for whoever resumes it rather than losing everything to a

@@ -107,8 +107,7 @@ Placement is load-bearing in three ways:
 1. **Above every resolution step.** A block *negates* the hit rather than mitigating it, so it must
    roll no crit, apply no elemental proc, build no Rage/Resonance, and fire no `OnWeaponHitLanded`/
    `OnHealthDamageApplied` signal. Returning before any of it is the only way to guarantee all of it
-   at once. (This also means a blocked hit can never interrupt a teammate's revive channel - see
-   `ReviveDamageInterruptSystem`, which is driven by exactly those signals.)
+   at once.
 2. **Below the `Invulnerable` check.** A player already protected by Cheat Death or post-revive grace
    must not silently burn a durability point on a hit that was never going to land.
 3. **Gated to `bypassOutgoingResolution == false`.** This is the same gate `OnWeaponHitLanded`

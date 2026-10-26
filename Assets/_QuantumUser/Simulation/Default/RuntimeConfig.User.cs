@@ -169,12 +169,9 @@
             public bool DisableAutoLevelUpPick;
             public bool DisableAutoBreathingSkipVote;
 
-            // Same "take the bot out of a waiting-for-all-players gate" reasoning as
-            // DisableAutoBreathingSkipVote above, for Optional Team Challenge's own unanimous-Ready
-            // requirement (see TeamChallengeUtility.TryReadyUp) - a bot has nobody to walk it into
-            // the Ready/Cancel Area and press Interact, so it auto-Readies instead of silently
-            // blocking a human party from ever reaching unanimity.
-            public bool DisableAutoTeamChallengeReady;
+            // Bots walk to an Optional Team Challenge POI and Ready up like a human; this opts them out
+            // (they then never Ready, so a human party can't reach unanimity - test-only).
+            public bool DisableTeamChallenge;
         }
 
     }

@@ -416,6 +416,15 @@ namespace Quantum
 
             BotBrain* brain = filter.Brain;
 
+            // Ready for a Team Challenge: hold at the POI until the team starts (or Ready is lost).
+            EntityRef readied = BotPoiUtility.GetReadiedTeamChallenge(f, filter.Entity);
+
+            if (readied != EntityRef.None)
+            {
+                poi = readied;
+                return true;
+            }
+
             // Sticky - only re-picked once the held POI is used or stops being wanted.
             if (brain->Goal == BotGoal.Interact
                 && BotPoiUtility.IsStillWanted(f, filter.Entity, brain, settings, perception.HealthFraction, brain->GoalTarget) == true)
@@ -781,6 +790,10 @@ namespace Quantum
                 ExecuteMoveTo(f, ref filter, settings, arrival);
                 return;
             }
+
+            // Already Ready: stay put (no re-press) until the challenge starts.
+            if (BotPoiUtility.GetReadiedTeamChallenge(f, filter.Entity) == poi)
+                return;
 
             BotPoiUtility.Use(f, filter.Entity, brain, poi, perception.HealthFraction);
             SetGoal(brain, filter.Transform->Position, BotGoal.None, EntityRef.None);

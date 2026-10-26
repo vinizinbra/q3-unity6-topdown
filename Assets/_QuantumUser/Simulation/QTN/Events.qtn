@@ -1000,6 +1000,14 @@ event TeamChallengeActivated
     EntityRef Player;
 }
 
+// A Raider's Ready marker was cancelled because they left the Ready/Cancel Area while the team was
+// still WaitingForTeam. Player is who got cancelled - TeamChallengeWidget toasts them only.
+event TeamChallengeReadyCanceled
+{
+    EntityRef Poi;
+    EntityRef Player;
+}
+
 // Fired by TeamChallengeUtility.BeginChallengeActive the instant the countdown ends and the
 // objective actually begins (Starting->ChallengeActive) - View-only hook for the whole-team
 // "CHALLENGE STARTED" animated banner (TeamChallengeWidget), distinct from TeamChallengeActivated
@@ -1048,6 +1056,15 @@ event PlayerRevived
 {
     EntityRef Target;
     EntityRef Reviver;
+}
+
+// Fired by ReviveChannelSystem when a teammate's hold-to-revive is lost against their will (pushed
+// out of ReviveInteractionRange, typically by knockback) - NOT on a deliberate button release.
+// Reviver is the player whose hold broke; View shows a "Revive canceled" toast to the local owner.
+event ReviveCanceled
+{
+    EntityRef Reviver;
+    EntityRef Target;
 }
 
 // A Free Hit Guard (StatusEffects.FreeHitGuardRemaining) just negated a hit - the View-facing

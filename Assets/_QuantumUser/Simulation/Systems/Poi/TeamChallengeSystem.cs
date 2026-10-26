@@ -40,9 +40,8 @@ namespace Quantum
             }
         }
 
-        // Cancels any Ready marker whose holder has left the Ready/Cancel Area - no timeout, no
-        // toast (the X/Y READY HUD counter on TeamChallengeView communicates this, per docs' own
-        // "no spam" requirement). Then re-checks unanimity every tick (not just on a fresh Ready
+        // Cancels any Ready marker whose holder has left the Ready/Cancel Area - no timeout; raises
+        // TeamChallengeReadyCanceled so that Raider alone gets a "too far away" toast. Then re-checks unanimity every tick (not just on a fresh Ready
         // press) - see TeamChallengeUtility.TryBeginStarting's own comment for why (a disconnect
         // shrinking the requirement must also be able to complete unanimity with no new press).
         private static void TickWaitingForTeam(Frame f, EntityRef poi, TeamChallenge* challenge, Transform3D* poiTransform)
@@ -65,12 +64,8 @@ namespace Quantum
             for (int i = 0; i < toCancel.Count; i++)
             {
                 f.Remove<TeamChallengeReady>(toCancel[i]);
+                f.Events.TeamChallengeReadyCanceled(poi, toCancel[i]);
             }
-
-            // After the cancel sweep, not before - a bot immediately re-Readying here always wins
-            // out over that same tick's distance check, since it has nobody at the keyboard to walk
-            // it back into the Ready/Cancel Area anyway (see TeamChallengeUtility.AutoReadyBots).
-            TeamChallengeUtility.AutoReadyBots(f, poi);
 
             TeamChallengeUtility.TryBeginStarting(f, poi, challenge);
         }

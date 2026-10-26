@@ -11,7 +11,10 @@ shared attempt for the whole team, not a per-player usage count.
 Every currently required Raider (connected, not Downed/KO) must press Interact inside the small
 Interaction Area to Ready up, then stay inside the larger Ready/Cancel Area
 (`TeamChallengeConfig.ReadyCancelRadius`) - leaving it cancels that Raider's own Ready with no
-timeout. Survival runs completely normally while waiting. Once every required Raider is
+timeout. As soon as anyone has Readied (WaitingForTeam), `InteractionPromptWidget` shows the POI prompt
+to every local Raider inside the Ready/Cancel Area, not only inside the small Interaction Area, so the
+rest of the team sees the roster and can walk in (2026-10-25: Interaction radius 6, `ReadyCancelRadius` 15).
+Survival runs completely normally while waiting. Once every required Raider is
 simultaneously Ready, activation locks in (no more cancelling), every enemy alive is wiped (same
 no-reward wipe described below) and Director spawning holds, an optional
 `TeamChallengeConfig.CountdownDuration` counts down, then `ChallengeActive` begins: Survival's
@@ -154,7 +157,7 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
 - `Assets/_QuantumUser/Simulation/QTN/Events.qtn` - `TeamChallengeActivated`/`Started`/`Completed`/
   `Failed`.
 - `Assets/_QuantumUser/Simulation/Default/RuntimeConfig.User.cs` - new
-  `Bots.DisableAutoTeamChallengeReady` opt-out.
+  `Bots.DisableTeamChallenge` opt-out. Bots no longer auto-Ready: `BotPoiUtility` treats the POI like any other (walk in, `TeamChallengeUtility.TryInteract`, Available/WaitingForTeam only, also mid-Survival), and a Ready bot holds at the POI (`BotInputSystem.TrySelectInteract`) so the Ready/Cancel Area sweep doesn't cancel it. Reward claim stays human.
 - `Assets/_QuantumUser/Simulation/Assets/Poi/ChallengeDefinition.cs` - new asset: `Type`,
   `DisplayName`, `Duration`, `KillTarget`, pacing fields (no enemy list - borrowed from `SurvivalConfig`).
 - `Assets/_QuantumUser/Simulation/Assets/Poi/ChallengeDefinition.View.cs` - new `partial` split:
