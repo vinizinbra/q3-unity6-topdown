@@ -75,7 +75,11 @@ namespace Quantum
         RecoverFromBot,         // removes BotBrain from the sender's own entity (undo of BecomeBot) -
                                 // PlayerInputUtility.Resolve falls back to the real device input the
                                 // very next tick. No-op if the entity isn't a bot.
-        ToggleDamageBoost       // add/remove the sender's CheatDamageBoost tag (x10 outgoing damage, every source)
+        ToggleDamageBoost,      // add/remove the sender's CheatDamageBoost tag (x10 outgoing damage, every source)
+        TeleportToTraversal,    // teleports the sender next to the first Traversal Challenge activator
+                                // (KCC.Teleport + velocity reset) - see CheatSystem.TeleportToTraversal
+        ActivateTraversal       // starts every Idle Traversal Challenge (TraversalChallengeUtility.TryActivate,
+                                // as if the sender pressed Base Skill on it) - spawns platforms + reward
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

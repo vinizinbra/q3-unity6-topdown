@@ -306,6 +306,56 @@ the old baked chest offset (35.03, 2.68, 5.86); pad at (31.5, 1, 2.5) on the far
 destination (1.6, 1, 9.8) on the start block ~2.7m from the activator). Compiles; pad look checked
 in a gameplay-camera render; not yet played through.
 
+## Layouts
+
+All per-layout tuning (platforms, checkpoint, reward, return pad) lives on the ACTIVATOR prefab's
+`QPrototypeTraversalChallenge`, so each chunk layout needs its own activator prefab + its own
+`ChunkSpawnConfig` pointing at it. Both layouts share the one Traversal `ChunkPool` entry (weight 1
+each), so a run gets one or the other.
+
+- **`TraversalChunk`** (left -> right, `AllowedConnectionSides = Left`): `TraversalActivator` +
+  `Traversal1ChunkSpawnConfig`. 1 spawned platform; the rest of the crossing is permanent stones with
+  3.6-5.4m gaps (dash territory). `TraversalChunk 1.prefab` is an unused duplicate.
+- **`TraversalChunkWest`** (rebuilt from scratch 2026-10-27, right -> left, `AllowedConnectionSides =
+  Right`, 40x20): `TraversalActivatorWest` + `TraversalWestChunkSpawnConfig`, standard 4x4x4
+  platforms. START (h0, x34..40) -> P1 (h0) -> P2 (h1) -> P3 (h2, up-screen) -> **jump + Dash 7.5m, +1**
+  to REST (h3, x12..18 z8..14) -> hop 2m down-screen +1 to P4 (h4) -> GOAL (h4, x0..6 z2..8) at the
+  far-left end, where the reward + return pad sit. An h4 pillar (x9..11 z3..5) sits exactly midway between GOAL (x6) and P4 (x14..18), 3m each side, centered on P4's line;
+  at h4 it is a stepping stone (P4 -> pillar 3m hop, pillar -> GOAL 3m hop), so the final stretch
+  needs no Dash, and REST -> pillar (~3.6m, +1) can skip P4. Labelled top view:
+  `Recordings/TraversalChunkWest-top.png`. 4 spawned platforms, 40s.
+- **`TraversalChunkNorth`** (reworked 2026-10-27, bottom -> top, `AllowedConnectionSides = Bottom`,
+  20x40): `TraversalActivatorNorth` + `TraversalNorthChunkSpawnConfig`, standard 4x4x4 platforms.
+  START (h0, x3..9 z0..5) -> BIG (permanent h0 island x6..18 z7..11 - one wide platform, since the
+  activator can only spawn one platform prefab) with an h3 WALL (x6..18 z11..13) flush along its whole
+  front edge -> jump off BIG's side out over the water and **jump + Dash forward around the wall end**
+  (~6.5m) to P1 (h0, x16..20) -> P2 (h1) -> P3 (h2), climbing left -> **jump + Dash 7.5m, +1** to REST
+  (h3, x2..8 z29..35; wait out the cooldown) -> **jump + Dash 7.5m, +1** right to P4 (h4) -> 2m hop to
+  GOAL (h4, x14..20 z35..40, top edge) with the reward + return pad. 4 spawned platforms, 45s. The h3
+  wall can't be dashed over (Dash height from h0 is ~2.6m, wall top is 4m). Going around the LEFT end
+  can reach P2 (~6.4m, +1) and skip P1 - still a jump + Dash around the wall. Labelled top view:
+  `Recordings/TraversalChunkNorth-top.png`.
+
+**Reach (measured against a West playtest, 2026-10-27).** The hero capsule radius is 0.6
+(`KCCSettings`): the edge auto-jump fires with the centre already past the edge and a landing counts
+on capsule contact, so a normal jump clears ~4-5m flat (more with move-speed buffs), ~3.6m at +1.
+Dash (`Dash.asset`) is a flat 5m burst that locks height, works mid-air, stops at walls, 4s cooldown /
+1 charge - a plain Dash from the edge barely clears ~5.5m, so in practice gaps past jump range are
+**jump + Dash** gaps: ~8-9m flat, ~8m at +1. Nothing reaches +2 (jump apex ~1.6m) - that is the only
+hard gate, and both halves of each course must be separated by >= +2 or > ~9m without the spawned
+platforms. Design: hops 2-3m, jump + Dash gaps 7-8m, walls (h2+) on the straight/diagonal line to force a
+sidestep, a rest island between dashes for the cooldown. `PlatformPositions` are pad CENTERS (top =
+y + 2). Waypoints are on the start island only.
+
+**In-game check (2026-10-27, West, Play mode):** spawned platforms land exactly on the authored
+chunk-relative offsets, with the prefab's baked collider size (root scale -> box extents), Ground
+layer. The tileset view matches the collider except the prebuilt `Block_2x2` piece (used for a 2x2
+pad), which overhangs it by ~0.2m per side.
+
+**Cheats (CheatMenu > World > Map):** *Teleport To Traversal* (next to the first activator) and
+*Activate Traversal* (TryActivate on every Idle challenge, as the sender) - `CheatActionKind.
+TeleportToTraversal`/`ActivateTraversal`. Teleport first: activation is unavailable in the lobby.
+
 ## Known simplifications
 
 - Completion is a single proximity checkpoint near the far side, not sequential per-platform

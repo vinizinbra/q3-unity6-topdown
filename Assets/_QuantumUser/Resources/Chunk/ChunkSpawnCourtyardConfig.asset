@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee8242cb69d344458aa9cd25a7c455b3, type: 3}
+  m_Name: ChunkSpawnCourtyardConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ChunkSpawnConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Chunk/ChunkSpawnCourtyardConfig
+    Guid:
+      Value: 285631546924075689
+  Spawns:
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
+    Offset:
+      X:
+        RawValue: 163840
+      Y:
+        RawValue: 229376
+      Z:
+        RawValue: 917504
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
+    Offset:
+      X:
+        RawValue: 1671168
+      Y:
+        RawValue: 229376
+      Z:
+        RawValue: 917504
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
+    Offset:
+      X:
+        RawValue: 589824
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 589824
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
+    Offset:
+      X:
+        RawValue: 1245184
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 1245184
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
+    Offset:
+      X:
+        RawValue: 917504
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 262144
+    Requirement: 0
+    Chance:
+      RawValue: 0
+  - Prototypes:
+    - Prototype:
+        Id:
+          Value: 1490237048963392359
+      Weight: 1
+    Offset:
+      X:
+        RawValue: 917504
+      Y:
+        RawValue: 163840
+      Z:
+        RawValue: 1572864
+    Requirement: 0
+    Chance:
+      RawValue: 0

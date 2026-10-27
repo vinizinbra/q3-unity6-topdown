@@ -470,6 +470,8 @@ namespace QuantumUser.View
             CreateSectionLabel(rt, "Map");
             ButtonGrid map = new ButtonGrid(rt, GridColumns);
             GridButton(map, "Reveal Map", CheatActionKind.RevealMap);
+            GridButton(map, "Teleport To Traversal", CheatActionKind.TeleportToTraversal);
+            GridButton(map, "Activate Traversal", CheatActionKind.ActivateTraversal);
             map.Close();
         }
 

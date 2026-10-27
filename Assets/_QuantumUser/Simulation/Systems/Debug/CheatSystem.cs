@@ -188,7 +188,57 @@ namespace Quantum
                     f.Global->DebugDirectorSpawnsDisabled = !f.Global->DebugDirectorSpawnsDisabled;
                     Log.Debug($"[Cheat] Director spawns {(f.Global->DebugDirectorSpawnsDisabled ? "disabled" : "enabled")}");
                     break;
+
+                case CheatActionKind.TeleportToTraversal:
+                    TeleportToTraversal(f, player);
+                    break;
+
+                case CheatActionKind.ActivateTraversal:
+                    ActivateTraversal(f, player);
+                    break;
             }
+        }
+
+        // Drops the sender 1.5m beside the first Traversal Challenge activator, ground-snapped - same
+        // KCC.Teleport + zero-every-velocity reset TraversalReturnTeleportSystem uses.
+        private static void TeleportToTraversal(Frame f, EntityRef player)
+        {
+            var challenges = f.Filter<TraversalChallenge, Transform3D>();
+            if (challenges.Next(out EntityRef challenge, out TraversalChallenge _, out Transform3D challengeTransform) == false)
+            {
+                Log.Warn("[Cheat] TeleportToTraversal: no Traversal Challenge in this level");
+                return;
+            }
+
+            FPVector3 to = challengeTransform.Position + new FPVector3(FP._1 + FP._0_50, FP._0, FP._0);
+            if (EnemyMovementUtility.TryFindGroundHeight(f, to + FPVector3.Up * FP._2, EnemyMovementUtility.GetGroundLayerMask(f), out FP groundY))
+                to.Y = groundY;
+
+            if (f.Unsafe.TryGetPointer<KCC>(player, out var kcc) == true)
+            {
+                kcc->Teleport(f, to);
+                kcc->SetKinematicVelocity(FPVector3.Zero);
+                kcc->SetDynamicVelocity(FPVector3.Zero);
+            }
+            else if (f.Unsafe.TryGetPointer<Transform3D>(player, out var transform) == true)
+            {
+                transform->Position = to;
+            }
+
+            Log.Debug($"[Cheat] {player} teleported to Traversal Challenge {challenge} at {to}");
+        }
+
+        // Collected first, then activated - TryActivate f.Create's platforms/reward, which must not
+        // happen mid-filter-iteration.
+        private static void ActivateTraversal(Frame f, EntityRef player)
+        {
+            List<EntityRef> challenges = new List<EntityRef>();
+            var filter = f.Filter<TraversalChallenge>();
+            while (filter.Next(out EntityRef entity, out TraversalChallenge _))
+                challenges.Add(entity);
+
+            foreach (EntityRef challenge in challenges)
+                TraversalChallengeUtility.TryActivate(f, player, challenge);
         }
 
         private static readonly FP SpawnEnemyMinRadius = FP._4;
