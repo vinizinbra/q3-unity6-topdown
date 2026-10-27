@@ -13,7 +13,7 @@ public class CharacterCatalog : ScriptableObject
         public string displayName;
         public AssetRef<EntityPrototype> avatar;
 
-        [Tooltip("The hero's own gameplay prefab (Kai.prefab, Zara.prefab...), used to resolve this character's icon sprite and ring colour (see ResolveIconSprite/TryResolveRingColor below). Deliberately a separate field from Avatar above rather than derived from it: Avatar is an AssetRef<EntityPrototype> resolved through Quantum's asset DB, which has no way back to the source GameObject at runtime.")]
+        [Tooltip("The hero's own gameplay prefab (Yoru.prefab, Zara.prefab...), used to resolve this character's icon sprite and ring colour (see ResolveIconSprite/TryResolveRingColor below). Deliberately a separate field from Avatar above rather than derived from it: Avatar is an AssetRef<EntityPrototype> resolved through Quantum's asset DB, which has no way back to the source GameObject at runtime.")]
         public GameObject viewPrefab;
 
         [Tooltip("A dedicated, menu-ready display prefab for this character, spawned directly into the menu's 3D scene by CharacterPreviewWidget (at a hand-placed spawn point, not rendered into a RawImage). Unlike viewPrefab this is authored specifically for the menu, so it needs none of the gameplay-only stripping the old RenderTexture approach required. Leave unassigned to show no preview for this character.")]
@@ -70,7 +70,7 @@ public class CharacterCatalog : ScriptableObject
     // PREFAB, so no instance has to exist for a party slot to show a teammate's face.
     //
     // Prefers the head, then falls back to the first sprite on the rig as a whole. Not every hero is
-    // rigged with a separate head - Lux is drawn as one piece - and for those the whole body IS the
+    // rigged with a separate head - Capy is drawn as one piece - and for those the whole body IS the
     // portrait. The fallback only ever applies to a hero with no head to find, so it can't change
     // what the others show.
     public Sprite ResolveIconSprite(string id)

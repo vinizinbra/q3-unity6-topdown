@@ -163,12 +163,12 @@
                 // "needs to keep counting down regardless of anything else" reasoning as
                 // JuggernautDischargeCooldownSystem.
                 new RevengeMarkTimeoutSystem(),
-                // Kai's First Strike rank 3 - banks a one-shot bonus onto his next First Strike when
+                // Yoru's First Strike rank 3 - banks a one-shot bonus onto his next First Strike when
                 // he kills a First-Strike-marked target. Replaces FirstStrikeMarkTimeoutSystem (the
                 // refresh-window mechanism it ticked was removed - each enemy triggers First Strike
                 // exactly once now). Signal-driven, no ordering dependency, same shape as
                 // MaxVendettaSystem.
-                new KaiFirstStrikeSystem(),
+                new YoruFirstStrikeSystem(),
                 // Max's Fire Mastery traits - reacts to Combat.qtn's OnCriticalHit/
                 // OnHealthDamageApplied/OnEntityKilled (Flashpoint/Cremation/Wildfire), plus its own
                 // per-tick ExplosionOnConditionalHit.CooldownRemaining ticking. Independent of
@@ -251,12 +251,12 @@
                 // Independent of the area/alternating systems above - no shared state, just needs to run
                 // after ProjectileSystem so a vortex spawned this tick can start pulling immediately.
                 new VortexSystem(),
-                // Kai's Undertow Ascension - its own pull (DamageUtility.ApplyPull) needs the exact
+                // Yoru's Undertow Ascension - its own pull (DamageUtility.ApplyPull) needs the exact
                 // same after-EnemySystem placement as VortexSystem just above, for the exact same
                 // reason: EnemySystem writes PhysicsBody3D.Velocity every tick regardless of phase,
                 // which would otherwise erase this impulse before it moved anything. See
-                // docs/kai-ascensions.md.
-                new KaiUndertowSystem(),
+                // docs/yoru-ascensions.md.
+                new YoruUndertowSystem(),
                 // Same reasoning as VortexSystem just above, but also needs to run after SkillSystem
                 // (Sentry spawns from there, not ProjectileSystem) - so a settling entity spawned by
                 // either path starts easing into position the same tick instead of popping into its
@@ -320,14 +320,14 @@
                 // run before StatusEffectSystem/ShieldSystem below for the same reason every other
                 // hit-resolving system does.
                 new SentryDecaySystem(),
-                // Lux's Targeting Link mark (Assault Rifle Mastery R3) - a plain refresh-duration timer,
-                // filtered on TargetingLinkMark so it costs nothing for any target Lux hasn't marked.
+                // Capy's Targeting Link mark (Assault Rifle Mastery R3) - a plain refresh-duration timer,
+                // filtered on TargetingLinkMark so it costs nothing for any target Capy hasn't marked.
                 new TargetingLinkSystem(),
-                // Generic Damage Echo (Kai's Ghost Shot is the first consumer) - ticks each owner's
+                // Generic Damage Echo (Yoru's Ghost Shot is the first consumer) - ticks each owner's
                 // scheduled echoes and fires them on expiry, filtered on PendingDamageEcho so it costs
                 // nothing for anyone who has never scheduled one.
                 new DamageEchoSystem(),
-                // Generic Priority Target (Lux's Neutral Focus is the first consumer) - ticks each
+                // Generic Priority Target (Capy's Neutral Focus is the first consumer) - ticks each
                 // owner's active priority target down and clears it (fires PriorityTargetCleared) on
                 // expiry/invalidity, filtered on PriorityTarget so it costs nothing for anyone who has
                 // never had one set. Ordering relative to SentryBarrelSystem (registered earlier in

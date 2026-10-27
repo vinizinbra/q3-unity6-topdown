@@ -8,17 +8,17 @@
 // be correct.
 enum EntityDespawnReason : Byte
 {
-    // Killed by damage, or its own lifetime ran out. On-death effects (Lux's Overload Core) SHOULD
+    // Killed by damage, or its own lifetime ran out. On-death effects (Capy's Overload Core) SHOULD
     // fire. Never actually stamped - it's what "no DespawnIntent component" already means.
     Destroyed = 0,
 
-    // Superseded by a newer instance of the same thing (Lux redeploying past her active-Sentry cap,
+    // Superseded by a newer instance of the same thing (Capy redeploying past her active-Sentry cap,
     // Zara's second Portable Speaker replacing her first). On-death effects must NOT fire - the
     // player didn't lose anything, and letting a free explosion fall out of "deploy again" would
     // make redeploy-spam the optimal Overload Core rotation.
     Replaced = 1,
 
-    // Deliberately picked up/moved by its owner and re-created elsewhere (Lux's Relocation Protocol).
+    // Deliberately picked up/moved by its owner and re-created elsewhere (Capy's Relocation Protocol).
     // On-death effects must NOT fire, same reasoning as Replaced.
     Recalled = 2
 }

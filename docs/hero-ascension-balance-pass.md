@@ -1,7 +1,7 @@
 # Hero Ascension Balance Pass — plan, decisions, status
 
-Working doc for the 2026-08-20 pass that normalizes Max / Pixie / Kai / Brute / Zara / Lux to
-**9 Ascension lines × 3 ranks**, rebalances the existing ones, and fully refactors Zara and Lux.
+Working doc for the 2026-08-20 pass that normalizes Max / Pixie / Yoru / Brute / Zara / Capy to
+**9 Ascension lines × 3 ranks**, rebalances the existing ones, and fully refactors Zara and Capy.
 
 The brief itself is the specification; this doc records the **architecture decisions, deviations and
 progress**, which the brief can't. Per-hero design detail still lives in each hero's own doc
@@ -15,10 +15,10 @@ progress**, which the brief can't. Per-hero design detail still lives in each he
 2. Generic primitives (everything else depends on them) — **done**
 3. Max targeted changes — **done**
 4. Pixie targeted changes — **done**
-5. Kai targeted changes — **done**
+5. Yoru targeted changes — **done**
 6. Brute targeted changes — **done**
 7. Zara full refactor — **done**
-8. Lux baseline + full refactor — **done**
+8. Capy baseline + full refactor — **done**
 9. Editor asset generators for all six heroes — **done**
 10. Per-hero doc updates — **done**
 
@@ -46,15 +46,15 @@ Everything below is hero-agnostic by construction; heroes are consumers, never s
 
 | Primitive | What it is | First consumers |
 |---|---|---|
-| **Hard-CC diminishing returns** | `EnemyTierResistanceConfig.StunImmunityDuration`/`InterruptImmunityDuration`/`ImmuneToHardCC` + `StatusEffects.StunImmunityRemaining`/`InterruptImmunityRemaining`. `ApplyStun`/`TryInterrupt` reject rather than refresh while the window runs. Defaults: Filler/Normal none, Specialist 2s, Heavy 3s, Elite 4s, Boss immune. | Kai Singularity gravity pulses, Brute Concussive Impact, Zara Bass Drop |
+| **Hard-CC diminishing returns** | `EnemyTierResistanceConfig.StunImmunityDuration`/`InterruptImmunityDuration`/`ImmuneToHardCC` + `StatusEffects.StunImmunityRemaining`/`InterruptImmunityRemaining`. `ApplyStun`/`TryInterrupt` reject rather than refresh while the window runs. Defaults: Filler/Normal none, Specialist 2s, Heavy 3s, Elite 4s, Boss immune. | Yoru Singularity gravity pulses, Brute Concussive Impact, Zara Bass Drop |
 | **`WallSlamUtility`** | The shared *knockback source → enemy movement → valid wall impact → wall-slam effect* step. Extracted verbatim from Iron Shoulder's own private version; reports the wall hit **and**, separately, whether the Stun genuinely landed. Also owns the presentation half — it raises the generic `WallSlammed` event itself, so any knockback source added later gets the shared wall-impact VFX/shake with no hookup. | Brute Iron Shoulder, Brute Groundbreaker |
 | **`LandingSource` + a 3-arg `OnPlayerLanded`** | The pre-existing generic landing signal now also carries *why* the player was airborne (`Fall`/`Jump`/`Launched`), tracked on `PlayerMovement.AirborneSource` and claimed by `AutoJumpSystem.DoJump` / `DamageUtility.ApplyResolvedImpulse`. | Brute Groundbreaker |
-| **One shared aura-DR slot** | `GuardianDamageReduction*` renamed → `AuraDamageReduction*`, now **take-the-stronger**. Two aura sources never stack additively; strongest wins. | Brute Guardian, Lux Fire Support |
+| **One shared aura-DR slot** | `GuardianDamageReduction*` renamed → `AuraDamageReduction*`, now **take-the-stronger**. Two aura sources never stack additively; strongest wins. | Brute Guardian, Capy Fire Support |
 | **`AreaAllyBudget` + `AreaAllyBudgetUtility`** | Per-**spawned-deployable**, per-ally spend caps (HP healed, cooldown reduced). Lives on the area entity, so a fresh deploy = a fresh allowance and two Zaras never share one. | Zara Totem healing cap + Sound Boost cooldown cap |
 | **`ModifyRemainingCooldownEffectData`** | Generic "reduce this ally's remaining skill cooldown" hit effect, budget-aware. Clamped at 0, never banks. | Zara Sound Boost R2 |
-| **`AllyBuffEffectData`** | Generic bundle: Move Speed / Fire Rate / outgoing damage / DR / flat Shield, all opt-in. | Zara Support Beat + Portable Speaker, Lux Fire Support |
+| **`AllyBuffEffectData`** | Generic bundle: Move Speed / Fire Rate / outgoing damage / DR / flat Shield, all opt-in. | Zara Support Beat + Portable Speaker, Capy Fire Support |
 | **`DelayedBlast` + `DelayedBlastSystem`** | Generic one-shot "go off shortly, over there" blast parked on the owner. | Pixie Unstable Mixture R3, Brute Aftershock R3 |
-| **`DespawnIntent` + `DespawnIntentUtility`** | Despawn/death **reason tags** so housekeeping removals don't fire on-death effects. | Lux Sentry replace/relocate, Zara Speaker replace |
+| **`DespawnIntent` + `DespawnIntentUtility`** | Despawn/death **reason tags** so housekeeping removals don't fire on-death effects. | Capy Sentry replace/relocate, Zara Speaker replace |
 | **`StatusEffects.TempOutgoingDamage*`** | Timed outgoing-damage buff across every `DamageSource` (the Weapon-only pair already existed). | Zara Power Chord |
 | **`HitEffectContext.SourceEntity`** | The area entity that produced a hit, so a per-instance effect can find its own instance. | `AreaAllyBudget` consumers |
 | **`WeaponSystem.RefillMagazine`** | Explicit one-shot magazine refill, event-driven instead of a live condition. | Max Full Throttle R3 |
@@ -90,7 +90,7 @@ Everything below is hero-agnostic by construction; heroes are consumers, never s
    *existing* Burn (which a weapon's elemental proc can supply), and gating two of nine lines behind
    one Overdrive/Dash pick narrowed the draft pool too far.
 
-5. **Kai's per-vortex interrupt tracker was deleted, not kept alongside** the new generic CC immunity.
+5. **Yoru's per-vortex interrupt tracker was deleted, not kept alongside** the new generic CC immunity.
    It only ever protected against one vortex; the generic window also covers a second Singularity,
    a Brute stun, and anything added later.
 
@@ -104,7 +104,7 @@ Every number in the brief is exposed on its own asset. The ones most likely to n
   `RageLossFraction`/`MaxRageDamageReduction` (plus `BerserkSkillData.RageLossFraction`, the baseline), Blood Debt `MaxHealFractionPerKill`, Cremation's three thresholds.
 - Pixie: Explosive Rounds `ProcChance` **and** its optional `ProcCooldown` (shipped off), Unstable
   Mixture per-stack bonuses + secondary blast, Blast Jump `TriggerRadius`.
-- Kai: `EnemyTierResistanceConfig` interrupt windows (these govern Singularity's whole feel),
+- Yoru: `EnemyTierResistanceConfig` interrupt windows (these govern Singularity's whole feel),
   Event Horizon's projectile-speed values.
 - Brute: Aftershock stack values + Earthquake, Guardian's reactive DR trio, Bodyguard's flat Shield
   and per-ally cooldown, Groundbreaker's `MinimumFallHeight` (the single value deciding whether the
@@ -112,7 +112,7 @@ Every number in the brief is exposed on its own asset. The ones most likely to n
 - Zara: `Resonance.Max` vs `GenerationPerDamage` (tune together against a ~10-12s pulse cadence),
   `MaxHealFractionPerAlly` (global Totem healing cap), `MaxCooldownReductionPerTotem` (shipped
   generous at 6s; expected tuning range 3-4s), `MaxActiveSpeakers`.
-- Lux: Scrap drop chances, `StacksRequired`, max active Sentries, Field Modification stack values,
+- Capy: Scrap drop chances, `StacksRequired`, max active Sentries, Field Modification stack values,
   Redline threshold, lifetime-extension budget.
 
 ---
@@ -131,7 +131,7 @@ it rather than left as invisible dead code:
 - `StatusEffects.HardCcImmunityRemaining` (+ its tick, + its checks in `ApplyStun`/`ApplyRoot`/
   `TryConsumeInterruptImmunity`) — Unstoppable R3's only mechanism.
 
-The per-tier **hard-CC diminishing returns** row above was deliberately **kept** — Kai's Singularity,
+The per-tier **hard-CC diminishing returns** row above was deliberately **kept** — Yoru's Singularity,
 Brute's own Concussive Impact and Zara's Bass Drop all rely on it.
 
 Two primitives were added in exchange (both already in the table above): `WallSlamUtility`, which
@@ -153,7 +153,7 @@ filled the gaps.
 |---|---|
 | `AreaHitData.Detonate` | **Pixie's Bunny Bomb**, cluster bomblets, weapon explosions, every `AreaHitData` blast |
 | `ExplodeOnDestroyUtility.TryDetonate` | dropped/planted bombs (Backblast, Pocket Bombs, DashBomb) |
-| `SpawnVortexEffectData` | **Kai's Vortex** — and through its collider, Compression / Vortex Collapse / Void Shards, which all derive from it |
+| `SpawnVortexEffectData` | **Yoru's Vortex** — and through its collider, Compression / Vortex Collapse / Void Shards, which all derive from it |
 | `HitPathSkillAction` / `SpawnEntitySkillAction` | every generic path/spawn skill action |
 | `JuggernautSkillData` | **Brute's Discharge** (`KnockbackRadius`) and **Aftershock** (incl. its stack bonus) |
 | `ResonanceUtility.FirePulse` | **Zara's Resonance pulse** |
@@ -163,14 +163,14 @@ filled the gaps.
 
 | Hero | Area | Where |
 |---|---|---|
-| **Lux** | Sentry **Range** — targeting, Fortification aura and the range ring all read it | `SpawnSentrySkillAction` |
+| **Capy** | Sentry **Range** — targeting, Fortification aura and the range ring all read it | `SpawnSentrySkillAction` |
 | **Zara** | **Totem** (the deployed area's collider) | `SpawnAlternatingAreaEffectData.ApplyAreaMultiplier` |
 | **Zara** | Portable Speaker radius | `PortableSpeakerSkillAction` |
 | **Zara** | Afterbeat start/end pulses | `AfterbeatSkillAction` |
 | **Brute** | Concussive Impact landing shockwave | `JuggernautLandingImpactSystem` |
 | **Brute** | Iron Shoulder rank 3 wall shockwave | `IronShoulderSkillAction` |
 | **Brute** | Groundbreaker landing shockwave | `BruteGroundbreakerSystem` |
-| **Kai** | Mirror Step reflect radius | `MirrorStepSkillAction` |
+| **Yoru** | Mirror Step reflect radius | `MirrorStepSkillAction` |
 | **Max** | Ignition's **Inferno** burst | `MaxAscensionUtility` |
 | **Max** | Ignition's **Burning Ground** patch | `MaxAscensionUtility` |
 | **Max** | Vendetta Strike dash sweep | `VendettaStrikeSkillAction` |
@@ -220,14 +220,14 @@ This was done by retuning each skill's authored values. `CharacterData.SkillDama
 | Pixie | `PixieBaseSkill` `Damage` (and its description text) | 100 → 450 |
 | Brute | `BruteBaseSkill-Juggernaut` `Damage` (per discharge) | 30 → 120 |
 | Zara | `ZaraBaseSkill` `Damage` basis + `SpawnAlternatingAreaEffectData.DamageAmount` (per beat) | 10 → 60 |
-| Kai | `KaiVortexSkill` `Damage` (cast hit + Ascension basis) | 20 → 100 |
-| Lux | `LuxSkill` `SpawnSentrySkillAction.SkillDamage` (Ascension basis) | 50 → 150 |
-| Lux | `LuxSentryBase` / `Laser` / `Minigun` / `Rocket` weapon `Damage` | 6/3/2/12 → 20/10/7/40 |
+| Yoru | `YoruVortexSkill` `Damage` (cast hit + Ascension basis) | 20 → 100 |
+| Capy | `CapySkill` `SpawnSentrySkillAction.SkillDamage` (Ascension basis) | 50 → 150 |
+| Capy | `CapySentryBase` / `Laser` / `Minigun` / `Rocket` weapon `Damage` | 6/3/2/12 → 20/10/7/40 |
 | Max | `MaxHeroSkill` `FireRateBonus` / `Cooldown` | 0.5 / 18 → 0.75 / 15 |
 
 - Every Ascension that scales as a percentage of its skill's damage basis grows by the same factor. That is
   intended, because those Ascensions were also sized against the old tiny bases.
-- **Kai stays below target on purpose** (~7% against one target). His base vortex is crowd control with no
+- **Yoru stays below target on purpose** (~7% against one target). His base vortex is crowd control with no
   damage of its own (see `VortexSystem.cs`), and his Ascensions are ×5.
 - The Zara speaker prefabs' `DamageAmount` is overwritten at spawn (`SpawnAlternatingAreaEffectData`), so
   the prefabs were left alone.

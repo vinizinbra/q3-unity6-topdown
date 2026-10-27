@@ -557,12 +557,12 @@ later teammate-hold/self-revive/KO-dead-end change itself (the KO-revival cut) h
 re-verified in-Editor yet. Still needed by hand before anything works end-to-end at runtime:
 1. Assign `OverallGameConfig.ReviveConfig` (`QuantumMenuConfig.asset`), same place every other config
    is already assigned.
-2. Add a `PlayerLifeState` component to every hero `EntityPrototype` (`Pixie`/`Brute`/`Zara`/`Kai`/
-   `Max`/`MainChar`/`Lux` under `Assets/_QuantumUser/Entities/Characters/`) - defaults all-zero
+2. Add a `PlayerLifeState` component to every hero `EntityPrototype` (`Pixie`/`Brute`/`Zara`/`Yoru`/
+   `Max`/`MainChar`/`Capy` under `Assets/_QuantumUser/Entities/Characters/`) - defaults all-zero
    (Alive), nothing else to author on it.
 3. Add `ReviveInteractionPromptView` to each hero's own View prefab, wiring
    `InteractionPromptWidgetManager` the same way `PoiView` already is. **`Zara.prefab` is still
-   missing it** (2026-08-25) - Brute/Kai/Lux/Max/Pixie all have it, Zara does not, so a Downed Zara
+   missing it** (2026-08-25) - Brute/Yoru/Capy/Max/Pixie all have it, Zara does not, so a Downed Zara
    gets no world-space revive prompt at all, on anyone's screen (her reviver still sees their own
    `SkillCooldownUiWidget` hold fill, which is what makes this look like a one-sided bug rather
    than a missing component).

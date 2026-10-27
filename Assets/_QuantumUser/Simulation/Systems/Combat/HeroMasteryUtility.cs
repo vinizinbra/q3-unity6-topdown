@@ -127,9 +127,9 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == true && stats->BurnOnHitStacks != 0;
         }
 
-        // Kai's Heavy Mastery R3 "Deadeye" - bonus damage on the first Heavy-weapon hit THIS owner
+        // Yoru's Heavy Mastery R3 "Deadeye" - bonus damage on the first Heavy-weapon hit THIS owner
         // lands against each enemy, via the generic WeaponWeightFirstHitTracker rather than a bespoke
-        // mark - naturally coexists with Kai's own First Strike Ascension without merging their state.
+        // mark - naturally coexists with Yoru's own First Strike Ascension without merging their state.
         private static FP ResolveDeadeye(Frame f, EntityRef owner, EntityRef target, WeaponDataAsset weaponData)
         {
             if (weaponData.Weight != WeaponWeight.Heavy || f.Unsafe.TryGetPointer<DeadeyeUpgrade>(owner, out var deadeye) == false)
@@ -140,10 +140,10 @@ namespace Quantum
                 : FP._1;
         }
 
-        // Lux's Medium Mastery R3 "Targeting Link" - a Medium-weapon hit from a TargetingLinkUpgrade
+        // Capy's Medium Mastery R3 "Targeting Link" - a Medium-weapon hit from a TargetingLinkUpgrade
         // holder refreshes (never stacks) a duration mark on the target; the actual bonus damage is
         // read separately by GetTargetingLinkMultiplier below, since it has to reach Sentry-attributed
-        // damage (owner = a SentryBarrel with no CharacterStats), not just Lux's own hits.
+        // damage (owner = a SentryBarrel with no CharacterStats), not just Capy's own hits.
         private static void ApplyTargetingLinkMark(Frame f, EntityRef owner, EntityRef target, WeaponDataAsset weaponData)
         {
             if (weaponData.Weight != WeaponWeight.Medium || f.Unsafe.TryGetPointer<TargetingLinkUpgrade>(owner, out var targetingLink) == false)
@@ -157,7 +157,7 @@ namespace Quantum
         // Targeting Link's own damage-bonus read - MUST run before DamageUtility.ResolveOutgoingDamage's
         // CharacterStats gate, since the damage this boosts is dealt by a SentryBarrel (owner here),
         // which never carries CharacterStats (see WeaponSystem.Equip's own comment on that). Resolves
-        // the barrel back to its chassis, then to the Lux who deployed it, so only THAT Lux's own
+        // the barrel back to its chassis, then to the Capy who deployed it, so only THAT Capy's own
         // Targeting Link (and only a mark SHE placed) ever pays out - never another player's Sentry,
         // never a global incoming-damage buff.
         public static FP GetTargetingLinkMultiplier(Frame f, EntityRef owner, EntityRef target)
@@ -178,7 +178,7 @@ namespace Quantum
         }
     }
 
-    // Generic reusable "has (owner, weight) already landed a hit on this target" ledger - Kai's
+    // Generic reusable "has (owner, weight) already landed a hit on this target" ledger - Yoru's
     // Deadeye is the first consumer, but any future Weapon Weight Mastery needing the same "first hit
     // of weight X from owner Y" shape reuses this instead of a bespoke mark.
     public static unsafe class WeaponWeightFirstHitUtility

@@ -187,7 +187,7 @@ namespace Quantum
         // Also called DIRECTLY by the mutations that write these fields, so picking one mid-run takes
         // effect on the weapon already in hand rather than only on the next equip - same dual-call
         // precedent ApplyPixieExplosiveWeapon/ExplosiveRoundsPassiveUpgradeData already set. No-op for
-        // any owner with no CharacterStats (Lux's sentry barrels) or no modifier authored.
+        // any owner with no CharacterStats (Capy's sentry barrels) or no modifier authored.
         public static void ApplyOwnerWeaponModifiers(Frame f, EntityRef owner, Weapon* weapon)
         {
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
@@ -356,7 +356,7 @@ namespace Quantum
 
         // GetPlayerCommand only returns non-null on the tick a sent command actually lands - unlike
         // polled Input, this fires exactly once per SendCommand call, not every tick. PlayerLink
-        // isn't part of Filter (a non-player shooter like Lux's sentry gun has no PlayerLink and
+        // isn't part of Filter (a non-player shooter like Capy's sentry gun has no PlayerLink and
         // therefore nothing sending it commands - see HasFireDriver), so it's looked up directly
         // here instead. See GrantWeaponPerkCommand for why this has to be a command rather than a
         // direct call from the View (WeaponPerkDebugTrigger today; a level-up/pickup screen
@@ -459,7 +459,7 @@ namespace Quantum
                 // Debug override: replaces auto-attack entirely for a real player - firing follows
                 // the Fire input only, target locked or not, instead of Aim.Target.
                 // FireShot/ResolveAimDirection already fall back to facing direction when target is
-                // None, so firing untargeted is safe as-is. Non-player shooters (Lux's sentry gun)
+                // None, so firing untargeted is safe as-is. Non-player shooters (Capy's sentry gun)
                 // have no PlayerLink and stay purely target-driven regardless of this flag.
                 canFire = PlayerInputUtility.Resolve(f, filter.Entity, playerLink)->Fire.IsDown == true;
             }
@@ -525,7 +525,7 @@ namespace Quantum
             bool isLastBullet = filter.Weapon->Ammo == 1;
             bool isEchoEligibleShot = filter.Weapon->MagazineSize - filter.Weapon->Ammo + 1 <= 3;
 
-            // Generic Damage Echo (Kai's Ghost Shot) gating - only the very first shot of a fresh
+            // Generic Damage Echo (Yoru's Ghost Shot) gating - only the very first shot of a fresh
             // magazine schedules any echoes, same magazine-position idiom every perk above reads off
             // Ammo/MagazineSize rather than tracking its own shot index. See
             // DamageEchoUtility.TryScheduleEcho's own comment for why this lives at fire time now.
@@ -552,7 +552,7 @@ namespace Quantum
             // already-equipped weapons instead of only the next Equip.
             FP damage = ResolveLiveDamage(f, filter.Entity, weaponData.Damage * filter.Weapon->DamageMultiplier, magazineFraction, isLastBullet);
 
-            // Kai's Phantom Strike - consumed here, once, on the actual next shot fired (hit or miss),
+            // Yoru's Phantom Strike - consumed here, once, on the actual next shot fired (hit or miss),
             // not on hit landing - "next weapon hit" reads naturally as "next shot", and this keeps the
             // damage bonus and the bonus pierce below consuming the same charge at the same single
             // resolution point. Applies to both this shot and a Double Tap proc off it (same damage
@@ -705,7 +705,7 @@ namespace Quantum
             switch (weaponData.FireType)
             {
                 case WeaponFireType.Hitscan:
-                    // grantPierceAmount (Kai's Phantom Strike) counts here too now that a hitscan beam
+                    // grantPierceAmount (Yoru's Phantom Strike) counts here too now that a hitscan beam
                     // pierces - see FireHitscanPellet. It used to be dropped on the floor for the same
                     // reason Piercing Rounds/Ricochet were: both perks only ever wrote Projectile
                     // fields, so a raycast that hit once and stopped could never express either.
@@ -1357,7 +1357,7 @@ namespace Quantum
 
         // Firing itself is driven by Aim.Target now (auto-attack), not a held Fire input - but a
         // Weapon still needs *something* attaching it to the world (a real player's PlayerLink, or
-        // a non-player shooter's InputSource, e.g. Lux's sentry gun) before it's allowed to fire at
+        // a non-player shooter's InputSource, e.g. Capy's sentry gun) before it's allowed to fire at
         // all. False means the entity has a Weapon but nothing driving it - skip the tick entirely.
         private static bool HasFireDriver(Frame f, EntityRef entity)
         {
@@ -1406,7 +1406,7 @@ namespace Quantum
                 }
             }
 
-            // Kai's Phantom Strike - a one-shot flat pierce bonus consumed once per fired shot, on
+            // Yoru's Phantom Strike - a one-shot flat pierce bonus consumed once per fired shot, on
             // top of whatever Piercing Rounds already grants. Same value FireProjectile hands to
             // ApplyProjectilePerks.
             pierces += grantPierceAmount;
@@ -1427,7 +1427,7 @@ namespace Quantum
                 FireHitscanPellet(f, owner, weaponData, damage, origin, pelletDirection, range, pierces, bounces,
                     isExplosiveProc && i == 0, isCataclysm && i == 0, forceCritical && i == 0, ref hitIndex);
 
-                // Generic Damage Echo (Kai's Ghost Shot) - see FireProjectile's own comment; every
+                // Generic Damage Echo (Yoru's Ghost Shot) - see FireProjectile's own comment; every
                 // pellet of the first shot of a fresh magazine independently schedules its own echo
                 // along that exact pellet's own fired direction, hit or miss.
                 if (isFirstBullet == true)
@@ -1936,7 +1936,7 @@ namespace Quantum
                 ApplyProjectilePerks(f, owner, entity, weapon, weaponData, isExplosiveProc && i == 0, isCataclysm && i == 0,
                     grantPierceAmount, forceCritical && i == 0);
 
-                // Generic Damage Echo (Kai's Ghost Shot, Neutral Mastery R3, is the first source) -
+                // Generic Damage Echo (Yoru's Ghost Shot, Neutral Mastery R3, is the first source) -
                 // every REAL pellet the FIRST shot of a fresh magazine actually launches independently
                 // schedules its own echo, mirroring this exact pellet's own fired direction (an
                 // N-pellet shotgun's first shot gets N ghost pellets fanning out the same way) - see
@@ -1956,7 +1956,7 @@ namespace Quantum
         // Rounds/Ricochet (RemainingPierces/RemainingBounces), Long Barrel/engagement range
         // (MaxTravelDistance, see Projectile.qtn), and this specific shot's Explosive
         // Sequence/Cataclysm Round flags (see DirectHitData for how the latter two are consumed on
-        // impact). grantPierceAmount is Kai's Phantom Strike - a one-shot flat pierce bonus (1/2/99 per
+        // impact). grantPierceAmount is Yoru's Phantom Strike - a one-shot flat pierce bonus (1/2/99 per
         // rank) baked on top of whatever Piercing Rounds already grants, consumed once per fired shot
         // back in Update, not per pellet. weaponData.BonusBounces is the weapon's own authored base
         // ricochet count, added unconditionally alongside whatever the Ricochet perk grants.
@@ -1995,7 +1995,7 @@ namespace Quantum
         }
 
         // PlayerLink deliberately isn't a required field here anymore - a real player has one, but a
-        // non-player shooter (Lux's sentry gun) doesn't, and shouldn't need one just to be seen by
+        // non-player shooter (Capy's sentry gun) doesn't, and shouldn't need one just to be seen by
         // this system. See HasFireDriver, which checks for PlayerLink/InputSource itself instead.
         public struct Filter
         {

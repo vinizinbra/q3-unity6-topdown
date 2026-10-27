@@ -1,7 +1,7 @@
 namespace Quantum
 {
-    // Generic (hero-agnostic) enemy-action interrupt helper - first consumer is Kai's Singularity
-    // Ascension (see docs/kai-ascensions.md), but this has nothing Kai-specific in it. Deliberately
+    // Generic (hero-agnostic) enemy-action interrupt helper - first consumer is Yoru's Singularity
+    // Ascension (see docs/yoru-ascensions.md), but this has nothing Yoru-specific in it. Deliberately
     // independent of EnemyTierStatsConfig.TierStats.CanBeInterruptedByKnockback (the live config has
     // that false for Heavy/Elite/Boss) - that flag governs physical-push resistance, a different
     // concern from a pure state-machine cancel with no impulse behind it. The only pre-existing

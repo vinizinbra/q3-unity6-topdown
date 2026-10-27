@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace QuantumUser.View
 {
-    // Fires a GrantPassiveUpgradeCommand for the local player - lets any PassiveUpgradeData (Lux's
-    // Efficient Salvage, Kai's Void Pressure, etc.) be tried out at runtime without a real
+    // Fires a GrantPassiveUpgradeCommand for the local player - lets any PassiveUpgradeData (Capy's
+    // Efficient Salvage, Yoru's Void Pressure, etc.) be tried out at runtime without a real
     // level-up/pickup screen. Works identically networked, since a command is replicated and
     // executed on the same tick by every client - it isn't a local-only shortcut. Two ways in: the
     // field+button below (pick any asset without opening it), or the "Grant To Local Player" button

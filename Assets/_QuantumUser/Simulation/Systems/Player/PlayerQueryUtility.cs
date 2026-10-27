@@ -20,7 +20,7 @@ namespace Quantum
     //   anything FRIENDLY that means an actual person: orb pickup, chest opening, currency.
     //
     //   Player physics layer (TryFindNearestOnPlayerLayer/CountOnPlayerLayerInRadius/
-    //   GatherOnPlayerLayer) - PlayerLink entities PLUS Sentry entities, because Lux's
+    //   GatherOnPlayerLayer) - PlayerLink entities PLUS Sentry entities, because Capy's
     //   Sentry.prefab is authored on layer 7 ("Player") without a PlayerLink, so an enemy
     //   genuinely targets one today and EnemyDecisionUtility.TargetCountScore genuinely counts
     //   one. Anything enemy-facing has to keep seeing them.
@@ -41,8 +41,8 @@ namespace Quantum
         // Quantum.Input.MAX_COUNT, same constant PlayerClusterDirectorUtility already pins to.
         public const int MaxPlayers = PlayerClusterDirectorUtility.MaxPlayers;
 
-        // 4 players + headroom for their live sentries (LuxScrapCollector.MaxActiveSentries is
-        // per-Lux and data-driven, so there is no exact bound to derive). Only GatherOnPlayerLayer's
+        // 4 players + headroom for their live sentries (CapyScrapCollector.MaxActiveSentries is
+        // per-Capy and data-driven, so there is no exact bound to derive). Only GatherOnPlayerLayer's
         // caller-supplied span is bounded by this - CountOnPlayerLayerInRadius and
         // TryFindNearestOnPlayerLayer scan every candidate regardless of how many there are.
         public const int MaxPlayerLayerCandidates = 16;

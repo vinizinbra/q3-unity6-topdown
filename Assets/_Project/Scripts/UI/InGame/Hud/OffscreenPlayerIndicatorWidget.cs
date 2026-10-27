@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 // One off-screen teammate indicator (see OffscreenPlayerIndicatorManager / docs/offscreen-indicators.md):
 // a hex frame holding the hero's live in-game head (the rig's BlobAnimationView.Head sprite, NOT the
-// CharacterData.UIHead portrait; the torso sprite - the whole body - for a headless rig like Lux), a border + arrow tinted with the hero's RingColor (DownedColor while
+// CharacterData.UIHead portrait; the torso sprite - the whole body - for a headless rig like Capy), a border + arrow tinted with the hero's RingColor (DownedColor while
 // Downed), and an optional distance label. The manager owns all placement; this only paints and pops.
 // When that teammate pings while off-screen, hex rings ripple out from behind the frame in the border's
 // colour (PlayPingRipple) - the edge-of-screen counterpart of PingWorldRippleWidget.
@@ -183,7 +183,7 @@ public class OffscreenPlayerIndicatorWidget : MonoBehaviour
 
     // The live rig head - re-read every frame so it follows whatever the head is showing (cheap: a
     // sprite reference compare). Hero colour is resolved on the same pass the renderer is found.
-    // The rig's head sprite, or - for a rig with no separate head, like Lux - the torso's, which is then the
+    // The rig's head sprite, or - for a rig with no separate head, like Capy - the torso's, which is then the
     // whole body (preserveAspect fits it inside the hex).
     private static SpriteRenderer ResolveHeadRenderer(BlobAnimationView blobView)
     {

@@ -132,7 +132,7 @@ namespace Quantum
                 skipIncapacitated: true, out entity);
         }
 
-        // Reverse of TryFindNearestPlayer - for a non-enemy shooter (e.g. Lux's sentry gun) that
+        // Reverse of TryFindNearestPlayer - for a non-enemy shooter (e.g. Capy's sentry gun) that
         // needs to find something on the Enemy layer to aim at. Mirrors AimSystem's own private
         // FindClosestTarget (used for player aim-assist): flat (XZ-only) distance so elevation
         // doesn't skew which one counts as closest, and skips a dying/lingering enemy

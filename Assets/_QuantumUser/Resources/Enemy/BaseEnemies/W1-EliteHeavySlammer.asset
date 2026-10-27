@@ -596,6 +596,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
   Description: Slams the ground again and again. Stay out of the shockwave.
   ViewPrefab: {fileID: 8476845490732343577, guid: 86f573a3addc946149c69474a1b93d5b, type: 3}
+  CatalogSubtitle: Elite
 --- !u!114 &4340968106952071898
 MonoBehaviour:
   m_ObjectHideFlags: 0

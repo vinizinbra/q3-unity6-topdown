@@ -80,7 +80,7 @@ namespace Quantum
                 ? filter.Projectile->MovementOverride
                 : projectileData.Movement);
 
-            // Prefers a per-shot override (Kai's Ghost Shot) over the weapon's own authored Hit - see
+            // Prefers a per-shot override (Yoru's Ghost Shot) over the weapon's own authored Hit - see
             // Projectile.HitOverride's own comment. Invalid for every projectile not spawned through
             // that path, which falls back to exactly the prior behavior.
             ProjectileHitData hitData = f.FindAsset(filter.Projectile->HitOverride.IsValid
@@ -209,7 +209,7 @@ namespace Quantum
         // caller test the result, so a nearest contact the shot must ignore - its own OWNER above all
         // - threw the whole tick's result away and hid every valid target behind it. Every muzzle sits
         // inside the shooter's own capsule (CharacterData.WeaponPosition is ~0.5 against a 0.5-radius,
-        // 1-high capsule), and Lux/Kai carry theirs deliberately ABOVE the head (1.8/2 - that is their
+        // 1-high capsule), and Capy/Yoru carry theirs deliberately ABOVE the head (1.8/2 - that is their
         // authored silhouette, not a mistake), which makes a point-blank shot dive straight back down
         // through that same capsule on its way to the target's collider center. Either way the first
         // unit or so of a shot's flight could register nothing at all, so an enemy standing point-blank

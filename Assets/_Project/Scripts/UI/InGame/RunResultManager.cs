@@ -131,7 +131,7 @@ public class RunResultManager : QuantumGlobalMonoBehaviour
 
     // Prefers the player's own Photon nickname over the hero name, falling back to the hero's
     // CharacterCatalog-authored display name (never the raw CharacterData asset name, e.g.
-    // "KaiCharacterData") if no nickname is set - matches this project's other per-hero label,
+    // "YoruCharacterData") if no nickname is set - matches this project's other per-hero label,
     // PartyRoomWidget.DisplayNameFor, which does the same "nickname first" fallback at the menu.
     //
     // CAUTION: the PlayerRef -> Photon ActorNumber bridge below (playerRef._index) has no other

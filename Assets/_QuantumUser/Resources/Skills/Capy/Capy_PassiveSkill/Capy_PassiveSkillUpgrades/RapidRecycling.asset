@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72fed84908ba847c8971999ba5bc910f, type: 3}
+  m_Name: RapidRecycling
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.RapidRecyclingPassiveUpgradeData
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Capy/Capy_PassiveSkill/Capy_PassiveSkillUpgrades/RapidRecycling
+    Guid:
+      Value: 487893626376381545
+  Icon: {fileID: -6426474614715203157, guid: ea5b28679b8534674abdd82e8ebb615b, type: 3}
+  DisplayName: Rapid Recycling
+  Description: "Collected Scrap shortens your Sentry's cooldown."
+  <MaxRank>k__BackingField: 3
+  RankDescriptions:
+  - "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>0.5s</color>."
+  - "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>1s</color>."
+  - "Each Scrap collected cuts Sentry cooldown by <color=#FD3971>1s</color>. Earning a Fabrication Charge (every <color=#FD3971>10</color> Scrap) cuts another <color=#FD3971>3s</color>."
+  CooldownReductionPerPickup:
+  - RawValue: 32768
+  - RawValue: 65536
+  - RawValue: 65536
+  CooldownReductionOnCharge:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 196608

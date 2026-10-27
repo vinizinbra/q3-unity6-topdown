@@ -187,6 +187,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
   Description: Slow, heavy slam that hits a wide area.
   ViewPrefab: {fileID: 8476845490732343577, guid: e99e424ab0f0747ef8d2bd4fed33e32c, type: 3}
+  CatalogSubtitle: Heavy
 --- !u!114 &390359091281415846
 MonoBehaviour:
   m_ObjectHideFlags: 0

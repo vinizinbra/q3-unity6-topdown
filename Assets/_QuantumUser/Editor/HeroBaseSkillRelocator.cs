@@ -5,8 +5,8 @@ namespace QuantumUser.Editor
     using UnityEngine;
 
     // Moves every hero's base-skill asset into a Skills/<Hero>/BaseSkill/ subfolder, giving all 6
-    // heroes the same layout (Lux/Max/Pixie/Zara's used to sit inside HeroSkillUpgrades/ alongside
-    // unrelated upgrade assets; Brute's/Kai's used to sit directly at Skills/<Hero>/ root). No renaming -
+    // heroes the same layout (Capy/Max/Pixie/Zara's used to sit inside HeroSkillUpgrades/ alongside
+    // unrelated upgrade assets; Brute's/Yoru's used to sit directly at Skills/<Hero>/ root). No renaming -
     // AssetDatabase.MoveAsset preserves each .meta's GUID so every existing AssetRef (which resolves by
     // Quantum's own Guid, not by path) keeps working.
     public static class HeroBaseSkillRelocator
@@ -14,8 +14,8 @@ namespace QuantumUser.Editor
         private static readonly (string From, string To)[] Moves =
         {
             ("Assets/_QuantumUser/Resources/Skills/Brute/BruteSkill.asset", "Assets/_QuantumUser/Resources/Skills/Brute/BaseSkill/BruteSkill.asset"),
-            ("Assets/_QuantumUser/Resources/Skills/Kai/KaiVortexSkill.asset", "Assets/_QuantumUser/Resources/Skills/Kai/BaseSkill/KaiVortexSkill.asset"),
-            ("Assets/_QuantumUser/Resources/Skills/Lux/HeroSkillUpgrades/LuxSkill.asset", "Assets/_QuantumUser/Resources/Skills/Lux/BaseSkill/LuxSkill.asset"),
+            ("Assets/_QuantumUser/Resources/Skills/Yoru/YoruVortexSkill.asset", "Assets/_QuantumUser/Resources/Skills/Yoru/BaseSkill/YoruVortexSkill.asset"),
+            ("Assets/_QuantumUser/Resources/Skills/Capy/HeroSkillUpgrades/CapySkill.asset", "Assets/_QuantumUser/Resources/Skills/Capy/BaseSkill/CapySkill.asset"),
             ("Assets/_QuantumUser/Resources/Skills/Max/HeroSkillUpgrades/MaxHeroSkill.asset", "Assets/_QuantumUser/Resources/Skills/Max/BaseSkill/MaxHeroSkill.asset"),
             ("Assets/_QuantumUser/Resources/Skills/Pixie/HeroSkillUpgrades/BunnyBombSkill.asset", "Assets/_QuantumUser/Resources/Skills/Pixie/BaseSkill/BunnyBombSkill.asset"),
             ("Assets/_QuantumUser/Resources/Skills/Zara/HeroSkillUpgrades/ZaraSkillData.asset", "Assets/_QuantumUser/Resources/Skills/Zara/BaseSkill/ZaraSkillData.asset"),

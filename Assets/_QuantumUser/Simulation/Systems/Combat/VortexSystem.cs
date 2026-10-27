@@ -13,8 +13,8 @@ namespace Quantum
     // pulled enemy keeps targeting/attacking normally the whole time instead of being staggered into
     // EnemySystem's stagger branch for as long as it stays in range. PhysicsCollider3D is a required
     // filter field, not an optional lookup, the same reasoning AreaDamageSystem's own collider is
-    // required - a vortex without one has no radius to pull from at all. Also drives Kai's own Vortex
-    // Ascension lines (Singularity/Compression/Vortex Collapse/Void Shards, see docs/kai-ascensions.md).
+    // required - a vortex without one has no radius to pull from at all. Also drives Yoru's own Vortex
+    // Ascension lines (Singularity/Compression/Vortex Collapse/Void Shards, see docs/yoru-ascensions.md).
     //
     // Note the PULL pulses on TickInterval but Singularity's INTERRUPT is checked EVERY tick - see
     // Update. They are two different cadences on purpose; sharing one is what used to let a caught
@@ -142,7 +142,7 @@ namespace Quantum
             TryImplosionPulse(f, ref filter, caughtCount);
         }
 
-        // Kai's Singularity Ascension - interrupts a caught enemy's own attack, whether it's still
+        // Yoru's Singularity Ascension - interrupts a caught enemy's own attack, whether it's still
         // winding up OR already committed (see EnemyActionUtility.TryInterrupt, which handles both
         // Preparation/Telegraph and Active - a charging Charger or an airborne Leaper gets cancelled
         // either way, not just during its wind-up). MaxEligibleTierIndex is the rank gate: which tiers
@@ -190,7 +190,7 @@ namespace Quantum
 
         // 1.0 unless VortexCrowdDamageUpgrade is equipped - a vanilla vortex's damage doesn't scale
         // with crowd size at all. A single enemy caught (or fewer) deals baseline damage; each
-        // additional one up to MaxCount adds PerEnemyBonus more - see Kai's Compression rank 2.
+        // additional one up to MaxCount adds PerEnemyBonus more - see Yoru's Compression rank 2.
         private static FP ResolveCrowdMultiplier(Frame f, EntityRef entity, int caughtCount)
         {
             if (f.Unsafe.TryGetPointer<VortexCrowdDamageUpgrade>(entity, out var upgrade) == false)
@@ -202,7 +202,7 @@ namespace Quantum
             return FP._1 + upgrade->PerEnemyBonus * bonusCount;
         }
 
-        // Kai's Compression rank 3 "Implosion" - every EveryNthPulse-th pull pulse, an additional
+        // Yoru's Compression rank 3 "Implosion" - every EveryNthPulse-th pull pulse, an additional
         // blast at the vortex's own center, scaled by ResolveCrowdMultiplier same as every other
         // Vortex damage source (so it "benefits from Crowd Compression" per design). Counted off the
         // base pull's own cadence (this is only ever called once per pull pulse, from Update), not an
@@ -232,7 +232,7 @@ namespace Quantum
 
             ResolveOwner(f, filter.Entity, out EntityRef owner, out DamageSource source, out _);
 
-            FP damage = KaiAscensionUtility.ResolveVortexSkillDamage(f, owner) * upgrade->DamagePercent * ResolveCrowdMultiplier(f, filter.Entity, caughtCount);
+            FP damage = YoruAscensionUtility.ResolveVortexSkillDamage(f, owner) * upgrade->DamagePercent * ResolveCrowdMultiplier(f, filter.Entity, caughtCount);
             FPVector3 position = filter.Transform3D->Position;
 
             HitEffectUtility.ApplyDamageInRadius(f, position, radius, owner, damage, source, DamageTargetMask.Enemies);
@@ -249,7 +249,7 @@ namespace Quantum
         // (dashed off, disconnected) by the time a long-Duration vortex finally expires. Damage is
         // applied directly (HitEffectUtility.ApplyDamageInRadius), no spawned entity - same shape as
         // DamageUtility's own ExplodeOnDeath chain, just event-only for the view instead of an asset.
-        // Kai's Vortex Collapse rank 3 "Event Collapse" - PreExplosionPullForce, when set, yanks
+        // Yoru's Vortex Collapse rank 3 "Event Collapse" - PreExplosionPullForce, when set, yanks
         // everyone caught to the center in one strong pull immediately before the blast lands.
         private static void TryExplodeOnDestroy(Frame f, ref Filter filter)
         {
@@ -294,12 +294,12 @@ namespace Quantum
             Log.Debug($"[Vortex] {filter.Entity} exploded on destroy at {position}, radius {radius}, damage {damage}");
         }
 
-        // Kai's Warp Wake rank 3 "Repulsion" - the Dash Void counterpart to TryExplodeOnDestroy above,
+        // Yoru's Warp Wake rank 3 "Repulsion" - the Dash Void counterpart to TryExplodeOnDestroy above,
         // pushing enemies away (DamageUtility.ApplyKnockback) instead of pulling them in, on top of a
         // flat damage hit. Kept as its own component/method rather than folding into
         // VortexExplodeOnDestroy - "pull in then explode" and "push out instead" are different enough
         // shapes to keep the per-asset Source typing unambiguous for the view.
-        // Kai's Singularity rank 3 - pins every eligible caught enemy at the vortex's center. Runs EVERY
+        // Yoru's Singularity rank 3 - pins every eligible caught enemy at the vortex's center. Runs EVERY
         // tick from Update's sweep (which runs after EnemySystem), so the vortex owns the enemy's
         // horizontal velocity outright - the AI's own chase velocity never reaches physics. It used to
         // fire once per GravityPulse.Interval (1/3s): between pulses the AI walked enemies back out, a
@@ -346,7 +346,7 @@ namespace Quantum
             }
         }
 
-        // Periodically fires ShardCount homing projectiles (Kai's Void Shards, 1 at ranks 1-2, 2 at
+        // Periodically fires ShardCount homing projectiles (Yoru's Void Shards, 1 at ranks 1-2, 2 at
         // rank 3) at the nearest enemies within (the vortex's own pull radius * SearchRadiusMultiplier)
         // - a multiplier of the vortex's own collider rather than an absolute value, so it
         // automatically reaches slightly past the pull's own catch zone (and keeps doing so if

@@ -64,8 +64,8 @@ component InfernalRageUpgrade
     FP DamageBonus;
 }
 
-// Kai's Heavy Mastery R3 "Deadeye" - bonus damage on the first Heavy-weapon hit this owner lands
-// against each enemy, tracked via the generic WeaponWeightFirstHitTracker rather than a Kai-specific
+// Yoru's Heavy Mastery R3 "Deadeye" - bonus damage on the first Heavy-weapon hit this owner lands
+// against each enemy, tracked via the generic WeaponWeightFirstHitTracker rather than a Yoru-specific
 // mark, so any future Weapon Weight Mastery needing the same "first hit of weight X from owner Y"
 // shape can reuse it. Per target/per owner/per weight - switching between different Heavy weapons
 // still counts as the same opener against that target (see WeaponWeightFirstHitUtility).
@@ -130,7 +130,7 @@ component SelfFireRateOnJoltUpgrade
 }
 
 
-// Lux's Medium Mastery R3 "Targeting Link" - enemies hit by Lux's own Medium weapon (Assault Rifle,
+// Capy's Medium Mastery R3 "Targeting Link" - enemies hit by Capy's own Medium weapon (Assault Rifle,
 // Shotgun, future Medium weapons) take bonus damage from HER Sentries specifically
 // (HeroMasteryUtility.GetTargetingLinkMultiplier), never from another player's Sentry and never a
 // global incoming-damage buff.
@@ -141,8 +141,8 @@ component TargetingLinkUpgrade
 }
 
 // Target-side refresh-duration mark placed by a Medium-weapon hit from a TargetingLinkUpgrade-holding
-// owner - ticked down and removed by TargetingLinkSystem. MarkedBy carries which specific Lux placed it
-// (same shape as FirstStrikeMark/RevengeMark) so a second Lux's hits don't silently credit the first.
+// owner - ticked down and removed by TargetingLinkSystem. MarkedBy carries which specific Capy placed it
+// (same shape as FirstStrikeMark/RevengeMark) so a second Capy's hits don't silently credit the first.
 component TargetingLinkMark
 {
     EntityRef MarkedBy;

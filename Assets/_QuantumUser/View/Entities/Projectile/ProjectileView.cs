@@ -276,7 +276,7 @@ namespace Quantum
             // hit": no impact effect, which is right, since the explosion draws its own.
             bool hasProjectile = frame.TryGet<Projectile>(_entityRef, out var projectile);
 
-            // Deliberately the raw launch speed, ignoring SpeedMultiplier (Kai's Void Field slowing
+            // Deliberately the raw launch speed, ignoring SpeedMultiplier (Yoru's Void Field slowing
             // an enemy shot): this only sets how fast the visual is allowed to close a gap, and
             // MoveTowards can't overshoot the target, so erring high costs nothing while reading a
             // multiplier that is only guaranteed seeded from the tick after a spawn could cost a
@@ -506,7 +506,7 @@ namespace Quantum
             return weaponView != null ? weaponView.MuzzleTransform : null;
         }
 
-        // Generic Damage Echo hook (Kai's Ghost Shot, Neutral Mastery R3, is the first source) - any
+        // Generic Damage Echo hook (Yoru's Ghost Shot, Neutral Mastery R3, is the first source) - any
         // projectile entity carrying an EchoProjectile component (see DamageEcho.qtn/DamageEchoSystem.
         // SpawnEchoProjectile) gets its own Visual's EffectPrefab (DamageEchoVisualData.View.cs)
         // instantiated as a child of the visual root, BEFORE Detach hands root off to

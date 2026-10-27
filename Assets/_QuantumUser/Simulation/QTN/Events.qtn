@@ -397,7 +397,7 @@ event GroundbreakerSlammed
     FP        Radius;
 }
 
-// Lux's Emergency Repair Dash Ascension - fired when a dash ends near one of her own Sentries and
+// Capy's Emergency Repair Dash Ascension - fired when a dash ends near one of her own Sentries and
 // actually services it. View-only cue (a repair spark on the chassis); the sim never reads it.
 event SentryRepaired
 {
@@ -405,7 +405,7 @@ event SentryRepaired
     EntityRef Sentry;
 }
 
-// Lux's Relocation Protocol Dash Ascension - fired when a Sentry is picked up and MOVED to her dash
+// Capy's Relocation Protocol Dash Ascension - fired when a Sentry is picked up and MOVED to her dash
 // destination. Position is where it landed. Deliberately distinct from a fresh deploy: the same
 // entity (and all its state) simply moved, so a view should relocate/replay rather than treat this as
 // a new machine.
@@ -416,7 +416,7 @@ event SentryRelocated
     FPVector3 Position;
 }
 
-// Lux's Overclock rank 3 "Redline" - fired once, the moment a Sentry's remaining lifetime first
+// Capy's Overclock rank 3 "Redline" - fired once, the moment a Sentry's remaining lifetime first
 // crosses the threshold and it goes into overdrive for the rest of its life. A one-shot cue, not a
 // state readout (the state is Sentry.RedlineActive).
 event SentryRedlineEngaged
@@ -424,7 +424,7 @@ event SentryRedlineEngaged
     EntityRef Sentry;
 }
 
-// Lux's Field Modifications rank 3 "MK II" - fired once, when a Sentry hits max stacks and its
+// Capy's Field Modifications rank 3 "MK II" - fired once, when a Sentry hits max stacks and its
 // primary Cannon is swapped for the Twin Cannon. Barrel is the slot-0 barrel that was re-equipped, so
 // a view can swap that specific gun's art rather than the whole chassis.
 event SentryUpgradedToMkII
@@ -449,7 +449,7 @@ event VortexExploded
     AssetRef<VortexCollapseSkillAction> Source;
 }
 
-// Fired by VortexSystem's Implosion pulse (see VortexImplosionUpgrade, Kai's Compression rank 3) -
+// Fired by VortexSystem's Implosion pulse (see VortexImplosionUpgrade, Yoru's Compression rank 3) -
 // every EveryNthPulse-th pull pulse, a smaller blast at the vortex's own center. Kept separate from
 // VortexExploded (the single big blast on expiry) since the view will likely want a smaller/different
 // VFX for these - Source resolves CompressionSkillAction.BlastEffectPrefab (if authored), same
@@ -463,12 +463,12 @@ event VortexImploded
     AssetRef<CompressionSkillAction> Source;
 }
 
-// Fired by KaiUndertowSystem.TickUndertowPulls whenever a struck enemy's pull target resolves to a
+// Fired by YoruUndertowSystem.TickUndertowPulls whenever a struck enemy's pull target resolves to a
 // new enemy (fresh link, or the nearest enemy switches mid-pull) - NOT from OnWeaponHitLanded, since
 // the pull target isn't known yet at hit time. Both Source and Target are always genuine enemies -
-// never Kai/the owner - one-shot impact/mark feedback on both affected enemies, separate from the
+// never Yoru/the owner - one-shot impact/mark feedback on both affected enemies, separate from the
 // ongoing tether line (which the view instead polls live off UndertowPull.LinkTarget every frame -
-// see KaiUndertowLinksView - rather than reacting to this event, so the line's own duration never
+// see YoruUndertowLinksView - rather than reacting to this event, so the line's own duration never
 // drifts from simulation state on rollback/resimulation).
 event UndertowTriggered
 {
@@ -777,11 +777,11 @@ event ShatterTriggered
     FP         Radius;
 }
 
-// Fired once per Projectile actually reversed by Kai's Reflect dash ascension
+// Fired once per Projectile actually reversed by Yoru's Reflect dash ascension
 // (MirrorStepSkillAction) - a point-in-space "parry" moment, not radius-scaled like the
 // pulses above, since it marks a single deflected shot rather than an area effect. Position is the
-// projectile's own position at the instant it's reflected, not Kai's, so the spark reads at the
-// parry point even if Kai is still mid-dash toward/past it.
+// projectile's own position at the instant it's reflected, not Yoru's, so the spark reads at the
+// parry point even if Yoru is still mid-dash toward/past it.
 event ProjectileReflected
 {
     EntityRef  Entity;
@@ -860,7 +860,7 @@ event ExpOrbCollected
     FP        Amount;
 }
 
-// Fired by ScrapOrbSystem the instant the owning Lux reaches a ScrapOrb - a View-only pickup-glow
+// Fired by ScrapOrbSystem the instant the owning Capy reaches a ScrapOrb - a View-only pickup-glow
 // hook (see HitFeedback's own ExpOrbCollected subscription for the same shape), no simulation
 // consumer. Unlike ExpOrbCollected, Collector is always the only entity Scrap ever means anything
 // to (see ScrapOrbSystem), not one of several onlookers.
@@ -1155,9 +1155,9 @@ event AccessoryRestored
 
 // Fired by DamageEchoSystem the instant a scheduled Damage Echo actually lands (target was still
 // valid - see DamageEchoUtility.ExecuteEcho; a cancelled echo, target dead/gone, fires nothing).
-// Generic, not Kai-specific - Kai's Ghost Shot (Neutral Mastery R3) is the first consumer, so the
+// Generic, not Yoru-specific - Yoru's Ghost Shot (Neutral Mastery R3) is the first consumer, so the
 // view has no dedicated prefab yet; treat an unauthored slot the same way every other reaction event
-// does (fall back to a tinted generic hit/blast effect) rather than adding Kai-specific view code.
+// does (fall back to a tinted generic hit/blast effect) rather than adding Yoru-specific view code.
 // The normal EntityDamaged event still fires too (DamageUtility.ApplyDamage is the actual damage
 // application) - this is purely the "that hit was a supernatural echo, not the primary shot" flag for
 // presentation.
@@ -1178,7 +1178,7 @@ event DamageEchoTriggered
 
 // Generic priority-target behavior (see PriorityTarget.qtn) - fired by PriorityTargetUtility.
 // TrySetPriorityTarget the instant Owner's PriorityTarget is first set OR refreshed/replaced onto a
-// DIFFERENT Target (not re-fired every tick a target simply stays focused). Lux's Neutral Focus
+// DIFFERENT Target (not re-fired every tick a target simply stays focused). Capy's Neutral Focus
 // (Neutral Mastery R3) is the first source. Presentation-only - simulation's own authoritative state
 // is the PriorityTarget component itself; this is just the "something changed, worth showing a marker"
 // signal.

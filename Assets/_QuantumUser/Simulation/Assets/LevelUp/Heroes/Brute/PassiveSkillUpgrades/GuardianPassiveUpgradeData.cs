@@ -17,7 +17,7 @@ namespace Quantum
     // The permanent team DR is deliberately capped at 15% rather than climbing per rank: rank 3's
     // value is in the reactive spike, not in a bigger always-on number. Combined with the fact that
     // the aura writes the SHARED aura-DR slot (so two Brutes never stack additively - strongest wins),
-    // that is what keeps a co-op stack of Guardian + Zara's Protective Rhythm + Lux's Fire Support from
+    // that is what keeps a co-op stack of Guardian + Zara's Protective Rhythm + Capy's Fire Support from
     // compounding into near-immunity.
     public unsafe partial class GuardianPassiveUpgradeData : PassiveUpgradeData
     {

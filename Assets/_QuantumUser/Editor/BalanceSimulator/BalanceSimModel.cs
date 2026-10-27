@@ -434,7 +434,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         public string Model = "none";
 
         // The hero's OWN skill damage per cast (crits, level bonus): FlatDamage + DurationScaledDamage.
-        // Skill-mounted weapons (Lux's sentry) are kept separately in MountedWeapons.
+        // Skill-mounted weapons (Capy's sentry) are kept separately in MountedWeapons.
         public double DamagePerActivation;
         public double Cooldown = 1;
         public double ActiveDuration;
@@ -455,7 +455,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         public double WeaponFireRateBonus;
         public double WeaponReloadBonus;
 
-        // "Skill Damage" basis every percent-of-basis Ascension scales off (KaiAscensionUtility.
+        // "Skill Damage" basis every percent-of-basis Ascension scales off (YoruAscensionUtility.
         // ResolveVortexSkillDamage & friends): ProjectileSkillData.Damage / JuggernautSkillData.Damage /
         // SpawnSentrySkillAction.SkillDamage.
         public double Basis;
@@ -467,11 +467,11 @@ namespace QuantumUser.Editor.BalanceSimulator
         // Juggernaut: enemy hits per cast (area x channel / per-enemy discharge cooldown x contact uptime).
         public double HitsPerActivation;
 
-        // Kai: seconds between vortex pull pulses (VortexSystem, prefab Vortex.TickInterval rounded to
+        // Yoru: seconds between vortex pull pulses (VortexSystem, prefab Vortex.TickInterval rounded to
         // game ticks) - what Compression's Implosion counts, not the 0.5s damage pulse.
         public double PullPulseInterval;
 
-        // Skill-mounted weapons (Lux sentry barrels) and how long the entity carrying them lives.
+        // Skill-mounted weapons (Capy sentry barrels) and how long the entity carrying them lives.
         public List<WeaponDataAsset> MountedWeapons = new();
         public double MountedLifetime;
     }
@@ -581,7 +581,7 @@ namespace QuantumUser.Editor.BalanceSimulator
             }
         }
 
-        // Sentry upgrades (Lux): extra barrels plus Overclock's fire rate / lifetime / Redline, all
+        // Sentry upgrades (Capy): extra barrels plus Overclock's fire rate / lifetime / Redline, all
         // folded into mounted DPS live so tick rounding of the barrels' fire rate applies.
         public List<WeaponDataAsset> UpgradeMountedWeapons = new();
         public double MountedFireRate = 1;
@@ -750,7 +750,7 @@ namespace QuantumUser.Editor.BalanceSimulator
         }
 
         // Skill hits skip weapon crit but keep CharacterStats crit (DamageUtility.ResolveCriticalTerms).
-        // Skill-mounted weapons (Lux's sentry barrels) fire as their own entity with no
+        // Skill-mounted weapons (Capy's sentry barrels) fire as their own entity with no
         // CharacterStats: they get the baked DamageMultiplier x SkillDamageMultiplier
         // (StatUtility.GetSkillDamageMultiplier) but no crit and no level bonus.
         public double SkillDps(BalanceSimScenario scenario) => OwnSkillDps(scenario) + BuffDps(scenario);

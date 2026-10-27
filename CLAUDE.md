@@ -73,9 +73,9 @@ which one to open.
 - **Pixie** — Cluster Bomb / Direct Hit / Birthday Cake / Pocket Bombs / Unstable Mixture / Unstable Targeting / Explosive Rounds / Backblast / Hot Fuse; `ForceMarkOnDetonate`, Chain Reaction base. → `docs/pixie-ascensions.md`
 - **Brute** — Juggernaut/Protector/Dash lines; `CheckActions` bug fix, Groundbreaker, charge-only + temporary Shield, Bodyguard Free Hit Guard. → `docs/brute-ascensions.md`
 - **Max** — Overdrive/Passive/Dash; Rage-as-boolean, Adrenaline deleted, `MaxOverdriveReactionSystem` ordered before `MaxVendettaSystem`. → `docs/max-ascensions.md`
-- **Kai** — Vortex/Passive/Dash; `CheckActions` bug, `EnemyActionUtility.TryInterrupt`, `ApplyBound`, Vortex Skill Damage now dealt. → `docs/kai-ascensions.md`
+- **Yoru** — Vortex/Passive/Dash; `CheckActions` bug, `EnemyActionUtility.TryInterrupt`, `ApplyBound`, Vortex Skill Damage now dealt. → `docs/yoru-ascensions.md`
 - **Zara** — Resonance fully removed for Flow State passive; `OnHostileHitConnected`, Totem/Portable Speaker, `AlternatingArea.EffectivenessMultiplier`. → `docs/zara-ascensions.md`
-- **Lux** — Engineer/Sentry/Scrap loop; lifetime-as-Health, Covering Fire Free Hit Guard, MK II weapon swap. → `docs/lux-ascensions.md`
+- **Capy** — Engineer/Sentry/Scrap loop; lifetime-as-Health, Covering Fire Free Hit Guard, MK II weapon swap. → `docs/capy-ascensions.md`
 
 ## UI / View / presentation
 
@@ -85,6 +85,7 @@ which one to open.
 - **Minimap** — node-based minimap baked into one painted `Texture2D`: per-chunk fills, level outline, POI icons, player/enemy markers; one surface that expands (click/M/R2) from the panned corner view to a whole-level view. → `docs/minimap.md`
 - **In-Match Settings Popup** — Escape-toggled pause-style popup: SFX/Music/Voice sliders (`AudioManager` category multipliers), Disconnect, offline-only Restart (`RestartOfflineMatch` shuts the runner down and restarts the offline session, reloading the scene). → `docs/in-match-settings.md`
 - **Menu & in-game UI navigation** — controller/keyboard focus: cascading `FocusScopeWidget` levels (Cancel = back, L1/R1 = sub-tabs), popups that wait for their intro animation, modal menu popups, `CanvasInputGateWidget` (no input to the hidden menu during a match), and the reusable `FocusOutlineWidget` glow + the `Add Focus Glow To Open Scenes` tool. → `docs/menu-navigation.md`
+- **Catalog** — menu Enemies/Bosses/Rift Mutations pages built only from game data (world spawns, `LevelUpConfig.RiftMutations`), no per-entry assets; view-only `CatalogSubtitle`/`CatalogDiscovery` on the gameplay assets, `CatalogProgress` save seam keyed by asset Guid. → `docs/catalog.md`
 - **Menu Tips** — `TipsData` asset + `TipsWidget` rotating tip bar on the Home tab (shuffle bag, slide/fade/typewriter transition, hover-pause, click-skip); reusable by the LoadingWindow. → `docs/menu-tips.md`
 - **Settings screens + Quality** — shared look for the menu and in-match settings popups (`SettingsSliderRow` prefab, row-level focus glow) and the mobile-only Quality slider (`RenderScaleSetting` = URP render scale 100–60 %, persisted). → `docs/settings-ui.md`
 - **Menu Settings Popup** — MenuScene TopBar Settings: same SFX/Music/Voice `AudioManager` category sliders as in-match, plus Photon region dropdown (`PhotonRegionSettings`): None = find best and save it as the selection until set back to None. → `docs/menu-settings.md`

@@ -192,10 +192,10 @@ namespace Quantum
                 totalDamage = ResolveOutgoingDamage(f, owner, target, damage, source, forceCritical, out isCritical);
             }
 
-            // Generic Priority Target (Lux's Neutral Mastery R3 "Neutral Focus" is the first
+            // Generic Priority Target (Capy's Neutral Mastery R3 "Neutral Focus" is the first
             // consumer) - a genuine weapon trigger pull only, not a DoT tick/reaction proc, the same
             // "bypassOutgoingResolution == false" distinction OnWeaponHitLanded above already uses.
-            // (Kai's Neutral Mastery R3 "Ghost Shot"/generic Damage Echo used to hook in here too -
+            // (Yoru's Neutral Mastery R3 "Ghost Shot"/generic Damage Echo used to hook in here too -
             // it now schedules at FIRE time instead of hit time, from WeaponSystem's own pellet-spawn
             // loop, so it counts every shot fired, hit or miss - see DamageEchoUtility's own comment.)
             if (source == DamageSource.Weapon && bypassOutgoingResolution == false)
@@ -358,7 +358,7 @@ namespace Quantum
 
             // An enemy that fell off the level (EnemySystem.CheckFallDeath) dies far below the map
             // with no owner - its XP/Coin/Rift Shard/Chest still drop, just on the nearest platform
-            // instead of into the void. Scrap stays owner-only (it needs a Lux killer to credit).
+            // instead of into the void. Scrap stays owner-only (it needs a Capy killer to credit).
             FPVector3 dropPosition = f.Unsafe.TryGetPointer<Transform3D>(target, out var deathTransform) ? deathTransform->Position : FPVector3.Zero;
             bool fellOffLevel = FallRespawnUtility.TryResolveFallDropPosition(f, dropPosition, out dropPosition);
 
@@ -674,7 +674,7 @@ namespace Quantum
             Log.Debug($"[Damage] {target}'s marked death exploded at {center} radius {blastRadius} for {damage}");
         }
 
-        // Lux's Overload Core Ascension. Fully independent from the enemy MarkExplosiveDeath/
+        // Capy's Overload Core Ascension. Fully independent from the enemy MarkExplosiveDeath/
         // ExplodeOnDeath kill-chain mechanic above - its own Radius/Damage (SentryOverloadUpgrade,
         // granted by SentryOverloadCoreSkillAction and copied onto the spawned sentry by
         // SpawnSentrySkillAction.ApplyOverloadUpgrade), no shared RuntimeConfig. Still uses the same
@@ -682,7 +682,7 @@ namespace Quantum
         //
         // Reached only from a genuine death (Health hit 0 - decay or combat damage alike, which are
         // the same path for a sentry by design). A sentry retired for HOUSEKEEPING - replaced past
-        // Lux's active cap, or picked up by Relocation Protocol - is despawned with an explicit
+        // Capy's active cap, or picked up by Relocation Protocol - is despawned with an explicit
         // DespawnIntent instead, which the guard below rejects. Without that, redeploy-spam would
         // become the cheapest way to fire this.
         private static void TrySentryOverload(Frame f, EntityRef owner, EntityRef target)
@@ -705,7 +705,7 @@ namespace Quantum
 
             // Rank 2's knockback and rank 3's "Exposed" both sweep the same radius. Exposed reuses the
             // pre-existing generic Rupture status (an incoming-damage multiplier with take-the-stronger
-            // semantics) rather than introducing a Lux-specific one - so it composes with everything
+            // semantics) rather than introducing a Capy-specific one - so it composes with everything
             // that already reads it, and two Sentries meltdown-ing together don't stack additively.
             if (overload->KnockbackForce > FP._0 || overload->ExposedDamageTakenBonus > FP._0)
             {
@@ -964,7 +964,7 @@ namespace Quantum
             damage *= StatusEffectUtility.GetOutgoingDamageMultiplier(f, owner);
             damage *= ProtectorAuraUtility.GetFearlessBonusMultiplier(f, owner, target);
 
-            // Lux's Targeting Link (Assault Rifle Mastery R3) - has to run before the CharacterStats
+            // Capy's Targeting Link (Assault Rifle Mastery R3) - has to run before the CharacterStats
             // gate below since the damage it boosts is dealt by a SentryBarrel entity, which never
             // carries CharacterStats (same reason GetOutgoingDamageMultiplier/GetFearlessBonusMultiplier
             // already sit up here). See HeroMasteryUtility.GetTargetingLinkMultiplier's own comment.
@@ -1032,13 +1032,13 @@ namespace Quantum
                 damage *= FP._1 + stunDamageBonus->DamageMultiplierBonus;
             }
 
-            // Kai's First Strike - bonus damage on a target's first-ever hit from an owner holding this
+            // Yoru's First Strike - bonus damage on a target's first-ever hit from an owner holding this
             // upgrade, or (rank 3 "Perfect Opening" only, RefreshWindow > 0) once more after the mark
             // has sat untouched for RefreshWindow seconds (see FirstStrikeMarkTimeoutSystem). Gated on
             // the OWNER holding the trait (not "has anyone ever hit this enemy") so another hero's shot
-            // landing first in co-op doesn't silently deny Kai his own bonus. FirstStrikeMark also
-            // tracks WHICH Kai currently holds the mark (RevengeMark-shaped, see Heroes/Kai/
-            // FirstStrike.qtn) - a second Kai's hit reclaims it rather than tracking both at once.
+            // landing first in co-op doesn't silently deny Yoru his own bonus. FirstStrikeMark also
+            // tracks WHICH Yoru currently holds the mark (RevengeMark-shaped, see Heroes/Yoru/
+            // FirstStrike.qtn) - a second Yoru's hit reclaims it rather than tracking both at once.
             if (f.Unsafe.TryGetPointer<FirstStrikeUpgrade>(owner, out var firstStrike) == true)
             {
                 bool firstStrikeEligible = f.Unsafe.TryGetPointer<FirstStrikeMark>(target, out var firstStrikeMark) == false
@@ -1047,7 +1047,7 @@ namespace Quantum
                 if (firstStrikeEligible == true)
                 {
                     // Rank 3 - a banked "you finished your last opening" bonus rides along with this
-                    // one strike and is spent here (see KaiFirstStrikeSystem). 0 at ranks 1-2 and
+                    // one strike and is spent here (see YoruFirstStrikeSystem). 0 at ranks 1-2 and
                     // whenever nothing is banked, so this is the plain rank bonus otherwise.
                     damage *= FP._1 + firstStrike->DamageMultiplierBonus + firstStrike->PendingEmpowerBonus;
                     firstStrike->PendingEmpowerBonus = FP._0;
@@ -1057,7 +1057,7 @@ namespace Quantum
                 liveFirstStrikeMark->MarkedBy = owner;
             }
 
-            // Kai's Undertow rank 3 "Gravitational Bond" - bonus damage against any Bound enemy (see
+            // Yoru's Undertow rank 3 "Gravitational Bond" - bonus damage against any Bound enemy (see
             // StatusEffectUtility.ApplyBound/IsBound) - not per-source, since Bound is a status on the
             // enemy like Stun/Intimidate, not an attribution-scoped mark.
             if (f.Unsafe.TryGetPointer<UndertowUpgrade>(owner, out var undertow) == true && undertow->BoundDamageBonus > FP._0

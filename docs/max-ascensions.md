@@ -325,7 +325,7 @@ reads clearly (the Free Hit Guard radial on `CharacterUiWidget`).
 
 **2026-10-16 tuning:** Full Throttle raised from 20/30/40% to 40/70/100% Weapon Damage - the Balance
 Simulator had Max at ~700 DPS at minute 12 solo vs 965-1656 for the other heroes; 40/70/100 lands
-him at ~1090 (Brute/Lux band). Kept below that band's top since the sim doesn't model his Burn damage
+him at ~1090 (Brute/Capy band). Kept below that band's top since the sim doesn't model his Burn damage
 but does assume max Rage for the whole Overdrive.
 
 **2026-10-20 fix: max-Rage Ascensions never applied at cast.** `SkillSystem.TryBegin` runs the skill's

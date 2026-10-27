@@ -181,7 +181,7 @@ component CharacterStats
     // Longshot: extra pierces granted to a shot fired at a target beyond DamageUtility's own far
     // range threshold. Resolved once per SHOT at fire time (WeaponSystem.Update), not per target -
     // pierce is a property of the projectile/hitscan walk, not of any individual hit - and fed into
-    // the exact same two places Kai's Phantom Strike already feeds its own PierceBonus.
+    // the exact same two places Yoru's Phantom Strike already feeds its own PierceBonus.
     Int32 LongRangePierceBonus;
 
     // Heavy Arsenal: chance for a weapon hit to briefly stagger (stun) what it hits, and for how

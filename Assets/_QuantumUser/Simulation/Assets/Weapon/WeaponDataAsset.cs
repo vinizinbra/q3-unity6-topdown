@@ -34,7 +34,7 @@ namespace Quantum
         // Which of the 6 player weapon families this is (Pistol/SMG/AssaultRifle/Shotgun/Sniper/
         // GrenadeLauncher) - identity/perk-pool/UI/balance classification, independent of Element and
         // Weight below and never coupled to either (see docs/hero-mastery.md). None (default) for
-        // anything that isn't one of the 6 (Lux's sentry guns, test/basic weapons).
+        // anything that isn't one of the 6 (Capy's sentry guns, test/basic weapons).
         public WeaponFamily Family = WeaponFamily.None;
 
         // Which weight class this weapon belongs to - the axis Hero Mastery's Weapon Weight track keys

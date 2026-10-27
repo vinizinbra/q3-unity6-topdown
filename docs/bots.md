@@ -58,7 +58,7 @@ swap and none of them knows a bot exists**:
 - `WeaponSystem` (only under `DebugManualFireInput`)
 
 This is the same "fake a player's Input on an entity" shape `InputSource.qtn` already established
-for Lux's sentry gun. It is deliberately a **second** component rather than reusing `InputSource`,
+for Capy's sentry gun. It is deliberately a **second** component rather than reusing `InputSource`,
 because a bot really does have a `PlayerLink`, and `WeaponSystem.HasFireDriver` reads "has
 `InputSource`" as "is a non-player shooter".
 
@@ -110,8 +110,8 @@ recast), with a 1 s / 2 s re-press guard. Keyed off the Hero Skill's `SkillData`
 | --- | --- |
 | Brute (`JuggernautSkillData`) | 3+ enemies within AftershockRadius+1, an Elite there, or <50 % Health with an enemy within 3 |
 | Max (`BerserkSkillData`) | 3+ enemies within 8, or an Elite within 8 |
-| Pixie / Zara / Kai (`ProjectileSkillData`) | `Aim.Target` within the skill's Range and 3+ enemies within 4 of it, or it's an Elite |
-| Lux (Sentry spawn action) | Any enemy within 10 and none of her sentries alive |
+| Pixie / Zara / Yoru (`ProjectileSkillData`) | `Aim.Target` within the skill's Range and 3+ enemies within 4 of it, or it's an Elite |
+| Capy (Sentry spawn action) | Any enemy within 10 and none of her sentries alive |
 | anything else | 2+ enemies within 8 |
 
 **Dash** is never fired blind (it moves 6 units with the KCC off and no ground check - the main way

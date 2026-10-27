@@ -8,7 +8,7 @@ Mastery UI, currency, or progression system.
 
 **2026-09-16 - migrated from Weapon Family to Weapon Weight.** The Weapon Weight track replaces what
 used to be a **Weapon Family Mastery** (fixed weapon family - Brute/Shotgun, Pixie/Grenade Launcher,
-Max/Pistol, Kai/Sniper, Zara/SMG, Lux/Assault Rifle). `WeaponFamily` itself is untouched and still
+Max/Pistol, Yoru/Sniper, Zara/SMG, Capy/Assault Rifle). `WeaponFamily` itself is untouched and still
 drives weapon identity/perk pools/UI/balance (see "Weapon Weight" below) - only Hero Mastery's own
 keying axis changed, to a new, independent `WeaponWeight` classification. This was a full replacement,
 not an added second system: the old 6 Family-keyed Mastery assets and their `CharacterData.
@@ -32,7 +32,7 @@ Code-complete. Not yet authored/verified in-Editor - run
 all 12 `.asset` files (2 per hero) into every hero's `CharacterData.PassiveUpgrades`, without touching
 any hero's other Ascension/Passive lines. Requires Quantum DSL codegen to run first (new `WeaponWeight`
 enum + renamed/added `.qtn` components) - see CLAUDE.md's "Quantum `.qtn` codegen gotcha". The 6 old
-Weapon-Family-keyed Mastery icons (`BruteShotgunMastery`/`MaxPistolMastery`/`KaiSniperMastery` sprites in
+Weapon-Family-keyed Mastery icons (`BruteShotgunMastery`/`MaxPistolMastery`/`YoruSniperMastery` sprites in
 `UISprites.spriteatlas`) are now unused and need re-authoring/renaming for the new Heavy/Light/Heavy
 lines - not done here (art-asset only, no code dependency).
 
@@ -61,7 +61,7 @@ ways to run it:
   A weapon is `(Family, Element, Weight)`, never coupled - `WeaponDataAsset.Weight` is hand-tagged on
   every player weapon asset in `Resources/Weapons/` (the asset is authoritative - e.g. `ShotgunWeapon`/
   `AutoShotgun`/`Minigun`/`SniperWeapon`/`GrenadeLauncher` are Heavy, `PistolWeapon`/`SMG` Light, the
-  rifles Medium); anything untagged (Lux's sentry guns, test/basic weapons) stays the default
+  rifles Medium); anything untagged (Capy's sentry guns, test/basic weapons) stays the default
   `WeaponWeight.Medium` and simply never matches a Light or Heavy Mastery. `Medium` is the enum's ordinal-0 default deliberately, so an un-tagged weapon reads as
   neutral rather than silently getting the Light speed bonus or Heavy penalty (see below).
   **Move speed**: `WeaponWeightUtility.GetMoveSpeedMultiplier` (`Systems/Weapon/`) resolves the
@@ -70,7 +70,7 @@ ways to run it:
   (CharacterStats/timed buffs/MutationModifier) - `PlayerMovementProcessor` and the Hero Info "Move
   Speed" row both read that one helper. A general weapon property, not part of
   Hero Mastery, so it lives in its own utility rather than duplicating resolution logic inside Mastery.
-  One Mastery hook: `WeaponWeightMasteryData.IgnoreMoveSpeedPenaltyAtMaxRank` (on for Brute's and Kai's
+  One Mastery hook: `WeaponWeightMasteryData.IgnoreMoveSpeedPenaltyAtMaxRank` (on for Brute's and Yoru's
   Heavy lines) sets `WeaponWeightMastery.IgnoreMoveSpeedPenalty` at R3, and the utility then returns 1x
   instead of a penalty for a weapon matching the line's Weight (bonuses are never cancelled).
 - **Element** reuses the existing `ElementType` enum (`Neutral/Fire/Ice/Lightning` - Rock/Void were
@@ -91,8 +91,8 @@ ways to run it:
   codebase.
 - **12 concrete lines**, one pair per hero, under
   `Assets/_QuantumUser/Simulation/Assets/LevelUp/Heroes/<Hero>/PassiveSkillUpgrades/`
-  (`BruteHeavyMasteryData`/`PixieHeavyMasteryData`/`MaxLightMasteryData`/`KaiHeavyMasteryData`/
-  `ZaraLightMasteryData`/`LuxMediumMasteryData`, one per hero's Weight line). Each hero's
+  (`BruteHeavyMasteryData`/`PixieHeavyMasteryData`/`MaxLightMasteryData`/`YoruHeavyMasteryData`/
+  `ZaraLightMasteryData`/`CapyMediumMasteryData`, one per hero's Weight line). Each hero's
   `Editor/<Hero>AscensionAssetGenerator.cs` authors and wires its own pair into that hero's
   `CharacterData.PassiveUpgrades` (same `CreateOrUpdate`/full-list-replace pattern every other
   Ascension line already follows) - no new pool, no new `LevelUpPoolKind`. `LevelUpUtility.
@@ -117,12 +117,12 @@ ways to run it:
 | Pixie | Fire | Incendiary Rounds | Every Fire-weapon hit detonates a real `AreaHitData` explosion, guaranteed (not a proc chance, unlike Pixie's separate Explosive Rounds Ascension). `FireWeaponExplosiveShotUpgrade{Explosion: AssetRef<AreaHitData>}` - fully author-configured (BlastRadius/TargetMask/Effects) via the same asset type Grenade Launcher's own weapon uses, rather than bespoke fields. Triggered from `StatusEffectUtility.TryTriggerFireWeaponExplosion`, called unconditionally for every Fire-element weapon hit (`TryApplyElementalStatus`), using `AreaHitData`'s own public, Projectile-agnostic `Detonate(...)` overload - the same one `ExplodeOnDestroyUtility` uses for a planted bomb with no live `Projectile*`. Direct Hit/Unstable Mixture/Pocket Bombs/Cluster Bomb all apply automatically, zero extra plumbing. (Replaced the original "Flash Burn" design - detonating part of a Burning target's remaining Burn - which is no longer implemented.) |
 | Max | Light | Vendetta | `VendettaUpgrade{DamageBonus}`, read in `HeroMasteryUtility.ResolveVendettaBonus` against the target's existing `RevengeMark` - no duplicate mark, gated on `weaponData.Weight == Light` so it works for a Pistol or SMG alike. |
 | Max | Fire | Infernal Rage | `InfernalRageUpgrade{DamageBonus}`, gated on `f.Has<RageOverdrive>(owner)` (component **presence** = "an Overdrive activation is running", the same convention every other Overdrive Ascension already reads). Generates no Rage. Both this bonus and the base Fire Mastery %-damage multiplier also apply on a **Neutral** weapon whenever Ignition's guaranteed Burn is active (`HeroMasteryUtility.HasGuaranteedBurn` reads `CharacterStats.BurnOnHitStacks != 0`) - that hit lands a Burn just like a Fire weapon's would, so it counts as eligible for Fire Mastery too. |
-| Kai | Heavy | Deadeye | `DeadeyeUpgrade{DamageBonus}` + a **generic** `WeaponWeightFirstHitTracker` component (4-slot `(Owner,Weight)` ledger per target, `WeaponWeightFirstHitUtility.TryConsumeFirstHit`) - reusable by any future "first hit of weight X from owner Y" effect, deliberately separate from Kai's own `FirstStrikeMark` so the two Ascensions' state never merges. Gated on `weaponData.Weight == Heavy`, tracked per (owner, target, Heavy) - switching between different Heavy weapons still counts as the same opener against a given enemy. |
-| Kai | Neutral | Ghost Shot | See "Ghost Shot / generic Damage Echo" below. Kai's Element Mastery was originally Ice ("Cold Blooded") - **replaced** by Neutral/Ghost Shot; Cold Blooded/`ColdBloodedUpgrade`/`ColdBloodedWindow` are no longer implemented. |
+| Yoru | Heavy | Deadeye | `DeadeyeUpgrade{DamageBonus}` + a **generic** `WeaponWeightFirstHitTracker` component (4-slot `(Owner,Weight)` ledger per target, `WeaponWeightFirstHitUtility.TryConsumeFirstHit`) - reusable by any future "first hit of weight X from owner Y" effect, deliberately separate from Yoru's own `FirstStrikeMark` so the two Ascensions' state never merges. Gated on `weaponData.Weight == Heavy`, tracked per (owner, target, Heavy) - switching between different Heavy weapons still counts as the same opener against a given enemy. |
+| Yoru | Neutral | Ghost Shot | See "Ghost Shot / generic Damage Echo" below. Yoru's Element Mastery was originally Ice ("Cold Blooded") - **replaced** by Neutral/Ghost Shot; Cold Blooded/`ColdBloodedUpgrade`/`ColdBloodedWindow` are no longer implemented. |
 | Zara | Light | Full Tempo | `ConditionalWeaponFireRateBonus{Weight,FireRateBonus,Active}` - a **generic** component read by `WeaponSystem.ResolveLiveFireCooldown` with zero Flow-specific knowledge, gated on `Weight == Light`. `Active` is flipped by `ZaraFlowUtility.ApplyStatBonuses` on Flow's own activation edge (the same place `FasterTempoPassiveUpgradeData`'s own Fire Rate bonus already rebakes). **Renamed** `FasterTempoPassiveUpgradeData`'s existing rank-3 nickname from "Full Tempo" to "Perfect Rhythm" to avoid colliding with this new name - cosmetic only, no mechanics moved. |
 | Zara | Electric | High Voltage | `SelfFireRateOnJoltUpgrade{FireRateBonus,Duration}`, triggered from `StatusEffectUtility.ApplyElementBaseline`'s `Lightning` case (`TryTriggerSelfFireRateOnJolt`) - applies via the existing per-source Haste slots (`StatusEffectUtility.ApplyHaste`, refresh-not-stack by construction). |
-| Lux | Medium | Targeting Link | `TargetingLinkUpgrade{SentryDamageBonus,MarkDuration}` + `TargetingLinkMark{MarkedBy,Remaining}` on the target, ticked by a small `TargetingLinkSystem`, gated on `weaponData.Weight == Medium` so it works for an Assault Rifle or Shotgun alike. See "Lux multiplayer ownership" below. |
-| Lux | Neutral | Neutral Focus | See "Neutral Focus / generic Priority Target" below. Lux's Element Mastery was originally Electric ("Overcharge" - a Sentry Fire Rate buff on Jolt) - **replaced** by Neutral/Neutral Focus; Overcharge, `SentryFireRateOnJoltUpgrade`, and `Sentry.OverchargeFireRateMultiplier`/`OverchargeRemaining` are no longer implemented. |
+| Capy | Medium | Targeting Link | `TargetingLinkUpgrade{SentryDamageBonus,MarkDuration}` + `TargetingLinkMark{MarkedBy,Remaining}` on the target, ticked by a small `TargetingLinkSystem`, gated on `weaponData.Weight == Medium` so it works for an Assault Rifle or Shotgun alike. See "Capy multiplayer ownership" below. |
+| Capy | Neutral | Neutral Focus | See "Neutral Focus / generic Priority Target" below. Capy's Element Mastery was originally Electric ("Overcharge" - a Sentry Fire Rate buff on Jolt) - **replaced** by Neutral/Neutral Focus; Overcharge, `SentryFireRateOnJoltUpgrade`, and `Sentry.OverchargeFireRateMultiplier`/`OverchargeRemaining` are no longer implemented. |
 
 ### Heavy Hit Area Expansion
 
@@ -159,7 +159,7 @@ never by weapon name/Family). Cut because it only ever did anything for a Heavy 
 projectile happened to be ballistic (in practice, only Grenade Launcher) - a Sniper in Pixie's hands got
 nothing from that half, which read as inconsistent on one card. `ProjectileMovementOverride` (the
 Mastery-installed upgrade component) is gone; the underlying generic `Projectile.MovementOverride` field
-and `ProjectileSystem.Update`'s preference logic for it are untouched and still used by Kai's Mirror Step
+and `ProjectileSystem.Update`'s preference logic for it are untouched and still used by Yoru's Mirror Step
 (`MirrorStepSkillAction`, unrelated to Hero Mastery) to redirect a reflected bolt at runtime.
 
 **Why this shape.** The codebase has no pre-existing "expand this attack's hit radius" primitive - every
@@ -173,14 +173,14 @@ introducing a second damage-application pipeline.
 
 ### Ghost Shot / generic Damage Echo
 
-Kai's Neutral Mastery R3 "Ghost Shot" - the first shot of every fresh magazine is echoed a moment
+Yoru's Neutral Mastery R3 "Ghost Shot" - the first shot of every fresh magazine is echoed a moment
 later for 50% of its own damage - is implemented as **configuration of a new generic, hero-agnostic
-behavior**, not Kai-specific code: `DamageEchoUpgrade`/`PendingDamageEcho`/`DamageEchoSystem`/
+behavior**, not Yoru-specific code: `DamageEchoUpgrade`/`PendingDamageEcho`/`DamageEchoSystem`/
 `DamageEchoUtility` (`DamageEcho.qtn`, `Systems/Combat/`). Any future hero/relic/weapon-perk/mutation
 wanting "this weapon's first shot each magazine repeats a moment later, a fraction of the damage"
 installs `DamageEchoUpgrade` with its own `RequiredElement`/`DamageMultiplier`/`Delay`/`Visual`/
-`EchoHit` instead of a bespoke implementation. `KaiNeutralMasteryData.ApplyRank` (rank 3 only) is the
-only Kai-specific code involved - it just installs that generic component with Kai's own tuned values.
+`EchoHit` instead of a bespoke implementation. `YoruNeutralMasteryData.ApplyRank` (rank 3 only) is the
+only Yoru-specific code involved - it just installs that generic component with Yoru's own tuned values.
 
 **Fire-time, not hit-time - and hit or miss, either way.** Earlier iterations scheduled an echo from
 `DamageUtility.ApplyDamage`, which meant a shot that never connected got no echo at all. Scheduling now
@@ -225,7 +225,7 @@ owner's live position/aim/weapon offset - the same `SpawnAnchor`/`SpawnOffset`/h
 via `ProjectileMovementData.GetLaunch` (free-aim, no locked target - there is nothing to lock onto,
 only a fixed heading). Only `Hit` is swapped, via the generic `Projectile.HitOverride` field
 (`ProjectileSpawner.Spawn`'s `hitOverride` param, the same "per-shot override, preferred every tick by
-`ProjectileSystem.Update`" shape `Projectile.MovementOverride` uses - see Kai's Mirror Step,
+`ProjectileSystem.Update`" shape `Projectile.MovementOverride` uses - see Yoru's Mirror Step,
 `MirrorStepSkillAction`) - `ProjectileSystem` prefers `HitOverride` over `projectileData.Hit`
 every tick it resolves hit behavior. `EchoHitData` (the one `EchoHit` asset today, `GhostShotHit.asset`)
 is deliberately minimal - no `Effects` list, no elemental status application, no on-hit proc chain - it
@@ -270,7 +270,7 @@ actually lands (never for a cancelled one). `Visual` is an `AssetRef<DamageEchoV
 generic, hero-agnostic asset whose Unity-only `.View.cs` partial carries the actual `ParticleSystem`
 prefab, exactly the same "configure the particle on the asset itself" split
 `QuantumRoundsWeaponPerkData`/`QuantumRoundsWeaponPerkData.View.cs` already establishes.
-`KaiNeutralMasteryData.GhostShotVisual` points at Kai's own `GhostShotVisual.asset` instance (its
+`YoruNeutralMasteryData.GhostShotVisual` points at Yoru's own `GhostShotVisual.asset` instance (its
 `EffectPrefab` left for hand-authoring in the Inspector). `EffectsManager.OnDamageEchoTriggered`
 resolves it the same way `OnQuantumRoundsTriggered` resolves `Source.ImpactEffectPrefab`, falling back
 to `defaultAreaBlastEffect` at `damageEchoEffectScale` if unassigned - a plain point-spark `PlayEffect`
@@ -295,18 +295,18 @@ rest of the visual's `Destroy(gameObject)`; an orphan/teardown cleanup (no real 
 it immediately alongside everything else, same as `TrailParticle`. This is the mechanism for "parent my
 own particle onto the projectile" - configure it once on `GhostShotVisual.asset`'s `EffectPrefab` and
 it plays for the whole flight of every Ghost Shot echo, generic and hero-agnostic (driven off
-`EchoProjectile`, not anything Kai-specific).
+`EchoProjectile`, not anything Yoru-specific).
 
 ### Neutral Focus / generic Priority Target
 
-Lux's Neutral Mastery R3 "Neutral Focus" - a Neutral weapon hit makes that enemy her Focus Target,
+Capy's Neutral Mastery R3 "Neutral Focus" - a Neutral weapon hit makes that enemy her Focus Target,
 which all of her own Sentries prioritize while it stays in their own normal range and stays valid - is
 implemented as **configuration of a new generic, hero-agnostic behavior**, mirroring how Ghost Shot
 sits on top of Damage Echo: `PriorityTargetUpgrade`/`PriorityTarget`/`PriorityTargetSystem`/
 `PriorityTargetUtility` (`PriorityTarget.qtn`, `Systems/Combat/`). Any future hero/relic/summon/command/
 mark wanting "my controlled units should prefer THIS target over their own normal targeting, while it
 stays valid" installs `PriorityTargetUpgrade` with its own `RequiredElement`/`Duration` instead of a
-bespoke implementation. `LuxNeutralMasteryData.ApplyRank` (rank 3 only) is the only Lux-specific code
+bespoke implementation. `CapyNeutralMasteryData.ApplyRank` (rank 3 only) is the only Capy-specific code
 involved.
 
 **Setting/refreshing/replacing the Focus Target.** `DamageUtility.ApplyDamage` calls
@@ -352,7 +352,7 @@ works, requiring no new priority/nearest/highest-damage logic layered on top.
 `TryGetValidPriorityTarget` touch Sentry Damage, Fire Rate, Exposed, or any vulnerability - Sentry
 targeting is the only thing a `PriorityTarget` ever changes.
 
-### Lux multiplayer ownership
+### Capy multiplayer ownership
 
 A Sentry barrel fires with **itself** as `owner` (see `WeaponSystem.Update`'s `filter.Entity`), and a
 barrel never carries `CharacterStats` - so any bonus gated behind the `CharacterStats` check in
@@ -362,11 +362,11 @@ barrel never carries `CharacterStats` - so any bonus gated behind the `Character
 `HeroMasteryUtility.GetTargetingLinkMultiplier` is called from the same pre-gate block as
 `StatusEffectUtility.GetOutgoingDamageMultiplier`/`ProtectorAuraUtility.GetFearlessBonusMultiplier`,
 resolves `owner` (a `SentryBarrel`) -> its `Sentry` chassis -> that `Sentry.Owner`, and only pays out if
-*that specific* Lux both still holds `TargetingLinkUpgrade` and placed the `TargetingLinkMark` on the
+*that specific* Capy both still holds `TargetingLinkUpgrade` and placed the `TargetingLinkMark` on the
 target (`TargetingLinkMark.MarkedBy == sentry.Owner`) - another player's Sentry, or a mark a different
-Lux placed, never qualifies. Neutral Focus is isolated the same way at the OTHER end - `PriorityTarget`
-lives on Lux herself (not the Sentry), and `SentryBarrelSystem` reads it via `sentry->Owner`, so one
-Lux's Focus Target can only ever redirect Sentries whose own `Owner` is that same Lux.
+Capy placed, never qualifies. Neutral Focus is isolated the same way at the OTHER end - `PriorityTarget`
+lives on Capy herself (not the Sentry), and `SentryBarrelSystem` reads it via `sentry->Owner`, so one
+Capy's Focus Target can only ever redirect Sentries whose own `Owner` is that same Capy.
 
 ## Configurable values
 
@@ -394,7 +394,7 @@ brief, not a balance pass.
   per-file asset Guid) so no dangling/missing reference is left behind.
 - **`HeroMasteryAssetGenerator.GenerateAll()`** (`Tools/RiftRaiders/Hero Mastery/Generate All Mastery
   Assets`) now only ever authors the 6 new Weight-keyed assets (`BruteHeavyMastery`/
-  `PixieHeavyMastery`/`MaxLightMastery`/`KaiHeavyMastery`/`ZaraLightMastery`/`LuxMediumMastery`, at new
+  `PixieHeavyMastery`/`MaxLightMastery`/`YoruHeavyMastery`/`ZaraLightMastery`/`CapyMediumMastery`, at new
   paths) - running it creates and wires these fresh, exactly like every other not-yet-authored Ascension
   in this project (see "Current status").
 - **UI needed no code changes.** `HeroInfoPopupWidget`/`HeroInfoWidget` read a Mastery line's
@@ -402,7 +402,7 @@ brief, not a balance pass.
   asset is equipped - no widget hardcodes "Shotgun Mastery" or any other family/weight name, so
   `DisplayName` changing from e.g. "Shotgun Mastery" to "Heavy Weapon Mastery" on the new asset is the
   entire UI migration. The one non-code UI asset affected is the Mastery card icon sprites
-  (`BruteShotgunMastery`/`MaxPistolMastery`/`KaiSniperMastery` in `UISprites.spriteatlas`) - these are
+  (`BruteShotgunMastery`/`MaxPistolMastery`/`YoruSniperMastery` in `UISprites.spriteatlas`) - these are
   now orphaned (the assets that referenced them by Icon are deleted) and need re-authoring for the new
   Heavy/Light/Heavy lines by hand in the Editor; not done here, flagged as a follow-up.
 

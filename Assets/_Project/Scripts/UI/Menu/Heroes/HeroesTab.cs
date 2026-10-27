@@ -233,7 +233,7 @@ public class HeroesTab : TabContent
     }
 
     // Explicit up/down chain between the rows, nothing past either end. With automatic navigation, Down on
-    // the last row (Lux) found some other selectable below/beside the list and left focus stranded there;
+    // the last row (Capy) found some other selectable below/beside the list and left focus stranded there;
     // now it just stays on the row. Left/Right stay unlinked on purpose: Right enters the info panel
     // (HeroRowWidget.MovedRight) and Left at the list's edge goes back to the main menu (MenuNavigationController).
     private void LinkRowNavigation()

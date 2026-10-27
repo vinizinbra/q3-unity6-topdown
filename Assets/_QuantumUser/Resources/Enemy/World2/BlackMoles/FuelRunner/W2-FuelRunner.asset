@@ -658,3 +658,4 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 36dd1e61cdac04d189cb55341a23b3b4, type: 2}
   Description: Leaves a trail of oil that slows whoever steps in it.
   ViewPrefab: {fileID: 877418933192376666, guid: 020a00f594e874b0ab0a4eb4b32b57bf, type: 3}
+  CatalogSubtitle: Trail

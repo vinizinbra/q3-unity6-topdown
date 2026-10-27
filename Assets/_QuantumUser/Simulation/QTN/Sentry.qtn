@@ -1,4 +1,4 @@
-// Marks the "chassis" entity of an autonomous sentry (Lux's Sentry) - doesn't shoot or aim itself.
+// Marks the "chassis" entity of an autonomous sentry (Capy's Sentry) - doesn't shoot or aim itself.
 // Up to 4 separate SentryBarrel child entities (one per armed weapon slot) each carry their own
 // Weapon/Aim/InputSource and independently find their own nearest enemy every tick
 // (SentryBarrelSystem, searching from that barrel's own position - so different barrels can end up

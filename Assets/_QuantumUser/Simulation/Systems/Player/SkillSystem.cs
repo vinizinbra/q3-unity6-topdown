@@ -321,7 +321,7 @@ namespace Quantum
             return true;
         }
 
-        // Marks a slot's *next* activation as free - added for Lux's Scrap Collector passive (10
+        // Marks a slot's *next* activation as free - added for Capy's Scrap Collector passive (10
         // Scrap pickups makes the Hero Skill's next cast cost nothing, see
         // ScrapUtility.TryGrantFreeCharge). Deliberately does not touch CurrentStacks/CooldownTimer
         // here: this only takes effect once TryBegin is actually pressed, not the instant it's
@@ -482,7 +482,7 @@ namespace Quantum
             // A pending free cast (see SkillSlot.FreeCastPending) spends itself instead of a stack -
             // no CurrentStacks change, no cooldown start. OnFreeCastUsed fires here, at the moment
             // it's actually spent, not when ScrapUtility.TryGrantFreeCharge granted it - that's what
-            // lets Lux's own Scrap counter reset on use instead of on threshold-reached.
+            // lets Capy's own Scrap counter reset on use instead of on threshold-reached.
             if (freeCast == true)
             {
                 slot->FreeCastPending = false;

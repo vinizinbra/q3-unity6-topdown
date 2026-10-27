@@ -16857,7 +16857,7 @@ MonoBehaviour:
       DisableCursedRift: 0
       DisableAutoLevelUpPick: 0
       DisableAutoBreathingSkipVote: 0
-      DisableAutoTeamChallengeReady: 0
+      DisableTeamChallenge: 0
   RuntimePlayers:
   - PlayerAvatar:
       Id:

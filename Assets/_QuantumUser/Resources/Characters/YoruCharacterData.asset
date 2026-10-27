@@ -1,0 +1,146 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2081b046763ac4d3bb208774c58c218a, type: 3}
+  m_Name: YoruCharacterData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.CharacterData
+  Identifier:
+    Path: _QuantumUser/Resources/Characters/YoruCharacterData
+    Guid:
+      Value: 448340892303563690
+  BaseMaxHealth:
+    RawValue: 6553600
+  BaseHealthRegenRate:
+    RawValue: 0
+  MoveSpeedMultiplier:
+    RawValue: 65536
+  BaseArmor:
+    RawValue: 0
+  BaseMaxShield:
+    RawValue: 0
+  ShieldChargeOnly: 1
+  ShieldRechargeDelay:
+    RawValue: 0
+  ShieldRechargeRate:
+    RawValue: 0
+  ShieldTemporaryDuration:
+    RawValue: 0
+  DamageMultiplier:
+    RawValue: 65536
+  WeaponDamageMultiplier:
+    RawValue: 65536
+  SkillDamageMultiplier:
+    RawValue: 65536
+  CriticalChance:
+    RawValue: 0
+  CriticalDamageMultiplier:
+    RawValue: 65536
+  AttackSpeedMultiplier:
+    RawValue: 65536
+  ReloadSpeedMultiplier:
+    RawValue: 65536
+  AreaRadiusMultiplier:
+    RawValue: 65536
+  NearDamageMultiplier:
+    RawValue: 65536
+  FarDamageMultiplier:
+    RawValue: 65536
+  DashCooldownMultiplier:
+    RawValue: 65536
+  SkillCooldownMultiplier:
+    RawValue: 65536
+  SkillDurationMultiplier:
+    RawValue: 65536
+  KnockbackMultiplier:
+    RawValue: 65536
+  LifeSteal:
+    RawValue: 0
+  OutgoingStatusDurationMultiplier:
+    RawValue: 65536
+  MaxHealthMultiplier:
+    RawValue: 65536
+  MaxShieldMultiplier:
+    RawValue: 65536
+  DamageReduction:
+    RawValue: 0
+  DamageTakenMultiplier:
+    RawValue: 65536
+  KnockbackTakenMultiplier:
+    RawValue: 65536
+  HealingReceivedMultiplier:
+    RawValue: 65536
+  PickupRangeMultiplier:
+    RawValue: 65536
+  Luck:
+    RawValue: 0
+  ExperienceGainMultiplier:
+    RawValue: 65536
+  RiftShardGainMultiplier:
+    RawValue: 65536
+  CoinGainMultiplier:
+    RawValue: 65536
+  DisplayName: Yoru
+  Description: A battlefield controller who pulls the fight to him - Vortex drags
+    enemies into one spot so the team can end it fast.
+  RingColor: {r: 0.7722275, g: 0.35506406, b: 0.9528302, a: 1}
+  PawnSprite: {fileID: 1231564051, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
+  UIHead: {fileID: 1038944989, guid: 534d18fb848e14f3cba55332d14c7b18, type: 3}
+  WeaponPosition:
+    X:
+      RawValue: 32768
+    Y:
+      RawValue: 65536
+    Z:
+      RawValue: 0
+  Prototype:
+    Id:
+      Value: 1528421175378562387
+  DashSkill:
+    Id:
+      Value: 533523231288344056
+  HeroSkill:
+    Id:
+      Value: 527298509968981600
+  Passive:
+    Id:
+      Value: 411221715940256372
+  StartingWeapon:
+    Id:
+      Value: 532371987665164333
+  DashSkillUpgrades:
+  - Id:
+      Value: 426548535379839428
+  - Id:
+      Value: 410004890060701885
+  PassiveUpgrades:
+  - Id:
+      Value: 469056453639286897
+  - Id:
+      Value: 320692999273507519
+  - Id:
+      Value: 318677384688188296
+  - Id:
+      Value: 3000299746576496687
+  - Id:
+      Value: 449995147557023149
+  Title: 
+  Accessory:
+    DisplayName: 
+    CollectibleSprite: {fileID: 753418782, guid: babf8bf5c1b784e07bb668d455b33d8d, type: 3}
+    CollectibleScale: 1.2
+    BrokenEffectPrefab: {fileID: 0}
+  Emojis:
+  - {fileID: -369734157, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1361276074, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1347471790, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 1050206852, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  EmojiOffset: {x: -1, y: 1, z: 0}
+  EmojiScale: 0.75

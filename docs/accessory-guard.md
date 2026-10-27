@@ -292,7 +292,7 @@ no guard - so the one shared prefab still serves every enemy. Authoring fewer pi
 
 A third field, `accessoryGuardRoot`, hides the pip STRIP itself (its empty frames and backing
 image, the part no pip owns) for any entity with no `AccessoryGuard` - the pips going dark
-individually still left a row of empty guard slots hanging on every enemy and every Lux sentry,
+individually still left a row of empty guard slots hanging on every enemy and every Capy sentry,
 which read as a broken readout rather than as an absent mechanic.
 
 Recovery restores the **state, not the durability** - recovering a 2/3 accessory gives back a 2/3
@@ -749,10 +749,10 @@ behaviour.
 
 ## Consequences worth knowing
 
-- **Kai, Pixie and Max have no Shield route of their own** and will sit at 0 unless a teammate or the
+- **Yoru, Pixie and Max have no Shield route of their own** and will sit at 0 unless a teammate or the
   Store supplies one. Shield is now a *team* resource; the accessory is personal defence.
 - **The standing Shield sources are:** Brute's Juggernaut Discharge (self), Brute's Bodyguard rank 2+
-  (self, on a save), Zara's Protective Rhythm (allies), Zara's Encore overheal conversion, Lux's Sentry
+  (self, on a save), Zara's Protective Rhythm (allies), Zara's Encore overheal conversion, Capy's Sentry
   Shield Battery, and the Store's Shield Cell.
 - **Not yet retuned, deliberately** (each is a balance call, not a code one): Rift Mutations Glass Core
   (2x Max Shield now only raises a cap you must fill), Last Bastion (trading Shield away is now nearly
@@ -768,15 +768,15 @@ behaviour.
 - `ShieldUiWidget` lost its above-Max colour swap (nothing can exceed Max any more), and
   `CharacterUiWidget`'s recharge shine no longer fires for players.
 
-## Lux is the one exception
+## Capy is the one exception
 
-`ShieldChargeOnly` is authored **false on Lux only**. A self-recharging barrier is the one hero
+`ShieldChargeOnly` is authored **false on Capy only**. A self-recharging barrier is the one hero
 fantasy that genuinely fits it - he is the engineer, and his Sentry already grants Shield to allies
 (Shield Battery). Every other hero is charge-only. Enemies never carry the flag at all.
 
-Practically this makes Lux the only hero whose Accessory is passively protected: his Shield refills
+Practically this makes Capy the only hero whose Accessory is passively protected: his Shield refills
 5s after he stops taking hits (50 Max at 10/sec), so his hat only comes off under sustained pressure.
-That is a real asymmetry and it is deliberate - but it is also the first thing to look at if Lux ends
+That is a real asymmetry and it is deliberate - but it is also the first thing to look at if Capy ends
 up losing his accessory far less than anyone else.
 
 ## Do NOT trust C# field-initializer defaults on existing assets

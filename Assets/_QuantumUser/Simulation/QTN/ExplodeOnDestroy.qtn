@@ -13,7 +13,7 @@
 // stayed Projectile-based - carries no identity tied to either feature, so any future "spawn
 // something that explodes when it's destroyed" reuses this exact same component for free.
 //
-// Not to be confused with VortexExplodeOnDestroy (Heroes/Kai) - a similarly-named but unrelated,
+// Not to be confused with VortexExplodeOnDestroy (Heroes/Yoru) - a similarly-named but unrelated,
 // Vortex-specific mechanic: damage applied directly via HitEffectUtility.ApplyDamageInRadius off the
 // vortex's own live collider radius, no AreaHitData/Explosion asset, no spawned entity, and its own
 // VortexExploded event rather than AreaDetonated. Predates this component; the naming overlap is

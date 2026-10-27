@@ -1,6 +1,6 @@
 // Generic secondary-shot "echo" behavior - deliberately NOT hero-specific, so any future hero/relic/
 // weapon-perk/mutation wanting "this weapon's shots are repeated a moment later, a fraction of the
-// damage" reuses this exact pair instead of a bespoke one. Kai's Neutral Mastery R3 "Ghost Shot" is
+// damage" reuses this exact pair instead of a bespoke one. Yoru's Neutral Mastery R3 "Ghost Shot" is
 // the first (and currently only) consumer - see DamageEchoUtility.
 //
 // An owner holding DamageEchoUpgrade has every REAL pellet/projectile the FIRST shot of a fresh

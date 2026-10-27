@@ -60,7 +60,7 @@ public class SoundClip
 // motivating case: a skill fires its impact sound and, sometimes, a hero voice line on top.
 //
 // A layer points at another SoundData rather than holding its own clips, so the layered sound is a
-// real reusable asset: one "Kai voice lines" pool referenced by every Kai skill, retuned in one
+// real reusable asset: one "Yoru voice lines" pool referenced by every Yoru skill, retuned in one
 // place. What lives here is only how THIS parent uses it - how often, how far behind, how loud.
 [System.Serializable]
 public class SoundLayer

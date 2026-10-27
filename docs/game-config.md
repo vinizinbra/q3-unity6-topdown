@@ -25,7 +25,7 @@ a debug knob).
 
 ## Folder
 Every shared config asset is in `Assets/_QuantumUser/Resources/Configs/`. These were moved in on 2026-10-20 (GUIDs kept):
-DirectorConfig, LifecycleConfig (were `Director/`), ScrapConfig (was in Lux's skill folder), HealthOrbConfig
+DirectorConfig, LifecycleConfig (were `Director/`), ScrapConfig (was in Capy's skill folder), HealthOrbConfig
 (`Resources/` root), CursedRiftConfig (`Sacrifice/`), StoreConfig, BlacksmithConfig (`Store/`), TalentsConfig
 (`Talents/`), AccessoryGuardConfig (`Accessory/`), ReviveConfig (`Revive/`). Their content generators write to the
 new paths. Per-world assets (SurvivalConfigs, WorldBalance, WorldDefinitions) stay under `Director/World*` and `Worlds/`.

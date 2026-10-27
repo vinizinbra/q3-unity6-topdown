@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f45b9ded648c248efb63b1c50be9589c, type: 3}
+  m_Name: MirrorStepSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.MirrorStepSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Yoru/Yoru_DashSkillUpgrades/MirrorStepSkillAction
+    Guid:
+      Value: 426548535379839428
+  Icon: {fileID: -6012258710592717756, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
+  DisplayName: Mirror Step
+  RankDescriptions:
+  - "While Dashing, enemy projectiles within <color=#FD3971>3m</color> are reflected at their owner, dealing <color=#FD3971>40%</color> of its max Health."
+  - "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected at their owner. Normal and weaker enemies die instantly; others take <color=#FD3971>60%</color> of their max Health."
+  - "While Dashing, enemy projectiles within <color=#FD3971>4.5m</color> are reflected. Specialist and weaker enemies die instantly; others take <color=#FD3971>80%</color> of their max Health. Each reflect cuts Vortex cooldown by <color=#FD3971>0.5s</color>."
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 3
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: Dashing reflects nearby enemy projectiles back toward their attackers.
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  Radius:
+  - RawValue: 196608
+  - RawValue: 294912
+  - RawValue: 294912
+  ShooterHealthPercent:
+  - RawValue: 26214
+  - RawValue: 39322
+  - RawValue: 52429
+  ReflectedRangeMultiplier:
+    RawValue: 98304
+  ReflectedMovement:
+    Id:
+      Value: 443112952488832536
+  CooldownReductionPerReflect:
+  - RawValue: 0
+  - RawValue: 0
+  - RawValue: 32768
+  MaxCooldownReductionPerDash:
+    RawValue: 131072

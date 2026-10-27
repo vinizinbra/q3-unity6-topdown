@@ -723,6 +723,49 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.CapyScrapCollector))]
+  public unsafe partial class CapyScrapCollectorPrototype : ComponentPrototype<Quantum.CapyScrapCollector> {
+    public FP DropChance;
+    public QBoolean IncludeFillerTier;
+    public FP FillerDropChance;
+    public Byte GuaranteedDropTierIndex;
+    public Byte GuaranteedDropCount;
+    public Byte BossGuaranteedScrap;
+    public Byte ScrapStacks;
+    public Byte StacksRequired;
+    public Byte MaxActiveSentries;
+    public FP CooldownReductionPerPickup;
+    public FP CooldownReductionOnCharge;
+    public FP FieldModDamagePerStack;
+    public FP FieldModFireRatePerStack;
+    public Byte FieldModMaxStacks;
+    public AssetRef<WeaponDataAsset> MkIIWeapon;
+    partial void MaterializeUser(Frame frame, ref Quantum.CapyScrapCollector result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.CapyScrapCollector component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.CapyScrapCollector result, in PrototypeMaterializationContext context = default) {
+        result.DropChance = this.DropChance;
+        result.IncludeFillerTier = this.IncludeFillerTier;
+        result.FillerDropChance = this.FillerDropChance;
+        result.GuaranteedDropTierIndex = this.GuaranteedDropTierIndex;
+        result.GuaranteedDropCount = this.GuaranteedDropCount;
+        result.BossGuaranteedScrap = this.BossGuaranteedScrap;
+        result.ScrapStacks = this.ScrapStacks;
+        result.StacksRequired = this.StacksRequired;
+        result.MaxActiveSentries = this.MaxActiveSentries;
+        result.CooldownReductionPerPickup = this.CooldownReductionPerPickup;
+        result.CooldownReductionOnCharge = this.CooldownReductionOnCharge;
+        result.FieldModDamagePerStack = this.FieldModDamagePerStack;
+        result.FieldModFireRatePerStack = this.FieldModFireRatePerStack;
+        result.FieldModMaxStacks = this.FieldModMaxStacks;
+        result.MkIIWeapon = this.MkIIWeapon;
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.CharacterSkills))]
   public unsafe partial class CharacterSkillsPrototype : ComponentPrototype<Quantum.CharacterSkills> {
     public Quantum.Prototypes.SkillSlotPrototype DashSkill;
@@ -2606,49 +2649,6 @@ namespace Quantum.Prototypes {
         }
         result.RolledPerkCount = this.RolledPerkCount;
         result.RolledWeaponLevel = this.RolledWeaponLevel;
-        MaterializeUser(frame, ref result, in context);
-    }
-  }
-  [System.SerializableAttribute()]
-  [Quantum.Prototypes.Prototype(typeof(Quantum.LuxScrapCollector))]
-  public unsafe partial class LuxScrapCollectorPrototype : ComponentPrototype<Quantum.LuxScrapCollector> {
-    public FP DropChance;
-    public QBoolean IncludeFillerTier;
-    public FP FillerDropChance;
-    public Byte GuaranteedDropTierIndex;
-    public Byte GuaranteedDropCount;
-    public Byte BossGuaranteedScrap;
-    public Byte ScrapStacks;
-    public Byte StacksRequired;
-    public Byte MaxActiveSentries;
-    public FP CooldownReductionPerPickup;
-    public FP CooldownReductionOnCharge;
-    public FP FieldModDamagePerStack;
-    public FP FieldModFireRatePerStack;
-    public Byte FieldModMaxStacks;
-    public AssetRef<WeaponDataAsset> MkIIWeapon;
-    partial void MaterializeUser(Frame frame, ref Quantum.LuxScrapCollector result, in PrototypeMaterializationContext context);
-    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
-        Quantum.LuxScrapCollector component = default;
-        Materialize((Frame)f, ref component, in context);
-        return f.Set(entity, component) == SetResult.ComponentAdded;
-    }
-    public void Materialize(Frame frame, ref Quantum.LuxScrapCollector result, in PrototypeMaterializationContext context = default) {
-        result.DropChance = this.DropChance;
-        result.IncludeFillerTier = this.IncludeFillerTier;
-        result.FillerDropChance = this.FillerDropChance;
-        result.GuaranteedDropTierIndex = this.GuaranteedDropTierIndex;
-        result.GuaranteedDropCount = this.GuaranteedDropCount;
-        result.BossGuaranteedScrap = this.BossGuaranteedScrap;
-        result.ScrapStacks = this.ScrapStacks;
-        result.StacksRequired = this.StacksRequired;
-        result.MaxActiveSentries = this.MaxActiveSentries;
-        result.CooldownReductionPerPickup = this.CooldownReductionPerPickup;
-        result.CooldownReductionOnCharge = this.CooldownReductionOnCharge;
-        result.FieldModDamagePerStack = this.FieldModDamagePerStack;
-        result.FieldModFireRatePerStack = this.FieldModFireRatePerStack;
-        result.FieldModMaxStacks = this.FieldModMaxStacks;
-        result.MkIIWeapon = this.MkIIWeapon;
         MaterializeUser(frame, ref result, in context);
     }
   }

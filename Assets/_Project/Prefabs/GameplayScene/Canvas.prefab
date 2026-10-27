@@ -119537,7 +119537,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerNumberUiWidget
   numberText: {fileID: 2826569835950361923}
-  colorAccent: {fileID: 7934699182636997709}
+  colorAccent: {fileID: 6796400131256748037}
 --- !u!1 &8729180619382127821
 GameObject:
   m_ObjectHideFlags: 0

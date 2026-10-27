@@ -8,7 +8,7 @@ namespace Quantum
     // Move-Speed pulse, or all of them at once.
     //
     // Consumers so far: Zara's Support Beat (Move Speed + Fire Rate, plus Power Chord's outgoing
-    // damage at rank 3), her Portable Speaker's reduced-effect variant, and Lux's Fire Support Sentry
+    // damage at rank 3), her Portable Speaker's reduced-effect variant, and Capy's Fire Support Sentry
     // aura (Fire Rate + Damage Reduction). Nothing here is hero-specific.
     //
     // Every underlying primitive already handles multi-source stacking on its own terms - Haste keeps

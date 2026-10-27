@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Quantum
 {
-    // Per-entity view for an autonomous Sentry's "chassis" (e.g. Lux's sentry gun) - wires up its
+    // Per-entity view for an autonomous Sentry's "chassis" (e.g. Capy's sentry gun) - wires up its
     // HUD health widget (SentryUiWidgetManager), same Initialize/DeInitialize hook shape EnemyView
     // uses for its own widget manager, activates the gun sprite matching each SentryBarrel slot as
     // it's actually armed, and keeps a direct Transform reference to each spawned barrel's own View

@@ -18,8 +18,8 @@ namespace QuantumUser.Editor
 
             WeaponPerkAssetGenerator.Generate();
             GlobalUpgradeAssetGenerator.Generate();
-            KaiAscensionAssetGenerator.Generate();
-            LuxAscensionAssetGenerator.Generate();
+            YoruAscensionAssetGenerator.Generate();
+            CapyAscensionAssetGenerator.Generate();
             PixieAscensionAssetGenerator.Generate();
             MaxAscensionAssetGenerator.Generate();
             ZaraAscensionAssetGenerator.Generate();

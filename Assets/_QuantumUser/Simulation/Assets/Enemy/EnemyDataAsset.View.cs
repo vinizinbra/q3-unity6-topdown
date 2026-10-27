@@ -20,5 +20,12 @@ namespace Quantum
         [PreviewPrefab]
         [Tooltip("Default/fallback visual rig prefab (EnemyViewRig + SpriteRenderers + optional weapon) instantiated as a child on spawn (EnemyView) - swap this per enemy type to change appearance without touching the shared generic sim prototype. EnemyBlobAnimationView/EnemyArmAimView/EnemyAttackVisualsView live on the generic prototype itself, not in here - they get this rig handed to them once it's instantiated. Scale is fit automatically off EnemyViewRig.ReferenceSprite's bounds, so it's PPU-independent - no need to hand-author at a specific scale.")]
         public GameObject ViewPrefab;
+
+        [Header("Catalog")]
+        [Tooltip("Short role shown after the faction in the Catalog's detail panel (RANGED, HEAVY...). Left empty on a boss, the Catalog shows \"Boss\".")]
+        public string CatalogSubtitle;
+
+        [Tooltip("When the Catalog reveals this enemy - see CatalogDiscovery.")]
+        public CatalogDiscovery Discovery;
     }
 }

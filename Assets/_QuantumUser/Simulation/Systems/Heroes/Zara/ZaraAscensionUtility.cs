@@ -9,7 +9,7 @@ namespace Quantum
         // (see AfterbeatSkillAction, spec's own "damage scales from Hero Skill Damage, not fixed 20").
         // Reactivates ZaraBaseSkill.Damage, previously a dead field (the Totem's real Damage Beat
         // amount lives on SpawnAlternatingAreaEffectData.DamageAmount instead). Mirrors
-        // KaiAscensionUtility.ResolveVortexSkillDamage/BruteAscensionUtility.
+        // YoruAscensionUtility.ResolveVortexSkillDamage/BruteAscensionUtility.
         // ResolveJuggernautSkillDamage exactly - resolved via CharacterStats.CharacterData ->
         // CharacterData.HeroSkill rather than a direct asset reference, so it always reflects
         // whichever hero/skill asset the entity actually has equipped.

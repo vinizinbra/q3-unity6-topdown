@@ -8,17 +8,19 @@ using UnityEngine.UI;
 /// <summary>
 /// Catalog tab content: everything the player can run into - Enemies, Bosses, Rift Mutations - as
 /// grids of tiles grouped into sections (faction / rarity), with the selected entry's details on the right.
-/// The Enemies page has a world filter and a world banner. Enemies and bosses come from what each world actually spawns
-/// (WorldCatalog -> SurvivalConfig phases, see <see cref="BuildWorldEntries"/>) - the game's own configuration, never a
-/// second list; mutations from the <see cref="CatalogEntryData"/> assets in <c>entries</c>. One tile / section / chip is
-/// cloned per entry / group / world.
+/// The Enemies page has a world filter and a world banner. Everything is listed from the game's own configuration, never
+/// a second list: enemies and bosses from what each world actually spawns (WorldCatalog -> SurvivalConfig phases, see
+/// <see cref="BuildWorldEntries"/>), mutations from the level-up pool (<see cref="BuildMutationEntries"/>). What the
+/// Catalog needs beyond that (an enemy's subtitle, every entry's <see cref="CatalogDiscovery"/>) lives on the gameplay
+/// asset itself. One tile / section / chip is cloned per entry / group / world.
 ///
-/// UI only: discovery and the encountered/defeated counters are mocked from each entry asset.
+/// Discovery and the encountered/defeated counters come from <see cref="CatalogProgress"/>, which nothing records yet.
 /// </summary>
 public class CatalogTab : TabContent
 {
     private const string LogTag = "Catalog";
     private const int KindCount = 3;
+    private const string GameConfigPath = "Configs/OverallGameConfig";
 
     private class Section
     {
@@ -30,8 +32,17 @@ public class CatalogTab : TabContent
     }
 
     [Header("Data")]
-    [SerializeField, Tooltip("Rift Mutations. Enemies and bosses are listed from the worlds' spawn data instead; an Enemy or Boss entry here only overrides that enemy's subtitle / icon / mock progress (its world and kind come from the game).")]
-    private List<CatalogEntryData> entries = new List<CatalogEntryData>();
+    [SerializeField, Tooltip("Shows every entry as discovered while there is no saved Catalog progress yet. Turn off to see the real CatalogDiscovery rules.")]
+    private bool mockAllDiscovered = true;
+
+    [SerializeField, Tooltip("Rift Mutation section header color per rarity, in UpgradeRarity order: Common, Rare, Epic, Legendary.")]
+    private Color[] rarityColors =
+    {
+        new Color(0.75f, 0.75f, 0.78f),
+        new Color(0.1f, 0.6f, 1f),
+        new Color(0.65f, 0.3f, 1f),
+        new Color(1f, 0.75f, 0.1f)
+    };
 
     [Header("Templates (placed in the scene, cloned per item, hidden themselves)")]
     [SerializeField, Tooltip("A section placed in the first page's list.")] private CatalogSectionWidget sectionTemplate;
@@ -68,9 +79,8 @@ public class CatalogTab : TabContent
     [SerializeField] private TMP_Text[] statValues;
 
     private readonly List<Section> sections = new List<Section>();
-    // What the tab lists: the authored mutations plus one runtime entry per enemy / boss (see BuildWorldEntries).
-    private readonly List<CatalogEntryData> listed = new List<CatalogEntryData>();
-    private readonly List<CatalogEntryData> generated = new List<CatalogEntryData>();
+    // What the tab lists: one runtime entry per enemy / boss / mutation the game can produce, minus hidden undiscovered ones.
+    private readonly List<CatalogEntry> listed = new List<CatalogEntry>();
     private readonly List<FilterChipWidget> chips = new List<FilterChipWidget>();
     private CatalogTileWidget selected;
     private int kind;
@@ -120,23 +130,27 @@ public class CatalogTab : TabContent
         ListTemplateUtility.Hide(sectionTemplate, tileTemplate, bossTileTemplate, chipTemplate);
 
         listed.Clear();
-        foreach (CatalogEntryData entry in entries)
+        var candidates = BuildWorldEntries();
+        candidates.AddRange(BuildMutationEntries());
+        foreach (CatalogEntry entry in candidates)
         {
-            if (entry != null && entry.kind != CatalogKind.Enemy && entry.kind != CatalogKind.Boss)
+            CatalogDiscovery rule = CatalogProgress.RuleOf(entry.source);
+            entry.record = CatalogProgress.Get(entry.source.Guid);
+            entry.discovered = mockAllDiscovered || CatalogProgress.IsDiscovered(rule, entry.record);
+            if (rule != CatalogDiscovery.HiddenUntilFound || entry.discovered)
                 listed.Add(entry);
         }
-        listed.AddRange(BuildWorldEntries());
 
         for (int k = 0; k < KindCount; k++)
         {
             int number = 0;
-            foreach (CatalogEntryData entry in EntriesOf((CatalogKind)k))
+            foreach (CatalogEntry entry in EntriesOf((CatalogKind)k))
             {
                 Section section = FindOrCreateSection(entry, k);
                 CatalogTileWidget template = entry.kind == CatalogKind.Boss && bossTileTemplate != null ? bossTileTemplate : tileTemplate;
                 CatalogTileWidget tile = ListTemplateUtility.Spawn(template, section.widget.GridRoot);
-                tile.name = "Entry_" + entry.name;
-                tile.Bind(entry, ++number, entry.mockDiscovered, entry.kind == CatalogKind.Boss ? WorldName(entry.worldIndex) : null);
+                tile.name = "Entry_" + entry.Name;
+                tile.Bind(entry, ++number, entry.discovered, entry.kind == CatalogKind.Boss ? WorldName(entry.worldIndex) : null);
                 tile.Clicked += OnTileClicked;
                 section.tiles.Add(tile);
             }
@@ -160,18 +174,10 @@ public class CatalogTab : TabContent
     // Enemies and bosses come from each world's own spawn data, so the lists always match what the game spawns:
     // enemies from every phase's AllowedEnemies, AllowedGroups / GuaranteedGroup members and GuaranteedEnemyData;
     // bosses from a Boss phase's BossPrototype (its Enemy component's EnemyData - the same path RunPhaseUtility spawns
-    // from). Each is listed under the first world that spawns it. A CatalogEntryData in `entries` with the same source
-    // is copied for its subtitle / icon / mock progress; the copy, never the asset, gets the world and kind.
-    private List<CatalogEntryData> BuildWorldEntries()
+    // from). Each is listed under the first world that spawns it.
+    private List<CatalogEntry> BuildWorldEntries()
     {
-        var overrides = new Dictionary<Object, CatalogEntryData>();
-        foreach (CatalogEntryData entry in entries)
-        {
-            if (entry != null && (entry.kind == CatalogKind.Enemy || entry.kind == CatalogKind.Boss) && entry.source != null)
-                overrides[entry.source] = entry;
-        }
-
-        var result = new List<CatalogEntryData>();
+        var result = new List<CatalogEntry>();
         var seen = new HashSet<EnemyDataAsset>();
         WorldCatalog catalog = WorldCatalog.Instance;
         for (int w = 0; catalog != null && w < catalog.Worlds.Count; w++)
@@ -229,50 +235,64 @@ public class CatalogTab : TabContent
                 result.Add(CreateEntry(enemy, CatalogKind.Enemy, worldIndex));
         }
 
-        CatalogEntryData CreateEntry(EnemyDataAsset source, CatalogKind entryKind, int worldIndex)
+        CatalogEntry CreateEntry(EnemyDataAsset source, CatalogKind entryKind, int worldIndex)
         {
-            CatalogEntryData entry = overrides.TryGetValue(source, out CatalogEntryData authored)
-                ? Instantiate(authored)
-                : ScriptableObject.CreateInstance<CatalogEntryData>();
-            entry.name = authored != null ? authored.name : source.name;
-            if (authored == null && entryKind == CatalogKind.Boss)
-                entry.subtitle = "Boss";
-            entry.kind = entryKind;
-            entry.source = source;
-            entry.worldIndex = worldIndex;
-            generated.Add(entry);
-            return entry;
+            return new CatalogEntry { kind = entryKind, source = source, worldIndex = worldIndex };
         }
     }
 
-    private void OnDestroy()
+    // Mutations come from the same pool level-ups, Chests and the Cursed Rift roll from (LevelUpConfig.RiftMutations),
+    // so a mutation added there shows up here with nothing else to author.
+    private List<CatalogEntry> BuildMutationEntries()
     {
-        foreach (CatalogEntryData entry in generated)
+        var result = new List<CatalogEntry>();
+        var config = Resources.Load<OverallGameConfig>(GameConfigPath);
+        if (config == null || !QuantumUnityDB.TryGetGlobalAsset(config.LevelUpConfig, out LevelUpConfig levelUp) || levelUp.RiftMutations == null)
         {
-            if (entry != null)
-                Destroy(entry);
+            LogHelper.Warn(LogTag, "No LevelUpConfig on Resources/" + GameConfigPath + " - Rift Mutations page stays empty.");
+            return result;
         }
-        generated.Clear();
+
+        var seen = new HashSet<RiftMutationData>();
+        foreach (AssetRef<RiftMutationData> mutationRef in levelUp.RiftMutations)
+        {
+            if (!QuantumUnityDB.TryGetGlobalAsset(mutationRef, out RiftMutationData mutation) || !seen.Add(mutation))
+                continue;
+
+            int rarity = (int)mutation.Rarity;
+            Color color = rarityColors != null && rarity < rarityColors.Length ? rarityColors[rarity] : Color.white;
+            result.Add(new CatalogEntry { kind = CatalogKind.RiftMutation, source = mutation, rarityColor = color });
+        }
+
+        return result;
     }
 
-    // List order for bosses and mutations. Enemies are ordered from their own data instead: world, then the
-    // faction's SortOrder, then tier (Filler first, Elite last), then name.
-    private IEnumerable<CatalogEntryData> EntriesOf(CatalogKind of)
+    // List order for bosses: as the worlds spawn them. Enemies are ordered from their own data: world, then the
+    // faction's SortOrder, then tier (Filler first, Elite last), then name. Mutations: rarity, then name.
+    private IEnumerable<CatalogEntry> EntriesOf(CatalogKind of)
     {
-        var result = new List<CatalogEntryData>();
-        foreach (CatalogEntryData entry in listed)
+        var result = new List<CatalogEntry>();
+        foreach (CatalogEntry entry in listed)
         {
-            if (entry != null && entry.kind == of)
+            if (entry.kind == of)
                 result.Add(entry);
         }
 
         if (of == CatalogKind.Enemy)
             result.Sort(CompareEnemies);
+        else if (of == CatalogKind.RiftMutation)
+            result.Sort(CompareMutations);
 
         return result;
     }
 
-    private static int CompareEnemies(CatalogEntryData a, CatalogEntryData b)
+    private static int CompareMutations(CatalogEntry a, CatalogEntry b)
+    {
+        int result = ((RiftMutationData)a.source).Rarity.CompareTo(((RiftMutationData)b.source).Rarity);
+        return result != 0 ? result : string.CompareOrdinal(a.ResolvedName, b.ResolvedName);
+    }
+
+    private static int CompareEnemies(CatalogEntry a, CatalogEntry b)
     {
         int result = a.worldIndex.CompareTo(b.worldIndex);
         if (result != 0)
@@ -290,17 +310,17 @@ public class CatalogTab : TabContent
         return result != 0 ? result : string.CompareOrdinal(a.ResolvedName, b.ResolvedName);
     }
 
-    private static int FactionOrder(CatalogEntryData entry)
+    private static int FactionOrder(CatalogEntry entry)
     {
         return entry.source is EnemyDataAsset enemy && enemy.Faction != null ? enemy.Faction.SortOrder : int.MaxValue;
     }
 
-    private static int TierOrder(CatalogEntryData entry)
+    private static int TierOrder(CatalogEntry entry)
     {
         return entry.source is EnemyDataAsset enemy ? (int)enemy.Tier : int.MaxValue;
     }
 
-    private Section FindOrCreateSection(CatalogEntryData entry, int k)
+    private Section FindOrCreateSection(CatalogEntry entry, int k)
     {
         // Only the Enemies page has a section per world (and a banner); bosses and mutations are one flat list
         // whose tiles the world filter shows or hides.
@@ -438,12 +458,10 @@ public class CatalogTab : TabContent
     private void RefreshDiscoveredTotal()
     {
         int found = 0, total = 0;
-        foreach (CatalogEntryData entry in listed)
+        foreach (CatalogEntry entry in listed)
         {
-            if (entry == null)
-                continue;
             total++;
-            found += entry.mockDiscovered ? 1 : 0;
+            found += entry.discovered ? 1 : 0;
         }
 
         if (discoveredText != null)
@@ -510,17 +528,18 @@ public class CatalogTab : TabContent
 
     private void RefreshDetail(CatalogTileWidget tile)
     {
-        CatalogEntryData entry = tile.Entry;
+        CatalogEntry entry = tile.Entry;
         bool known = tile.Discovered;
 
         detailNumber.text = tile.NumberLabel;
         detailName.text = known ? entry.ResolvedName.ToUpperInvariant() : "???";
         string heading = entry.kind == CatalogKind.Boss ? (WorldName(entry.worldIndex) ?? string.Empty) : entry.ResolvedGroup;
-        detailSubtitle.text = known ? (heading + (string.IsNullOrEmpty(entry.subtitle) ? string.Empty : "  •  " + entry.subtitle)).ToUpperInvariant() : string.Empty;
+        string subtitle = entry.ResolvedSubtitle;
+        detailSubtitle.text = known ? (heading + (string.IsNullOrEmpty(subtitle) ? string.Empty : "  •  " + subtitle)).ToUpperInvariant() : string.Empty;
         Sprite sprite = entry.ResolvedIcon;
         detailIcon.sprite = sprite;
         detailIcon.enabled = sprite != null;
-        detailIcon.color = known ? entry.iconTint : new Color(0.08f, 0.09f, 0.12f, 0.9f);
+        detailIcon.color = known ? Color.white : new Color(0.08f, 0.09f, 0.12f, 0.9f);
         detailDescription.text = known ? entry.ResolvedDescription : "Not discovered yet.";
 
         var labels = new List<string>();
@@ -529,15 +548,15 @@ public class CatalogTab : TabContent
         {
             case CatalogKind.Boss:
                 labels.AddRange(new[] { "ENCOUNTERED", "DEFEATED", "BEST CLEAR TIME", "WORLD" });
-                values.AddRange(new[] { Count(entry.mockEncountered, known), Count(entry.mockDefeated, known), known ? ClearTime(entry.mockBestClearSeconds) : "-", (WorldName(entry.worldIndex) ?? "-").ToUpperInvariant() });
+                values.AddRange(new[] { Count(entry.record.Encountered, known), Count(entry.record.Defeated, known), known ? ClearTime(entry.record.BestClearSeconds) : "-", (WorldName(entry.worldIndex) ?? "-").ToUpperInvariant() });
                 break;
             case CatalogKind.Enemy:
                 labels.AddRange(new[] { "ENCOUNTERED", "DEFEATED", "WORLD", "FACTION" });
-                values.AddRange(new[] { Count(entry.mockEncountered, known), Count(entry.mockDefeated, known), (WorldName(entry.worldIndex) ?? "-").ToUpperInvariant(), entry.ResolvedGroup.ToUpperInvariant() });
+                values.AddRange(new[] { Count(entry.record.Encountered, known), Count(entry.record.Defeated, known), (WorldName(entry.worldIndex) ?? "-").ToUpperInvariant(), entry.ResolvedGroup.ToUpperInvariant() });
                 break;
             default:
                 labels.AddRange(new[] { "RARITY", "PICKED" });
-                values.AddRange(new[] { entry.ResolvedGroup.ToUpperInvariant(), Count(entry.mockEncountered, known) });
+                values.AddRange(new[] { entry.ResolvedGroup.ToUpperInvariant(), Count(entry.record.Encountered, known) });
                 break;
         }
 

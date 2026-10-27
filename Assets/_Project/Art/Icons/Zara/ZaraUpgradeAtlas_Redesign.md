@@ -11,4 +11,4 @@
 
 Flow State and Totem are base ability icons. Other cells match the named upgrade assets. Existing sprite assignments are unchanged.
 
-Generated with built-in image generation using KaiUpgradeAtlas_Redesign.png as style reference. Prompt: colorful chunky cartoon art, strong dark contours, clean blue backgrounds, cyan/pink musical identity, distinct symbols based on actual upgrade effects, uniform grid, no decorative splash backplates or text.
+Generated with built-in image generation using YoruUpgradeAtlas_Redesign.png as style reference. Prompt: colorful chunky cartoon art, strong dark contours, clean blue backgrounds, cyan/pink musical identity, distinct symbols based on actual upgrade effects, uniform grid, no decorative splash backplates or text.

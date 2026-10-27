@@ -18,7 +18,7 @@ namespace Quantum
     //    grants a short outgoing-damage window.
     //
     // Every rank's buff profile is ONE authored AllyBuffEffectData asset rather than a pile of numbers
-    // here - the same generic effect the Portable Speaker and Lux's Fire Support aura use, so a
+    // here - the same generic effect the Portable Speaker and Capy's Fire Support aura use, so a
     // designer tunes a buff in one place regardless of who emits it. SpeakerSupportBuffEffect/
     // SpeakerCooldownEffect are the reduced-effectiveness variants Portable Speaker rank 3 "Mobile
     // Stage" reads - a different data profile, not different code.

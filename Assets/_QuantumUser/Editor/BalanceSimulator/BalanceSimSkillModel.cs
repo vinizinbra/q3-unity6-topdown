@@ -206,7 +206,7 @@ namespace QuantumUser.Editor.BalanceSimulator
 
             switch (action.GetType().Name)
             {
-                // -- Kai (vortex lifetime is stretched by SkillDurationMultiplier -> Scaled)
+                // -- Yoru (vortex lifetime is stretched by SkillDurationMultiplier -> Scaled)
                 case "CompressionSkillAction":
                 {
                     double pulses = window / Math.Max(0.1, F("PulseTickInterval"));
@@ -298,7 +298,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                         value.ScaledSkillDamage = est.TickDamage * F("DurationBonus") / est.TickWindow;
                     break;
 
-                // -- Lux (barrels fire as their own entity - SimPlayer folds these in live)
+                // -- Capy (barrels fire as their own entity - SimPlayer folds these in live)
                 case "SentryWeaponSystemsSkillAction":
                 {
                     value.MountedWeapons = new List<WeaponDataAsset>();

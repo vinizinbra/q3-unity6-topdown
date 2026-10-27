@@ -5,7 +5,7 @@ namespace Quantum
 
     // Zara's base Passive - Flow State. Adds the persistent ZaraFlow component onto her own entity
     // (same "spawn-time bake adds a component" shape SeedShield/SeedArmor already use in
-    // CharacterSystem, and the same "field lives on the hero" shape Kai's ProjectileSlowField and
+    // CharacterSystem, and the same "field lives on the hero" shape Yoru's ProjectileSlowField and
     // Brute's ProtectorAura use). Passive Ascensions mutate that component directly rather than
     // CharacterStats, since none of these tunables are generic hero stats.
     //

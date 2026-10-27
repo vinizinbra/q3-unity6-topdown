@@ -58,7 +58,7 @@ namespace Quantum
         private float skillFillWidth = 0.12f;
         [SerializeField, Range(24, 180), Tooltip("Segments the fill ring is built from - the arc drains in steps of 360/this degrees (the boundary segment fades, so it looks smooth).")]
         private int skillFillSegments = 96;
-        [SerializeField, Tooltip("Revolutions per second of the shine that sweeps around the fill ring while a PASSIVE is at its payoff - Lux's banked free cast (Scavenge full), Zara's Flow active. Timed skills (Overdrive, Juggernaut) don't shine, they drain. 0 turns the shine off.")]
+        [SerializeField, Tooltip("Revolutions per second of the shine that sweeps around the fill ring while a PASSIVE is at its payoff - Capy's banked free cast (Scavenge full), Zara's Flow active. Timed skills (Overdrive, Juggernaut) don't shine, they drain. 0 turns the shine off.")]
         private float skillShineSpeed = 0.9f;
         [SerializeField, Range(0.02f, 0.5f), Tooltip("Width of the shine as a fraction of the full circle.")]
         private float skillShineWidth = 0.16f;
@@ -323,7 +323,7 @@ namespace Quantum
             // WHICH sprite ended up on the renderer.
             ResolveAccessoryIconLayout();
 
-            BuildFillRing(_baseRingColor);
+            BuildFillRing(_baseRingColor, characterData != null ? characterData.SkillRingColor : default);
             StartGlowPulse();
         }
 
@@ -448,15 +448,19 @@ namespace Quantum
 
         // The skill fill is its own radial ring in an adjacent hue (see BuildFillRing) - the authored
         // ring and glow keep the hero's own colour so the "this is you" marker never changes identity.
-        private void BuildFillRing(Color ringColor)
+        // A hero's own CharacterData.SkillRingColor wins over the view-wide skillFillColor, which wins
+        // over the derived hue.
+        private void BuildFillRing(Color ringColor, Color heroSkillRingColor)
         {
             if (_fillMesh != null || ringSprite.sprite == null)
                 return;
 
             Color.RGBToHSV(ringColor, out float h, out float sat, out float v);
-            _fillBaseColor = skillFillColor.a > 0f
-                ? skillFillColor
-                : Color.HSVToRGB(Mathf.Repeat(h + skillFillHueShift, 1f), Mathf.Max(sat, 0.85f), 1f);
+            _fillBaseColor = heroSkillRingColor.a > 0f
+                ? new Color(heroSkillRingColor.r, heroSkillRingColor.g, heroSkillRingColor.b, 1f)
+                : skillFillColor.a > 0f
+                    ? skillFillColor
+                    : Color.HSVToRGB(Mathf.Repeat(h + skillFillHueShift, 1f), Mathf.Max(sat, 0.85f), 1f);
 
             int n = Mathf.Max(8, skillFillSegments);
             float ringRadius = ringSprite.sprite.bounds.extents.x * ringSprite.transform.localScale.x;

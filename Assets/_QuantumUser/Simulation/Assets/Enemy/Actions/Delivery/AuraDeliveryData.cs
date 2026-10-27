@@ -27,7 +27,7 @@ namespace Quantum
             // StateTimer instead, robust to variable frame delta time (see BeamDeliveryData, same
             // reasoning).
             //
-            // Void Pressure (Kai) - see BeamDeliveryData's identical comment on why this decrement is
+            // Void Pressure (Yoru) - see BeamDeliveryData's identical comment on why this decrement is
             // scaled, and why only this Active-phase Tick is ever affected.
             FP elapsedBefore = AuraDuration - filter.Enemy->StateTimer;
             filter.Enemy->StateTimer -= f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);

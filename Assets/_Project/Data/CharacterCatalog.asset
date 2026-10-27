@@ -34,8 +34,8 @@ MonoBehaviour:
         Value: 1271619087951089254
     viewPrefab: {fileID: 506928541793919104, guid: ee85e910ecba34873a088acf598476eb, type: 3}
     menuPrefab: {fileID: 6518181404652115371, guid: f6da62384320c47da9b87e9d4a59470a, type: 3}
-  - id: Kai
-    displayName: Kai
+  - id: Yoru
+    displayName: Yoru
     avatar:
       Id:
         Value: 1472908484413352043
@@ -48,8 +48,8 @@ MonoBehaviour:
         Value: 1324160128536901815
     viewPrefab: {fileID: 506928541793919104, guid: 92445699946014419b8a6a3ad7cf35de, type: 3}
     menuPrefab: {fileID: 8369380886623440971, guid: 3241035f34ca94ecd94267e074ae2831, type: 3}
-  - id: Lux
-    displayName: Lux
+  - id: Capy
+    displayName: Capy
     avatar:
       Id:
         Value: 1358955562811382291

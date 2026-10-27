@@ -35,6 +35,26 @@ public class PartyLifeStateWidget : QuantumGlobalMonoBehaviour
         if (canvasGroup == null)
             canvasGroup = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
 
+        CaptureNormalColors();
+
+        // Forces the first paint - _shownState already defaults to Alive.
+        _shownState = (PlayerLifeStateKind)byte.MaxValue;
+        Apply(PlayerLifeStateKind.Alive, 0f);
+    }
+
+    // Re-captured on Initialize too: PartyHudWidget initializes PlayerNumberUiWidget first, which
+    // may tint the card with the hero's RingColor - that tint is this slot's "normal" color, so
+    // leaving Downed must restore it instead of the prefab's authored color.
+    public void Initialize(EntityRef entityRef)
+    {
+        _entityRef = entityRef;
+        CaptureNormalColors();
+        _shownState = (PlayerLifeStateKind)byte.MaxValue;
+        Apply(PlayerLifeStateKind.Alive, 0f);
+    }
+
+    private void CaptureNormalColors()
+    {
         _normalTints = new Color[downedTintTargets != null ? downedTintTargets.Length : 0];
 
         for (int i = 0; i < _normalTints.Length; i++)
@@ -42,16 +62,6 @@ public class PartyLifeStateWidget : QuantumGlobalMonoBehaviour
 
         if (portrait != null)
             _normalPortraitColor = portrait.color;
-
-        // Forces the first paint - _shownState already defaults to Alive.
-        _shownState = (PlayerLifeStateKind)byte.MaxValue;
-        Apply(PlayerLifeStateKind.Alive, 0f);
-    }
-
-    public void Initialize(EntityRef entityRef)
-    {
-        _entityRef = entityRef;
-        Apply(PlayerLifeStateKind.Alive, 0f);
     }
 
     public override void QStart(QuantumGame game)

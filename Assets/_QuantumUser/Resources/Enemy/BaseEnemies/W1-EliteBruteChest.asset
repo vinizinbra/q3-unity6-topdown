@@ -187,6 +187,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
   Description: A hulking Rukk guarding a chest. Drops it when it falls.
   ViewPrefab: {fileID: 8476845490732343577, guid: 3753da288d3fd4253ab3f0bcec412210, type: 3}
+  CatalogSubtitle: Elite
 --- !u!114 &3107646801899731645
 MonoBehaviour:
   m_ObjectHideFlags: 0

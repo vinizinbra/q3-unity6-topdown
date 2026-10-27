@@ -601,6 +601,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 91839dc39bf60469d9594f381d93b9ee, type: 2}
   Description: Winds up, then charges in a straight line.
   ViewPrefab: {fileID: 8476845490732343577, guid: 319b3a4f416114624b53cb03df10a735, type: 3}
+  CatalogSubtitle: Charger
 --- !u!114 &3966869393339546562
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -89,10 +89,10 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
     `BerserkSkillData`: the slot stays Active for `Duration` and `SkillSystem.FinishSkill` only arms the
     cooldown when it ends. Projectile skills finish at release, so their spawned entity lives during
     the cooldown.
-  - **Skill Duration** only stretches Skill-source spawned entities (`SpawnedEntitySpawner`: Kai's
-    vortex, Zara's totem, Lux's sentry) - it scales their tick/pulse/barrel damage, never the cycle, and
+  - **Skill Duration** only stretches Skill-source spawned entities (`SpawnedEntitySpawner`: Yoru's
+    vortex, Zara's totem, Capy's sentry) - it scales their tick/pulse/barrel damage, never the cycle, and
     doesn't touch a channel.
-  - Skill-mounted weapons (Lux's sentries) get neither crit nor the level bonus: a barrel has no
+  - Skill-mounted weapons (Capy's sentries) get neither crit nor the level bonus: a barrel has no
     `CharacterStats`, only the baked `StatUtility.GetSkillDamageMultiplier`. Their DPS is recomputed
     live through `SimWeapon.BaseDps` (tick rounding included) with Overclock's fire rate, extra
     lifetime and Redline.
@@ -116,22 +116,22 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
     (area? `AreaTargets`) - only when the hit carries a `DamageEffectData` (or is a vortex) - plus
     `SpawnAlternatingAreaEffectData` beats (Zara: Damage/Support alternate, Support deals half, so 0.75
     of `DamageAmount` per beat). All **Activated** actions on the skill (only when
-    `SkillData.CheckActions`) add any mounted `AssetRef<WeaponDataAsset>` (Lux sentry) and any
+    `SkillData.CheckActions`) add any mounted `AssetRef<WeaponDataAsset>` (Capy sentry) and any
     `Damage`/`DamageAmount` field x ticks x `AreaTargets`. The table's "Skill model" line says which
     path was used.
 - **Skill Ascension ranks** - `BalanceSimSkillModel.EvaluateUpgrade` values each rank of a hero-skill
   action from its rank-indexed fields against the skill's basis (`ProjectileSkillData.Damage`,
-  `JuggernautSkillData.Damage`, `SpawnSentrySkillAction.SkillDamage`): Kai Compression/Void Shards/
+  `JuggernautSkillData.Damage`, `SpawnSentrySkillAction.SkillDamage`): Yoru Compression/Void Shards/
   Collapse (percent x pulses x targets; Compression's rank-3 Implosion counts the vortex's *pull*
   pulses - prefab `Vortex.TickInterval` 0.05 s -> every 2 game ticks - not the damage pulse), Pixie
   Cluster Bomb / Direct Hit (x `InnerRadiusFraction`^2 - only the blast's inner area qualifies) /
   Birthday Cake (bonus from rank 3 only), Brute Bone Breaker / Aftershock (stacks = every unit hit this
   cast, Earthquake = the stacked blast x its percent) / Concussive Impact (per discharge hit), Max Full
   Throttle (weapon damage while Overdrive x `SkillDamageMultiplier`, assumes max Rage), Zara Amplifier/Double Time/Main Stage,
-  Lux Weapon Systems (extra barrels) / Overclock (fire rate, lifetime, Redline) / Overload Core; unknown
+  Capy Weapon Systems (extra barrels) / Overclock (fire rate, lifetime, Redline) / Overload Core; unknown
   actions use a generic `DamagePercent` rule. A modelled action whose rank adds nothing stays at 0;
   only unmodelled ranks (Singularity, Momentum, Last Stand...) fall back to the flat
-  `SkillUpgradeDpsValue`. Kai's baseline vortex therefore shows ~0
+  `SkillUpgradeDpsValue`. Yoru's baseline vortex therefore shows ~0
   skill DPS until Compression/Collapse/Shards are picked - that is the authored design, not a bug.
 - **Level-ups** - category from `LevelUpConfig.LevelSequence[(level-1) % count]` where `level` is the new
   displayed level (`Global.Level + 1` after the increment, so the first level-up reads index 1),
@@ -248,8 +248,8 @@ Verified/found so far by comparing against play:
 - Co-op levelled slower than solo because only the Director *budget* scaled with player count while
   its pressure/alive caps didn't - fixed with `CoopGlobalKey.DirectorPressure`
   (`docs/run-curves-coop-scaling.md`); `XpRequirement` now wants re-tuning downward.
-- Kai's baseline vortex has no damage beyond its 20 impact (by design); Brute's Juggernaut is a
-  contact channel (`ChannelContactUptime`); `LuxSentryLaser.asset` has `Damage 0` (unauthored
+- Yoru's baseline vortex has no damage beyond its 20 impact (by design); Brute's Juggernaut is a
+  contact channel (`ChannelContactUptime`); `CapySentryLaser.asset` has `Damage 0` (unauthored
   placeholder), so Weapon Systems R3 is currently a no-op in game and in the sim.
 
 Not yet calibrated: every knob in the table above still carries its default - the next recorded run

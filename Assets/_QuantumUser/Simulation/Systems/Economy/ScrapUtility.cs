@@ -2,12 +2,12 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Spawn/grant side of Lux's Scrap Collector passive - see ScrapOrb.qtn (the pickup) and
+    // Spawn/grant side of Capy's Scrap Collector passive - see ScrapOrb.qtn (the pickup) and
     // ScrapOrbSystem (collection). Mirrors ExperienceUtility's static-utility shape, but gated on the
-    // killing owner actually carrying LuxScrapCollector - unlike ExpOrb, which drops for every kill
-    // regardless of who's playing, Scrap only ever means anything to a Lux.
+    // killing owner actually carrying CapyScrapCollector - unlike ExpOrb, which drops for every kill
+    // regardless of who's playing, Scrap only ever means anything to a Capy.
     //
-    // Everything here is scoped to ONE Lux's own component, so two Luxes in the same match have fully
+    // Everything here is scoped to ONE Capy's own component, so two Capyes in the same match have fully
     // independent Scrap progressions, Fabrication Charges and Field Modification stacks.
     public static unsafe class ScrapUtility
     {
@@ -18,7 +18,7 @@ namespace Quantum
 
             EntityRef realOwner = ResolveRealOwner(f, owner);
 
-            if (f.Unsafe.TryGetPointer<LuxScrapCollector>(realOwner, out var collector) == false)
+            if (f.Unsafe.TryGetPointer<CapyScrapCollector>(realOwner, out var collector) == false)
                 return;
 
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == false)
@@ -48,7 +48,7 @@ namespace Quantum
         // How many orbs this kill produces. Scavenger rank 3 "Jackpot" is the only thing that ever
         // returns more than 1, or that bypasses the chance roll entirely - Boss has its own count so
         // it can be tuned independently of the tier rule.
-        private static int ResolveDropCount(Frame f, LuxScrapCollector* collector, EnemyTier tier)
+        private static int ResolveDropCount(Frame f, CapyScrapCollector* collector, EnemyTier tier)
         {
             if (tier == EnemyTier.Boss && collector->BossGuaranteedScrap > 0)
                 return collector->BossGuaranteedScrap;
@@ -97,10 +97,10 @@ namespace Quantum
             destroy->RemainingTime = lifetime;
         }
 
-        // A kill landed by Lux's own deployed Sentry attributes `owner` to the barrel entity that
-        // actually fired (each SentryBarrel carries its own independent Weapon), not to Lux herself -
-        // LuxScrapCollector only ever lives on her own player entity, so without this trace every
-        // Sentry kill would silently never drop Scrap. No-op (returns owner unchanged) for a kill Lux
+        // A kill landed by Capy's own deployed Sentry attributes `owner` to the barrel entity that
+        // actually fired (each SentryBarrel carries its own independent Weapon), not to Capy herself -
+        // CapyScrapCollector only ever lives on her own player entity, so without this trace every
+        // Sentry kill would silently never drop Scrap. No-op (returns owner unchanged) for a kill Capy
         // (or any other hero) landed directly, which is the common case.
         private static EntityRef ResolveRealOwner(Frame f, EntityRef owner)
         {
@@ -113,10 +113,10 @@ namespace Quantum
             return sentry->Owner;
         }
 
-        // Called by ScrapOrbSystem when the owning Lux walks over an orb. Unlike
+        // Called by ScrapOrbSystem when the owning Capy walks over an orb. Unlike
         // ExperienceUtility.Grant, there's no shared run-wide total to credit - every effect here is
         // scoped to this one collecting entity, and (for Field Modifications) to one machine she owns.
-        public static void Grant(Frame f, EntityRef collectorEntity, LuxScrapCollector* collector)
+        public static void Grant(Frame f, EntityRef collectorEntity, CapyScrapCollector* collector)
         {
             // Rapid Recycling ranks 1-2 - 0 (the base passive's default) means the ascension hasn't
             // been taken, so this is skipped rather than calling ReduceCooldown with a no-op amount.
@@ -137,7 +137,7 @@ namespace Quantum
         // reset here: it only resets when that free cast is actually spent (OnFreeCastConsumed below) -
         // the spend moment. Reaching the threshold again while one is still banked is a no-op, not a
         // second Charge, which is what enforces "maximum 1 stored Fabrication Charge".
-        private static void TryGrantFreeCharge(Frame f, EntityRef collectorEntity, LuxScrapCollector* collector)
+        private static void TryGrantFreeCharge(Frame f, EntityRef collectorEntity, CapyScrapCollector* collector)
         {
             byte required = collector->StacksRequired > 0 ? collector->StacksRequired : (byte)10;
 
@@ -174,7 +174,7 @@ namespace Quantum
             if (slotId != SkillSlotId.HeroSkill)
                 return;
 
-            if (f.Unsafe.TryGetPointer<LuxScrapCollector>(entity, out var collector) == false)
+            if (f.Unsafe.TryGetPointer<CapyScrapCollector>(entity, out var collector) == false)
                 return;
 
             collector->ScrapStacks = 0;
@@ -185,7 +185,7 @@ namespace Quantum
         // deployed (SentryUtility.FindNewestOwnedSentry), which is the brief's own preferred starting
         // rule. Stacks live on that machine and die with it (see SentryModifications), which is what
         // makes the loop "deploy -> collect -> upgrade this machine before it expires".
-        private static void ApplyFieldModification(Frame f, EntityRef collectorEntity, LuxScrapCollector* collector)
+        private static void ApplyFieldModification(Frame f, EntityRef collectorEntity, CapyScrapCollector* collector)
         {
             if (collector->FieldModMaxStacks == 0)
                 return;

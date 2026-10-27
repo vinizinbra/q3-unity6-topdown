@@ -5,12 +5,12 @@
 // CharacterStats.qtn, CoinUtility/RiftShardUtility.Grant/GrantAll, docs/breathing-poi.md) since
 // 2026-08-14's per-player currency conversion.
 //
-// Scrap is deliberately in here even though it is not a wallet currency at all - it is Lux's own
-// per-passive pickup resource (LuxScrapCollector.ScrapStacks, see ScrapUtility). It joins the enum
+// Scrap is deliberately in here even though it is not a wallet currency at all - it is Capy's own
+// per-passive pickup resource (CapyScrapCollector.ScrapStacks, see ScrapUtility). It joins the enum
 // purely so a Scrap pickup reuses the ONE FlyingCurrencyManager/HitFeedback.FlashPickup pipeline
 // every other pickup already goes through, rather than growing a parallel FlyingScrapManager that
 // would then have to be kept in sync by hand. Its HUD readout is NOT CurrencyUiWidget's job -
-// LuxHudWidget already owns that (stacks against the free-cast threshold, not a running total), so
+// CapyHudWidget already owns that (stacks against the free-cast threshold, not a running total), so
 // CurrencyUiWidget.TryResolveTotal deliberately has no Scrap case.
 //
 // MonsterKills is the opposite shape - not a pickup at all (no orb, no FlyingCurrencyManager/

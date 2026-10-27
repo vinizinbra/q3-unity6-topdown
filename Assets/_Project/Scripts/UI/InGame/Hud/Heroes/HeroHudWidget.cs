@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Base for the per-hero resource readouts (Brute/Max/Zara/Lux) that live under CharacterUiWidget -
+// Base for the per-hero resource readouts (Brute/Max/Zara/Capy) that live under CharacterUiWidget -
 // one widget per HERO, not one per resource, so everything a given hero needs to read at a glance
 // (gauge + stack count + how long the channel has left) is authored and gated together.
 //
@@ -226,7 +226,7 @@ public abstract class HeroHudWidget : MonoBehaviour
 
         public void Show(float fill, string value, bool full = false, bool urgent = false)
         {
-            // Pops on appearing AND on a meter reaching full (Lux's banked free cast, Rage at max) -
+            // Pops on appearing AND on a meter reaching full (Capy's banked free cast, Rage at max) -
             // both are "something just became true" moments, not steady states.
             bool justAppeared = _wasShown == false || (full && _wasFull == false);
             _wasShown = true;

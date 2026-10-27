@@ -106,6 +106,9 @@ namespace Quantum
         [Tooltip("Tint for the local player's ground ring/glow/movement-arrow (see MovementRingView) - lets each hero's \"this is you\" marker read as their own color.")]
         public Color RingColor = Color.white;
 
+        [Tooltip("Optional explicit colour for the hero-skill fill ring around the ground ring (see MovementRingView.BuildFillRing). Leave alpha at 0 to derive it from RingColor via the ring view's hue shift.")]
+        public Color SkillRingColor = new Color(0f, 0f, 0f, 0f);
+
         [Tooltip("Sprite used to represent this hero on the minimap's player marker (see MinimapWidget). Left unassigned, the marker keeps its prefab's default sprite.")]
         public Sprite PawnSprite;
 

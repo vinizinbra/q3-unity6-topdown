@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Quantum
 {
-    // A held sound for an entity that spawns, persists, and is later destroyed - Kai's Vortex, a
+    // A held sound for an entity that spawns, persists, and is later destroyed - Yoru's Vortex, a
     // Totem, a Sentry, a lingering area effect. Starts when the view initializes and fades out when
     // the entity dies, rather than being cut off mid-sample the instant it despawns.
     //

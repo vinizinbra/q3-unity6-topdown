@@ -1,8 +1,8 @@
 // Dash Ascension (Afterbeat, ranked) - added by AfterbeatSkillAction.Begin/End when Zara's dash
 // starts/ends, ticked down by ZaraAfterbeatSystem. Stores both delayed pulses' own position/damage/
 // radius/knockback directly on Zara's own entity rather than spawning marker entities - simpler than
-// the other heroes' "needs a standalone EntityPrototype authored by hand" dash ascensions (Kai's
-// SlowArea, Lux's Decoy Beacon, Brute's Barricade, Pixie's Bombs Away), since this needs no physical/
+// the other heroes' "needs a standalone EntityPrototype authored by hand" dash ascensions (Yoru's
+// SlowArea, Capy's Decoy Beacon, Brute's Barricade, Pixie's Bombs Away), since this needs no physical/
 // visual representation of its own, just two independent countdowns. Two named slots (Start/End)
 // rather than an array - rank 3 "Double Beat" needs exactly Start (from Begin) and End (from End)
 // live at once, never more, and a second dash before either fires simply overwrites the pending one

@@ -105,7 +105,7 @@ namespace Quantum
 
         public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            // Void Pressure (Kai) / boss-phase ActiveSpeedMultiplier both compose into this single
+            // Void Pressure (Yoru) / boss-phase ActiveSpeedMultiplier both compose into this single
             // call - same reasoning as every other Active-phase Tick in this file family: only ever
             // scales here, never the windup.
             filter.Enemy->StateTimer -= f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);

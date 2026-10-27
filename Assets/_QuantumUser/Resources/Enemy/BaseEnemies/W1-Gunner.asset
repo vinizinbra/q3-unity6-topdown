@@ -638,6 +638,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 26afa0b7c1c5442e3956a668aec84cb3, type: 2}
   Description: Basic ranged bot. Fires predictable volleys from medium range.
   ViewPrefab: {fileID: 8476845490732343577, guid: 0f9bf80130ec34ffcbfcf4925f927fee, type: 3}
+  CatalogSubtitle: Ranged
 --- !u!114 &5510490751386579581
 MonoBehaviour:
   m_ObjectHideFlags: 0

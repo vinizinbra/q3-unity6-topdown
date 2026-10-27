@@ -8,7 +8,7 @@ using UnityEngine;
 // gameplay rig or simulation behind it, not the hero preview CharacterPreviewWidget already
 // renders (that one gets its own idle breathing for free via BlobAnimationView.TickPreview). The
 // leg array (rather than BlobAnimationView's fixed legLeft/legRight pair) exists specifically to
-// cover a character like Lux, whose rig has several mechanical floating legs instead of two.
+// cover a character like Capy, whose rig has several mechanical floating legs instead of two.
 public class IdleBreatheWidget : MonoBehaviour
 {
     [SerializeField, Tooltip("Rises/compresses vertically on the breathing wave. Optional - leave unassigned to skip.")]
@@ -49,7 +49,7 @@ public class IdleBreatheWidget : MonoBehaviour
     }
 
     [Header("Legs (optional)")]
-    [SerializeField, Tooltip("Optional legs - any number, individual entries with no Transform assigned are skipped. Each gets the same scale-pulse + bob treatment as chest/head (e.g. Lux's mechanical floating legs), but with its own frequency/amount/phase so legs don't have to move identically.")]
+    [SerializeField, Tooltip("Optional legs - any number, individual entries with no Transform assigned are skipped. Each gets the same scale-pulse + bob treatment as chest/head (e.g. Capy's mechanical floating legs), but with its own frequency/amount/phase so legs don't have to move identically.")]
     private LegConfig[] legs = System.Array.Empty<LegConfig>();
 
     private Vector3 _chestBaseScale, _chestBasePos;

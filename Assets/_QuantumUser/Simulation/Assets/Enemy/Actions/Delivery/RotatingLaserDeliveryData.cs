@@ -78,7 +78,7 @@ namespace Quantum
 
         public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            // Void Pressure (Kai) - same reasoning as every other Active-phase Tick in this file
+            // Void Pressure (Yoru) - same reasoning as every other Active-phase Tick in this file
             // family: only ever scales here, never the windup. Scales BOTH the spin rate and the
             // duration countdown, so a slowed laser spins slower in real time too, not just lingers
             // longer at the same speed - see StatusEffectUtility.GetLocalTimeMultiplier's own comment.

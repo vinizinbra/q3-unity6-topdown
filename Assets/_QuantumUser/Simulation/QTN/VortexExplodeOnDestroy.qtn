@@ -1,4 +1,4 @@
-// Granted by Heroes/Kai's VortexCollapseSkillAction onto the owner, then baked as a copy of
+// Granted by Heroes/Yoru's VortexCollapseSkillAction onto the owner, then baked as a copy of
 // itself directly onto the spawned Vortex entity by SpawnVortexEffectData - so VortexSystem can
 // detonate at the vortex's own position the tick it expires, without needing the owner to still
 // exist by then. Radius isn't authored here - same convention as the pull itself, it comes from the

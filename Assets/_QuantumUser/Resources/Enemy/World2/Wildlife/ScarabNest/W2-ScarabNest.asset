@@ -591,6 +591,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 91839dc39bf60469d9594f381d93b9ee, type: 2}
   Description: Keeps spawning scarabs until it is destroyed.
   ViewPrefab: {fileID: 4250493844407008202, guid: c74d689b1338e43bfa6c9e2641a351b1, type: 3}
+  CatalogSubtitle: Spawner
 --- !u!114 &3562097286675511710
 MonoBehaviour:
   m_ObjectHideFlags: 0

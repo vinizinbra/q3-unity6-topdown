@@ -601,6 +601,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 36dd1e61cdac04d189cb55341a23b3b4, type: 2}
   Description: Armored enforcer that hits hard.
   ViewPrefab: {fileID: 7832052509628360025, guid: 005593f98bf93448384623ba2f40dc91, type: 3}
+  CatalogSubtitle: Heavy
 --- !u!114 &1346807441344333571
 MonoBehaviour:
   m_ObjectHideFlags: 0

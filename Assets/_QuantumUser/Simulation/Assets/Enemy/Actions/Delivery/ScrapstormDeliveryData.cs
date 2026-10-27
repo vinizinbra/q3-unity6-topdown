@@ -43,7 +43,7 @@ namespace Quantum
 
         public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            // Void Pressure (Kai) - same reasoning as AuraDeliveryData/BeamDeliveryData's identical
+            // Void Pressure (Yoru) - same reasoning as AuraDeliveryData/BeamDeliveryData's identical
             // comment: only this Active-phase Tick is ever scaled, never the windup/telegraph.
             FP elapsedBefore = Duration - filter.Enemy->StateTimer;
             filter.Enemy->StateTimer -= f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);

@@ -10,7 +10,7 @@ namespace Quantum
         // Re-arms an entity so GroundSettleSystem drops (or raises) it onto the ground again from
         // wherever it is now. A freshly created entity does NOT need this - it arrives with Enabled
         // authored true on its own prototype, which is the entire point of that flag. This exists for
-        // an entity MOVED mid-life (RelocationProtocolSkillAction teleporting a Sentry to wherever Lux
+        // an entity MOVED mid-life (RelocationProtocolSkillAction teleporting a Sentry to wherever Capy
         // was standing, which may well be mid-air), and is kept on the spawn paths as a cheap
         // guarantee that a spawn grounds itself even if someone forgets to tick Enabled on a new
         // prototype. FallVelocity resets so a fresh drop accelerates from rest instead of inheriting

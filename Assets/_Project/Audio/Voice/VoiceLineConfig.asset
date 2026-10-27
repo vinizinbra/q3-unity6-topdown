@@ -165,8 +165,8 @@ MonoBehaviour:
     Audience: 2
   - name: PingPoi
     Trigger: 101
-    Probability: 0.5
-    Cooldown: 15
+    Probability: 1
+    Cooldown: 30
     Priority: 1
     Audience: 2
   - name: PingReviveMe

@@ -1,6 +1,6 @@
 // Brute's Protector Aura - added directly onto his own entity by ProtectorPassiveData (so it
 // follows him via his own Transform3D, same "field lives on the hero, no separate tracking entity"
-// shape Kai's ProjectileSlowField already uses). Driven every tick by ProtectorAuraSystem, which
+// shape Yoru's ProjectileSlowField already uses). Driven every tick by ProtectorAuraSystem, which
 // continuously re-applies Intimidate to nearby enemies and Damage Reduction to nearby allies -
 // refresh-only, same idiom SentryAuraSystem already uses, so nothing needs removing when a target
 // leaves radius.

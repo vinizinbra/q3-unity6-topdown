@@ -5,7 +5,7 @@ namespace Quantum
     // Hero Skill Upgrade - while equipped, whatever the skill spawns has its own collider ScaleBonus
     // bigger than what's authored on its prototype - see SpawnedEntitySpawner.ApplyRadiusUpgrade.
     // Generic rather than hero-specific: SpawnRadiusUpgrade already scales whatever collider any
-    // spawned entity has, so one class covers every hero (Zara's speaker, Kai's vortex, and anything
+    // spawned entity has, so one class covers every hero (Zara's speaker, Yoru's vortex, and anything
     // future) - create a separate .asset instance per hero and name it accordingly rather than a
     // separate subclass.
     //

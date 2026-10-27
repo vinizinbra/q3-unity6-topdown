@@ -49,7 +49,7 @@ namespace QuantumUser.View.Managers
         [SerializeField, Tooltip("Played whenever a ShockwaveReleased event fires (currently only Empty Chamber, see docs/weapon-perks.md) - generic and source-agnostic, not per-asset. Falls back to defaultAreaBlastEffect if left empty. Authored at a reference radius of 1, scaled by e.Radius (not diameter) - same convention as the other radius-scaled handlers below.")]
         private ParticleSystem shockwaveEffectPrefab;
 
-        [SerializeField, Tooltip("Played once at BOTH affected enemies' positions whenever Kai's Undertow ascension resolves a fresh pull target (UndertowTriggered) - a small, fixed-scale impact/mark flash, separate from the ongoing tether line itself (see KaiUndertowLinksView, which polls simulation state directly rather than reacting to this event). Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
+        [SerializeField, Tooltip("Played once at BOTH affected enemies' positions whenever Yoru's Undertow ascension resolves a fresh pull target (UndertowTriggered) - a small, fixed-scale impact/mark flash, separate from the ongoing tether line itself (see YoruUndertowLinksView, which polls simulation state directly rather than reacting to this event). Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
         private ParticleSystem undertowMarkEffectPrefab;
 
         [Header("Stun (Jolt)")]
@@ -200,7 +200,7 @@ namespace QuantumUser.View.Managers
         [Header("Heal / Shield Grant")]
         [SerializeField, Tooltip("Played at the target whenever EntityHealed fires, from any source (PortableSpeakerSkillAction, HealEffectData, HealthRegenSystem, ...) - generic and source-agnostic, not per-asset. The floating heal number (DamageFeedbackManager) and hit-flash (HitFeedback) already cover this event too; this is just the particle. Leave empty to skip the particle - unlike the blast-style handlers above, this deliberately does NOT fall back to defaultAreaBlastEffect, since a combat blast reads wrong for a heal.")]
         private ParticleSystem healGrantEffectPrefab;
-        [SerializeField, Tooltip("Played at the target whenever EntityShielded fires, from any source (BodyguardSkillAction, Lux's Shield Battery aura, ShieldEffectData) - generic and source-agnostic, not per-asset. Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
+        [SerializeField, Tooltip("Played at the target whenever EntityShielded fires, from any source (BodyguardSkillAction, Capy's Shield Battery aura, ShieldEffectData) - generic and source-agnostic, not per-asset. Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
         private ParticleSystem shieldGrantEffectPrefab;
         [SerializeField, Tooltip("Played at the target whenever ShieldBroken fires (Shield.Current hitting 0 - see DamageUtility.AbsorbWithShield), from any source (player or enemy). Leave empty to skip the particle, same no-fallback reasoning as healGrantEffectPrefab.")]
         private ParticleSystem shieldBreakEffectPrefab;
@@ -210,11 +210,11 @@ namespace QuantumUser.View.Managers
         private float quantumRoundsEffectScale = 1f;
 
         [Header("Damage Echo")]
-        [SerializeField, Tooltip("Uniform scale used for DamageEchoTriggered's impact spark - the prefab itself is resolved per-asset off Visual.EffectPrefab (see DamageEchoVisualData.View.cs/OnDamageEchoTriggered below), falling back to defaultAreaBlastEffect if that's left empty (or Visual was never assigned). Generic - not Kai-specific - Ghost Shot (Neutral Mastery R3) is the first source, any future Damage Echo granter's own configured asset plays through this same handler. This event carries no radius of its own to derive a scale from, same reasoning as quantumRoundsEffectScale.")]
+        [SerializeField, Tooltip("Uniform scale used for DamageEchoTriggered's impact spark - the prefab itself is resolved per-asset off Visual.EffectPrefab (see DamageEchoVisualData.View.cs/OnDamageEchoTriggered below), falling back to defaultAreaBlastEffect if that's left empty (or Visual was never assigned). Generic - not Yoru-specific - Ghost Shot (Neutral Mastery R3) is the first source, any future Damage Echo granter's own configured asset plays through this same handler. This event carries no radius of its own to derive a scale from, same reasoning as quantumRoundsEffectScale.")]
         private float damageEchoEffectScale = 1f;
 
         [Header("Projectile Reflect")]
-        [SerializeField, Tooltip("Played whenever a ProjectileReflected event fires (Kai's Reflect dash ascension, see MirrorStepSkillAction) - a single point 'parry' spark at the reflected projectile's position, not radius-scaled. Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
+        [SerializeField, Tooltip("Played whenever a ProjectileReflected event fires (Yoru's Reflect dash ascension, see MirrorStepSkillAction) - a single point 'parry' spark at the reflected projectile's position, not radius-scaled. Falls back to defaultAreaBlastEffect (at a small fixed scale) if left empty.")]
         private ParticleSystem projectileReflectedEffectPrefab;
         [SerializeField, Tooltip("Uniform scale used for projectileReflectedEffectPrefab (or its fallback) - this effect has no radius of its own to derive a scale from.")]
         private float projectileReflectedEffectScale = 1f;
@@ -368,7 +368,7 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // Kai's Compression rank 3 "Implosion" - a smaller blast every third Vortex pulse, while the
+        // Yoru's Compression rank 3 "Implosion" - a smaller blast every third Vortex pulse, while the
         // vortex is still alive. Same resolution as OnVortexExploded, off
         // CompressionSkillAction.BlastEffectPrefab instead.
         private void OnVortexImploded(EventVortexImploded e)
@@ -382,10 +382,10 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // Kai's Undertow ascension - a small, fixed-scale impact/mark flash on BOTH the struck enemy
-        // and its pull target (Source/Target here are always genuine enemies, never Kai/the owner -
+        // Yoru's Undertow ascension - a small, fixed-scale impact/mark flash on BOTH the struck enemy
+        // and its pull target (Source/Target here are always genuine enemies, never Yoru/the owner -
         // see UndertowTriggered's own comment in Events.qtn), separate from the ongoing tether line
-        // (which KaiUndertowLinksView polls live off simulation state - see that class - rather than
+        // (which YoruUndertowLinksView polls live off simulation state - see that class - rather than
         // reacting to this event).
         private void OnUndertowTriggered(EventUndertowTriggered e)
         {
@@ -483,7 +483,7 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * e.Radius.AsFloat);
         }
 
-        // Generic - fires for any radial-push moment regardless of source (Empty Chamber, Kai's Dash
+        // Generic - fires for any radial-push moment regardless of source (Empty Chamber, Yoru's Dash
         // Shockwave - see HitEffectUtility.ApplyShockwave/
         // WeaponSystem.ApplyMagazineEmptiedPerks). Same "no single asset to resolve a bespoke prefab
         // from" reasoning as OnExplodeOnDeathDetonated - the prefab lives directly on this manager,
@@ -1176,7 +1176,7 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * quantumRoundsEffectScale);
         }
 
-        // Generic Damage Echo (Kai's Ghost Shot, Neutral Mastery R3, is the first source) - same
+        // Generic Damage Echo (Yoru's Ghost Shot, Neutral Mastery R3, is the first source) - same
         // per-asset-configured-prefab resolution as OnQuantumRoundsTriggered above, except Visual can
         // genuinely be unassigned (a Mastery picked before an artist configures a particle), so this
         // checks IsValid first rather than assuming FindAsset always resolves. Point spark at the
@@ -1192,7 +1192,7 @@ namespace QuantumUser.View.Managers
             PlayEffect(prefab, e.Position.ToUnityVector3(), Quaternion.identity, Vector3.one * damageEchoEffectScale);
         }
 
-        // Point spark for Kai's Reflect dash ascension (see MirrorStepSkillAction) - no
+        // Point spark for Yoru's Reflect dash ascension (see MirrorStepSkillAction) - no
         // radius on the event itself, so this uses its own fixed authored scale instead of
         // e.Radius-driven scaling like every other generic handler above.
         private void OnProjectileReflected(EventProjectileReflected e)

@@ -39,7 +39,7 @@ namespace Quantum
 
             FP engagementRange = ResolveEngagementRange(f, filter.Entity, sentry);
 
-            // Generic Priority Target (Lux's Neutral Focus is the first source) - a priority override,
+            // Generic Priority Target (Capy's Neutral Focus is the first source) - a priority override,
             // never forced targeting: only ever wins if it ALSO sits within THIS barrel's own
             // engagement range and passes the exact same validity rules TryFindNearestEnemy applies to
             // every candidate it considers (see PriorityTargetUtility.TryGetValidPriorityTarget's own
@@ -66,7 +66,7 @@ namespace Quantum
         // itself is capped by this barrel's own WeaponDataAsset.Range - WeaponSystem casts exactly
         // that far and no further, and a projectile expires at exactly that MaxTravelDistance.
         // Nothing kept the two in sync: Sentry.Range is scaled by Fortification's Extended Range and
-        // by Lux's own skill-range multiplier, while a barrel's Weapon.RangeMultiplier is only ever
+        // by Capy's own skill-range multiplier, while a barrel's Weapon.RangeMultiplier is only ever
         // touched by player weapon perks and so stays 1 forever. A sentry with any range upgrade
         // therefore locked on, fired every single cooldown, and had the shot die in mid-air short of
         // a target it was visibly aiming at. Engaging at whichever range is actually smaller fixes

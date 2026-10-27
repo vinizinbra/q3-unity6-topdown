@@ -22,8 +22,8 @@ namespace QuantumUser.Editor
             ("Brute", "Assets/_QuantumUser/Entities/Characters/QBruteEntityPrototype.qprototype"),
             ("Pixie", "Assets/_QuantumUser/Entities/Characters/QPixieEntityPrototype.qprototype"),
             ("Zara", "Assets/_QuantumUser/Entities/Characters/QZaraEntityPrototype.qprototype"),
-            ("Kai", "Assets/_QuantumUser/Entities/Characters/QKaiEntityPrototype.qprototype"),
-            ("Lux", "Assets/_QuantumUser/Entities/Characters/QLuxEntityPrototype.qprototype"),
+            ("Yoru", "Assets/_QuantumUser/Entities/Characters/QYoruEntityPrototype.qprototype"),
+            ("Capy", "Assets/_QuantumUser/Entities/Characters/QCapyEntityPrototype.qprototype"),
         };
 
         [MainToolbarElement("RiftRaiders/Hero Quick Play", defaultDockPosition = MainToolbarDockPosition.Left)]

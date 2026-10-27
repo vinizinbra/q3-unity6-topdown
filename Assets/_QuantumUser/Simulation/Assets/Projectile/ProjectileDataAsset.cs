@@ -33,7 +33,7 @@ namespace Quantum
         // before this field existed. Above zero, ProjectileSystem.TryExpire fires as soon as
         // Projectile.TraveledDistance reaches this, whichever of the two conditions comes first -
         // useful for a shot that's meant to activate at a fixed range regardless of how long that
-        // takes (e.g. Kai's vortex bolt), rather than backing the range into Lifetime and an assumed
+        // takes (e.g. Yoru's vortex bolt), rather than backing the range into Lifetime and an assumed
         // constant Speed.
         public FP MaxDistance;
     }

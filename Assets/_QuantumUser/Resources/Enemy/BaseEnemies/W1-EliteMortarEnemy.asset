@@ -640,3 +640,4 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
   Description: Rains grenades over a wide area.
   ViewPrefab: {fileID: 8476845490732343577, guid: 0e5681003b2b24c3dbf08a6556c5275e, type: 3}
+  CatalogSubtitle: Elite

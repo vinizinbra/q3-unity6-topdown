@@ -5,7 +5,7 @@ namespace Quantum
 
     // Ticks every owner's PriorityTarget down and clears it - either once Remaining expires, or
     // immediately the tick the target itself becomes invalid (destroyed, or an Enemy that died),
-    // whichever comes first - so "Focus clears immediately if the target dies" (Lux's Neutral Focus)
+    // whichever comes first - so "Focus clears immediately if the target dies" (Capy's Neutral Focus)
     // doesn't have to wait out the rest of Duration. Filtered on PriorityTarget, so this costs nothing
     // for anyone who has never had one set.
     [Preserve]

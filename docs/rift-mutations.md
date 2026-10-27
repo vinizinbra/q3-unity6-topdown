@@ -158,7 +158,7 @@ nothing in the present roster needs it.
 
 Greed's "Currency ×2" needed a real currency to double - none existed anywhere in the simulation
 before this pool. **Rift Shards** were built to fill that gap, mirroring the existing `ExpOrb`
-drop/collect pattern almost field-for-field (a third instance of that pattern - `ScrapOrb`, Lux's
+drop/collect pattern almost field-for-field (a third instance of that pattern - `ScrapOrb`, Capy's
 Scrap Collector passive, was the second):
 
 - **`RiftShard.qtn`** - `component RiftShard { FP Value; }`, the physical pickup, same shape as
@@ -514,7 +514,7 @@ Slayer, Elemental Bestowment, Deadly Curse and Sanguine Relic (see the roster). 
 flat -25% Dash cooldown (duplicates the Dash Cooldown Global Upgrade), Perfect Sixth (weapon-perk shaped -
 Final Round/Explosive Sequence already exist), Flowing Time (near-duplicate of Critical Focus, and an
 always-on ~-33% CDR). Deferred: Iron Circuit (needs an ally link + tether visual; would reuse
-`KaiUndertowLinksView`'s LineRenderer approach and must be ineligible solo).
+`YoruUndertowLinksView`'s LineRenderer approach and must be ineligible solo).
 
 **Architecture:** all runtime logic lives in `MutationCombatUtility` (`Systems/Progression/`); the mutation
 classes only write `CharacterStats` fields in `Apply`. Hooks, one line each:

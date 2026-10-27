@@ -245,7 +245,7 @@ survives the swap.
 ## Files
 
 **New QTN**: `Combat.qtn` (`OnEntityKilled`/`OnCriticalHit`/`OnWeaponHitLanded` signals -
-`OnWeaponHitLanded`'s `target` parameter is also read by `KaiUndertowSystem`), `WeaponPerks.qtn`
+`OnWeaponHitLanded`'s `target` parameter is also read by `YoruUndertowSystem`), `WeaponPerks.qtn`
 (the 7 optional perk components above, plus the `PendingEcho`/`PendingDoubleTapShot` structs - see
 "Weapon Perk component split").
 **Edited QTN**: `Weapon.qtn` (trimmed down to its 13 core fields - every perk-specific field moved to
@@ -411,7 +411,7 @@ engagement range across (never a fresh budget), and gets one contact before it m
 exactly what a ricocheting projectile gets. Each segment raises its own `HitscanFired`, so
 `WeaponTracerView` draws every leg of the path with no view-side changes at all.
 
-Kai's **Phantom Strike** bonus pierce now reaches Hitscan too, for the same reason - it was being
+Yoru's **Phantom Strike** bonus pierce now reaches Hitscan too, for the same reason - it was being
 dropped on the floor purely because a raycast couldn't express it.
 
 **Critical Rebound** no longer checks fire type before deciding whether a crit can bounce. The perk
@@ -433,7 +433,7 @@ on one target in one tick can't hash-collide in Quantum's event dedup.
 ## Pierce trajectory levelling (2026-08-21)
 
 Pierce was working - it just spent its extra hits on the floor. A shot leaves the muzzle, which sits
-wherever the hero carries the weapon (`CharacterData.WeaponPosition` - Kai holds his over his head,
+wherever the hero carries the weapon (`CharacterData.WeaponPosition` - Yoru holds his over his head,
 a full 2 units above his own origin), and is aimed at the target's collider CENTER
 (`ProjectileAimUtility.ResolveAimDirection`, ~0.5 units up). So a shot that looks flat is really
 diving: about 17 degrees down at 5 units of range, steeper the closer the target. The first hit lands
@@ -603,7 +603,7 @@ the number on the asset is what you get, and weapon-vs-weapon balance doesn't de
 | Explosives (Cluster, Napalm, Grenade Launcher) | 5% | x2.0 |
 
 Dual Uzi (was higher) now matches its twin Drum SMG; Explosives were set to 5% (below the other families) by design.
-Lux sentries, Beam guns and Flamethrower still author no crit. Caveat of 0% heroes: a *skill* hit rolls
+Capy sentries, Beam guns and Flamethrower still author no crit. Caveat of 0% heroes: a *skill* hit rolls
 crit off `CharacterStats` alone, so skills only crit via upgrades/mutations/passives now (their crit
 multiplier was already 1.0, i.e. no extra damage, unless a Crit Damage upgrade is held). Crit is rolled per
 hit, so a 5-6 pellet shotgun rolls per pellet - on-crit perks (Critical Rebound, Bottomless Momentum) can

@@ -2967,6 +2967,80 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct CapyScrapCollector : Quantum.IComponent {
+    public const Int32 SIZE = 72;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(40)]
+    public FP DropChance;
+    [FieldOffset(8)]
+    public QBoolean IncludeFillerTier;
+    [FieldOffset(64)]
+    public FP FillerDropChance;
+    [FieldOffset(3)]
+    public Byte GuaranteedDropTierIndex;
+    [FieldOffset(2)]
+    public Byte GuaranteedDropCount;
+    [FieldOffset(0)]
+    public Byte BossGuaranteedScrap;
+    [FieldOffset(5)]
+    public Byte ScrapStacks;
+    [FieldOffset(6)]
+    public Byte StacksRequired;
+    [FieldOffset(4)]
+    public Byte MaxActiveSentries;
+    [FieldOffset(32)]
+    public FP CooldownReductionPerPickup;
+    [FieldOffset(24)]
+    public FP CooldownReductionOnCharge;
+    [FieldOffset(48)]
+    public FP FieldModDamagePerStack;
+    [FieldOffset(56)]
+    public FP FieldModFireRatePerStack;
+    [FieldOffset(1)]
+    public Byte FieldModMaxStacks;
+    [FieldOffset(16)]
+    public AssetRef<WeaponDataAsset> MkIIWeapon;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 15607;
+        hash = hash * 31 + DropChance.GetHashCode();
+        hash = hash * 31 + IncludeFillerTier.GetHashCode();
+        hash = hash * 31 + FillerDropChance.GetHashCode();
+        hash = hash * 31 + GuaranteedDropTierIndex.GetHashCode();
+        hash = hash * 31 + GuaranteedDropCount.GetHashCode();
+        hash = hash * 31 + BossGuaranteedScrap.GetHashCode();
+        hash = hash * 31 + ScrapStacks.GetHashCode();
+        hash = hash * 31 + StacksRequired.GetHashCode();
+        hash = hash * 31 + MaxActiveSentries.GetHashCode();
+        hash = hash * 31 + CooldownReductionPerPickup.GetHashCode();
+        hash = hash * 31 + CooldownReductionOnCharge.GetHashCode();
+        hash = hash * 31 + FieldModDamagePerStack.GetHashCode();
+        hash = hash * 31 + FieldModFireRatePerStack.GetHashCode();
+        hash = hash * 31 + FieldModMaxStacks.GetHashCode();
+        hash = hash * 31 + MkIIWeapon.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (CapyScrapCollector*)ptr;
+        serializer.Stream.Serialize(&p->BossGuaranteedScrap);
+        serializer.Stream.Serialize(&p->FieldModMaxStacks);
+        serializer.Stream.Serialize(&p->GuaranteedDropCount);
+        serializer.Stream.Serialize(&p->GuaranteedDropTierIndex);
+        serializer.Stream.Serialize(&p->MaxActiveSentries);
+        serializer.Stream.Serialize(&p->ScrapStacks);
+        serializer.Stream.Serialize(&p->StacksRequired);
+        QBoolean.Serialize(&p->IncludeFillerTier, serializer);
+        AssetRef.Serialize(&p->MkIIWeapon, serializer);
+        FP.Serialize(&p->CooldownReductionOnCharge, serializer);
+        FP.Serialize(&p->CooldownReductionPerPickup, serializer);
+        FP.Serialize(&p->DropChance, serializer);
+        FP.Serialize(&p->FieldModDamagePerStack, serializer);
+        FP.Serialize(&p->FieldModFireRatePerStack, serializer);
+        FP.Serialize(&p->FillerDropChance, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct CharacterSkills : Quantum.IComponent {
     public const Int32 SIZE = 544;
     public const Int32 ALIGNMENT = 8;
@@ -5539,80 +5613,6 @@ namespace Quantum {
         QBoolean.Serialize(&p->FromChest, serializer);
         QBoolean.Serialize(&p->KeptCurrent, serializer);
         FixedArray.Serialize(p->Options, serializer, Statics.SerializeLevelUpOption);
-    }
-  }
-  [StructLayout(LayoutKind.Explicit)]
-  public unsafe partial struct LuxScrapCollector : Quantum.IComponent {
-    public const Int32 SIZE = 72;
-    public const Int32 ALIGNMENT = 8;
-    [FieldOffset(40)]
-    public FP DropChance;
-    [FieldOffset(8)]
-    public QBoolean IncludeFillerTier;
-    [FieldOffset(64)]
-    public FP FillerDropChance;
-    [FieldOffset(3)]
-    public Byte GuaranteedDropTierIndex;
-    [FieldOffset(2)]
-    public Byte GuaranteedDropCount;
-    [FieldOffset(0)]
-    public Byte BossGuaranteedScrap;
-    [FieldOffset(5)]
-    public Byte ScrapStacks;
-    [FieldOffset(6)]
-    public Byte StacksRequired;
-    [FieldOffset(4)]
-    public Byte MaxActiveSentries;
-    [FieldOffset(32)]
-    public FP CooldownReductionPerPickup;
-    [FieldOffset(24)]
-    public FP CooldownReductionOnCharge;
-    [FieldOffset(48)]
-    public FP FieldModDamagePerStack;
-    [FieldOffset(56)]
-    public FP FieldModFireRatePerStack;
-    [FieldOffset(1)]
-    public Byte FieldModMaxStacks;
-    [FieldOffset(16)]
-    public AssetRef<WeaponDataAsset> MkIIWeapon;
-    public override readonly Int32 GetHashCode() {
-      unchecked { 
-        var hash = 9403;
-        hash = hash * 31 + DropChance.GetHashCode();
-        hash = hash * 31 + IncludeFillerTier.GetHashCode();
-        hash = hash * 31 + FillerDropChance.GetHashCode();
-        hash = hash * 31 + GuaranteedDropTierIndex.GetHashCode();
-        hash = hash * 31 + GuaranteedDropCount.GetHashCode();
-        hash = hash * 31 + BossGuaranteedScrap.GetHashCode();
-        hash = hash * 31 + ScrapStacks.GetHashCode();
-        hash = hash * 31 + StacksRequired.GetHashCode();
-        hash = hash * 31 + MaxActiveSentries.GetHashCode();
-        hash = hash * 31 + CooldownReductionPerPickup.GetHashCode();
-        hash = hash * 31 + CooldownReductionOnCharge.GetHashCode();
-        hash = hash * 31 + FieldModDamagePerStack.GetHashCode();
-        hash = hash * 31 + FieldModFireRatePerStack.GetHashCode();
-        hash = hash * 31 + FieldModMaxStacks.GetHashCode();
-        hash = hash * 31 + MkIIWeapon.GetHashCode();
-        return hash;
-      }
-    }
-    public static void Serialize(void* ptr, FrameSerializer serializer) {
-        var p = (LuxScrapCollector*)ptr;
-        serializer.Stream.Serialize(&p->BossGuaranteedScrap);
-        serializer.Stream.Serialize(&p->FieldModMaxStacks);
-        serializer.Stream.Serialize(&p->GuaranteedDropCount);
-        serializer.Stream.Serialize(&p->GuaranteedDropTierIndex);
-        serializer.Stream.Serialize(&p->MaxActiveSentries);
-        serializer.Stream.Serialize(&p->ScrapStacks);
-        serializer.Stream.Serialize(&p->StacksRequired);
-        QBoolean.Serialize(&p->IncludeFillerTier, serializer);
-        AssetRef.Serialize(&p->MkIIWeapon, serializer);
-        FP.Serialize(&p->CooldownReductionOnCharge, serializer);
-        FP.Serialize(&p->CooldownReductionPerPickup, serializer);
-        FP.Serialize(&p->DropChance, serializer);
-        FP.Serialize(&p->FieldModDamagePerStack, serializer);
-        FP.Serialize(&p->FieldModFireRatePerStack, serializer);
-        FP.Serialize(&p->FillerDropChance, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -9612,6 +9612,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.Burrowed>();
       BuildSignalsArrayOnComponentAdded<Quantum.CanApplyBurn>();
       BuildSignalsArrayOnComponentRemoved<Quantum.CanApplyBurn>();
+      BuildSignalsArrayOnComponentAdded<Quantum.CapyScrapCollector>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.CapyScrapCollector>();
       BuildSignalsArrayOnComponentAdded<CharacterController2D>();
       BuildSignalsArrayOnComponentRemoved<CharacterController2D>();
       BuildSignalsArrayOnComponentAdded<CharacterController3D>();
@@ -9756,8 +9758,6 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.LastStandUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.LevelUpChoice>();
       BuildSignalsArrayOnComponentRemoved<Quantum.LevelUpChoice>();
-      BuildSignalsArrayOnComponentAdded<Quantum.LuxScrapCollector>();
-      BuildSignalsArrayOnComponentRemoved<Quantum.LuxScrapCollector>();
       BuildSignalsArrayOnComponentAdded<Quantum.MainStageBonusBeats>();
       BuildSignalsArrayOnComponentRemoved<Quantum.MainStageBonusBeats>();
       BuildSignalsArrayOnComponentAdded<Quantum.MainStageUpgrade>();
@@ -10275,6 +10275,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Button), Button.SIZE);
       typeRegistry.Register(typeof(CallbackFlags), 4);
       typeRegistry.Register(typeof(Quantum.CanApplyBurn), Quantum.CanApplyBurn.SIZE);
+      typeRegistry.Register(typeof(Quantum.CapyScrapCollector), Quantum.CapyScrapCollector.SIZE);
       typeRegistry.Register(typeof(Quantum.ChallengeType), 1);
       typeRegistry.Register(typeof(CharacterController2D), CharacterController2D.SIZE);
       typeRegistry.Register(typeof(CharacterController3D), CharacterController3D.SIZE);
@@ -10409,7 +10410,6 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.LevelUpChoice), Quantum.LevelUpChoice.SIZE);
       typeRegistry.Register(typeof(Quantum.LevelUpOption), Quantum.LevelUpOption.SIZE);
       typeRegistry.Register(typeof(Quantum.LevelUpPoolKind), 1);
-      typeRegistry.Register(typeof(Quantum.LuxScrapCollector), Quantum.LuxScrapCollector.SIZE);
       typeRegistry.Register(typeof(Quantum.MainStageBonusBeats), Quantum.MainStageBonusBeats.SIZE);
       typeRegistry.Register(typeof(Quantum.MainStageUpgrade), Quantum.MainStageUpgrade.SIZE);
       typeRegistry.Register(typeof(MapEntityId), MapEntityId.SIZE);
@@ -10606,6 +10606,7 @@ namespace Quantum {
         .Add<Quantum.BurrowChargeState>(Quantum.BurrowChargeState.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Burrowed>(Quantum.Burrowed.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CanApplyBurn>(Quantum.CanApplyBurn.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.CapyScrapCollector>(Quantum.CapyScrapCollector.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CharacterSkills>(Quantum.CharacterSkills.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.CharacterStats>(Quantum.CharacterStats.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.ChargeHitTracking>(Quantum.ChargeHitTracking.Serialize, null, null, ComponentFlags.None)
@@ -10676,7 +10677,6 @@ namespace Quantum {
         .Add<Quantum.KCCProcessorLink>(Quantum.KCCProcessorLink.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.LastStandUpgrade>(Quantum.LastStandUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.LevelUpChoice>(Quantum.LevelUpChoice.Serialize, null, null, ComponentFlags.None)
-        .Add<Quantum.LuxScrapCollector>(Quantum.LuxScrapCollector.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.MainStageBonusBeats>(Quantum.MainStageBonusBeats.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.MainStageUpgrade>(Quantum.MainStageUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.MarkExplosiveDeath>(Quantum.MarkExplosiveDeath.Serialize, null, null, ComponentFlags.None)

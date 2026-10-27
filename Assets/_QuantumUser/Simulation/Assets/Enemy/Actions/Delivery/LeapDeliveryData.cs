@@ -54,7 +54,7 @@ namespace Quantum
 
         public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            // Void Pressure (Kai) - the timer this jump's whole arc is derived from (see the lerp
+            // Void Pressure (Yoru) - the timer this jump's whole arc is derived from (see the lerp
             // below) only ticks down at StatusEffectUtility.GetLocalTimeMultiplier's rate while it's
             // in effect, stretching the entire leap through the air in real time rather than just
             // delaying when it resolves - see that method's own comment for why only the Active phase

@@ -80,9 +80,9 @@ namespace Quantum
         //
         // Exists for the one case that CANNOT go through that per-hit path: damage that has to be
         // BAKED up front onto something that will later deal it on its own, with itself as the owner.
-        // Lux's Sentry barrels are the case - each barrel is its own entity carrying its own Weapon,
+        // Capy's Sentry barrels are the case - each barrel is its own entity carrying its own Weapon,
         // and WeaponSystem fires it with the BARREL as owner. A barrel has no CharacterStats, so
-        // ResolveOutgoingDamage returns at its own stats gate and the shot receives none of Lux's
+        // ResolveOutgoingDamage returns at its own stats gate and the shot receives none of Capy's
         // build at all. Baking her skill-damage multiplier in at deploy time is what reconnects them.
         //
         // Crit and range falloff are deliberately NOT folded in here: both are per-hit rolls/distances

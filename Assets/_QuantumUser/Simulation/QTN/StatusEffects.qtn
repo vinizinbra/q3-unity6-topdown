@@ -95,7 +95,7 @@ component StatusEffects
     // Generic hard-CC diminishing-returns windows (see EnemyTierResistanceConfig.
     // TierStatusResistance.StunImmunityDuration/InterruptImmunityDuration). While > 0, a further
     // Stun (StatusEffectUtility.ApplyStun) or action-interrupt (EnemyActionUtility.TryInterrupt) is
-    // REJECTED outright rather than refreshing - which is what stops a repeating pulse (Kai's
+    // REJECTED outright rather than refreshing - which is what stops a repeating pulse (Yoru's
     // Singularity gravity pulses, Zara's Bass Drop, Brute's Concussive Impact shockwaves) from
     // perma-locking a protected enemy. Seeded to (the applied CC's own duration + that tier's
     // authored immunity window) at the moment the CC lands, so the gap is measured from the end of
@@ -145,7 +145,7 @@ component StatusEffects
     FP ShieldRegenRemaining;
     FP ShieldRegenMultiplier;
 
-    // Slows this entity's own attack-execution timers (Kai's Void Pressure passive ascension) - a
+    // Slows this entity's own attack-execution timers (Yoru's Void Pressure passive ascension) - a
     // true time dilation on the entity's own clock, independent of Ice (which only ever affects
     // movement speed). See StatusEffectUtility.ApplyTimeDilation/GetLocalTimeMultiplier, read only by
     // each EnemyDeliveryData's own Active-phase timer - never the Preparation/Telegraph windup or
@@ -164,7 +164,7 @@ component StatusEffects
     FP DamageReductionRemaining;
     FP DamageReductionAmount;
 
-    // The shared CONTINUOUS-AURA damage-reduction slot (Brute's Guardian, Lux's Fire Support - any
+    // The shared CONTINUOUS-AURA damage-reduction slot (Brute's Guardian, Capy's Fire Support - any
     // "stand inside my radius and take less damage" source). Deliberately NOT folded into the generic
     // DamageReductionRemaining/DamageReductionAmount pair above, even though the effect (a timed
     // incoming-damage reduction) is identical - an aura refreshes every tick an ally stays in range,
@@ -173,7 +173,7 @@ component StatusEffects
     //
     // Renamed off the old Guardian-specific name once a second hero's aura needed the same slot -
     // this ONE slot is the explicit stacking policy the spec asks for: two aura sources (two Brutes,
-    // or a Brute plus a Lux Sentry) never stack additively, the STRONGEST simply wins for as long as
+    // or a Brute plus a Capy Sentry) never stack additively, the STRONGEST simply wins for as long as
     // it keeps refreshing (see StatusEffectUtility.ApplyAuraDamageReduction's take-the-stronger
     // semantics). Same 0-1 convention as the pairs above, folded into
     // DamageUtility.ResolveDamageReduction alongside them (all three stack multiplicatively).
@@ -286,8 +286,8 @@ component StatusEffects
     // unconditional Weapon.Ammo--.
     FP NoAmmoConsumptionRemaining;
 
-    // Generic (not Kai-named) - marks this entity as a valid target for "bonus damage to Bound
-    // enemies" effects (Kai's Undertow rank 3 "Gravitational Bond" is the first consumer). See
+    // Generic (not Yoru-named) - marks this entity as a valid target for "bonus damage to Bound
+    // enemies" effects (Yoru's Undertow rank 3 "Gravitational Bond" is the first consumer). See
     // StatusEffectUtility.ApplyBound/IsBound, read in DamageUtility.ResolveOutgoingDamage. Plain
     // overwrite-on-reapply, same as Ice/Stun/Root.
     FP BoundRemaining;

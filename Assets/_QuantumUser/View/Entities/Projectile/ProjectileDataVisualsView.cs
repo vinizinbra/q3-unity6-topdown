@@ -16,7 +16,7 @@ namespace Quantum
     // Resolved off Projectile.WeaponData (seeded at fire time, see Projectile.qtn's own comment)
     // rather than the owner's currently-equipped Weapon - a shot keeps the look of whatever weapon
     // actually fired it even if the owner has since swapped weapons. No-op (leaves the prefab's own
-    // authored/default state) for anything not fired by a Weapon - a skill, an enemy attack, Kai's
+    // authored/default state) for anything not fired by a Weapon - a skill, an enemy attack, Yoru's
     // Ghost Shot echo - since none of those carry a WeaponData ref.
     //
     // Both particle slots are captured by ProjectileVisualController's own GetComponentsInChildren

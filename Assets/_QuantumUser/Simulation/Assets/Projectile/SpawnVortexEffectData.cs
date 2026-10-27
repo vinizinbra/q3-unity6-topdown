@@ -4,15 +4,15 @@ namespace Quantum
     using Quantum.Physics3D;
 
     // SpawnEntityEffectData that also configures the spawned entity's Vortex (see VortexSystem) and
-    // deals Kai's flat Cast Damage directly to whatever the throw actually hit - see Apply below.
+    // deals Yoru's flat Cast Damage directly to whatever the throw actually hit - see Apply below.
     // PullForce is its own baseline, decoupled from the throw's own Damage (which is now "Vortex Skill
     // Damage," the percentage basis every Ascension line scales off - see
-    // KaiAscensionUtility.ResolveVortexSkillDamage - not the pull's own strength). Radius isn't
+    // YoruAscensionUtility.ResolveVortexSkillDamage - not the pull's own strength). Radius isn't
     // configured here either - it comes from the spawned entity's own PhysicsCollider3D (a Sphere),
     // which SpawnedEntitySpawner's existing SpawnRadiusUpgrade already knows how to scale generically.
     public unsafe class SpawnVortexEffectData : SpawnEntityEffectData
     {
-        // Baseline pull strength, independent of Kai's own Cast Damage - see Singularity, which
+        // Baseline pull strength, independent of Yoru's own Cast Damage - see Singularity, which
         // multiplies this rather than overriding it. Placeholder pending a real balance pass.
         public FP PullForce = 8;
 

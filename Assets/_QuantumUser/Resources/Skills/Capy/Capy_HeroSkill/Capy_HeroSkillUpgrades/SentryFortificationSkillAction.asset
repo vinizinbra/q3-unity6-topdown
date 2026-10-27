@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49955da391b334d0e8221a041cfd3d2a, type: 3}
+  m_Name: SentryFortificationSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SentryFortificationSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Capy/Capy_HeroSkill/Capy_HeroSkillUpgrades/SentryFortificationSkillAction
+    Guid:
+      Value: 479614577650482228
+  Icon: {fileID: -6921998784767801246, guid: ea5b28679b8534674abdd82e8ebb615b, type: 3}
+  DisplayName: Fortification
+  RankDescriptions:
+  - "Sentry attack range <color=#FD3971>+2m</color>."
+  - "Sentry attack range <color=#FD3971>+2m</color>. Allies in its range get a Guard that blocks one hit (once per Sentry)."
+  - "Sentry attack range <color=#FD3971>+2m</color>. Allies in its range get a Guard that blocks one hit (once per Sentry), <color=#FD3971>+15%</color> Fire Rate and <color=#FD3971>10%</color> Damage Reduction."
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 0
+  Description: "Your Sentry becomes a position worth holding - longer reach, then covering fire."
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  RangeBonus:
+  - RawValue: 131072
+  - RawValue: 131072
+  - RawValue: 131072
+  GuardDuration:
+  - RawValue: 0
+  - RawValue: 65536
+  - RawValue: 65536
+  GuardsPerAlly: 000101
+  AuraRangeRatio:
+    RawValue: 32768
+  FireSupportEffect:
+  - Id:
+      Value: 0
+  - Id:
+      Value: 0
+  - Id:
+      Value: 297551053167391233

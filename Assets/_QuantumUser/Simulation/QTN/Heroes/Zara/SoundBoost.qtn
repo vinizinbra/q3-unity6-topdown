@@ -19,7 +19,7 @@ component SoundBoostUpgrade
     // The Support Beat's buff bundle (Move Speed / Fire Rate / outgoing damage) as an
     // AllyBuffEffectData asset - a rank's whole buff profile is one authored asset rather than a
     // handful of numbers copied onto this component, so the same generic effect class serves the
-    // Totem, the Speaker and Lux's Fire Support aura identically.
+    // Totem, the Speaker and Capy's Fire Support aura identically.
     AssetRef<HitEffectData> SupportBuffEffect;
 
     // Rank 2+ - a ModifyRemainingCooldownEffectData appended to the Support Beat, shaving time off

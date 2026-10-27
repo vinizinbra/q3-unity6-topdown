@@ -11,9 +11,9 @@ namespace Quantum
     //   Brute  (JuggernautSkillData)  - 3+ enemies within knockback reach, an Elite in reach, or low
     //                                    Health with anything close (it's also his damage reduction).
     //   Max    (BerserkSkillData)     - 3+ enemies within 8, or an Elite within 8.
-    //   Pixie/Zara/Kai (ProjectileSkillData) - thrown at Aim.Target: within the skill's Range and
+    //   Pixie/Zara/Yoru (ProjectileSkillData) - thrown at Aim.Target: within the skill's Range and
     //                                    either 3+ enemies clustered around it or it's an Elite.
-    //   Lux    (Sentry spawn)         - any enemy within 10 and none of her sentries are out.
+    //   Capy    (Sentry spawn)         - any enemy within 10 and none of her sentries are out.
     //   other                          - 2+ enemies within 8.
     //
     // Dash is never fired blind any more (it moves the hero 6 units with the KCC off and no ground

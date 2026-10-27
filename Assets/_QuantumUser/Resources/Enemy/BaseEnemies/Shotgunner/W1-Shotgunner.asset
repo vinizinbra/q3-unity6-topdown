@@ -187,3 +187,4 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
   Description: Fires a wide spread at close range.
   ViewPrefab: {fileID: 8476845490732343577, guid: edde00b8d74e340549e53916adce3443, type: 3}
+  CatalogSubtitle: Ranged

@@ -11,7 +11,7 @@ no commands. Each client projects the other heroes' views itself.
 - Local couch-coop slots never get one. The camera frames every local slot (`MyLocalPlayer.Register`
   adds them to `FollowCamera`), so they can't be off-screen.
 - **Head** = the live in-game rig head (`BlobAnimationView.Head`'s `SpriteRenderer.sprite`, re-read every
-  frame). It deliberately does **not** use the `CharacterData.UIHead` portrait. A rig with no separate head (Lux) falls back to its `BlobAnimationView.Torso` sprite, which is the whole body. The head sits fully inside the hex with no mask (a uGUI stencil `Mask` gives a jagged, un-antialiased edge) and always stays upright.
+  frame). It deliberately does **not** use the `CharacterData.UIHead` portrait. A rig with no separate head (Capy) falls back to its `BlobAnimationView.Torso` sprite, which is the whole body. The head sits fully inside the hex with no mask (a uGUI stencil `Mask` gives a jagged, un-antialiased edge) and always stays upright.
 - **Border + arrow** = the hero's `CharacterData.RingColor`, or `downedColor` (red) while that teammate is
   **Downed**. A **KO** teammate's indicator is hidden (`hideWhenKO`).
 - **Distance** = XZ world distance from local player one, as `"{n}m"`. The label sits on the side opposite the

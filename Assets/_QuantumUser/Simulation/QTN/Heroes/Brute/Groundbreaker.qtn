@@ -55,7 +55,7 @@ component GroundbreakerUpgrade
     FP ImpactDamagePercent;
 
     // (byte)EnemyTier this can affect, inclusive - tiers above are skipped entirely. Same data-not-code
-    // tier gating idiom Kai's SingularityUpgrade.MaxEligibleTierIndex uses. Defaults to Boss (every
+    // tier gating idiom Yoru's SingularityUpgrade.MaxEligibleTierIndex uses. Defaults to Boss (every
     // tier), because knockback already scales down (or is fully resisted) per tier via
     // DamageUtility.ResolveKnockbackScale - a hard skip on top of that would double-punish.
     Byte MaxAffectedTierIndex;
@@ -77,7 +77,7 @@ component GroundbreakerUpgrade
     // enemy inside a hard-CC immunity window or a tier authored ImmuneToHardCC correctly gets neither.
     //
     // Reuses the pre-existing generic Rupture status (StatusEffectUtility.ApplyRupture - an incoming
-    // damage multiplier with take-the-stronger semantics), the same one Lux's Overload Core rank 3
+    // damage multiplier with take-the-stronger semantics), the same one Capy's Overload Core rank 3
     // uses for its own "Exposed". No Brute-specific status was added.
     Boolean VulnerabilityEnabled;
     FP VulnerabilityDamageTakenModifier;

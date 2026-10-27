@@ -3302,7 +3302,7 @@ GameObject:
   - component: {fileID: 1139412320124843229}
   - component: {fileID: 5987454993040401649}
   m_Layer: 5
-  m_Name: LuxLobby
+  m_Name: CapyLobby
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3424,7 +3424,7 @@ GameObject:
   - component: {fileID: 2686318261061309171}
   - component: {fileID: 241894764518764429}
   m_Layer: 5
-  m_Name: KaiMenuViewPrefab
+  m_Name: YoruMenuViewPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -9,10 +9,10 @@
 // reusing AreaDamageSystem's own independent pulsing rather than hand-rolling a second damage-tick
 // system on Vortex itself.
 //
-// Force is set at spawn by SpawnVortexEffectData.PullForce - its own baseline, decoupled from Kai's
+// Force is set at spawn by SpawnVortexEffectData.PullForce - its own baseline, decoupled from Yoru's
 // Cast Damage (which is dealt directly on impact instead, then becomes "Vortex Skill Damage," the
-// percentage basis every Ascension line scales off - see KaiAscensionUtility.
-// ResolveVortexSkillDamage). Singularity (see Heroes/Kai/Singularity.qtn) MULTIPLIES this baseline
+// percentage basis every Ascension line scales off - see YoruAscensionUtility.
+// ResolveVortexSkillDamage). Singularity (see Heroes/Yoru/Singularity.qtn) MULTIPLIES this baseline
 // rather than overriding it.
 component Vortex
 {

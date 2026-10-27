@@ -107,7 +107,7 @@ namespace Quantum
         public Color CoinPickupFlashColor = new Color(1f, 0.84f, 0.2f, 0.35f);
         [Tooltip("Used on FlashPickup for CurrencyType.RiftShard.")]
         public Color RiftShardPickupFlashColor = new Color(1f, 0.35f, 0.75f, 0.35f);
-        [Tooltip("Used on FlashPickup for CurrencyType.Scrap - Lux's own pickup.")]
+        [Tooltip("Used on FlashPickup for CurrencyType.Scrap - Capy's own pickup.")]
         public Color ScrapPickupFlashColor = new Color(0.95f, 0.6f, 0.25f, 0.35f);
         public float PickupFlashDuration = 0.35f;
     }

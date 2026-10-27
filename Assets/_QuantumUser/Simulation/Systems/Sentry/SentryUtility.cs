@@ -2,9 +2,9 @@ namespace Quantum
 {
     using Photon.Deterministic;
 
-    // Shared helpers for Lux's Sentry - the small set of operations several Ascensions each need and
+    // Shared helpers for Capy's Sentry - the small set of operations several Ascensions each need and
     // which would otherwise be re-derived (badly) in three places: how long a sentry has left, how to
-    // give it more, how to find the ones a given Lux owns, and how to enforce her active-Sentry cap.
+    // give it more, how to find the ones a given Capy owns, and how to enforce her active-Sentry cap.
     //
     // Lifetime is deliberately NOT a second timer. A sentry's Health drains at Sentry.DecayRate (see
     // Sentry.qtn), so remaining lifetime is exactly CurrentHealth / DecayRate and extending it is
@@ -28,7 +28,7 @@ namespace Quantum
 
         // Grants `seconds` of extra life, drawn from this sentry's own remaining extension budget
         // (Sentry.LifetimeExtensionRemaining, seeded at deploy time). Returns how much was actually
-        // granted. Capping per SENTRY rather than per Lux is what stops a dash-cooldown build from
+        // granted. Capping per SENTRY rather than per Capy is what stops a dash-cooldown build from
         // keeping one machine alive indefinitely while still letting her extend each new one.
         public static FP TryExtendLifetime(Frame f, EntityRef sentry, Sentry* data, FP seconds)
         {
@@ -108,7 +108,7 @@ namespace Quantum
 
         // The closest sentry this owner has within maxDistance, or None. Used by Emergency Repair
         // (dash ends near one) and Relocation Protocol (dash while near one) - both explicitly scoped
-        // to sentries this Lux owns, so a teammate Lux's machine is never affected.
+        // to sentries this Capy owns, so a teammate Capy's machine is never affected.
         public static EntityRef FindOwnedSentryNear(Frame f, EntityRef owner, FPVector3 position, FP maxDistance)
         {
             EntityRef best = EntityRef.None;

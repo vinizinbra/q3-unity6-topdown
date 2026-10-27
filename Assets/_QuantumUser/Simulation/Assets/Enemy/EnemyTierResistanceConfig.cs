@@ -36,7 +36,7 @@ namespace Quantum
         // player) always gets, since GetTierResistance only ever resolves for enemies.
         //
         // This is the generic mechanism the spec's "repeated pulses must NOT repeatedly hard-interrupt
-        // the same protected enemy" asks for - shared by Kai's Singularity gravity pulses, Brute's
+        // the same protected enemy" asks for - shared by Yoru's Singularity gravity pulses, Brute's
         // Concussive Impact landing stuns, and Zara's Bass Drop, rather than each re-deriving its own
         // per-cast tracker. See StatusEffectUtility.ApplyStun/EnemyActionUtility.TryInterrupt.
         public FP StunImmunityDuration = FP._0;

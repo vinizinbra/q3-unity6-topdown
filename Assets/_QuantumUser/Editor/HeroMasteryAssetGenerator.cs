@@ -32,16 +32,16 @@ namespace QuantumUser.Editor
         private const string BrutePassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Brute/Brute_PassiveSkill/Brute_PassiveSkillUpgrades";
         private const string PixiePassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Pixie/Pixie_PassiveSkill/Pixie_PassiveSkillUpgrades";
         private const string MaxPassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Max/Max_PassiveSkill/Max_PassiveSkillUpgrades";
-        private const string KaiPassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Kai/Kai_PassiveUpgrades/Kai_PassiveSkillUpgrades";
+        private const string YoruPassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Yoru/Yoru_PassiveUpgrades/Yoru_PassiveSkillUpgrades";
         private const string ZaraPassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Passives/Zara/Zara_PassiveSkillUpgrades";
-        private const string LuxPassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Lux/Lux_PassiveSkill/Lux_PassiveSkillUpgrades";
+        private const string CapyPassiveUpgradesFolderPath = "Assets/_QuantumUser/Resources/Skills/Capy/Capy_PassiveSkill/Capy_PassiveSkillUpgrades";
 
         private const string BruteCharacterDataPath = "Assets/_QuantumUser/Resources/Characters/BruteCharacterData.asset";
         private const string PixieCharacterDataPath = "Assets/_QuantumUser/Resources/Characters/PixieCharacterData.asset";
         private const string MaxCharacterDataPath = "Assets/_QuantumUser/Resources/Characters/MaxCharacterData.asset";
-        private const string KaiCharacterDataPath = "Assets/_QuantumUser/Resources/Characters/KaiCharacterData.asset";
+        private const string YoruCharacterDataPath = "Assets/_QuantumUser/Resources/Characters/YoruCharacterData.asset";
         private const string ZaraCharacterDataPath = "Assets/_QuantumUser/Resources/Characters/ZaraCharacterData.asset";
-        private const string LuxCharacterDataPath = "Assets/_QuantumUser/Resources/Characters/LuxCharacterData.asset";
+        private const string CapyCharacterDataPath = "Assets/_QuantumUser/Resources/Characters/CapyCharacterData.asset";
 
         // Shared per-rank damage curves - every Weapon Weight line and every non-Neutral Element line
         // uses Standard; every Neutral Element line uses the deliberately weaker Neutral curve (Neutral
@@ -57,16 +57,16 @@ namespace QuantumUser.Editor
             CreateFolderRecursive(BrutePassiveUpgradesFolderPath);
             CreateFolderRecursive(PixiePassiveUpgradesFolderPath);
             CreateFolderRecursive(MaxPassiveUpgradesFolderPath);
-            CreateFolderRecursive(KaiPassiveUpgradesFolderPath);
+            CreateFolderRecursive(YoruPassiveUpgradesFolderPath);
             CreateFolderRecursive(ZaraPassiveUpgradesFolderPath);
-            CreateFolderRecursive(LuxPassiveUpgradesFolderPath);
+            CreateFolderRecursive(CapyPassiveUpgradesFolderPath);
 
             var brute = CreateBruteMastery();
             var pixie = CreatePixieMastery();
             var max = CreateMaxMastery();
-            var kai = CreateKaiMastery();
+            var yoru = CreateYoruMastery();
             var zara = CreateZaraMastery();
-            var lux = CreateLuxMastery();
+            var capy = CreateCapyMastery();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh(); // lets QuantumAssetObjectPostprocessor stamp Guid/Identifier on anything just created
@@ -74,9 +74,9 @@ namespace QuantumUser.Editor
             WireInto(BruteCharacterDataPath, brute.weight, brute.element);
             WireInto(PixieCharacterDataPath, pixie.weight, pixie.element);
             WireInto(MaxCharacterDataPath, max.weight, max.element);
-            WireInto(KaiCharacterDataPath, kai.weight, kai.element);
+            WireInto(YoruCharacterDataPath, yoru.weight, yoru.element);
             WireInto(ZaraCharacterDataPath, zara.weight, zara.element);
-            WireInto(LuxCharacterDataPath, lux.weight, lux.element);
+            WireInto(CapyCharacterDataPath, capy.weight, capy.element);
 
             LogHelper.Log("HeroMasteryAssetGenerator", "Regenerated and rewired Weapon Weight + Element Mastery for all 6 heroes " +
                 "(12 assets) - every per-rank value re-set explicitly, every other Ascension/Passive line on each hero left untouched.");
@@ -218,15 +218,15 @@ namespace QuantumUser.Editor
             return (lightMastery, maxFireMastery);
         }
 
-        // -- Kai: Heavy (Weapon Weight) + Neutral (Element) --
+        // -- Yoru: Heavy (Weapon Weight) + Neutral (Element) --
 
-        internal static (KaiHeavyMasteryData weight, KaiNeutralMasteryData element) CreateKaiMastery()
+        internal static (YoruHeavyMasteryData weight, YoruNeutralMasteryData element) CreateYoruMastery()
         {
-            KaiHeavyMasteryData heavyMastery = CreateOrUpdate<KaiHeavyMasteryData>($"{KaiPassiveUpgradesFolderPath}/KaiHeavyMastery.asset", asset =>
+            YoruHeavyMasteryData heavyMastery = CreateOrUpdate<YoruHeavyMasteryData>($"{YoruPassiveUpgradesFolderPath}/YoruHeavyMastery.asset", asset =>
             {
                 asset.DisplayName = "Heavy Weapon Mastery";
                 asset.MaxRank = 3;
-                asset.Description = "Kai's Heavy weapons hit harder, and the opening shot on a fresh target hits hardest.";
+                asset.Description = "Yoru's Heavy weapons hit harder, and the opening shot on a fresh target hits hardest.";
                 asset.RankDescriptions = new[]
                 {
                     "+<color=#FD3971>15%</color> Heavy Weapon Damage.",
@@ -242,7 +242,7 @@ namespace QuantumUser.Editor
             // (DamageEchoVisualData.View.cs) this generator can't meaningfully author - left
             // unassigned here for hand-authoring in the Inspector; EffectsManager.OnDamageEchoTriggered
             // falls back to its own default area blast effect until one is assigned.
-            var ghostShotVisual = CreateOrUpdate<DamageEchoVisualData>($"{KaiPassiveUpgradesFolderPath}/GhostShotVisual.asset", asset => { });
+            var ghostShotVisual = CreateOrUpdate<DamageEchoVisualData>($"{YoruPassiveUpgradesFolderPath}/GhostShotVisual.asset", asset => { });
 
             // Ghost Shot (R3) - the Hit behavior substituted onto the echo projectile in place of
             // whatever weapon fired it (see Projectile.HitOverride's own comment). The echo itself
@@ -251,9 +251,9 @@ namespace QuantumUser.Editor
             // that weapon - so there is nothing weapon-specific to author here. Delivers the already-
             // resolved echo Damage on impact - no Effects list, no re-resolution, no recursion (see
             // EchoHitData's own comment).
-            var ghostShotHit = CreateOrUpdate<EchoHitData>($"{KaiPassiveUpgradesFolderPath}/GhostShotHit.asset", asset => { });
+            var ghostShotHit = CreateOrUpdate<EchoHitData>($"{YoruPassiveUpgradesFolderPath}/GhostShotHit.asset", asset => { });
 
-            KaiNeutralMasteryData neutralMastery = CreateOrUpdate<KaiNeutralMasteryData>($"{KaiPassiveUpgradesFolderPath}/NeutralMastery.asset", asset =>
+            YoruNeutralMasteryData neutralMastery = CreateOrUpdate<YoruNeutralMasteryData>($"{YoruPassiveUpgradesFolderPath}/NeutralMastery.asset", asset =>
             {
                 asset.DisplayName = "Neutral Mastery";
                 asset.MaxRank = 3;
@@ -315,20 +315,20 @@ namespace QuantumUser.Editor
             return (lightMastery, zaraElectricMastery);
         }
 
-        // -- Lux: Medium (Weapon Weight) + Neutral (Element) --
+        // -- Capy: Medium (Weapon Weight) + Neutral (Element) --
 
-        internal static (LuxMediumMasteryData weight, LuxNeutralMasteryData element) CreateLuxMastery()
+        internal static (CapyMediumMasteryData weight, CapyNeutralMasteryData element) CreateCapyMastery()
         {
-            LuxMediumMasteryData mediumMastery = CreateOrUpdate<LuxMediumMasteryData>($"{LuxPassiveUpgradesFolderPath}/LuxMediumMastery.asset", asset =>
+            CapyMediumMasteryData mediumMastery = CreateOrUpdate<CapyMediumMasteryData>($"{CapyPassiveUpgradesFolderPath}/CapyMediumMastery.asset", asset =>
             {
                 asset.DisplayName = "Medium Weapon Mastery";
                 asset.MaxRank = 3;
-                asset.Description = "Lux's Medium weapons hit harder, and at rank 3, paint targets for her Sentries to finish.";
+                asset.Description = "Capy's Medium weapons hit harder, and at rank 3, paint targets for her Sentries to finish.";
                 asset.RankDescriptions = new[]
                 {
                     "+<color=#FD3971>15%</color> Medium Weapon Damage.",
                     "+<color=#FD3971>30%</color> Medium Weapon Damage.",
-                    "+<color=#FD3971>50%</color> Medium Weapon Damage. Enemies hit by Lux's Medium weapon take +<color=#FD3971>25%</color> Damage from her Sentry.",
+                    "+<color=#FD3971>50%</color> Medium Weapon Damage. Enemies hit by Capy's Medium weapon take +<color=#FD3971>25%</color> Damage from her Sentry.",
                 };
                 asset.Weight = WeaponWeight.Medium;
                 asset.DamageMultiplierPerRank = StandardDamageMultiplierPerRank;
@@ -336,7 +336,7 @@ namespace QuantumUser.Editor
                 asset.TargetingLinkMarkDuration = 4;
             });
 
-            LuxNeutralMasteryData neutralMastery = CreateOrUpdate<LuxNeutralMasteryData>($"{LuxPassiveUpgradesFolderPath}/LuxNeutralMastery.asset", asset =>
+            CapyNeutralMasteryData neutralMastery = CreateOrUpdate<CapyNeutralMasteryData>($"{CapyPassiveUpgradesFolderPath}/CapyNeutralMastery.asset", asset =>
             {
                 asset.DisplayName = "Neutral Mastery";
                 asset.MaxRank = 3;
@@ -345,7 +345,7 @@ namespace QuantumUser.Editor
                 {
                     "+<color=#FD3971>10%</color> Neutral Weapon Damage.",
                     "+<color=#FD3971>20%</color> Neutral Weapon Damage.",
-                    "+<color=#FD3971>40%</color> Neutral Weapon Damage. Neutral weapon hits make Lux's Sentries prioritize that enemy while it is in range.",
+                    "+<color=#FD3971>40%</color> Neutral Weapon Damage. Neutral weapon hits make Capy's Sentries prioritize that enemy while it is in range.",
                 };
                 asset.Element = ElementType.Neutral;
                 asset.DamageMultiplierPerRank = NeutralDamageMultiplierPerRank;

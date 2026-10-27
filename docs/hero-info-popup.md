@@ -50,7 +50,7 @@ Skill Damage, Dmg Reduction, Life Steal, Pickup, XP/Coin Gain and Luck were deli
 **`CharacterStats.ProjectileSpeedMultiplier` was removed from the game** (field in `CharacterStats.qtn`,
 `CharacterData`, `CharacterSystem` seeding, `StatUtility.GetProjectileSpeedMultiplier`, and its term in
 `ProjectileSpawner.Spawn`). Nothing wrote it after the global upgrade was deleted and every hero authored
-1.0, so gameplay is unchanged. Weapon, enemy/boss, Pixie Blast Jump and Kai Event Horizon projectile-speed
+1.0, so gameplay is unchanged. Weapon, enemy/boss, Pixie Blast Jump and Yoru Event Horizon projectile-speed
 multipliers are different fields and remain.
 
 Base Skill / Passive rows: the `Passive`/`BaseSkill` objects are off and `HeroInfoWidget.baseSkillWidget`/
@@ -156,7 +156,7 @@ The scene component currently sits on the HUD `Canvas` GameObject with `root` po
    optional - left unassigned just skips that stat) - see "Current Damage / Current Elemental /
    Current Critical" above.
 4. Author `Icon`/`DisplayName` on all 6 `PassiveData` assets (Max's Vendetta, Brute's Protector,
-   Lux's Scrap Collector, Pixie's Chain Reaction, Kai's Void Field, Zara's Resonance) - until then
+   Capy's Scrap Collector, Pixie's Chain Reaction, Yoru's Void Field, Zara's Resonance) - until then
    the Passive row shows no icon and falls back to the beautified asset name.
 5. Still outstanding from before this pass: `riftMarkContent` has never been assigned a scroll
    Content (see `docs/rift-mutations.md`). `RebuildList` early-outs on a null `content`, so nothing

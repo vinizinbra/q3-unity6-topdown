@@ -36,12 +36,12 @@ struct PendingDoubleTapShot
     Boolean   IsExplosiveProc;
     Boolean   IsCataclysm;
 
-    // Kai's Phantom Strike (see PhantomStrikeUpgrade.PierceBonus) - a flat pierce amount rather than
+    // Yoru's Phantom Strike (see PhantomStrikeUpgrade.PierceBonus) - a flat pierce amount rather than
     // a bool, so rank 2/3's higher bonus survives into a Double Tap's own free extra shot too.
     Int32     GrantPierceAmount;
 
     // Snapshotted from the primary shot so a Double Tap replay of the first bullet in a fresh
-    // magazine still counts as firing "the first shot" for generic Damage Echo (Kai's Ghost Shot) -
+    // magazine still counts as firing "the first shot" for generic Damage Echo (Yoru's Ghost Shot) -
     // see WeaponSystem.FireDoubleTapShot/DamageEchoUtility.TryScheduleEcho.
     Boolean   IsFirstBullet;
 }
@@ -299,7 +299,7 @@ component WeaponBurstState
     Boolean   CritOnFinalShot;
     Int32     BurstCount;
 
-    // Only what belongs to the TRIGGER PULL carries across the burst - Kai's Phantom Strike (its
+    // Only what belongs to the TRIGGER PULL carries across the burst - Yoru's Phantom Strike (its
     // damage factor and bonus pierce, consumed once for the whole pull). Everything magazine-driven
     // (damage from the magazine-position perks, Final Round/Cataclysm's last bullet, the Explosive
     // Sequence counter) is re-resolved per burst shot in TickWeaponBurst: each one is a real bullet,

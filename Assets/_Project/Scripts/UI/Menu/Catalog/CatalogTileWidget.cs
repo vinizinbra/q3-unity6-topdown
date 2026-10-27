@@ -30,7 +30,7 @@ public class CatalogTileWidget : MonoBehaviour, ISelectHandler
 
     public event Action<CatalogTileWidget> Clicked;
 
-    public CatalogEntryData Entry { get; private set; }
+    public CatalogEntry Entry { get; private set; }
     public int Number { get; private set; }
     public bool Discovered { get; private set; }
 
@@ -41,7 +41,7 @@ public class CatalogTileWidget : MonoBehaviour, ISelectHandler
         GetComponent<Button>().onClick.AddListener(RaiseClicked);
     }
 
-    public void Bind(CatalogEntryData entry, int number, bool discovered, string worldName = null)
+    public void Bind(CatalogEntry entry, int number, bool discovered, string worldName = null)
     {
         Entry = entry;
         Number = number;
@@ -50,7 +50,7 @@ public class CatalogTileWidget : MonoBehaviour, ISelectHandler
         Sprite sprite = entry.ResolvedIcon;
         icon.sprite = sprite;
         icon.enabled = sprite != null;
-        icon.color = discovered ? entry.iconTint : silhouetteColor;
+        icon.color = discovered ? Color.white : silhouetteColor;
         if (iconFitter != null && sprite != null)
             iconFitter.aspectRatio = sprite.rect.width / sprite.rect.height;
         if (discoveredMark != null)

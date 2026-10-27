@@ -33,7 +33,7 @@ namespace QuantumUser.Editor
                 "(1) assign OverallGameConfig's ReviveConfig field (Resources/Configs/OverallGameConfig), same place " +
                 "CursedRiftConfig etc. are already assigned; " +
                 "(2) add a PlayerLifeState component to every hero EntityPrototype (Pixie/Brute/Zara/" +
-                "Kai/Max/MainChar/Lux under Assets/_QuantumUser/Entities/Characters/) - defaults all-" +
+                "Yoru/Max/MainChar/Capy under Assets/_QuantumUser/Entities/Characters/) - defaults all-" +
                 "zero (Alive), nothing else to author on it; " +
                 "(3) add a ReviveInteractionPromptView component to each hero's own View prefab, wiring " +
                 "InteractionPromptWidgetManager the same way PoiView already is; " +

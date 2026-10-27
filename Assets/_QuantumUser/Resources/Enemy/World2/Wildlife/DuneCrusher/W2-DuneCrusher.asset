@@ -629,3 +629,4 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 91839dc39bf60469d9594f381d93b9ee, type: 2}
   Description: Crushes everything in a wide cone.
   ViewPrefab: {fileID: 5043495445576312837, guid: 17df5364bf41342da8ba2a4ca0d0121c, type: 3}
+  CatalogSubtitle: Heavy

@@ -21,7 +21,7 @@ public class RoomWidget : MonoBehaviour
     [Tooltip("Optional - shows this party member's chosen hero as a live animated preview, spawned at its own spawnPoint in the menu's 3D scene, the same way the local player's own pick is shown. MUST have Follow Local Selection turned OFF on the widget itself, or it will show YOUR character in every slot - and must NEVER be the local player's own main preview, which no slot owns.")]
     public CharacterPreviewWidget characterPreview;
 
-    [Tooltip("Optional - the hero's portrait, taken straight off their view prefab's own rig rather than a separately authored sprite, so it always matches the character art. Their head where they have one, otherwise their whole body (Lux is drawn as a single piece). Hidden while the slot is empty.")]
+    [Tooltip("Optional - the hero's portrait, taken straight off their view prefab's own rig rather than a separately authored sprite, so it always matches the character art. Their head where they have one, otherwise their whole body (Capy is drawn as a single piece). Hidden while the slot is empty.")]
     public Image characterIcon;
 
     [Tooltip("Optional - tinted with the hero's own CharacterData.RingColor, the same colour that marks this player's ground ring in the match, so a teammate reads as the same colour in the lobby and in game. The image's own alpha is preserved, so a translucent background stays translucent.")]

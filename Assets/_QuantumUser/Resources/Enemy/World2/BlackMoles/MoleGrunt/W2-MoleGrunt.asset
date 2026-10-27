@@ -187,6 +187,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 36dd1e61cdac04d189cb55341a23b3b4, type: 2}
   Description: Cheap digger that swarms in numbers.
   ViewPrefab: {fileID: 6254092517707556305, guid: 33e43671a823b42528143ad5a1bfd990, type: 3}
+  CatalogSubtitle: Filler
 --- !u!114 &3628957316349707937
 MonoBehaviour:
   m_ObjectHideFlags: 0

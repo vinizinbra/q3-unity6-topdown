@@ -15,7 +15,7 @@ public enum HeroId
     Max = 1,
     Pixie = 2,
     Brute = 3,
-    Kai = 4,
+    Yoru = 4,
     Zara = 5,
-    Lux = 6,
+    Capy = 6,
 }

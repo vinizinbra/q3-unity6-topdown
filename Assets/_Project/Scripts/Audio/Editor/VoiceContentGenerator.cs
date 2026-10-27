@@ -83,7 +83,7 @@ internal static class VoiceContentGenerator
         // Pings already have their own cooldown; this only keeps the CALLOUT from repeating. A
         // Revive-me ping is a plea for help, so it always plays and cuts through chatter.
         (VoiceLineTrigger.PingElite,              0.60f,  10f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
-        (VoiceLineTrigger.PingPoi,                0.50f,  15f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
+        (VoiceLineTrigger.PingPoi,                1.00f,  30f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
         (VoiceLineTrigger.PingReviveMe,           1.00f,   8f, VoicePriority.High,     VoiceAudience.AllPlayers),
     };
 

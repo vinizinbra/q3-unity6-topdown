@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5055b70076f3436e8932995ef7e1d85, type: 3}
+  m_Name: PhantomStrikeSkillAction
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.PhantomStrikeSkillAction
+  Identifier:
+    Path: _QuantumUser/Resources/Skills/Yoru/Yoru_DashSkillUpgrades/PhantomStrikeSkillAction
+    Guid:
+      Value: 410004890060701885
+  Icon: {fileID: -399011853929972512, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
+  DisplayName: Phantom Strike
+  RankDescriptions:
+  - "After Dashing, Yoru's next weapon hit deals <color=#FD3971>+50%</color> Damage and gains <color=#FD3971>+1</color> Pierce."
+  - "After Dashing, Yoru's next weapon hit deals <color=#FD3971>+75%</color> Damage and gains <color=#FD3971>+2</color> Pierce."
+  - "After Dashing, Yoru's next weapon hit deals <color=#FD3971>+100%</color> Damage and pierces every enemy."
+  <MaxRank>k__BackingField: 3
+  Priority: 0
+  Phase: 1
+  Interval:
+    RawValue: 0
+  Activated: 1
+  Description: "After Dashing, your next weapon hit deals bonus damage and pierces extra enemies."
+  BeginFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  OnGoingFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  EndFx:
+    ParticlePrefab: {fileID: 0}
+    SpawnMode: 0
+    Parent: 1
+    Offset: {x: 0, y: 0, z: 0}
+    ScaleByRadius: 0
+    Scale: 1
+    Alignment: 0
+  DamageMultiplierBonus:
+  - RawValue: 32768
+  - RawValue: 49152
+  - RawValue: 65536
+  PierceBonus: 010000000200000063000000

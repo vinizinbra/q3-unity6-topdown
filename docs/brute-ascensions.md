@@ -362,7 +362,7 @@ redesign of his offensive build engine and a rein-in of his team damage reductio
   - The aura itself writes the shared aura-DR slot (`StatusEffectUtility.ApplyAuraDamageReduction`,
     renamed from the Guardian-specific one and now take-the-stronger), which is what makes "Guardian
     from multiple Brutes must NOT stack additively" true by construction — and what keeps a Brute +
-    Zara + Lux DR stack from compounding.
+    Zara + Capy DR stack from compounding.
 - **Bodyguard restores a FLAT Shield, on a per-ally cooldown.** Was 10%/15%/20% of the ally's own Max
   Shield with no pacing — a dash-cooldown build could pump unbounded effective Shield into a
   high-Shield teammate. Now 10 / 15 / 20 flat, gated by
@@ -389,7 +389,7 @@ redesign of his offensive build engine and a rein-in of his team damage reductio
   `EnemyTierResistanceConfig`), with no change to the line itself.
 
 **Playtest first:** Aftershock stack acquisition rate (5 stacks should be a real routing goal, not
-automatic); Guardian + Zara's Protective Rhythm + Lux's Fire Support stacked on one ally; Unstoppable
+automatic); Guardian + Zara's Protective Rhythm + Capy's Fire Support stacked on one ally; Unstoppable
 R3's uptime given Momentum retention from Momentum R3.
 
 ---
@@ -471,7 +471,7 @@ needs it.
 Exposed is gated on the **Stun actually landing**, never on merely being caught in the shockwave and
 never on merely finding a wall. The reward is specifically: good positioning → correct knockback angle
 → wall impact → Stun → burst opportunity. Exposed reuses the pre-existing generic **Rupture** status
-(`StatusEffectUtility.ApplyRupture`, take-the-stronger), exactly as Lux's Overload Core rank 3 does —
+(`StatusEffectUtility.ApplyRupture`, take-the-stronger), exactly as Capy's Overload Core rank 3 does —
 no Brute-specific status was added.
 
 ### Concussive Impact: no double-trigger, by construction
@@ -504,7 +504,7 @@ Overflowing Rift already use, so it reads distinctly even before a bespoke prefa
 
 The prefab lives on `EffectsManager` rather than on `GroundbreakerPassiveUpgradeData` — unlike
 `SkillActionData`, `PassiveUpgradeData.Apply` gets no self `AssetRef` to travel with the event, which is
-exactly why Kai's Undertow and every reaction VFX already sit on the manager too.
+exactly why Yoru's Undertow and every reaction VFX already sit on the manager too.
 
 **Wall impact — a generic event, not a Groundbreaker one.** A new `WallSlammed` event is fired by
 **`WallSlamUtility` itself**, so every knockback source routing through that utility gets the impact VFX
@@ -542,7 +542,7 @@ removed too rather than left as invisible dead code:
 
 **Deliberately kept**, because they are used elsewhere: the per-tier hard-CC diminishing-returns
 windows (`EnemyTierResistanceConfig.StunImmunityDuration`/`InterruptImmunityDuration`/`ImmuneToHardCC`
-+ `StatusEffects.StunImmunityRemaining`/`InterruptImmunityRemaining`), which Kai's Singularity, Brute's
++ `StatusEffects.StunImmunityRemaining`/`InterruptImmunityRemaining`), which Yoru's Singularity, Brute's
 own Concussive Impact and Zara's Bass Drop all rely on.
 
 ## Status

@@ -162,7 +162,7 @@ namespace Quantum
                 return;
 
             // Reuses the pre-existing generic Rupture status (an incoming-damage multiplier with
-            // take-the-stronger semantics), exactly as Lux's Overload Core rank 3 "Exposed" does - no
+            // take-the-stronger semantics), exactly as Capy's Overload Core rank 3 "Exposed" does - no
             // Brute-specific status, and it composes with everything that already reads Rupture.
             StatusEffectUtility.ApplyRupture(f, target, groundbreaker->VulnerabilityDuration,
                 FP._1 + groundbreaker->VulnerabilityDamageTakenModifier);

@@ -4,7 +4,7 @@ namespace Quantum
 
     // Brute's base Passive - Protector. Adds the persistent, opt-in ProtectorAura component directly
     // onto his own entity (same "spawn-time bake adds a component" shape SeedShield/SeedArmor
-    // already use in CharacterSystem, and the same "field lives on the hero" shape Kai's
+    // already use in CharacterSystem, and the same "field lives on the hero" shape Yoru's
     // ProjectileSlowField already uses) - the aura follows him automatically via his own Transform3D
     // (see ProtectorAuraSystem). A Passive Ascension mutates that component directly (see
     // LevelUp/Heroes/Brute/PassiveSkillUpgrades).

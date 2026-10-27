@@ -9,7 +9,7 @@ Volatile Payload was dropped entirely.
 
 This is also where Pixie's Ascensions first exercise the **generic multi-rank Ascension architecture**
 (`MaxRank`/`IRankedUpgrade`/`UpgradeHistoryUtility` - see `docs/level-up-upgrades.md`'s own "Ranked
-Ascensions" section) - built generic from the start since every other hero's pool (Kai/Brute/Max) is
+Ascensions" section) - built generic from the start since every other hero's pool (Yoru/Brute/Max) is
 expected to go through the same treatment. Read that doc's section first for the shared mechanism;
 this doc only covers what's Pixie-specific.
 

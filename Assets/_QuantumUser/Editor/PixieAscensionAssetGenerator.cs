@@ -34,7 +34,7 @@ namespace QuantumUser.Editor
     // Projectile) still need hand-assigning in the Editor - flagged in this script's own log.
     //
     // All 3 folders (base passive, passive upgrades, hero skill/dash upgrades) live under one shared
-    // Skills/Pixie root now, matching Brute/Lux/Max's own convention - the base passive and its
+    // Skills/Pixie root now, matching Brute/Capy/Max's own convention - the base passive and its
     // upgrades used to sit under a separate Resources/Passives/Pixie tree instead, which is exactly
     // the kind of drift that let a stale ChainReactionPassiveData/UnstableMixture duplicate accumulate
     // at the Skills/Pixie location too (found and removed moving these). Also found and fixed the same

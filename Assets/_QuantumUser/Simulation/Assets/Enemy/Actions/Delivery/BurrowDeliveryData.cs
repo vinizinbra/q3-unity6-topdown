@@ -321,7 +321,7 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Burrowed>(filter.Entity, out var burrowed) == false)
                 return true;
 
-            // Same Void Pressure (Kai) time-dilation reasoning as LeapDeliveryData.Tick - only the
+            // Same Void Pressure (Yoru) time-dilation reasoning as LeapDeliveryData.Tick - only the
             // Active phase is stretched, not the windup.
             FP dt = f.DeltaTime * StatusEffectUtility.GetLocalTimeMultiplier(f, filter.Entity);
             FPVector3 start = filter.Enemy->SkillStartPosition;

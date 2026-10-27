@@ -207,6 +207,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 2154614ee967d441aadf7ecce7327956, type: 2}
   Description: Rushes in and bites at close range.
   ViewPrefab: {fileID: 8476845490732343577, guid: d1f1b213c420c42da86cfaeaa5e12cf2, type: 3}
+  CatalogSubtitle: Melee
 --- !u!114 &13293821001175021
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -7,7 +7,7 @@ namespace Quantum
         // Entities the shot passes through before it's spent; 1 stops on the first one.
         public int PierceCount = 1;
 
-        // A weapon is held wherever its hero carries it (CharacterData.WeaponPosition - Kai's sits a
+        // A weapon is held wherever its hero carries it (CharacterData.WeaponPosition - Yoru's sits a
         // full 2 units up, over his head) while a shot is aimed at its target's collider CENTER, so a
         // flat-looking shot is really travelling DOWNWARD - at 5 units of range that is roughly a 17
         // degree dive. The first hit lands fine, but the rest of the flight then buries itself in the

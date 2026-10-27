@@ -13,6 +13,9 @@ namespace Quantum
         [Tooltip("Player-facing effect text - also shown as a level-up card's description (see GetDescription). Supports {0}, {1}, etc. placeholders filled in from this mutation's own live values via DescriptionArgs (override in a subclass), so a retuned number can't drift out of sync with the sentence describing it. Plain text with no placeholders works too.")]
         public string Description;
 
+        [Tooltip("When the menu Catalog reveals this mutation - see CatalogDiscovery. Its Catalog section and subtitle come from Rarity and Scope, nothing else to author.")]
+        public CatalogDiscovery Discovery;
+
         // Override in a concrete RiftMutationData subclass to supply the values its own
         // Description template references via {0}, {1}, etc. - see GetFormattedDescription.
         protected virtual object[] DescriptionArgs => Array.Empty<object>();

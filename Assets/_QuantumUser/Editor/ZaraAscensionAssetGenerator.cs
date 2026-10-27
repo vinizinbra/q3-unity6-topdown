@@ -13,7 +13,7 @@ namespace QuantumUser.Editor
     // Afterbeat/Portable Speaker as Dash Ascensions - see docs/zara-ascensions.md), then
     // wires all of it into ZaraCharacterData.asset and ZaraBaseSkill.asset. Replaces
     // ZaraResonanceAssetGenerator.cs - same "one generator fully replaces every list it touches end to
-    // end" fix Brute/Max/Pixie/Kai's own refactors already applied for the identical append-vs-replace
+    // end" fix Brute/Max/Pixie/Yoru's own refactors already applied for the identical append-vs-replace
     // drift bug (the old generator's own WireCharacterData only appended-and-deduped DashSkillUpgrades,
     // which is exactly why the old, broken PortableSpeaker.asset survived every prior regeneration).
     //
@@ -46,7 +46,7 @@ namespace QuantumUser.Editor
         // ZaraSpeaker.prefab is the Totem's own real placed entity (already has the correct
         // AreaDamage+AlternatingArea setup) - reused directly as Portable Speaker's own spawn
         // prototype too, rather than a dedicated one, same "Dash mini-version reuses the Hero
-        // Skill's own entity" precedent Kai's Warp Wake already established (cosmetic follow-up, not
+        // Skill's own entity" precedent Yoru's Warp Wake already established (cosmetic follow-up, not
         // a functional gap). ZaraDeviceSpeaker.prefab is NOT this - it's the THROWN PROJECTILE visual
         // that flies from Zara to the Totem's landing spot (ZaraThrowProjectileSpeaker.Prototype),
         // confirmed by the user - do not point anything at it for Portable Speaker.
@@ -64,7 +64,7 @@ namespace QuantumUser.Editor
             // Shared generic effect assets - authored once, referenced by whichever ranks/lines need
             // them. Everything Zara grants an ally now routes through ONE generic effect class
             // (AllyBuffEffectData) rather than a per-stat effect asset each, so a designer tunes a
-            // whole buff profile in one place regardless of whether a Totem, a Speaker or Lux's Sentry
+            // whole buff profile in one place regardless of whether a Totem, a Speaker or Capy's Sentry
             // aura is emitting it.
             var scaledHeal = CreateOrUpdate<ScaledHealEffectData>($"{SharedEffectsFolderPath}/ZaraScaledHealPulse.asset", a => a.HealMultiplier = FP._1);
 
@@ -419,7 +419,7 @@ namespace QuantumUser.Editor
         // (SpawnAlternatingAreaEffectData's own base Damage/Heal amounts, and the shared
         // ZaraScaledHealPulse asset in its HealEffects) - these aren't separate .asset files, so
         // CreateOrUpdate<T> doesn't apply; they're found by scanning the file's own sub-objects, same
-        // as KaiAscensionAssetGenerator.ResolveKaiVortexPrototype. Returns the embedded
+        // as YoruAscensionAssetGenerator.ResolveYoruVortexPrototype. Returns the embedded
         // ZaraVoidPulseDamage's own AssetRef so Portable Speaker's DamageEffect can reuse the exact
         // same asset rather than duplicating it.
         private static AssetRef<HitEffectData> ConfigureTotemThrow(AssetRef<HitEffectData> scaledHealEffect, AssetRef<HitEffectData> supportBuffEffect)

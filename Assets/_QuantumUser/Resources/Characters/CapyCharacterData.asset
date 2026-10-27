@@ -1,0 +1,149 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2081b046763ac4d3bb208774c58c218a, type: 3}
+  m_Name: CapyCharacterData
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.CharacterData
+  Identifier:
+    Path: _QuantumUser/Resources/Characters/CapyCharacterData
+    Guid:
+      Value: 390463733213536559
+  BaseMaxHealth:
+    RawValue: 3932160
+  BaseHealthRegenRate:
+    RawValue: 0
+  MoveSpeedMultiplier:
+    RawValue: 65536
+  BaseArmor:
+    RawValue: 0
+  BaseMaxShield:
+    RawValue: 1310720
+  ShieldChargeOnly: 0
+  ShieldRechargeDelay:
+    RawValue: 655360
+  ShieldRechargeRate:
+    RawValue: 32768
+  ShieldTemporaryDuration:
+    RawValue: 0
+  DamageMultiplier:
+    RawValue: 65536
+  WeaponDamageMultiplier:
+    RawValue: 65536
+  SkillDamageMultiplier:
+    RawValue: 65536
+  CriticalChance:
+    RawValue: 0
+  CriticalDamageMultiplier:
+    RawValue: 65536
+  AttackSpeedMultiplier:
+    RawValue: 65536
+  ReloadSpeedMultiplier:
+    RawValue: 65536
+  AreaRadiusMultiplier:
+    RawValue: 65536
+  NearDamageMultiplier:
+    RawValue: 65536
+  FarDamageMultiplier:
+    RawValue: 65536
+  DashCooldownMultiplier:
+    RawValue: 65536
+  SkillCooldownMultiplier:
+    RawValue: 65536
+  DashDistanceMultiplier:
+    RawValue: 65536
+  SkillDurationMultiplier:
+    RawValue: 65536
+  KnockbackMultiplier:
+    RawValue: 65536
+  LifeSteal:
+    RawValue: 0
+  OutgoingStatusDurationMultiplier:
+    RawValue: 65536
+  MaxHealthMultiplier:
+    RawValue: 65536
+  MaxShieldMultiplier:
+    RawValue: 65536
+  DamageReduction:
+    RawValue: 0
+  DamageTakenMultiplier:
+    RawValue: 65536
+  KnockbackTakenMultiplier:
+    RawValue: 65536
+  HealingReceivedMultiplier:
+    RawValue: 65536
+  PickupRangeMultiplier:
+    RawValue: 65536
+  Luck:
+    RawValue: 0
+  ExperienceGainMultiplier:
+    RawValue: 65536
+  RiftShardGainMultiplier:
+    RawValue: 65536
+  CoinGainMultiplier:
+    RawValue: 65536
+  DisplayName: Capy
+  Description: An engineer who lets a turret do the fighting. Deploy the Sentry,
+    collect Scrap from the fallout, and rebuild it into whatever the fight needs.
+  RingColor: {r: 0.9811321, g: 0.96054816, b: 0.47668213, a: 1}
+  SkillRingColor: {r: 0.9529412, g: 0.9180993, b: 0.4627451, a: 1}
+  PawnSprite: {fileID: 1035773666, guid: b49db0c0e58ba4e9b8349764e5b8d384, type: 3}
+  UIHead: {fileID: 98873902, guid: 45a55c99be7c3435e9fc005925fa8aa8, type: 3}
+  WeaponPosition:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 117965
+    Z:
+      RawValue: 0
+  Prototype:
+    Id:
+      Value: 1358955562811382291
+  DashSkill:
+    Id:
+      Value: 533523231288344056
+  HeroSkill:
+    Id:
+      Value: 343253858491687803
+  Passive:
+    Id:
+      Value: 305265041979885090
+  StartingWeapon:
+    Id:
+      Value: 532371987665164333
+  DashSkillUpgrades:
+  - Id:
+      Value: 420168397532520612
+  - Id:
+      Value: 465261250465140776
+  PassiveUpgrades:
+  - Id:
+      Value: 269759498164841875
+  - Id:
+      Value: 487893626376381545
+  - Id:
+      Value: 369611404177242297
+  - Id:
+      Value: 498921966915144410
+  - Id:
+      Value: 2128245314434117072
+  Title: 
+  Accessory:
+    DisplayName: 
+    CollectibleSprite: {fileID: 629668979, guid: 88a2b3728ffc2417a840df84c7e12928, type: 3}
+    CollectibleScale: 0.12
+    BrokenEffectPrefab: {fileID: 0}
+  Emojis:
+  - {fileID: -504120045, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: 578162401, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -376141620, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  - {fileID: -1506394464, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
+  EmojiOffset: {x: -1, y: 1, z: 0}
+  EmojiScale: 0.75

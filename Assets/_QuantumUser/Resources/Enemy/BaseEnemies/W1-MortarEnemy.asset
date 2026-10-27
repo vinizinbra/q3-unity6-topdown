@@ -630,6 +630,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 26afa0b7c1c5442e3956a668aec84cb3, type: 2}
   Description: Lobs shells at wherever you stand.
   ViewPrefab: {fileID: 8476845490732343577, guid: 3144efe8802be4f9896cb5bb6d48f6fe, type: 3}
+  CatalogSubtitle: Artillery
 --- !u!114 &790037820283738255
 MonoBehaviour:
   m_ObjectHideFlags: 0

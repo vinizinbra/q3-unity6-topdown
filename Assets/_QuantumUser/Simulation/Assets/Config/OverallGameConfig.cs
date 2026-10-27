@@ -77,7 +77,7 @@ namespace Quantum
         public AssetRef<LevelUpConfig> LevelUpConfig;
 
         [Header("Currencies")]
-        // Balance tuning for Lux's Scrap pickup (Scrap Collector passive) - see ScrapConfig and
+        // Balance tuning for Capy's Scrap pickup (Scrap Collector passive) - see ScrapConfig and
         // ScrapUtility/ScrapOrbSystem.
         public AssetRef<ScrapConfig> ScrapConfig;
 

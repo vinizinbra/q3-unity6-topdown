@@ -19,7 +19,7 @@ namespace Quantum
 
         public override bool Tick(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
-            // Void Pressure (Kai) - see LeapDeliveryData's identical comment on why this decrement is
+            // Void Pressure (Yoru) - see LeapDeliveryData's identical comment on why this decrement is
             // scaled and why only this Active-phase Tick is ever affected. The per-tick ApplyPull
             // force below is deliberately left unscaled - a slowed grab still pulls at its authored
             // strength each tick, it just takes longer in real time to finish, same as every other

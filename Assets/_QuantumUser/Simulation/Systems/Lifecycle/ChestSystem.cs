@@ -47,7 +47,7 @@ namespace Quantum
             // Candidates come from PlayerQueryUtility, not a Player-layer physics query. Besides
             // dropping the per-chest per-tick frame-heap allocation, this fixes a real bug: the old
             // query returned everything on the Player layer and this loop only required a
-            // Transform3D, so a Lux SENTRY (authored on layer 7, no PlayerLink) parked inside the
+            // Transform3D, so a Capy SENTRY (authored on layer 7, no PlayerLink) parked inside the
             // radius opened the chest and was handed to BeginChestScreen as the "player".
             Span<EntityRef> players = stackalloc EntityRef[PlayerQueryUtility.MaxPlayers];
             int playerCount = PlayerQueryUtility.GatherPlayers(f, players);

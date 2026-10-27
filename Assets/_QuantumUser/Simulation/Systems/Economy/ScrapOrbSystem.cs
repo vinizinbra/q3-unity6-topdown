@@ -4,10 +4,10 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
-    // Collects a ScrapOrb once the Lux who owns it (the LuxScrapCollector holder ScrapUtility.
+    // Collects a ScrapOrb once the Capy who owns it (the CapyScrapCollector holder ScrapUtility.
     // TrySpawnDrop rolled the drop for) walks within pickup range. Unlike CurrencyOrbSystem, this never
     // checks every nearby player - Scrap only ever means anything to whoever has the passive, so a
-    // candidate without LuxScrapCollector is simply skipped. The padded broadphase prefilter this
+    // candidate without CapyScrapCollector is simply skipped. The padded broadphase prefilter this
     // used to share with CurrencyOrbSystem is gone - see that system's own comment.
     [Preserve]
     public unsafe class ScrapOrbSystem : SystemMainThreadFilter<ScrapOrbSystem.Filter>, ISignalOnFreeCastUsed
@@ -25,14 +25,14 @@ namespace Quantum
             int playerCount = PlayerQueryUtility.GatherPlayers(f, players);
 
             EntityRef collectorEntity = EntityRef.None;
-            LuxScrapCollector* collectorData = null;
+            CapyScrapCollector* collectorData = null;
             FP closestSqrDistance = default;
 
             for (int i = 0; i < playerCount; i++)
             {
                 EntityRef player = players[i];
 
-                if (f.Unsafe.TryGetPointer<LuxScrapCollector>(player, out var collector) == false)
+                if (f.Unsafe.TryGetPointer<CapyScrapCollector>(player, out var collector) == false)
                     continue;
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(player, out var playerTransform) == false)
@@ -70,7 +70,7 @@ namespace Quantum
         // ScrapUtility is a static utility, not a system, so it can't itself listen for the generic
         // OnFreeCastUsed signal (see CharacterSkills.qtn) - this system already owns everything
         // Scrap-related, so it's the natural place to forward the signal into
-        // ScrapUtility.OnFreeCastConsumed, which resets LuxScrapCollector.ScrapStacks only now, at
+        // ScrapUtility.OnFreeCastConsumed, which resets CapyScrapCollector.ScrapStacks only now, at
         // the moment the free cast is actually spent.
         public void OnFreeCastUsed(Frame f, EntityRef entity, SkillSlotId slotId)
         {

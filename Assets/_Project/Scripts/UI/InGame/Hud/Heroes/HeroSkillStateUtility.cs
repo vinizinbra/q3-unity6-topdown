@@ -8,7 +8,7 @@ using UnityEngine;
 // Three shapes, because the heroes really do come in these shapes:
 //  - TIMED skill: Max's Overdrive and Brute's Juggernaut drain SkillSlot.StateTimer against the
 //    skill's GetActiveDuration() - a real countdown, so SecondsLeft >= 0 and Fill drains 1 -> 0.
-//  - PASSIVE METER: Zara's Flow State (Progress 0..1) and Lux's Scavenge (ScrapStacks of
+//  - PASSIVE METER: Zara's Flow State (Progress 0..1) and Capy's Scavenge (ScrapStacks of
 //    StacksRequired) are meters that are ALWAYS on while the passive exists - Fill is the meter and
 //    Full is the payoff moment (Flow active / free cast banked). No clock, SecondsLeft is -1.
 //
@@ -72,7 +72,7 @@ public static class HeroSkillStateUtility
 
         // Scavenge: stacks hold at the threshold until the free cast is spent, so a full meter IS the
         // banked state.
-        if (frame.TryGet<LuxScrapCollector>(entity, out var scrap) && scrap.StacksRequired > 0)
+        if (frame.TryGet<CapyScrapCollector>(entity, out var scrap) && scrap.StacksRequired > 0)
         {
             state.Active = true;
             state.Fill = Mathf.Clamp01(scrap.ScrapStacks / (float)scrap.StacksRequired);

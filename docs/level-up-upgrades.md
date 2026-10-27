@@ -693,7 +693,7 @@ isn't `WeaponPerkData`/`RiftMutationData`). Every Global Upgrade `.asset` and ev
 Skill/Passive Ascension `.asset` still has a stale `Rarity:` line in its on-disk YAML from before this
 change - harmless (Unity silently drops an unknown key on next save) but will linger until each asset
 is re-saved, e.g. by re-running its generator (`Generate Global Upgrade Assets` /
-`Brute|Kai|Max|Pixie|Zara Generate Ascension Assets` / `LuxScrapAssetGenerator`).
+`Brute|Yoru|Max|Pixie|Zara Generate Ascension Assets` / `CapyScrapAssetGenerator`).
 
 **`CharacterData.HeroSkillUpgrades` was removed** - the Hero Skill slice of the Skill Upgrade pool no
 longer has its own authored list at all. `LevelUpUtility.AddHeroSkillUpgradeCandidates` now pulls it

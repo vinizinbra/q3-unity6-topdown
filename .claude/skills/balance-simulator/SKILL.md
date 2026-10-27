@@ -104,31 +104,31 @@ entity durations), `JuggernautSkillData` (discharges x `ChannelContactUptime`), 
 everything else generic. Channel skills cycle on cooldown + channel (`FinishSkill` arms the cooldown).
 `SkillDurationMultiplier` only stretches spawned-entity damage (`DurationScaledDamage`, mounted barrels).
 Then every **Activated** action in `SkillData.Actions` adds mounted `AssetRef<WeaponDataAsset>` DPS x
-duration (Lux sentry) and any `Damage`/`DamageAmount` field x ticks x targets.
+duration (Capy sentry) and any `Damage`/`DamageAmount` field x ticks x targets.
 
 `EvaluateUpgrade(action, rank)` values Ascension ranks from their rank-indexed arrays against the
 skill's basis (`est.Basis` = `ProjectileSkillData.Damage` / `JuggernautSkillData.Damage` /
 `SpawnSentrySkillAction.SkillDamage`). It switches on the action **type name** (so renames degrade to
 the generic `DamagePercent` rule instead of breaking). Ranks with nothing quantifiable fall back to
 `SkillUpgradeDpsValue` only when the action has no case (`UpgradeValue.Modelled` false) - a modelled
-rank worth 0 stays 0. Lux's barrel upgrades return weapons/fire-rate values that `SimPlayer` folds into
+rank worth 0 stays 0. Capy's barrel upgrades return weapons/fire-rate values that `SimPlayer` folds into
 mounted DPS live. The pick log prints `+N/cast` for quantified ranks.
 
 Facts that surprised us (verified from the assets, keep in mind before "fixing" the sim):
 - **Non-Activated actions are Ascension picks**, Activated ones are baseline
   (`LevelUpUtility.AddHeroSkillUpgradeCandidates` skips Activated). Only actions in the skill's
   `Actions` list count; sub-assets sitting in the same `.asset` file are often orphans
-  (`KaiVortexSkill.asset` has six).
-- Kai's baseline vortex deals only its 12 impact; all damage is in Compression/Void Shards/Collapse.
+  (`YoruVortexSkill.asset` has six).
+- Yoru's baseline vortex deals only its 12 impact; all damage is in Compression/Void Shards/Collapse.
 - Brute's Juggernaut is a 30/s-per-enemy contact channel, hence the uptime knob.
 - Weapon timing is tick-quantized: SessionConfig `UpdateFPS` is 20, and WeaponSystem sets its
   cooldown/burst/reload timers fresh (no remainder), so every wait is a whole number of 0.05 s ticks
-  (12/s fires at 10/s, the Lux sentry minigun's 15/s at 10/s). The reload overlaps the last shot's
+  (12/s fires at 10/s, the Capy sentry minigun's 15/s at 10/s). The reload overlaps the last shot's
   cooldown. Crit is `CharacterStats.CriticalDamageMultiplier (1.0 on every hero) x max(1, weapon
   bonus)`, multiplicative. `ExperienceConfig.DamageBonusPerLevel` (+2%/displayed level, code default,
   not serialized in the asset) scales every hero hit. Hero Mastery is +15/30/50% weapon damage per
   line on a matching weapon, not a skill-DPS rank.
-- Lux: `LuxSentryLaser.asset` has `Damage 0` (placeholder, see `docs/lux-ascensions.md`), so Weapon
+- Capy: `CapySentryLaser.asset` has `Damage 0` (placeholder, see `docs/capy-ascensions.md`), so Weapon
   Systems R3 adds nothing until it's authored. Every authored enemy has `Stats.ShieldMultiplier 0`.
 - Coins are shared like XP: a collected coin orb goes to EVERY wallet (`CurrencyOrbSystem.Grant` ->
   `CoinUtility.GrantAll`), only the pickup is by the nearest player; wallets/spending are per player.

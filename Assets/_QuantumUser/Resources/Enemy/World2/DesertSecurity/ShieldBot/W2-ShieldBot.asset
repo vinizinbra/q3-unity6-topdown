@@ -596,3 +596,4 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: a949f9ebce4e54cffac2e3b5d516a911, type: 2}
   Description: Holds a shield up to cover its allies.
   ViewPrefab: {fileID: 4669263682667838074, guid: 7d2a140b006624b6dae0b1e74d7f6e12, type: 3}
+  CatalogSubtitle: Support

@@ -163,7 +163,7 @@ yet** - the following need Editor authoring, none of it done yet:
    yet. Until it's dragged into that slot, `ExpBarUiWidget.QUpdate` bails out on its very first
    guard and shows whatever placeholder text is sitting in the Inspector, not live data.
 2. **`ExpOrb` prefab** - no `EntityPrototype` exists carrying the `ExpOrb` component. Needs a new
-   prefab (same shape as `Assets/_QuantumUser/Resources/Skills/Lux/Sentry.prefab`) with a visual.
+   prefab (same shape as `Assets/_QuantumUser/Resources/Skills/Capy/Sentry.prefab`) with a visual.
 3. `ExpOrbPrototype` also needs assigning on `RuntimeConfig` once the prefab above exists.
 4. `ExpValue` is tuned per `EnemyTier` in `EnemyTierStatsConfig`, not per `EnemyDataAsset` -
    already assigned to `RuntimeConfig`/`QuantumMenuConfig` with placeholder values, see that

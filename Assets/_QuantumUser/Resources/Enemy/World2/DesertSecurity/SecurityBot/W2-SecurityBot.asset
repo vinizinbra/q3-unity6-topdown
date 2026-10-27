@@ -281,6 +281,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: a949f9ebce4e54cffac2e3b5d516a911, type: 2}
   Description: Desert patrol bot with steady fire.
   ViewPrefab: {fileID: 4643335697641966209, guid: d83990f7150584ae791082b29da92cb3, type: 3}
+  CatalogSubtitle: Ranged
 --- !u!114 &4899668339533938794
 MonoBehaviour:
   m_ObjectHideFlags: 0

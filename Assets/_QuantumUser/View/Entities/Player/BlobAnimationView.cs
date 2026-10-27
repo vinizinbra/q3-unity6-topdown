@@ -28,7 +28,7 @@ namespace Quantum
         public Transform Head => head;
 
         // Read-only for the same reason - OffscreenPlayerIndicatorWidget falls back to the torso's sprite
-        // for a rig with no separate head (Lux: the whole capybara is one LuxBody sprite on the torso).
+        // for a rig with no separate head (Capy: the whole capybara is one CapyBody sprite on the torso).
         public Transform Torso => torso;
 
         // The rig's own top transform - everything this component poses hangs off it. Read-only,

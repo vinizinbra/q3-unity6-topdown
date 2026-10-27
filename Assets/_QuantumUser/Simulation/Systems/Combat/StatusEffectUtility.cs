@@ -203,7 +203,7 @@ namespace Quantum
             // false still gets the freeze above, just never the cancel. Also respects
             // InterruptibleDuringTelegraph/InterruptibleDuringActive (default false = don't bypass -
             // Stun is a general-purpose CC landed from many sources, not a dedicated hard-CC pick like
-            // Kai's Singularity, which deliberately does bypass them) and its own separate
+            // Yoru's Singularity, which deliberately does bypass them) and its own separate
             // InterruptImmunityRemaining diminishing-returns window, entirely independent of the
             // StunImmunityRemaining one just above.
             if (stunCancelsAction == true)
@@ -489,7 +489,7 @@ namespace Quantum
             return FPMath.Clamp(FP._1 - status->DamageReductionAmount, FP._0, FP._1);
         }
 
-        // The shared CONTINUOUS-AURA damage-reduction slot - Brute's Guardian and Lux's Fire Support
+        // The shared CONTINUOUS-AURA damage-reduction slot - Brute's Guardian and Capy's Fire Support
         // both write here, deliberately sharing ONE slot rather than each owning their own pair. That
         // sharing IS the stacking policy: two aura sources never stack additively, the strongest wins
         // (take-the-stronger/longer on reapply, so a weaker aura refreshing every tick can never cut a
@@ -713,8 +713,8 @@ namespace Quantum
             return f.Unsafe.TryGetPointer<StatusEffects>(entity, out var status) == true && status->IntimidateRemaining > FP._0;
         }
 
-        // Generic (not Kai-named) - marks a target as Bound, a plain flag other effects can key bonus
-        // damage off (Kai's Undertow rank 3 "Gravitational Bond" is the first consumer). Plain
+        // Generic (not Yoru-named) - marks a target as Bound, a plain flag other effects can key bonus
+        // damage off (Yoru's Undertow rank 3 "Gravitational Bond" is the first consumer). Plain
         // overwrite-on-reapply, same as Ice/Stun/Root.
         public static void ApplyBound(Frame f, EntityRef target, FP duration)
         {

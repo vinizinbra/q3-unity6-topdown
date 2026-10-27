@@ -216,7 +216,7 @@ namespace Quantum
                 RecordHit(f, filter.Entity, hitEntity, HitCooldown);
             }
 
-            // Void Pressure (Kai) - scales the whole rest of this Tick (timer, wall-check lookahead,
+            // Void Pressure (Yoru) - scales the whole rest of this Tick (timer, wall-check lookahead,
             // and the actual kinematic move below), not just the timer, so a slowed Charge visibly
             // covers less ground per real second instead of just timing out later - see
             // StatusEffectUtility.GetLocalTimeMultiplier's own comment for why only this Active-phase

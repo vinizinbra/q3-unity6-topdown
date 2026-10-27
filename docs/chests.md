@@ -152,7 +152,7 @@ appears, moves or vanishes *later*, which a baked `TargetY` never could. `Settli
 
 `GroundOffsetUtility.Apply(f, entity)` survives as a pure **re-arm** (`Enabled = true`,
 `FallVelocity = 0`, no raycast) for an entity *moved* mid-life -
-`RelocationProtocolSkillAction` teleporting a Sentry to wherever Lux was standing is the canonical
+`RelocationProtocolSkillAction` teleporting a Sentry to wherever Capy was standing is the canonical
 case, since that Sentry cleared its own `Enabled` back when it first landed. The runtime spawn paths
 (`SpawnedEntitySpawner`, `TalentGateSystem`, `OrbSpawnUtility`, `ExperienceUtility`) still call it as
 a belt-and-braces guarantee that a spawn grounds itself even if a new prototype ships with the box

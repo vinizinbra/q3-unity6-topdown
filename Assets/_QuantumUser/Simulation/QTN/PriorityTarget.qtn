@@ -1,7 +1,7 @@
 // Generic "preferred/priority target" behavior - deliberately NOT hero/Sentry-specific, so any future
 // hero/relic/summon/command/mark wanting "my controlled units should prefer THIS target over their own
 // normal target-selection result, while it stays in range and valid" reuses this exact pair instead of
-// a bespoke one. Lux's Neutral Mastery R3 "Neutral Focus" is the first (and currently only) consumer -
+// a bespoke one. Capy's Neutral Mastery R3 "Neutral Focus" is the first (and currently only) consumer -
 // see PriorityTargetUtility.
 //
 // This is a PRIORITY OVERRIDE, not forced/global targeting: a consumer (SentryBarrelSystem today) only

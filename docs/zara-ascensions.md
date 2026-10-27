@@ -4,7 +4,7 @@ Zara's Hero Ascension pool was consolidated (2026-08-11) from a fragmented set o
 sub-actions, 4 single-pick Resonance passives, and 4 overlapping Dash picks into exactly 10 three-rank
 Ascension lines (Hero Skill/Totem: Amplifier/Healing Chorus/Double Time/Main Stage; Passive/Resonance:
 Faster Tempo/Heavy Bass/Restorative Beat/Remix; Dash: Afterbeat/Portable Speaker), reusing the exact
-generic ranked-Ascension architecture Pixie/Brute/Max/Kai's own refactors already established
+generic ranked-Ascension architecture Pixie/Brute/Max/Yoru's own refactors already established
 (`IRankedUpgrade`/`MaxRank`/`UpgradeHistoryUtility` - see `docs/level-up-upgrades.md`'s "Ranked
 Ascensions" section) - zero Zara-specific rank code anywhere.
 
@@ -12,7 +12,7 @@ Her fantasy: a Combat DJ / support controller whose Totem alternates Damage Beat
 Damage Beat → Healing Beat, whose Resonance builds from combat into a periodic burst, and whose Dash
 carries that rhythm around the battlefield.
 
-## The `CheckActions` bug (same pattern already found and fixed for Brute/Kai)
+## The `CheckActions` bug (same pattern already found and fixed for Brute/Yoru)
 
 `ZaraBaseSkill.asset` (the Totem) had `CheckActions: 0` - all 8 of its old embedded sub-actions
 (`Activated: 0`) only ever executed once picked via `SkillSlot.Upgrades`, never as baseline, regardless
@@ -134,7 +134,7 @@ picks, client only displays.
 `ResonanceUtility.GrantPercent`, `AfterbeatSkillAction.ResonancePercentOnDash`). R2 adds a delayed
 (~1s) damaging/knocking pulse at the dash's own starting
 position, scaling off a newly-reactivated "Hero Skill Damage" basis (`ZaraBaseSkill.Damage`, previously
-dead - see `ZaraAscensionUtility.ResolveHeroSkillDamage`, mirroring `KaiAscensionUtility.
+dead - see `ZaraAscensionUtility.ResolveHeroSkillDamage`, mirroring `YoruAscensionUtility.
 ResolveVortexSkillDamage`). R3 "Double Beat" adds an identical second pulse at the dash's ENDING
 position too (`ZaraAfterbeat` gained two full slots, `Start*`/`End*`, rather than one shared one), and
 enemies hit generate additional Resonance, capped per dash
@@ -147,7 +147,7 @@ generic per-damage hook.
 (replaces the old, broken `PortableSpeaker.asset` `SpawnEntitySkillAction` instance) spawns
 `ZaraSpeaker.prefab` (the Totem's OWN real placed entity, reused directly rather than a dedicated
 prefab - see "Corrections" below) and hand-configures its `AlternatingArea`/`AreaDamage` directly (same
-"spawn, then configure" shape `SpawnAlternatingAreaEffectData`/Kai's `WarpWakeSkillAction` already use)
+"spawn, then configure" shape `SpawnAlternatingAreaEffectData`/Yoru's `WarpWakeSkillAction` already use)
 at 50% of the Totem's own baseline Damage/Heal values, using the SAME alternating rhythm. R2 grows
 duration/radius, dash-end also heals nearby allies 5% Max Health. R3 "Mobile Stage" inherits 50% of
 Amplifier's `DamageBonus`, Healing Chorus's `HealBonus`, and Double Time's own interval-shrink from
@@ -201,7 +201,7 @@ by the new `PortableSpeakerSkillAction` class.
   `QPrototypeProjectile` component - never actually stray - is what lets it fly at all. **Portable
   Speaker's prototype is now `ZaraSpeaker.prefab`** (the Totem's own real placed entity, which already
   has the correct `AreaDamage`+`AlternatingArea` setup) - reused directly rather than authoring a
-  dedicated prefab, same "Dash mini-version reuses the Hero Skill's own entity" precedent Kai's Warp
+  dedicated prefab, same "Dash mini-version reuses the Hero Skill's own entity" precedent Yoru's Warp
   Wake already established for its Dash Void (a cosmetic follow-up - Portable Speaker currently looks
   identical to the full Totem, just smaller via its own collider scale - not a functional gap).
 
@@ -278,7 +278,7 @@ deliver Move Speed / Fire Rate / cooldown reduction — only the HP half switche
     generous **6s**, expected tuning range 3-4s). The budget is charged only for reduction that
     actually landed, so an already-ready skill never eats the allowance.
   - Each rank's buff profile is ONE authored `AllyBuffEffectData` asset, not a pile of numbers — the
-    same generic effect Lux's Fire Support aura uses.
+    same generic effect Capy's Fire Support aura uses.
 - **Double Time** — unchanged (1.0 → 0.85 → 0.70 → 0.50s). Its synergy with Sound Boost is intentional
   and balanced through `MaxCooldownReductionPerTotem`, not special-cased.
 - **Main Stage** — unchanged (+30/50/75% radius, +2s duration at R2, R3's opening Damage Beat and
@@ -373,7 +373,7 @@ Two of Zara's lines touched it:
 
 **Her support value went UP, not down.** Both of these used to top up a bar that would have refilled
 itself in five seconds. Now Shield is charge-only and is what keeps an ally's Accessory from being
-knocked off — and Kai, Pixie and Max have no Shield source of their own at all — so Zara is one of the
+knocked off — and Yoru, Pixie and Max have no Shield source of their own at all — so Zara is one of the
 few standing team Shield sources in the game, and Protective Rhythm quietly protects her team's *gear*
 as much as their health. Worth a look during the next balance pass: the line may now be undertuned in
 the other direction.

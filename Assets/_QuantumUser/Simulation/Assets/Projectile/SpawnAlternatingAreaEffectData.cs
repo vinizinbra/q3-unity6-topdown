@@ -197,7 +197,7 @@ namespace Quantum
         // Skill Area (CharacterStats.AreaRadiusMultiplier) - grows the whole deployed area once at
         // spawn by scaling its collider, the single radius AlternatingAreaSystem's beats, the
         // AreaDamage pulse and the ally search all read. Baked here rather than re-read per beat, the
-        // same treatment (and the same reasoning) SpawnVortexEffectData gives Kai's vortex.
+        // same treatment (and the same reasoning) SpawnVortexEffectData gives Yoru's vortex.
         // Main Stage's own RadiusBonus composes on top of this rather than instead of it.
         private static void ApplyAreaMultiplier(Frame f, EntityRef owner, EntityRef spawned)
         {

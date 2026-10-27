@@ -31,7 +31,7 @@ namespace Quantum
             // dedicated TickTimer - this derives interval-boundary-crossing from the shared
             // StateTimer instead, robust to variable frame delta time.
             //
-            // Void Pressure (Kai) - scaling this same decrement is what makes a slowed beam's own
+            // Void Pressure (Yoru) - scaling this same decrement is what makes a slowed beam's own
             // pulses land less often in real time too, not just extend how long the channel lasts -
             // see StatusEffectUtility.GetLocalTimeMultiplier's own comment for why only this
             // Active-phase Tick is ever affected, never the windup/telegraph.

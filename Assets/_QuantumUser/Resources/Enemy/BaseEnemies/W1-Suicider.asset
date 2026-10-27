@@ -596,6 +596,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 26afa0b7c1c5442e3956a668aec84cb3, type: 2}
   Description: Runs at you and detonates.
   ViewPrefab: {fileID: 8476845490732343577, guid: da3e7381baddf46dc83f5bc5b07b2a5d, type: 3}
+  CatalogSubtitle: Bomber
 --- !u!114 &6885070469556791417
 MonoBehaviour:
   m_ObjectHideFlags: 0

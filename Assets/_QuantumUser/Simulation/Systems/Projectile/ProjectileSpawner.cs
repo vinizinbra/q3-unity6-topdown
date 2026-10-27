@@ -30,7 +30,7 @@ namespace Quantum
         // EnemyDeliveryData.FireLandingWarning) needs that final, post-multiplier velocity, not
         // whatever it originally solved before this ever ran.
         // Projectile.MovementOverride itself is still a real, generic per-entity field (preferred every
-        // tick by ProjectileSystem.Update over the asset's own Movement) - Kai's Mirror Step
+        // tick by ProjectileSystem.Update over the asset's own Movement) - Yoru's Mirror Step
         // (MirrorStepSkillAction) writes it directly onto an already-live Projectile* to curve a
         // reflected bolt in on its shooter. Spawn no longer offers a convenience param for setting it
         // AT spawn time - nothing needs that any more (Pixie's Rocket Conversion, the original user of

@@ -4,12 +4,12 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine.Scripting;
 
-    // Lux's Fortification Ascension, ranks 2-3 - the support half of "fight around the machine".
+    // Capy's Fortification Ascension, ranks 2-3 - the support half of "fight around the machine".
     // Reapplies Shield Battery (a flat Shield-per-second trickle) and Fire Support (an
     // AllyBuffEffectData: Fire Rate + Damage Reduction) to allies standing inside the sentry's aura.
     //
     // Both are baked onto the sentry itself at deploy time (see SpawnSentrySkillAction) rather than
-    // read live off the Lux who deployed it, so the aura keeps working even once she's no longer
+    // read live off the Capy who deployed it, so the aura keeps working even once she's no longer
     // nearby or alive.
     //
     // Continuously refreshed rather than a persistent flag, so each buff naturally fades shortly after
@@ -69,7 +69,7 @@ namespace Quantum
                 //
                 // The budget is charged on that first grant and never refunded, so an ally who wanders
                 // out unharmed has still used their charge on this turret. That's the point: another
-                // denial means another turret, which is what ties this line to Lux's redeploy economy
+                // denial means another turret, which is what ties this line to Capy's redeploy economy
                 // (Rapid Recycling, Relocation Protocol) instead of it being a passive aura.
                 if (hasCoveringFire == true)
                 {
@@ -91,9 +91,9 @@ namespace Quantum
 
                 var context = new HitEffectContext
                 {
-                    // Owner is the deploying Lux, not the sentry - so the Haste inside the buff bundle
+                    // Owner is the deploying Capy, not the sentry - so the Haste inside the buff bundle
                     // keys its per-source slot to HER, meaning two Sentries she owns share one slot
-                    // (they're the same source and must not compound) while a second Lux's Sentry gets
+                    // (they're the same source and must not compound) while a second Capy's Sentry gets
                     // its own.
                     Owner = filter.Sentry->Owner,
                     Target = ally,

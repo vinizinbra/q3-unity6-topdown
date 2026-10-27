@@ -40,7 +40,7 @@ component AreaAllyBudget
     FP MaxCooldownReductionPerAlly;
 
     // Cap on how many Free Hit Guards this area may grant any ONE ally over its whole lifetime.
-    // Lux's Sentry Fortification rank 2+ is the first consumer, at 1 - "one denial per hero per
+    // Capy's Sentry Fortification rank 2+ is the first consumer, at 1 - "one denial per hero per
     // turret", so getting another means deploying another turret, which is what ties the line into
     // his own cooldown/redeploy economy rather than making it a passive aura.
     //

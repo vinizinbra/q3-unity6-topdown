@@ -12,8 +12,8 @@ using UnityEngine.Pool;
 // (CurrencyType-driven) rather than one per currency, replacing the old UI-space FlyingXpManager/
 // FlyingXpWidget (Exp-only, flew to the HUD bar instead of the collecting character).
 //
-// Scrap rides the same pipeline despite being Lux's own per-passive resource rather than a wallet
-// currency (see CurrencyType) - its Collector is always the one Lux the pickup means anything to
+// Scrap rides the same pipeline despite being Capy's own per-passive resource rather than a wallet
+// currency (see CurrencyType) - its Collector is always the one Capy the pickup means anything to
 // (ScrapOrbSystem), but the flight itself still plays on every client like every other pickup.
 //
 // Flies a world-space sprite (FlyingCurrencyWidget) from the orb's collected position to the
@@ -40,7 +40,7 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
     [SerializeField, SoundDataPicker, Tooltip("Played when a Rift Shard reaches the collector. Same reasoning as Coin - rare by drop chance, so it can afford to be prominent.")]
     private SoundData riftShardCollectSound;
 
-    [SerializeField, SoundDataPicker, Tooltip("Played when a Scrap orb reaches Lux. Only ever fires for a player running the Scrap Collector passive, and each pickup is a real step toward a free Hero Skill cast - so it can be distinct, but a Jackpot drop arrives as a burst, so author a cooldown on the SoundData the way Experience does.")]
+    [SerializeField, SoundDataPicker, Tooltip("Played when a Scrap orb reaches Capy. Only ever fires for a player running the Scrap Collector passive, and each pickup is a real step toward a free Hero Skill cast - so it can be distinct, but a Jackpot drop arrives as a burst, so author a cooldown on the SoundData the way Experience does.")]
     private SoundData scrapCollectSound;
 
     [SerializeField, Tooltip("Raises the XP pickup's pitch a step for each orb collected in quick succession, resetting after a gap. Turns a burst of pickups into an ascending run instead of the same tick repeated - the difference between feedback that rewards a big clear and feedback that just reports one. Applies to Experience ONLY: Coin and Rift Shard are rare by drop chance, so a streak would never really trigger, and a rare reward should sound identical every time to stay recognisable.")]
@@ -123,7 +123,7 @@ public class FlyingCurrencyManager : QuantumGlobalMonoBehaviour
 
         // Exp keeps its existing "bar catches up + flashes" reaction, on top of the character
         // flash above - nothing else needs one here: CurrencyUiWidget's own punch-on-change already
-        // covers Coin/RiftShard independently of this arrival, and Scrap's gauge (LuxHudWidget) is
+        // covers Coin/RiftShard independently of this arrival, and Scrap's gauge (CapyHudWidget) is
         // per-character rather than a singleton, so it just polls its own stacks like it already
         // does - its "free cast banked" glow is the moment worth reacting to, not each pickup.
         if (type == CurrencyType.Experience)

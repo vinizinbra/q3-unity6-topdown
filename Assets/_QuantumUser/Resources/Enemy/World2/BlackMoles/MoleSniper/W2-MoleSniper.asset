@@ -281,6 +281,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 36dd1e61cdac04d189cb55341a23b3b4, type: 2}
   Description: Takes aim from the edge of the dunes.
   ViewPrefab: {fileID: 4558517492767084542, guid: c795555bf980948cbb76c6f7a4788f24, type: 3}
+  CatalogSubtitle: Ranged
 --- !u!114 &2424313878542868957
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,4 +1,4 @@
-// Granted by Heroes/Kai's VoidShardsSkillAction onto the owner, then baked as a copy of
+// Granted by Heroes/Yoru's VoidShardsSkillAction onto the owner, then baked as a copy of
 // itself directly onto the spawned Vortex entity by SpawnVortexEffectData - periodically fires
 // ShardCount homing projectiles at the nearest (distinct, when available) enemies within (vortex's
 // own pull radius * SearchRadiusMultiplier) - see VortexSystem.TryHomingProjectile. A multiplier of

@@ -90,7 +90,7 @@ above). It's now fired from exactly two places, both "a Lightning weapon's stun 
 own Stun proc), and `WeaponPerkReactionSystem.OnCriticalHit`'s crit stun when the weapon's
 `WeaponDataAsset.Element` is Lightning (Disruptor's `DisruptorCritStun`, added 2026-10-21 - its crit
 stuns used to land silently, so Jolt looked random). `ApplyStun` itself never fires it, so every other
-Stun source (Shatter's primary, Brute/Kai/melee/skill stuns, weapon stagger, a non-Lightning Crit
+Stun source (Shatter's primary, Brute/Yoru/melee/skill stuns, weapon stagger, a non-Lightning Crit
 Stun...) stays Jolt-free - Jolt reads as "an electric weapon Stunned this target", never a generic
 stun (those get the Stun halo's bonk instead), and never "this target was Shocked" -
 Shock applying or refreshing never fires it. `EffectsManager.joltEffectPrefab` (the VFX itself) is untouched; only who
@@ -574,7 +574,7 @@ primitives with other live callers:
   Rift-Mark-reaction *trigger* (the retired "Deep Freeze" reaction) went away.
 - `StatusEffects.RuptureRemaining`/`RuptureDamageMultiplier` + `StatusEffectUtility.ApplyRupture`/
   `GetIncomingDamageMultiplier` - called directly by Brute's Groundbreaker, the Scrapjaw boss's
-  combo-chain finish, Scrapstorm, a wall-hit charge expose, and Lux's Sentry Overload. Survives
+  combo-chain finish, Scrapstorm, a wall-hit charge expose, and Capy's Sentry Overload. Survives
   untouched; only its old Rift-Mark-reaction trigger (the retired "Rupture" reaction) went away.
 
 ## Multiplayer and determinism

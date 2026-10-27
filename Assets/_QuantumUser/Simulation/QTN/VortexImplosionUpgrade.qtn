@@ -1,4 +1,4 @@
-// Granted by Heroes/Kai's CompressionSkillAction at rank 3 onto the owner, then baked as a copy of
+// Granted by Heroes/Yoru's CompressionSkillAction at rank 3 onto the owner, then baked as a copy of
 // itself directly onto the spawned Vortex entity by SpawnVortexEffectData - see
 // VortexSystem.Update's pulse block. Every EveryNthPulse-th pull pulse (counted via PulseCounter,
 // incremented once per pulse the same way the base pull's own TickTimer resets) additionally fires an

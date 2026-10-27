@@ -102,7 +102,7 @@ public class CharacterUiWidget : MonoBehaviour
     private StatusIndicator revengeMarkIndicator;
 
     [Header("Defense States (Brute)")]
-    [SerializeField, Tooltip("Shown on whoever is CURRENTLY benefiting from any continuous damage-reduction aura (a Guardian-ascended Brute's Protector Aura, a Fire Support Lux Sentry) - StatusEffects.AuraDamageReductionRemaining, the one shared aura-DR slot, so it can't collide with Max's Too Angry to Die.")]
+    [SerializeField, Tooltip("Shown on whoever is CURRENTLY benefiting from any continuous damage-reduction aura (a Guardian-ascended Brute's Protector Aura, a Fire Support Capy Sentry) - StatusEffects.AuraDamageReductionRemaining, the one shared aura-DR slot, so it can't collide with Max's Too Angry to Die.")]
     private StatusIndicator guardianAuraIndicator;
     [SerializeField, Tooltip("Shown on Brute himself while his Juggernaut Hero Skill is actively channeling (JuggernautCharge component present) - that's when CharacterStats.DamageReduction is temporarily boosted, see JuggernautSkillData.Begin/End.")]
     private StatusIndicator juggernautChannelIndicator;
@@ -135,10 +135,10 @@ public class CharacterUiWidget : MonoBehaviour
     [SerializeField, Tooltip("Shown only while this entity can interact with a nearby POI right now (ContextInteraction.State == Available) - same check SkillCooldownUiWidget uses to swap the Hero Skill button to its interact icon. Left unassigned to skip; self-hides for every entity without a ContextInteraction (enemies, sentries). See docs/breathing-poi.md.")]
     private GameObject contextInteractionRoot;
 
-    [SerializeField, Tooltip("Per-hero resource readouts (Brute/Max/Zara/Lux) authored as children of this widget - left empty, auto-populated via GetComponentsInChildren in Setup. Each one self-hides unless the entity this widget follows actually carries that hero's own components, so the single shared prefab keeps serving every hero AND every enemy. This is the only place they live: the party HUD deliberately shows none of them.")]
+    [SerializeField, Tooltip("Per-hero resource readouts (Brute/Max/Zara/Capy) authored as children of this widget - left empty, auto-populated via GetComponentsInChildren in Setup. Each one self-hides unless the entity this widget follows actually carries that hero's own components, so the single shared prefab keeps serving every hero AND every enemy. This is the only place they live: the party HUD deliberately shows none of them.")]
     private HeroHudWidget[] heroWidgets;
 
-    [SerializeField, Tooltip("Off (default): the per-hero hexagon next to the nameplate (Max Rage/Overdrive, Brute Juggernaut, Zara Flow, Lux Scrap) is switched off entirely - the foot ring (fill + shine) and the big last-seconds countdown by the head (see HeroSkillStateUtility) carry that information instead. On brings the hexagons back exactly as they were.")]
+    [SerializeField, Tooltip("Off (default): the per-hero hexagon next to the nameplate (Max Rage/Overdrive, Brute Juggernaut, Zara Flow, Capy Scrap) is switched off entirely - the foot ring (fill + shine) and the big last-seconds countdown by the head (see HeroSkillStateUtility) carry that information instead. On brings the hexagons back exactly as they were.")]
     private bool showHeroHexBadges = false;
 
     [SerializeField, Tooltip("Floating \"Skill not ready\"/\"Skill ready\"/\"Dash ready\" callout - event-driven, see SkillStatusLabelWidget. Auto-resolved from children if left unassigned; left absent entirely (e.g. on an enemy-only prefab), this feature is simply off.")]

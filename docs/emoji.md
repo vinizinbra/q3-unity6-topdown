@@ -36,7 +36,7 @@ Keyboard P2 / a second couch pad have no emoji binding (same as Ping).
 
 ## Art
 `Art/Sprites/Emoji/HeroEmojis.png` - 948×1659, 4 columns (Happy/Angry/Cry/Shock) × 7 rows of 237px cells:
-Max, Brute, Pixie, Robot (future hero, sliced only), Zara, Kai, Lux (capybara). Sprites are named
+Max, Brute, Pixie, Robot (future hero, sliced only), Zara, Yoru, Capy (capybara). Sprites are named
 `Emoji_<Row>_<Kind>`; the texture is packed in `GameplaySprites`. Replacing the PNG with the same
 size/layout keeps the slices and every reference.
 
