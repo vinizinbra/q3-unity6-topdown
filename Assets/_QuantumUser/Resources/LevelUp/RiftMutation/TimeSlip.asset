@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 323526582276840954
   Icon: {fileID: 5780534662424010148, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
   DisplayName: Time Slip
-  Rarity: 2
+  Rarity: 1
   Scope: 0
   IncompatibleWith: []
   Description: Dashing heals {0:0}% of the damage you took in the last {1:0.#}s

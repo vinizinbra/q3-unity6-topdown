@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 365049916202436520
   Icon: {fileID: -399139528, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Overkill
-  Rarity: 2
+  Rarity: 3
   Scope: 0
   IncompatibleWith: []
   Description: Damage beyond a killed enemy's health explodes for {0:0}% of the excess

@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 514021944172634289
   Icon: {fileID: -1461122820, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Executioner
-  Rarity: 2
+  Rarity: 3
   Scope: 0
   IncompatibleWith: []
   Description: Your damage instantly finishes off enemies below {0:0}% Health ({1:0}%

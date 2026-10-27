@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 349810371214074495
   Icon: {fileID: 635217702, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Dead Weight
-  Rarity: 3
+  Rarity: 2
   Scope: 0
   IncompatibleWith: []
   Description: +{0:0}% Weapon Damage, but only {1:0} Dash charge and {2:+0;-0}% Dash

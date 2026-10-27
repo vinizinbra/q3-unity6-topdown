@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 408498589321637135
   Icon: {fileID: 3482719673054867742, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
   DisplayName: Hair Trigger
-  Rarity: 2
+  Rarity: 1
   Scope: 0
   IncompatibleWith:
   - Id:

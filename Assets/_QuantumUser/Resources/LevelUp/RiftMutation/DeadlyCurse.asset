@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 517343898106316950
   Icon: {fileID: 5975183571883052661, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
   DisplayName: Deadly Curse
-  Rarity: 3
+  Rarity: 2
   Scope: 0
   IncompatibleWith:
   - Id:

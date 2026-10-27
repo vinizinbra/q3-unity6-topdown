@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 510355816574474916
   Icon: {fileID: -455086384, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Overpopulation
-  Rarity: 2
+  Rarity: 1
   Scope: 1
   IncompatibleWith: []
   Description: '{0:+0;-0}% enemies, but they have {1:+0;-0}% Max Health'

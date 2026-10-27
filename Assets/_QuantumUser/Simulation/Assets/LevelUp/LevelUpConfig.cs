@@ -219,5 +219,25 @@ namespace Quantum
                 default: return 0;
             }
         }
+
+        // Rift Mutations' own rarity axis - kept apart from the weights above so retuning how often
+        // a Legendary mutation shows up never shifts Weapon Perk odds. No Common row: every mutation
+        // is at least Rare (a Common-tagged one falls back to RiftMutationRareWeight).
+        [Header("Rift Mutation rarity weights")]
+        public int RiftMutationRareWeight = 50;
+        public int RiftMutationEpicWeight = 25;
+        public int RiftMutationLegendaryWeight = 8;
+
+        public int GetRiftMutationWeight(UpgradeRarity rarity)
+        {
+            switch (rarity)
+            {
+                case UpgradeRarity.Common:
+                case UpgradeRarity.Rare: return RiftMutationRareWeight;
+                case UpgradeRarity.Epic: return RiftMutationEpicWeight;
+                case UpgradeRarity.Legendary: return RiftMutationLegendaryWeight;
+                default: return 0;
+            }
+        }
     }
 }

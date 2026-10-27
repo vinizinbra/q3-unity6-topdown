@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 438491809508702669
   Icon: {fileID: -1497030017596441835, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
   DisplayName: Overcharge
-  Rarity: 2
+  Rarity: 1
   Scope: 0
   IncompatibleWith: []
   Description: '{1:+0;-0}% Skill Damage, but {0:+0;-0}% Skill Cooldown'

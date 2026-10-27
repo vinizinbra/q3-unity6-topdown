@@ -229,3 +229,6 @@ MonoBehaviour:
   RareWeight: 20
   EpicWeight: 18
   LegendaryWeight: 2
+  RiftMutationRareWeight: 50
+  RiftMutationEpicWeight: 25
+  RiftMutationLegendaryWeight: 8

@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 412179679706899192
   Icon: {fileID: -1557768301, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Second Wind
-  Rarity: 2
+  Rarity: 1
   Scope: 0
   IncompatibleWith: []
   Description: Recovering your Accessory heals {0:0}% of Max Health and grants +{1:0}%

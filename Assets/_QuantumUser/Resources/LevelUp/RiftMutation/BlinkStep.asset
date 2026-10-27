@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 457016925359621738
   Icon: {fileID: 7546404549819496275, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
   DisplayName: Blink Step
-  Rarity: 2
+  Rarity: 1
   Scope: 0
   IncompatibleWith: []
   Description: '{2:+0;-0}% Dash Cooldown, but {3:+0;-0}% Dash Distance'

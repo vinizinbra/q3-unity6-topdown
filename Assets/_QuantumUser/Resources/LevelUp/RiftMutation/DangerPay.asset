@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 302357521748849114
   Icon: {fileID: 314007913, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Danger Pay
-  Rarity: 2
+  Rarity: 1
   Scope: 0
   IncompatibleWith: []
   Description: 'Below {0:0}% Health: +{1:0}% Damage and +{2:0}% Move Speed'

@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 504440168474951502
   Icon: {fileID: 120746004, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Elite Territory
-  Rarity: 3
+  Rarity: 2
   Scope: 1
   IncompatibleWith: []
   Description: '{0:+0;-0}% enemies, but Elites appear {1:0.#}x as often'

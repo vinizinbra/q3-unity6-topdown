@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 296711657223204463
   Icon: {fileID: -5817012681416042433, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
   DisplayName: Deflection Shield
-  Rarity: 3
+  Rarity: 2
   Scope: 0
   IncompatibleWith: []
   Description: '{0:+0;-0}% damage from distant enemies, but {1:+0;-0}% from close

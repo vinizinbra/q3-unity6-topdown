@@ -18,7 +18,7 @@ MonoBehaviour:
       Value: 392115235866985160
   Icon: {fileID: -76555375, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
   DisplayName: Boss Destroyer
-  Rarity: 2
+  Rarity: 1
   Scope: 0
   IncompatibleWith: []
   Description: +{0:0}% Damage against Heavy/Elite/Boss enemies, -{1:0}% against Filler/Normal/Specialist

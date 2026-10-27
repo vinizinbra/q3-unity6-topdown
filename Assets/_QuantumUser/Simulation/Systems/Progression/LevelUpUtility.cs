@@ -319,10 +319,12 @@ namespace Quantum
         // a flat LevelUpConfig.CommonWeight instead, so every card in those pools is equally likely.
         private static int ResolveWeight(LevelUpConfig config, UpgradeData data)
         {
+            if (data is RiftMutationData mutation)
+                return config.GetRiftMutationWeight(mutation.Rarity);
+
             UpgradeRarity? rarity = data switch
             {
                 WeaponPerkData weaponPerk => weaponPerk.Rarity,
-                RiftMutationData mutation => mutation.Rarity,
                 _ => (UpgradeRarity?)null
             };
 
