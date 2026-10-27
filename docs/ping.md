@@ -16,7 +16,7 @@ Gamepad **Y** (`GamepadControls.PingHeld`), keyboard **middle mouse** (P1 only f
 | TeamChallenge Available/WaitingForTeam | TeamChallengeFound | Found Team Challenge |
 | TeamChallenge Starting/ChallengeActive | TeamChallengeStart | Let's start Team Challenge! |
 | TraversalChallenge | Traversal | Help here! |
-| Empty ground ahead | Ground | Look here |
+| Nothing nearby (no Elite/POI) | Ground (marks the pinger's own position) | Look here |
 | 3 Ground pings in 3s | StickTogether (marks the pinger's own position) | Stick together! |
 
 Works in Breathing and Survival (not tied to `PoiAvailability`). KO and bots never ping.
@@ -24,7 +24,9 @@ Cooldowns (per player): 0.5s general, 10s on StickTogether. `PlayerPing` is adde
 
 ## View
 - `PingFeedWidget` (`UI/InGame/Hud`) - self-building chat feed, last 5 lines, 8s life, built by
-  `GameplayUiController.QStart` via `PingFeedWidget.Ensure`. `PingPresentation` holds text + per-slot colour.
+  `GameplayUiController.QStart` via `PingFeedWidget.Ensure`. Each line = pinger's head icon
+  (`PlayerPortraitUiWidget.ResolveHeadSprite`: `UIHead`, else live rig head) + text on a black
+  left-to-right fade backing (`PingPresentation.GetFadeSprite`) that hugs the text; fades via a CanvasGroup. `PingPresentation` holds text + per-slot colour.
 - `MinimapWidget` - `OnPingPlaced`/`UpdatePingRadars`: pulsing ring + dot per player (one at a time,
   8s), counter-scaled like other overlays, so it shows on the corner and the expanded map. Runs after
   `CenterOnLocalPlayer`; a ping outside the masked viewport is pinned to its edge (same
@@ -37,6 +39,7 @@ Cooldowns (per player): 0.5s general, 10s on StickTogether. `PlayerPing` is adde
 ## Known simplifications / TODO
 - **Hurry up!** (ping a player still choosing in Level-Up/ChooseWindow/Store) is NOT built: the Level-Up
   pause is in `GameplaySystemGroup`, so `PingSystem` doesn't run then - needs a Command.
+- The Ground aim point (`GroundDistance` ahead) is now only used to find POIs, not as the ping position.
 - World ripple is a flat ground sprite (can hide behind tall walls); it doesn't follow a pinged Elite.
 - Per-hero colour is a placeholder palette indexed by player slot.
 - Tuning values are constants at the top of `PingSystem`; Elite "in view" is a flat radius, not the camera.

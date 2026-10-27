@@ -285,6 +285,7 @@ namespace Quantum {
     RewardAvailable,
     Completed,
     Failed,
+    Recharging,
   }
   public enum TraversalChallengeState : byte {
     Idle,
@@ -7891,9 +7892,9 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct TeamChallenge : Quantum.IComponent {
-    public const Int32 SIZE = 72;
+    public const Int32 SIZE = 80;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(64)]
+    [FieldOffset(72)]
     public PoiAvailability Availability;
     [FieldOffset(24)]
     public AssetRef<TeamChallengeConfig> Config;
@@ -7905,14 +7906,18 @@ namespace Quantum {
     public FP RemainingCountdown;
     [FieldOffset(48)]
     public FP RemainingChallengeTime;
-    [FieldOffset(4)]
-    public Int32 KillCount;
     [FieldOffset(8)]
+    public Int32 KillCount;
+    [FieldOffset(12)]
     public Int32 KillTarget;
     [FieldOffset(32)]
     public FP PulseBudget;
     [FieldOffset(40)]
     public FP PulseTimer;
+    [FieldOffset(4)]
+    public Int32 FailedAttempts;
+    [FieldOffset(64)]
+    public FP RetryReadyAtSurvivalTime;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 11959;
@@ -7926,12 +7931,15 @@ namespace Quantum {
         hash = hash * 31 + KillTarget.GetHashCode();
         hash = hash * 31 + PulseBudget.GetHashCode();
         hash = hash * 31 + PulseTimer.GetHashCode();
+        hash = hash * 31 + FailedAttempts.GetHashCode();
+        hash = hash * 31 + RetryReadyAtSurvivalTime.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (TeamChallenge*)ptr;
         serializer.Stream.Serialize((Byte*)&p->State);
+        serializer.Stream.Serialize(&p->FailedAttempts);
         serializer.Stream.Serialize(&p->KillCount);
         serializer.Stream.Serialize(&p->KillTarget);
         AssetRef.Serialize(&p->SelectedChallenge, serializer);
@@ -7940,6 +7948,7 @@ namespace Quantum {
         FP.Serialize(&p->PulseTimer, serializer);
         FP.Serialize(&p->RemainingChallengeTime, serializer);
         FP.Serialize(&p->RemainingCountdown, serializer);
+        FP.Serialize(&p->RetryReadyAtSurvivalTime, serializer);
         Quantum.PoiAvailability.Serialize(&p->Availability, serializer);
     }
   }

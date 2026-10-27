@@ -1027,8 +1027,8 @@ event TeamChallengeCompleted
 
 // Fired by TeamChallengeUtility.End the instant a Team Challenge fails (timeout, a Flawless Hunt
 // HP loss, or a Cursed Survival incapacitation) - View-only hook for the whole-team
-// "CHALLENGE FAILED" toast (TeamChallengeWidget). State is already Completed by the time this
-// fires - one attempt only, no retry.
+// "CHALLENGE FAILED" toast (TeamChallengeWidget). State is already Recharging (a retry is left) or
+// Failed (out of retries) by the time this fires.
 // Culprit is the Raider whose HP loss (Flawless Hunt) or incapacitation (Cursed Survival) ended
 // the attempt - the voice "sorry guys" speaker. None for a failure nobody caused (timeout, run
 // ending mid-challenge).
@@ -1036,6 +1036,13 @@ event TeamChallengeFailed
 {
     EntityRef Poi;
     EntityRef Culprit;
+}
+
+// Fired by TeamChallengeSystem the tick a Recharging Team Challenge becomes Available again for
+// its retry - View-only hook for the whole-team "ready to retry" toast (TeamChallengeWidget).
+event TeamChallengeRecharged
+{
+    EntityRef Poi;
 }
 
 // Fired by PlayerLifeStateUtility.EnterDowned the instant a player's Health hits 0 (see

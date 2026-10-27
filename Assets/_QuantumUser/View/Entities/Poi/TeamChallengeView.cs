@@ -1,3 +1,4 @@
+using Photon.Deterministic;
 using UnityEngine;
 
 namespace Quantum
@@ -42,8 +43,11 @@ namespace Quantum
         [SerializeField, Tooltip("Shown only while State == Completed - SUCCESS, the shared reward was claimed. Inactive, no longer usable.")]
         private GameObject completedVisual;
 
-        [SerializeField, Tooltip("Shown only while State == Failed - the challenge itself failed, no reward. Inactive, no longer usable.")]
+        [SerializeField, Tooltip("Shown only while State == Failed - out of retries, no reward. Inactive, no longer usable.")]
         private GameObject failedVisual;
+
+        [SerializeField, Tooltip("Shown only while State == Recharging - a failed attempt waiting out its retry cooldown. Left unassigned, failedVisual is shown instead.")]
+        private GameObject rechargingVisual;
 
         [Header("Ready / Cancel Area feedback")]
         [SerializeField, Tooltip("A ground ring/decal scaled to TeamChallengeConfig.ReadyCancelRadius - shown only while State is WaitingForTeam or Starting. Left unassigned, this feature is simply off.")]
@@ -60,8 +64,11 @@ namespace Quantum
         private string completedPromptDescription = "CHALLENGE COMPLETE";
         [SerializeField, Tooltip("Same as startingPromptDescription, for State == Failed.")]
         private string failedPromptDescription = "CHALLENGE FAILED";
+        [SerializeField, Tooltip("Same as startingPromptDescription, for State == Recharging - a string.Format template, {0} = whole seconds left on the retry cooldown (counts combat time only, so it holds still during Breaks/pauses).")]
+        private string rechargingPromptDescription = "RECHARGING - RETRY IN {0}s";
 
         private TeamChallengeState? _lastState;
+        private int _lastRetrySeconds = -1;
 
         // The reward is unconditionally a Rift Mutation - hardcoded in TeamChallengeUtility.
         // TryClaimReward (LevelUpUtility.BeginChestScreen(..., LevelUpCategory.RiftMutation)), never
@@ -87,7 +94,20 @@ namespace Quantum
                 _lastState = state;
                 ApplyStateVisuals(state);
                 ApplyReadyRing(f, challenge, state);
+                _lastRetrySeconds = -1;
                 PromptWidget?.SetDescriptionOverride(ResolvePromptDescriptionOverride(state));
+            }
+
+            // Live countdown - re-pushed only when the whole-second value changes.
+            if (state == TeamChallengeState.Recharging)
+            {
+                int seconds = FPMath.CeilToInt(TeamChallengeUtility.GetRetryTimeRemaining(f, challenge));
+
+                if (seconds != _lastRetrySeconds)
+                {
+                    _lastRetrySeconds = seconds;
+                    PromptWidget?.SetDescriptionOverride(string.Format(rechargingPromptDescription, seconds));
+                }
             }
         }
 
@@ -113,7 +133,8 @@ namespace Quantum
             SetShown(activeVisual, state == TeamChallengeState.ChallengeActive);
             SetShown(rewardVisual, state == TeamChallengeState.RewardAvailable);
             SetShown(completedVisual, state == TeamChallengeState.Completed);
-            SetShown(failedVisual, state == TeamChallengeState.Failed);
+            SetShown(failedVisual, state == TeamChallengeState.Failed || (state == TeamChallengeState.Recharging && rechargingVisual == null));
+            SetShown(rechargingVisual, state == TeamChallengeState.Recharging);
         }
 
         private unsafe void ApplyReadyRing(Frame f, TeamChallenge* challenge, TeamChallengeState state)

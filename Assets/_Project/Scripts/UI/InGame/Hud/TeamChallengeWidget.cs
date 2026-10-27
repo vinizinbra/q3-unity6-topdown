@@ -26,6 +26,7 @@ public class TeamChallengeWidget : GameStateGatedWidget
         QuantumEvent.Subscribe<EventTeamChallengeStarted>(this, OnStarted);
         QuantumEvent.Subscribe<EventTeamChallengeCompleted>(this, OnCompleted);
         QuantumEvent.Subscribe<EventTeamChallengeFailed>(this, OnFailed);
+        QuantumEvent.Subscribe<EventTeamChallengeRecharged>(this, OnRecharged);
 
     }
 
@@ -86,7 +87,13 @@ public class TeamChallengeWidget : GameStateGatedWidget
         AnnouncerManager.Instance?.Announce("CHALLENGE FAILED", OnBannerComplete);
     }
 
-    private void OnBannerComplete()
+    // A failed challenge with a retry left is Available again (see TeamChallengeSystem.TickRecharging).
+    private void OnRecharged(EventTeamChallengeRecharged e)
+    {
+        ToastManager.Instance?.Show("Rift Challenge recharged - ready to retry.");
+    }
+
+        private void OnBannerComplete()
     {
         RequestRecompute();
     }

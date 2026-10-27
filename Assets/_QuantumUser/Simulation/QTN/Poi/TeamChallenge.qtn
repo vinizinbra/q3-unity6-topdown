@@ -24,11 +24,16 @@ enum TeamChallengeState : Byte
     ChallengeActive,  // objective running; Global.ActiveTeamChallengeCount > 0
     RewardAvailable,  // succeeded, unclaimed - small Interaction Area press = Claim (ANY Raider)
 
-    // Terminal, one attempt only - the two outcomes are DISTINCT values (not one shared
-    // "Completed" the View has to disambiguate some other way), same "own value per outcome"
-    // convention TraversalChallengeState already uses for its own Completed/Failed.
+    // Terminal - the two outcomes are DISTINCT values (not one shared "Completed" the View has to
+    // disambiguate some other way), same "own value per outcome" convention TraversalChallengeState
+    // already uses for its own Completed/Failed.
     Completed, // SUCCESS - the shared reward was claimed (TeamChallengeUtility.TryClaimReward)
-    Failed     // the challenge itself failed - no reward (TeamChallengeUtility.End(success:false))
+    Failed,    // out of retries - no reward (TeamChallengeUtility.End(success:false))
+
+    // A failed attempt with a retry left (TeamChallengeConfig.MaxRetries) - goes back to Available
+    // once Global.SurvivalTime reaches RetryReadyAtSurvivalTime (TeamChallengeSystem). Appended last
+    // so the existing values keep their byte values.
+    Recharging
 }
 
 component TeamChallenge
@@ -59,6 +64,13 @@ component TeamChallenge
     // budget, and starting a challenge doesn't inherit leftover Survival budget either).
     FP PulseBudget;
     FP PulseTimer;
+
+    // Retry bookkeeping - see TeamChallengeUtility.End. The cooldown is measured in SurvivalTime
+    // (not wall time) so it only counts down during real combat: it freezes through Breathing,
+    // Elite holds, level-up/chest pauses and other challenges, so it can't be waited out safely.
+    // The SAME SelectedChallenge is kept for the retry (never re-rolled).
+    Int32 FailedAttempts;
+    FP RetryReadyAtSurvivalTime; // Recharging only
 }
 
 global

@@ -27,3 +27,6 @@ MonoBehaviour:
     RawValue: 1638400
   CountdownDuration:
     RawValue: 196608
+  MaxRetries: 1
+  RetryCooldown:
+    RawValue: 5898240

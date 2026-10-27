@@ -18,6 +18,8 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
 
     [SerializeField, Tooltip("Shown while the slot is recovering (State == Ready, CooldownTimer > 0) - drains from 1 (just used) down to 0 (ready). All driven identically - same shown state, same fillAmount every frame - so this can be built from more than one Image (e.g. layered/mirrored graphics) without any different-role logic.")]
     private Image[] cooldownFillImages;
+    [SerializeField, Tooltip("Optional - multi-charge skills only: shown INSTEAD of cooldownFillImages while at least one charge is still available but the next one is recharging (0 < CurrentStacks < MaxStacks). Fills UP from 0 to 1 toward the next charge. Should be a subtle element (thin radial ring/border), not a dark overlay - the skill is usable, so the button must keep reading as ready. Left unassigned, a partial recharge simply shows nothing besides chargeText.")]
+    private Image[] rechargeFillImages;
     [SerializeField, Tooltip("Optional - toggled on while the slot is actively channeling a duration skill (State == Active, SkillData.GetActiveDuration() > 0 - e.g. Juggernaut, Berserk/Overdrive), toggled off otherwise. A plain active-state indicator (border/glow/badge, whatever) rather than a fill - the countdown itself is chargeText, see UpdateDurationText. Left unassigned, this feature is simply off.")]
     private GameObject skillActiveObject;
     [SerializeField, Tooltip("Optional - shows SkillData.Icon for whichever skill is currently equipped in this slot. Left unassigned, this feature is simply off.")]
@@ -116,6 +118,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     {
         SetIconAlpha(false);
         SetShown(skillActiveObject, false);
+        SetShown(rechargeFillImages, false);
 
         if (iconImage != null)
         {
@@ -166,6 +169,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
     {
         SetIconAlpha(false);
         SetShown(cooldownFillImages, false);
+        SetShown(rechargeFillImages, false);
         SetShown(skillActiveObject, false);
 
         if (iconImage != null)
@@ -198,6 +202,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
         {
             SetIconAlpha(false);
             SetShown(cooldownFillImages, false);
+            SetShown(rechargeFillImages, false);
             SetShown(skillActiveObject, false);
             UpdateChargeText(skillSlot);
             return;
@@ -213,6 +218,7 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
             {
                 SetIconAlpha(false);
                 SetShown(cooldownFillImages, false);
+                SetShown(rechargeFillImages, false);
                 SetShown(skillActiveObject, true);
                 UpdateDurationText(skillSlot.StateTimer);
                 return;
@@ -228,12 +234,28 @@ public class SkillCooldownUiWidget : QuantumGlobalMonoBehaviour
         {
             SetIconAlpha(false);
             SetShown(cooldownFillImages, false);
+            SetShown(rechargeFillImages, false);
+            return;
+        }
+
+        float remaining = (skillSlot.CooldownTimer / cooldown).AsFloat;
+
+        // Multi-charge skill with at least one charge left: still usable, so it must read as ready -
+        // full-alpha icon, no dark cooldown overlay. The next charge's recovery only shows on the
+        // subtle rechargeFillImages ring (filling up 0 -> 1), if one is assigned.
+        if (skillSlot.CurrentStacks > 0)
+        {
+            SetIconAlpha(false);
+            SetShown(cooldownFillImages, false);
+            SetShown(rechargeFillImages, true);
+            SetFillAmount(rechargeFillImages, 1f - remaining);
             return;
         }
 
         SetIconAlpha(true);
+        SetShown(rechargeFillImages, false);
         SetShown(cooldownFillImages, true);
-        SetFillAmount(cooldownFillImages, (skillSlot.CooldownTimer / cooldown).AsFloat);
+        SetFillAmount(cooldownFillImages, remaining);
     }
 
     private void SetIconAlpha(bool onCooldown)

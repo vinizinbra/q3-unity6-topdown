@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Mini ping chat in the gameplay HUD (see docs/ping.md): the last few PingPlaced events as short
-// "Name: message" lines that fade out. Builds its own uGUI at runtime so it needs no scene/prefab
+// "[head] Name: message" lines on a black left-to-right fade that fade out. Builds its own uGUI at runtime so it needs no scene/prefab
 // authoring - GameplayUiController.QStart calls Ensure(). Also the single place that turns a
 // PingKind into text and a player into a colour, so the minimap radar reuses PingPresentation.
 public class PingFeedWidget : MonoBehaviour
@@ -14,9 +14,11 @@ public class PingFeedWidget : MonoBehaviour
     private const float LineLifetime = 8f;
     private const float FadeTime = 1f;
 
+    private const float IconSize = 34f;
+
     private struct Line
     {
-        public TMP_Text Text;
+        public CanvasGroup Group;
         public float ExpiresAt;
     }
 
@@ -61,8 +63,10 @@ public class PingFeedWidget : MonoBehaviour
 
         var layout = gameObject.AddComponent<VerticalLayoutGroup>();
         layout.childAlignment = TextAnchor.LowerLeft;
-        layout.childControlWidth = layout.childControlHeight = true;
-        layout.childForceExpandWidth = true;
+        // Width left to each line's ContentSizeFitter so the gradient backing hugs its text.
+        layout.childControlWidth = false;
+        layout.childControlHeight = true;
+        layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = false;
         layout.spacing = 2f;
 
@@ -82,7 +86,7 @@ public class PingFeedWidget : MonoBehaviour
             nickname = $"Player {(int)e.Player + 1}";
 
         string hex = ColorUtility.ToHtmlStringRGB(PingPresentation.GetPlayerColor(e.Player));
-        AddLine($"<b><color=#{hex}>{nickname}</color></b>  {PingPresentation.GetMessage(e.Kind, e.State)}");
+        AddLine(PlayerPortraitUiWidget.ResolveHeadSprite(e.Owner), $"<b><color=#{hex}>{nickname}</color></b>  {PingPresentation.GetMessage(e.Kind, e.State)}");
         PlaySound(e.Kind);
         PingWorldRippleWidget.Spawn(e.Player, e.Position.ToUnityVector3(), PingPresentation.GetPlayerColor(e.Player));
     }
@@ -104,15 +108,52 @@ public class PingFeedWidget : MonoBehaviour
             AudioManager.Play(data);
     }
 
-    private void AddLine(string rich)
+    // One line = black left-to-right fade backing, the pinger's head icon, then the text.
+    private void AddLine(Sprite icon, string rich)
     {
         if (_lines.Count >= MaxLines)
             RemoveLine(0);
 
         var go = new GameObject("PingLine", typeof(RectTransform));
         go.transform.SetParent(_root, false);
+        // Left pivot: the ContentSizeFitter resizes the line after the feed has placed it, and a
+        // centre pivot would grow it both ways - pushing the first line half its width off to the left.
+        ((RectTransform)go.transform).pivot = new Vector2(0f, 0.5f);
 
-        var text = go.AddComponent<TextMeshProUGUI>();
+        var background = go.AddComponent<Image>();
+        background.sprite = PingPresentation.GetFadeSprite();
+        background.color = new Color(0f, 0f, 0f, 0.8f);
+        background.raycastTarget = false;
+
+        var row = go.AddComponent<HorizontalLayoutGroup>();
+        row.padding = new RectOffset(8, 90, 3, 3);
+        row.spacing = 10f;
+        row.childAlignment = TextAnchor.MiddleLeft;
+        row.childControlWidth = row.childControlHeight = true;
+        row.childForceExpandWidth = row.childForceExpandHeight = false;
+
+        var fitter = go.AddComponent<ContentSizeFitter>();
+        fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        if (icon != null)
+        {
+            var iconGo = new GameObject("Icon", typeof(RectTransform));
+            iconGo.transform.SetParent(go.transform, false);
+
+            var image = iconGo.AddComponent<Image>();
+            image.sprite = icon;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+
+            var iconLayout = iconGo.AddComponent<LayoutElement>();
+            iconLayout.preferredWidth = iconLayout.preferredHeight = IconSize;
+            iconLayout.minWidth = iconLayout.minHeight = IconSize;
+        }
+
+        var textGo = new GameObject("Text", typeof(RectTransform));
+        textGo.transform.SetParent(go.transform, false);
+
+        var text = textGo.AddComponent<TextMeshProUGUI>();
         text.text = rich;
         text.fontSize = 22f;
         text.enableWordWrapping = false;
@@ -120,13 +161,19 @@ public class PingFeedWidget : MonoBehaviour
         text.outlineWidth = 0.2f;
         text.outlineColor = new Color32(0, 0, 0, 255);
 
-        _lines.Add(new Line { Text = text, ExpiresAt = Time.unscaledTime + LineLifetime });
+        var group = go.AddComponent<CanvasGroup>();
+        group.interactable = group.blocksRaycasts = false;
+
+        _lines.Add(new Line { Group = group, ExpiresAt = Time.unscaledTime + LineLifetime });
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)go.transform);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(_root);
     }
 
     private void RemoveLine(int index)
     {
-        if (_lines[index].Text != null)
-            Destroy(_lines[index].Text.gameObject);
+        if (_lines[index].Group != null)
+            Destroy(_lines[index].Group.gameObject);
         _lines.RemoveAt(index);
     }
 
@@ -142,7 +189,7 @@ public class PingFeedWidget : MonoBehaviour
                 continue;
             }
 
-            _lines[i].Text.alpha = Mathf.Clamp01(remaining / FadeTime);
+            _lines[i].Group.alpha = Mathf.Clamp01(remaining / FadeTime);
         }
     }
 }
@@ -152,11 +199,33 @@ public static class PingPresentation
 {
     private static Sprite _ringSprite;
     private static Sprite _dotSprite;
+    private static Sprite _fadeSprite;
 
     public static void ResetSprites()
     {
         _ringSprite = null;
         _dotSprite = null;
+        _fadeSprite = null;
+    }
+
+    // Procedural white horizontal fade (solid on the left, smoothstep to clear on the right) for the
+    // feed line backing; tinted black by the Image colour.
+    public static Sprite GetFadeSprite()
+    {
+        if (_fadeSprite != null)
+            return _fadeSprite;
+
+        const int width = 256;
+        var tex = new Texture2D(width, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+        for (int x = 0; x < width; x++)
+        {
+            float t = Mathf.InverseLerp(0.35f, 1f, x / (width - 1f));
+            tex.SetPixel(x, 0, new Color(1f, 1f, 1f, 1f - Mathf.SmoothStep(0f, 1f, t)));
+        }
+        tex.Apply();
+
+        _fadeSprite = Sprite.Create(tex, new Rect(0, 0, width, 1), new Vector2(0.5f, 0.5f), 100f);
+        return _fadeSprite;
     }
 
     // Procedural white ring / dot, built once and shared by the minimap radar and the world ripple.

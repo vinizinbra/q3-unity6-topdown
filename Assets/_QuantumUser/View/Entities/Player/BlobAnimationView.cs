@@ -153,6 +153,14 @@ namespace Quantum
         [SerializeField] private float landingSpringFrequency = 6f;
         [SerializeField] private float landingSpringDamping = 0.35f;
 
+        [Header("Heavy Landing (Groundbreaker)")]
+        [SerializeField, Tooltip("Replaces the normal landing squash when EventGroundbreakerSlammed fires for this player - i.e. only while Brute owns the Groundbreaker Ascension AND the landing actually qualified (the sim already applied MinimumFallHeight etc.). Same _jumpSquashT scale as maxLandingSquash, so deeper than it on purpose.")]
+        private float heavyLandingSquash = 0.8f;
+        [SerializeField, Tooltip("Seconds the rig stays fully squashed before the spring starts recovering - the 'weight' beat that sells the impact.")]
+        private float heavyLandingHoldDuration = 0.09f;
+        [SerializeField, Tooltip("Max seconds between the visual landing (local ground truth) and the sim's GroundbreakerSlammed event for the two to count as the same landing - they can arrive in either order.")]
+        private float heavyLandingMatchWindow = 0.25f;
+
         [Header("Downed/KO (see docs/revive.md) - a plain active-object swap, NOT a procedural pose. Alive shows bodyRoot, Downed shows downedRoot, KO shows koRoot. Each root is a separately-authored GameObject with its own sprite art.")]
         [SerializeField, Tooltip("The normal, alive rig - shown only while Alive. MUST be a CHILD of the object this component sits on (not this object itself, or an ancestor), or disabling it would stop QUpdate from firing and it could never re-enable. Typically the same GameObject as root.")]
         private GameObject bodyRoot;
@@ -220,6 +228,13 @@ namespace Quantum
         private float _jumpSquashT;
         private bool _springActive;
         private float _springVelocity;
+        // Freezes the landing spring at full squash before it recovers - only a Groundbreaker landing
+        // sets it (see BeginHeavyLanding).
+        private float _landingHoldTimer;
+        // The visual landing and EventGroundbreakerSlammed can arrive in either order - whichever
+        // comes first stamps its time and the second one, within heavyLandingMatchWindow, plays it.
+        private float _lastLandedTime = float.NegativeInfinity;
+        private float _heavyLandingArmedUntil = float.NegativeInfinity;
 
         // Jump Flip - a single 360° tumble, independent of _state/_jumpSquashT (same "orthogonal
         // effect layered on top of the normal pose" idiom the shoot punches below already use), so it
@@ -361,6 +376,7 @@ namespace Quantum
             QuantumEvent.Subscribe<EventPlayerJumped>(this, OnPlayerJumped);
             QuantumEvent.Subscribe<EventPlayerAutoJumpedDown>(this, OnPlayerAutoJumpedDown);
             QuantumEvent.Subscribe<EventPlayerRevived>(this, OnPlayerRevived);
+            QuantumEvent.Subscribe<EventGroundbreakerSlammed>(this, OnGroundbreakerSlammed);
         }
 
         public override void OnDestroy()
@@ -486,6 +502,33 @@ namespace Quantum
         }
 
         // Shared by revive and the match-start spawn reveal - both bring bodyRoot back from hidden.
+        // Groundbreaker's qualifying landing (see heavyLandingSquash). Usually arrives a tick or two
+        // apart from the visual landing - play now if the rig already touched down, otherwise arm it
+        // for the justLanded branch in Animate.
+        private void OnGroundbreakerSlammed(EventGroundbreakerSlammed e)
+        {
+            if (e.Owner != _entityRef)
+                return;
+
+            if (_wasGrounded == true && Time.time - _lastLandedTime <= heavyLandingMatchWindow)
+            {
+                BeginHeavyLanding();
+                _lastLandedTime = float.NegativeInfinity;
+            }
+            else
+            {
+                _heavyLandingArmedUntil = Time.time + heavyLandingMatchWindow;
+            }
+        }
+
+        private void BeginHeavyLanding()
+        {
+            _jumpSquashT = Mathf.Max(_jumpSquashT, heavyLandingSquash);
+            _springVelocity = 0f;
+            _springActive = true;
+            _landingHoldTimer = heavyLandingHoldDuration;
+        }
+
         private void PunchFromRest()
         {
             _squashT = 0f;
@@ -829,6 +872,14 @@ namespace Quantum
                 _jumpSquashT = Mathf.Clamp(impactSpeed * landingSquashPerSpeed, 0f, maxLandingSquash);
                 _springVelocity = 0f;
                 _springActive = true;
+                _landingHoldTimer = 0f;
+                _lastLandedTime = Time.time;
+                if (Time.time <= _heavyLandingArmedUntil)
+                {
+                    BeginHeavyLanding();
+                    _heavyLandingArmedUntil = float.NegativeInfinity;
+                    _lastLandedTime = float.NegativeInfinity;
+                }
                 _state = DetermineGroundedState(horizontalSpeed);
                 _trickArmed = false; // landed before takeoff ever happened - don't fire on a later walk-off
                 _trickPending = false;
@@ -863,7 +914,10 @@ namespace Quantum
 
             if (_springActive)
             {
-                IntegrateLandingSpring(dt);
+                if (_landingHoldTimer > 0f)
+                    _landingHoldTimer -= dt;
+                else
+                    IntegrateLandingSpring(dt);
             }
 
             UpdateFootsteps(isGrounded, horizontalSpeed);
@@ -1195,7 +1249,7 @@ namespace Quantum
             // Bounded overshoot (2x maxLandingSquash) keeps a bad-frame spike from reading as the
             // rig flying apart - see DampedSpring's own comment for why the naive form can't be
             // trusted to stay finite on its own at low/variable framerate.
-            DampedSpring.Integrate(ref _jumpSquashT, ref _springVelocity, 0f, landingSpringFrequency, landingSpringDamping, dt, maxLandingSquash * 2f);
+            DampedSpring.Integrate(ref _jumpSquashT, ref _springVelocity, 0f, landingSpringFrequency, landingSpringDamping, dt, Mathf.Max(maxLandingSquash, heavyLandingSquash) * 2f);
 
             if (Mathf.Abs(_jumpSquashT) < 0.01f && Mathf.Abs(_springVelocity) < 0.05f)
             {

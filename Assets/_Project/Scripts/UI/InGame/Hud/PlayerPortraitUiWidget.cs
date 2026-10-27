@@ -18,7 +18,7 @@ public class PlayerPortraitUiWidget : MonoBehaviour
         if (iconImage == null)
             return;
 
-        Sprite sprite = ResolveUIHeadSprite(entityRef) ?? ResolveRigHeadSprite(entityRef);
+        Sprite sprite = ResolveHeadSprite(entityRef);
 
         if (sprite == null)
             return;
@@ -26,6 +26,9 @@ public class PlayerPortraitUiWidget : MonoBehaviour
         iconImage.sprite = sprite;
         iconImage.enabled = true;
     }
+
+    // Shared with widgets that build their icon at runtime (e.g. PingFeedWidget).
+    public static Sprite ResolveHeadSprite(EntityRef entityRef) => ResolveUIHeadSprite(entityRef) ?? ResolveRigHeadSprite(entityRef);
 
     private static Sprite ResolveUIHeadSprite(EntityRef entityRef)
     {

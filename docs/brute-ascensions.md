@@ -506,6 +506,12 @@ The prefab lives on `EffectsManager` rather than on `GroundbreakerPassiveUpgrade
 `SkillActionData`, `PassiveUpgradeData.Apply` gets no self `AssetRef` to travel with the event, which is
 exactly why Yoru's Undertow and every reaction VFX already sit on the manager too.
 
+**Heavy squash landing.** `BlobAnimationView` also listens to `GroundbreakerSlammed` (own entity only)
+and swaps that landing's normal speed-scaled squash for a deeper one (`heavyLandingSquash` 0.8 vs
+`maxLandingSquash` 0.6), held fully flat for `heavyLandingHoldDuration`, then recovered on the normal landing spring. Because the event only fires with the upgrade *and* a
+qualifying drop, nothing else ever plays it. The local visual landing and the sim event can arrive in
+either order; whichever comes first is matched to the other within `heavyLandingMatchWindow`.
+
 **Wall impact — a generic event, not a Groundbreaker one.** A new `WallSlammed` event is fired by
 **`WallSlamUtility` itself**, so every knockback source routing through that utility gets the impact VFX
 with no per-source hookup. Brute's **Iron Shoulder dash gets this for free** — it had no dedicated wall

@@ -4,7 +4,7 @@ namespace Quantum
     using UnityEngine.Scripting;
 
     // Resolves a Ping button press into one PingPlaced event (see docs/ping.md and Ping.qtn).
-    // Priority: own Downed -> Elite in view -> nearest ping-able POI -> empty ground.
+    // Priority: own Downed -> Elite in view -> nearest ping-able POI -> the pinger's own position.
     [Preserve]
     public unsafe class PingSystem : SystemMainThreadFilter<PingSystem.Filter>
     {
@@ -67,14 +67,13 @@ namespace Quantum
 
                 if (kind == PingKind.Ground)
                 {
-                    position = new FPVector3(origin.X + dir.X * GroundDistance, origin.Y, origin.Z + dir.Y * GroundDistance);
+                    position = origin; // nothing to point at - mark where the pinger stands
 
                     ping->GroundSpamTimer = SpamWindow;
                     ping->GroundSpamCount++;
                     if (ping->GroundSpamCount >= SpamCountForStick && ping->StickCooldown <= FP._0)
                     {
                         kind = PingKind.StickTogether;
-                        position = origin; // "come to me" - marks the pinger, not the ground ahead
                         ping->StickCooldown = StickCooldown;
                         ping->GroundSpamCount = 0;
                     }
@@ -214,6 +213,7 @@ namespace Quantum
                         case TeamChallengeState.Completed:
                             return PingKind.TeamChallengeDone;
                         case TeamChallengeState.Failed:
+                        case TeamChallengeState.Recharging:
                             return PingKind.TeamChallengeFailed;
                         default:
                             return PingKind.None;

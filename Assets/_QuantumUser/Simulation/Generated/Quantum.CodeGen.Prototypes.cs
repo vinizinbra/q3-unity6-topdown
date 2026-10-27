@@ -4323,6 +4323,8 @@ namespace Quantum.Prototypes {
     public Int32 KillTarget;
     public FP PulseBudget;
     public FP PulseTimer;
+    public Int32 FailedAttempts;
+    public FP RetryReadyAtSurvivalTime;
     partial void MaterializeUser(Frame frame, ref Quantum.TeamChallenge result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.TeamChallenge component = default;
@@ -4340,6 +4342,8 @@ namespace Quantum.Prototypes {
         result.KillTarget = this.KillTarget;
         result.PulseBudget = this.PulseBudget;
         result.PulseTimer = this.PulseTimer;
+        result.FailedAttempts = this.FailedAttempts;
+        result.RetryReadyAtSurvivalTime = this.RetryReadyAtSurvivalTime;
         MaterializeUser(frame, ref result, in context);
     }
   }

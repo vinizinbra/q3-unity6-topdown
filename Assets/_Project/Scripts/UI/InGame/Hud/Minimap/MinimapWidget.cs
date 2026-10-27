@@ -1679,8 +1679,9 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             ApplyUsedLook(pair, challenge->State == TraversalChallengeState.Completed || challenge->State == TraversalChallengeState.Failed);
         }
 
-        // Completed (reward claimed) and Failed are both terminal - RewardAvailable stays pinned,
-        // since someone still has to walk back and claim it.
+        // Completed (reward claimed) and Failed are both terminal, Recharging dims until the retry
+        // is Available again - RewardAvailable stays pinned, since someone still has to walk back
+        // and claim it.
         foreach (var kvp in _iconTeamChallengeEntity)
         {
             if (frame.Unsafe.TryGetPointer<TeamChallenge>(kvp.Value, out var challenge) == false)
@@ -1689,7 +1690,7 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (_iconOverlays.TryGetValue(kvp.Key, out MapOverlay pair) == false)
                 continue;
 
-            ApplyUsedLook(pair, challenge->State == TeamChallengeState.Completed || challenge->State == TeamChallengeState.Failed);
+            ApplyUsedLook(pair, challenge->State == TeamChallengeState.Completed || challenge->State == TeamChallengeState.Failed || challenge->State == TeamChallengeState.Recharging);
         }
     }
 

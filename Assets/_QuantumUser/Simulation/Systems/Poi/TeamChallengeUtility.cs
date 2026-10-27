@@ -48,7 +48,7 @@ namespace Quantum
                     return ContextInteractionState.Available;
 
                 default:
-                    // Starting/ChallengeActive/Completed/Failed - nothing a press can do right now.
+                    // Starting/ChallengeActive/Recharging/Completed/Failed - nothing a press can do right now.
                     return ContextInteractionState.AlreadyUsed;
             }
         }
@@ -570,11 +570,29 @@ namespace Quantum
 
             challenge->RemainingChallengeTime = FP._0;
 
-            // Only the FAILURE path settles here - success instead goes to RewardAvailable, and
-            // only reaches the real terminal TeamChallengeState.Completed once the shared reward is
-            // actually claimed (see TryClaimReward). Failure has no reward to wait on, so it goes
-            // straight to its own terminal value.
-            challenge->State = success ? TeamChallengeState.RewardAvailable : TeamChallengeState.Failed;
+            // Success goes to RewardAvailable, and only reaches the real terminal
+            // TeamChallengeState.Completed once the shared reward is actually claimed (see
+            // TryClaimReward). Failure has no reward to wait on: Recharging if a retry is left,
+            // otherwise straight to its own terminal Failed.
+            if (success == true)
+            {
+                challenge->State = TeamChallengeState.RewardAvailable;
+            }
+            else
+            {
+                challenge->FailedAttempts++;
+
+                if (CanRetry(f, challenge) == true)
+                {
+                    TeamChallengeConfig config = f.FindAsset(challenge->Config);
+                    challenge->RetryReadyAtSurvivalTime = f.Global->SurvivalTime + config.RetryCooldown;
+                    challenge->State = TeamChallengeState.Recharging;
+                }
+                else
+                {
+                    challenge->State = TeamChallengeState.Failed;
+                }
+            }
 
             if (success == true)
                 f.Events.TeamChallengeCompleted(poi);
@@ -582,6 +600,27 @@ namespace Quantum
                 f.Events.TeamChallengeFailed(poi, culprit);
 
             Log.Debug($"[TeamChallenge] {poi} - ended, success={success}, new State={challenge->State}");
+        }
+
+        // A retry is only worth arming while the run is still going - the RunFailed/Victory
+        // interruption in TeamChallengeSystem also ends through End(success:false).
+        private static bool CanRetry(Frame f, TeamChallenge* challenge)
+        {
+            if (f.Global->CurrentState == GameState.RunFailed || f.Global->CurrentState == GameState.Victory)
+                return false;
+
+            TeamChallengeConfig config = f.FindAsset(challenge->Config);
+            return config != null && challenge->FailedAttempts <= config.MaxRetries;
+        }
+
+        // Live seconds left on a Recharging POI's retry cooldown (SurvivalTime-based, so it holds
+        // still whenever SurvivalTime does) - read by TeamChallengeView's prompt countdown.
+        public static FP GetRetryTimeRemaining(Frame f, TeamChallenge* challenge)
+        {
+            if (challenge->State != TeamChallengeState.Recharging)
+                return FP._0;
+
+            return FPMath.Max(FP._0, challenge->RetryReadyAtSurvivalTime - f.Global->SurvivalTime);
         }
 
         // Mirrors TraversalChallengeUtility.Fail's own platform-destroy sweep - guarantees Survival

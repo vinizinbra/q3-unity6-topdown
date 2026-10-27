@@ -18,5 +18,13 @@ namespace Quantum
         // Seconds of Starting-state countdown once unanimous Ready is reached, before
         // ChallengeActive begins. 0 skips the countdown entirely.
         public FP CountdownDuration;
+
+        // Failed attempts that send the POI to Recharging instead of terminal Failed. 0 = one
+        // attempt only.
+        public int MaxRetries = 1;
+
+        // Seconds of SurvivalTime (combat time only - see TeamChallenge.RetryReadyAtSurvivalTime)
+        // a failed attempt waits in Recharging before the POI is Available again.
+        public FP RetryCooldown = 90;
     }
 }

@@ -37,7 +37,25 @@ namespace Quantum
                 case TeamChallengeState.ChallengeActive:
                     TickChallengeActive(f, filter.Entity, filter.TeamChallenge);
                     break;
+
+                case TeamChallengeState.Recharging:
+                    TickRecharging(f, filter.Entity, filter.TeamChallenge);
+                    break;
             }
+        }
+
+        // A failed attempt with a retry left (see TeamChallengeUtility.End) - back to Available once
+        // enough SurvivalTime has passed. Keeps the same SelectedChallenge for the retry.
+        private static void TickRecharging(Frame f, EntityRef poi, TeamChallenge* challenge)
+        {
+            if (f.Global->SurvivalTime < challenge->RetryReadyAtSurvivalTime)
+                return;
+
+            challenge->State = TeamChallengeState.Available;
+            challenge->RetryReadyAtSurvivalTime = FP._0;
+            f.Events.TeamChallengeRecharged(poi);
+
+            Log.Debug($"[TeamChallenge] {poi} - recharged, retry Available (failed attempts {challenge->FailedAttempts})");
         }
 
         // Cancels any Ready marker whose holder has left the Ready/Cancel Area - no timeout; raises

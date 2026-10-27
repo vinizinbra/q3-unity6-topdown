@@ -26,8 +26,9 @@ co-op scaling pipeline every normal Survival enemy uses, and players keep fighti
 keeps running, any connected Raider may return and Interact to atomically claim the one shared
 reward, which reuses `LevelUpUtility.BeginChestScreen(..., LevelUpCategory.RiftMutation)` verbatim
 (the exact mechanism a Chest already uses) to pause the party and roll every connected player their
-own independent 3-Rift-Mutation choice. On failure the POI becomes permanently `Completed` - one
-attempt only, no retries, no reward.
+own independent 3-Rift-Mutation choice. On failure the POI goes to `Recharging` if a retry is left
+(`TeamChallengeConfig.MaxRetries`, default 1 = two attempts total), otherwise to terminal `Failed`
+(no reward). See "Retry after failure" below.
 
 Readying up (and re-checked every tick while `WaitingForTeam`, in case one spawns after everyone
 already readied) is blocked while any `EnemyTier.Elite` enemy is alive anywhere in the map - the
@@ -346,6 +347,28 @@ prompt never reflected the real co-op-scaled target).
 - If more than one Optional Team Challenge POI is ever `Starting`/`ChallengeActive` at once,
   `TeamChallengeWidget`'s single HUD banner only reflects whichever one the scan finds first - same
   accepted simplification `TraversalChallengeWidget`'s own multi-instance countdown documents.
+
+## Retry after failure
+
+Decided 2026-10-27: one retry, after a cooldown. Zero retries made one player's slip (esp. Flawless
+Hunt) lock the whole team out and discouraged attempting at all; unlimited retries would turn the
+commit-time enemy wipe + Survival pause into a spammable panic button and cheapen the Rift Mutation.
+
+- `TeamChallengeUtility.End(success:false)` increments `TeamChallenge.FailedAttempts`; while
+  `FailedAttempts <= MaxRetries` (and the run isn't over) it sets `State = Recharging` and
+  `RetryReadyAtSurvivalTime = SurvivalTime + RetryCooldown` (default **90s**), else `Failed`.
+- The cooldown is measured in `Global.SurvivalTime`, so it only counts down during real combat -
+  frozen through Breathing, Elite holds, level-up/chest pauses and Traversal/Team challenges. It
+  can't be waited out somewhere safe.
+- `TeamChallengeSystem.TickRecharging` returns the POI to `Available` once reached and fires
+  `TeamChallengeRecharged` (`TeamChallengeWidget` toast "Rift Challenge recharged - ready to retry.").
+- The retry keeps the same `SelectedChallenge` (no re-roll - "we know what killed us"); the kill
+  target is re-resolved for the live party size at `BeginChallengeActive`, as always.
+- View: `TeamChallengeView.rechargingVisual` (falls back to `failedVisual` when unassigned) and a
+  live `rechargingPromptDescription` countdown ("RECHARGING - RETRY IN {0}s"); minimap dims it like a
+  used POI; a ping on it resolves to `TeamChallengeFailed`; bots ignore it (Available/WaitingForTeam
+  only).
+- `Recharging` is appended last in `TeamChallengeState` so existing byte values are unchanged.
 
 ## Level-ups during the challenge
 
