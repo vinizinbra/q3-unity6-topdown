@@ -594,7 +594,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 6, y: -3, z: 7}
-  m_LocalScale: {x: 12, y: 4, z: 4}
+  m_LocalScale: {x: 12, y: 4, z: 6}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -797,8 +797,8 @@ Transform:
   m_GameObject: {fileID: 4533266606038373292}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6, y: -3, z: 11}
-  m_LocalScale: {x: 12, y: 7, z: 2}
+  m_LocalPosition: {x: 6, y: 1, z: 11}
+  m_LocalScale: {x: 12, y: 3, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -2201,14 +2201,14 @@ MonoBehaviour:
           Y:
             RawValue: -65509
           Z:
-            RawValue: 589824
+            RawValue: 655360
         BoxExtents:
           X:
             RawValue: 393216
           Y:
             RawValue: 131072
           Z:
-            RawValue: 131072
+            RawValue: 196608
         RotationOffset:
           X:
             RawValue: 0
@@ -2229,14 +2229,14 @@ MonoBehaviour:
           X:
             RawValue: 786432
           Y:
-            RawValue: 32813
+            RawValue: 163859
           Z:
             RawValue: 786432
         BoxExtents:
           X:
             RawValue: 393216
           Y:
-            RawValue: 229376
+            RawValue: 98304
           Z:
             RawValue: 65536
         RotationOffset:

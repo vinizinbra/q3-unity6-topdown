@@ -326,8 +326,8 @@ each), so a run gets one or the other.
   `Recordings/TraversalChunkWest-top.png`. 4 spawned platforms, 40s.
 - **`TraversalChunkNorth`** (reworked 2026-10-27, bottom -> top, `AllowedConnectionSides = Bottom`,
   20x40): `TraversalActivatorNorth` + `TraversalNorthChunkSpawnConfig`, standard 4x4x4 platforms.
-  START (h0, x3..9 z0..5) -> BIG (permanent h0 island x6..18 z7..11 - one wide platform, since the
-  activator can only spawn one platform prefab) with an h3 WALL (x6..18 z11..13) flush along its whole
+  START (h0, x3..9 z0..5) -> BIG (permanent h0 island x6..18 z7..13 - one wide platform, since the
+  activator can only spawn one platform prefab) with an h3 WALL (x6..18 z11..13) standing on its back strip (no water seam at the wall base, so no stray edge auto-jumps) along its whole
   front edge -> jump off BIG's side out over the water and **jump + Dash forward around the wall end**
   (~6.5m) to P1 (h0, x16..20) -> P2 (h1) -> P3 (h2), climbing left -> **jump + Dash 7.5m, +1** to REST
   (h3, x2..8 z29..35; wait out the cooldown) -> **jump + Dash 7.5m, +1** right to P4 (h4) -> 2m hop to
