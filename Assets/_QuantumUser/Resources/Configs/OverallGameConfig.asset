@@ -70,6 +70,9 @@ MonoBehaviour:
   BlacksmithConfig:
     Id:
       Value: 348202425962028469
+  TraversalChallengeConfig:
+    Id:
+      Value: 528023848265113520
   TalentsConfig:
     Id:
       Value: 344446873976981054
@@ -79,6 +82,14 @@ MonoBehaviour:
   ReviveConfig:
     Id:
       Value: 533983932994204390
+  DiscoveryViewHalfWidth:
+    RawValue: 786432
+  DiscoveryViewBack:
+    RawValue: 524288
+  DiscoveryViewForward:
+    RawValue: 655360
+  DiscoveryMinVisibleFraction:
+    RawValue: 6554
   Prefabs:
     ExpOrbPrototype:
       Id:

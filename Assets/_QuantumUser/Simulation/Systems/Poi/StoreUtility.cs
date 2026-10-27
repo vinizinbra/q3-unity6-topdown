@@ -95,8 +95,31 @@ namespace Quantum
             RollWeaponOffers(f, player, inventory, config);
             RollFoodOffers(f, inventory, config);
             inventory->RolledAtBreathingIndex = f.Global->BreathingIndex;
+            inventory->RollId++;
 
             Log.Debug($"[Store] {store} restocked for BreathingIndex {f.Global->BreathingIndex} - {inventory->WeaponOfferCount} weapon(s), {inventory->FoodOfferCount} food offer(s)");
+        }
+
+        // Called from StoreSystem when a RerollStoreCommand lands - spends one shared
+        // CharacterStats.RerollQuantity charge to redraw the rolled weapon + food offers. The inventory is
+        // shared, so this restocks for the whole team; the new RollId makes every player's earlier
+        // purchases of the old stock read as unpurchased. Guaranteed offers (Weapon Level, Accessory
+        // service) aren't part of the roll and are untouched.
+        public static void Reroll(Frame f, EntityRef player, StoreInteraction* interaction)
+        {
+            if (LevelUpUtility.GetRerollCharges(f, player) <= 0 || f.GameConfig.StoreConfig.IsValid == false)
+                return;
+
+            if (f.Unsafe.TryGetPointer<StoreInventory>(interaction->Store, out var inventory) == false)
+                return;
+
+            StoreConfig config = f.FindAsset(f.GameConfig.StoreConfig);
+            RollWeaponOffers(f, player, inventory, config);
+            RollFoodOffers(f, inventory, config);
+            inventory->RollId++;
+            LevelUpUtility.SpendRerollCharge(f, player);
+
+            Log.Debug($"[Store] {player} rerolled {interaction->Store}'s stock - {LevelUpUtility.GetRerollCharges(f, player)} charge(s) left");
         }
 
         // Distinct weapons drawn the same uniform-without-replacement way
@@ -391,7 +414,8 @@ namespace Quantum
         // own comment). Find-and-overwrite-in-place by (Store, OfferIndex, IsWeaponOffer), same
         // idiom PoiUsageUtility.MarkUsed already uses for its own array - so a later inventory roll
         // reusing the same (Store, OfferIndex) slot for a NEW item correctly reads as unpurchased
-        // again (PurchasedAtBreathingIndex no longer matches the offer's own live roll index).
+        // again (PurchasedAtRollId no longer matches the inventory's live RollId - bumped by every restock
+        // AND every Reroll).
         public static bool IsPurchased(Frame f, EntityRef player, EntityRef store, int offerIndex, bool isWeaponOffer)
         {
             if (f.Unsafe.TryGetPointer<StorePurchases>(player, out var purchases) == false)
@@ -407,7 +431,7 @@ namespace Quantum
                 if (entries[i].Store != store || entries[i].OfferIndex != offerIndex || entries[i].IsWeaponOffer != isWeaponOffer)
                     continue;
 
-                return entries[i].PurchasedAtBreathingIndex == inventory->RolledAtBreathingIndex;
+                return entries[i].PurchasedAtRollId == inventory->RollId;
             }
 
             return false;
@@ -427,7 +451,7 @@ namespace Quantum
                     continue;
 
                 StorePurchaseEntry entry = entries[i];
-                entry.PurchasedAtBreathingIndex = inventory->RolledAtBreathingIndex;
+                entry.PurchasedAtRollId = inventory->RollId;
                 entries[i] = entry;
                 return;
             }
@@ -442,7 +466,7 @@ namespace Quantum
                     Store = store,
                     OfferIndex = (byte)offerIndex,
                     IsWeaponOffer = isWeaponOffer,
-                    PurchasedAtBreathingIndex = inventory->RolledAtBreathingIndex
+                    PurchasedAtRollId = inventory->RollId
                 };
                 return;
             }

@@ -22,11 +22,13 @@
             factories.Add(new KeepCurrentWeaponCommand());
             factories.Add(new ConfirmCursedRiftCommand());
             factories.Add(new CancelCursedRiftCommand());
+            factories.Add(new RerollCursedRiftCommand());
             factories.Add(new SkipBreathingCommand());
             factories.Add(new BuyStoreWeaponCommand());
             factories.Add(new BuyStoreFoodCommand());
             factories.Add(new BuyStoreWeaponLevelCommand());
             factories.Add(new CloseStoreCommand());
+            factories.Add(new RerollStoreCommand());
             factories.Add(new SelectBlacksmithPerkCommand());
             factories.Add(new CancelBlacksmithCommand());
             factories.Add(new RerollBlacksmithCommand());

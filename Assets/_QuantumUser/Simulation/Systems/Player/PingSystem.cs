@@ -18,6 +18,8 @@ namespace Quantum
         private static readonly FP EliteViewRadius = (FP)12;
         private static readonly FP EliteConeDot = FP._0_75;
         private static readonly FP PoiPickRadius = (FP)4;
+        // A POI this close to a player counts as "found" and auto-pings once per run.
+        private static readonly FP PoiDiscoverRadius = (FP)10;
 
         public override void Update(Frame f, ref Filter filter)
         {
@@ -34,6 +36,8 @@ namespace Quantum
 
             if (PlayerInputUtility.IsBot(f, filter.Entity) == true)
                 return;
+
+            TryAutoPingDiscoveredPoi(f, ref filter);
 
             var input = PlayerInputUtility.Resolve(f, filter.Entity, filter.PlayerLink);
             if (input == null || input->Ping.WasPressed == false)
@@ -86,7 +90,38 @@ namespace Quantum
             }
 
             ping->Cooldown = Cooldown;
-            f.Events.PingPlaced(filter.PlayerLink->Player, filter.Entity, kind, position, target, poiState);
+            f.Events.PingPlaced(filter.PlayerLink->Player, filter.Entity, kind, position, target, poiState, false);
+        }
+
+        // First human player to come near a ping-able POI during the run pings it for them, once per POI.
+        private static void TryAutoPingDiscoveredPoi(Frame f, ref Filter filter)
+        {
+            if (f.Global->CurrentState == GameState.Lobby)
+                return;
+
+            if (f.Unsafe.TryGetPointer<PlayerLifeState>(filter.Entity, out var life) && life->State != PlayerLifeStateKind.Alive)
+                return;
+
+            FPVector3 origin = filter.Transform3D->Position;
+            FP radiusSqr = PoiDiscoverRadius * PoiDiscoverRadius;
+
+            var pois = f.Filter<Interactable, Transform3D>();
+            while (pois.Next(out EntityRef candidate, out Interactable interactable, out Transform3D t))
+            {
+                if (f.Has<PoiPingDiscovered>(candidate))
+                    continue;
+                if (EnemyMovementUtility.FlatSqrDistance(origin, t.Position) > radiusSqr)
+                    continue;
+
+                PingKind kind = ResolvePoiKind(f, candidate, interactable.Kind);
+                if (kind == PingKind.None || kind == PingKind.TeamChallengeDone || kind == PingKind.TeamChallengeFailed)
+                    continue;
+
+                f.Add<PoiPingDiscovered>(candidate);
+                var state = ContextInteractionSystem.ResolveState(f, filter.Entity, candidate, interactable.Kind);
+                f.Events.PingPlaced(filter.PlayerLink->Player, filter.Entity, kind, t.Position, candidate, state, true);
+                return; // one auto-ping per player per tick
+            }
         }
 
         private static bool TryResolveElite(Frame f, Aim* aim, FPVector3 origin, FPVector2 dir, out EntityRef target, out FPVector3 position)

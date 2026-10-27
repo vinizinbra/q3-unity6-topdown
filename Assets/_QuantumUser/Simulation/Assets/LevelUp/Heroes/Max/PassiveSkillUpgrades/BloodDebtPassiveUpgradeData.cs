@@ -3,34 +3,33 @@ namespace Quantum
     using Photon.Deterministic;
     using UnityEngine;
 
-    // Passive line 5 - Max's Vendetta progression, merging the old standalone Blood Debt + Unbroken
-    // Spirit + Settled Score picks into one 3-rank Ascension. All three compose onto the base
-    // Passive's own RevengeConfig (see VendettaPassiveData), same shared-component idiom Brute's
-    // Guardian already established for ranked Passives. Each rank SETS the total values (not additive
-    // across ranks).
+    // Passive line 5 - Max's Vendetta progression. Composes onto the base Passive's own RevengeConfig
+    // (see VendettaPassiveData), same shared-component idiom Brute's Guardian already established
+    // for ranked Passives. Each rank SETS the total values (not additive across ranks).
     //
-    //  - Rank 1: a longer mark window (12s), so a Vendetta actually survives long enough to collect.
-    //  - Rank 2: a Vendetta kill refunds Rage (RageOnVendettaKill - see
-    //    MaxOverdriveReactionSystem.TryRefundRage), tying the revenge loop into Overdrive uptime, and
-    //    Shield damage AND a hit the Accessory Guard blocks outright both start qualifying for
-    //    marking/accumulation (ShieldDamageCountsForRevenge - see MaxVendettaSystem's
-    //    OnShieldDamageApplied/OnAccessoryBlocked) so a shielded/accessoried Max isn't locked out of
-    //    his own passive.
-    //  - Rank 3: better on-kill sustain (HealMultiplier), deliberately paired with a hard per-kill
-    //    ceiling (MaxHealFractionPerKill) rather than left open - the brief is explicit that this
-    //    must not become a major healing engine, so the multiplier goes up AND the cap exists, both
-    //    editable.
+    //  - Rank 1: marked enemies take more damage (RevengeConfig.DamageBonus, base 15%).
+    //  - Rank 2: a Vendetta kill passes its mark to the nearest unmarked enemy around the death
+    //    (RevengeConfig.MarkSpreadRadius - see MaxVendettaSystem.TrySpreadMark), so one revenge hit
+    //    can chain through a pack instead of ending at the first kill.
+    //  - Rank 3: every Vendetta kill feeds Rage (RageOnVendettaKill - see
+    //    MaxOverdriveReactionSystem.TryRefundRage) and heals a guaranteed slice of Max HP
+    //    (RevengeConfig.MinHealFraction, base 1%). The per-kill ceiling (MaxHealFractionPerKill)
+    //    stays on from rank 1 so the chained kills can't turn into a healing engine.
     public unsafe partial class BloodDebtPassiveUpgradeData : PassiveUpgradeData
     {
-        [Tooltip("How long a Vendetta mark lasts, per rank.")]
-        public FP[] MarkDuration = { 12, 12, 12 };
+        [Tooltip("Bonus damage against Vendetta-marked enemies, per rank (base passive is 0.15).")]
+        public FP[] DamageBonus = { FP.FromString("0.30"), FP.FromString("0.30"), FP.FromString("0.30") };
 
         [Header("Rank 2")]
+        [Tooltip("A consumed mark jumps to the nearest enemy within this radius of the kill.")]
+        public FP MarkSpreadRadius = 6;
+
+        [Header("Rank 3")]
         [Tooltip("Rage stacks refunded per Vendetta kill.")]
         public byte RageOnVendettaKill = 2;
 
-        [Header("Rank 3")]
-        public FP HealMultiplierAtMaxRank = FP.FromString("0.60");
+        [Tooltip("Minimum heal per Vendetta kill, as a fraction of Max's own MaxHealth (base passive is 0.01).")]
+        public FP MinHealFractionAtMaxRank = FP.FromString("0.03");
 
         [Tooltip("Hard ceiling on a single Vendetta kill's heal, as a fraction of Max's own MaxHealth. Applied at every rank, not just rank 3.")]
         public FP MaxHealFractionPerKill = FP.FromString("0.15");
@@ -40,18 +39,18 @@ namespace Quantum
             f.AddOrGet<RevengeConfig>(entity, out var config);
 
             int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
-            config->MarkDuration = MarkDuration[index];
+            config->DamageBonus = DamageBonus[index];
             config->MaxHealFractionPerKill = MaxHealFractionPerKill;
 
             if (rank >= 2)
             {
-                config->RageOnVendettaKill = RageOnVendettaKill;
-                f.AddOrGet<ShieldDamageCountsForRevenge>(entity, out _);
+                config->MarkSpreadRadius = MarkSpreadRadius;
             }
 
             if (rank >= 3)
             {
-                config->HealMultiplier = HealMultiplierAtMaxRank;
+                config->RageOnVendettaKill = RageOnVendettaKill;
+                config->MinHealFraction = MinHealFractionAtMaxRank;
             }
         }
     }

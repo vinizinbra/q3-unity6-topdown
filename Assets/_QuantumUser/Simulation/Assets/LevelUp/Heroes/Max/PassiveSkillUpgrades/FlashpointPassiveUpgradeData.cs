@@ -16,10 +16,10 @@ namespace Quantum
     // boss fight without deleting one.
     public unsafe partial class FlashpointPassiveUpgradeData : PassiveUpgradeData
     {
-        [Header("Rank 1 - Hot Target")]
-        public FP CriticalChanceBonusVsBurning = FP._0_10;
+        [Header("Hot Target (all ranks)")]
+        public FP[] CriticalChanceBonusVsBurning = { FP.FromString("0.15"), FP.FromString("0.30"), FP.FromString("0.30") };
 
-        [Header("Rank 2 - Flashpoint")]
+        [Header("Rank 2 - Flashpoint (crits on Burning enemies explode)")]
         public FP ExplosionRadius = 3;
         public FP ExplosionDamageCoefficient = FP._0_50;
         public FP ExplosionProcCooldown = 2;
@@ -40,8 +40,10 @@ namespace Quantum
 
         public override void Apply(Frame f, EntityRef entity, int rank)
         {
+            int index = System.Math.Clamp(rank, 1, (int)MaxRank) - 1;
+
             f.AddOrGet<ConditionalCriticalModifier>(entity, out var modifier);
-            modifier->CriticalChanceBonusVsBurning = CriticalChanceBonusVsBurning;
+            modifier->CriticalChanceBonusVsBurning = CriticalChanceBonusVsBurning[index];
 
             if (rank >= 2)
             {

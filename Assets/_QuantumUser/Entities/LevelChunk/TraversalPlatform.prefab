@@ -397,7 +397,6 @@ GameObject:
   - component: {fileID: 4959216670235837303}
   - component: {fileID: 1042002844703497043}
   - component: {fileID: 8419207684791955034}
-  - component: {fileID: 8041154025980903769}
   - component: {fileID: 8442137513210814263}
   m_Layer: 6
   m_Name: VisualCube (15)
@@ -511,23 +510,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 333594bbb5f4445419e59fdae4798824, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkWallCube
---- !u!114 &8041154025980903769
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5866539230942344104}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0c3f10c40a1349a9a438c2f743a6012, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HasBuildingShadow
-  footprintRenderer: {fileID: 4959216670235837303}
-  maxAcquireAttempts: 5
-  acquireRetryInterval: 1
-  bakedShadow: {fileID: 0}
-  bakeShadowPrefabOverride: {fileID: 0}
 --- !u!114 &8442137513210814263
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -545,6 +527,12 @@ MonoBehaviour:
   mergeWithNeighbours: 0
   cellSize: 1
   mergeTolerance: 0.05
+  verticalOffset: -0.02
+  surfaceDecor: 0
+  groundBelowY: -0.5
+  cameraViewDirection: {x: 0, y: 0, z: 1}
+  wallPropMinY: 0.05
+  waterLevelY: 0
   variationSeed: 0
   generatedRoot: {fileID: 0}
   host: {fileID: 0}

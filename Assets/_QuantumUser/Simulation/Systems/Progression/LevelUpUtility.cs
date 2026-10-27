@@ -685,6 +685,19 @@ namespace Quantum
         // directly (the forced category IS stored, via FromChest) rather than re-deriving anything.
         // RollOptionsFor already resets Confirmed/SelectedIndex and overwrites Options in place (via
         // f.AddOrGet finding the existing component), so a reroll needs no separate "clear" step.
+        // CharacterStats.RerollQuantity is ONE shared pool - Level-Up/Chest, Cursed Rift, Store and Gunsmith
+        // rerolls all spend from it.
+        public static int GetRerollCharges(Frame f, EntityRef entity)
+        {
+            return f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) ? stats->RerollQuantity : 0;
+        }
+
+        public static void SpendRerollCharge(Frame f, EntityRef entity)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) && stats->RerollQuantity > 0)
+                stats->RerollQuantity--;
+        }
+
         public static void RerollOptionsFor(Frame f, EntityRef entity, LevelUpChoice* choice, LevelUpConfig config)
         {
             if (choice->Confirmed == true)

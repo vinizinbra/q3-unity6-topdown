@@ -49,7 +49,7 @@ namespace Quantum
             traversalChallenge->Chunk = chunkEntity;
 
             traversalChallenge->State = TraversalChallengeState.Active;
-            traversalChallenge->RemainingTime = traversalChallenge->Duration;
+            traversalChallenge->RemainingTime = ResolveDuration(f, traversalChallenge);
             traversalChallenge->ActivatedBy = player;
             f.Global->ActiveTraversalChallengeCount++;
 
@@ -68,7 +68,7 @@ namespace Quantum
 
             f.Events.TraversalChallengeActivated(challenge, player);
 
-            Log.Debug($"[TraversalChallenge] {player} activated {challenge} - {platformCount} platform(s) + reward {traversalChallenge->SpawnedReward} spawned, {traversalChallenge->Duration.AsFloat}s to reach the checkpoint");
+            Log.Debug($"[TraversalChallenge] {player} activated {challenge} - {platformCount} platform(s) + reward {traversalChallenge->SpawnedReward} spawned, {traversalChallenge->RemainingTime.AsFloat}s to reach the checkpoint");
         }
 
         // Called from TraversalChallengeSystem the tick a player reaches the checkpoint. Platforms
@@ -220,6 +220,16 @@ namespace Quantum
 
         // Clamped at 0 as cheap insurance against a future double-decrement bug permanently freezing
         // SurvivalTime/spawning for the rest of the run.
+        // The run's difficulty tier picks the timer from TraversalChallengeConfig; the activator's own
+        // Duration is only the fallback when OverallGameConfig has no TraversalChallengeConfig assigned.
+        private static FP ResolveDuration(Frame f, TraversalChallenge* traversalChallenge)
+        {
+            if (f.GameConfig.TraversalChallengeConfig.IsValid == false)
+                return traversalChallenge->Duration;
+
+            return f.FindAsset(f.GameConfig.TraversalChallengeConfig).GetDuration(f.Global->Difficulty.Tier);
+        }
+
         private static void Decrement(Frame f)
         {
             if (f.Global->ActiveTraversalChallengeCount > 0)

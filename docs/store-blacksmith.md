@@ -366,3 +366,15 @@ minute N gives weapons of the same level, perk count, perk rarity and perk-confl
 `StoreConfig.TalentRarityTuning`, `StoreUtility.RollStorePerks` and `ResolveWeaponLevelTalent` are gone; perk rarity
 for every source comes from `TalentsConfig.WeaponPerkRarityByLevel` (the Weapons meta line, level 0 = pool weights).
 The Balance Simulator's Store offers use the same roll. See `docs/talents.md`, "Meta progression".
+
+## Rerolls with the shared charge pool (2026-10-27)
+
+Both POIs' ChooseWindow now always shows the Reroll button, spending `CharacterStats.RerollQuantity` (the
+Rerolls talent's run charges, shared with Level-Up and Cursed Rift):
+- **Store** - `RerollStoreCommand` → `StoreUtility.Reroll` redraws the rolled weapon + food offers. The
+  inventory is on the Store entity, so this **restocks for the whole team**. Purchase tracking is now keyed by
+  `StoreInventory.RollId` (bumped on every restock and reroll) via `StorePurchaseEntry.PurchasedAtRollId`
+  (was `PurchasedAtBreathingIndex`), so freshly rerolled slots are buyable again. Weapon Level and Accessory
+  service are not rolled and stay as they are.
+- **Gunsmith** - `BlacksmithUtility.Reroll` uses this Break's free L4 reroll first, then a shared charge. The
+  button count is `BlacksmithUtility.GetRerollCharges` (free + shared).

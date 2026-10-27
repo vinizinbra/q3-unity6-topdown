@@ -28,6 +28,11 @@ component PlayerPing
     Int32 GroundSpamCount;
 }
 
+// Marks a ping-able POI that has already been auto-pinged on first discovery this run (PingSystem).
+component PoiPingDiscovered
+{
+}
+
 // synced: the HUD feed/minimap/sound must fire once per real ping, not once per predicted re-sim.
 synced event PingPlaced
 {
@@ -38,4 +43,6 @@ synced event PingPlaced
     EntityRef Target;
     // The pinged POI's state for the pinger (Available/PhaseUnavailable/AlreadyUsed...); None for non-POI pings.
     ContextInteractionState State;
+    // True for PingSystem's automatic first-discovery POI ping (feed shows "Found X" instead).
+    Boolean Auto;
 }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PingPoi
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
-  - clip: {fileID: 8300000, guid: 678c20c50bf544952bbdef6a106f43ce, type: 3}
+  - clip: {fileID: 8300000, guid: 2f597a0126e6a4b419c445cfd8ef7e29, type: 3}
     overrideTrim: 0
     startAt: 0
     endAt: 0
@@ -27,7 +27,7 @@ MonoBehaviour:
   group: 2
   output: {fileID: 0}
   volume: {x: 0.4, y: 0.4}
-  pitch: {x: 0.8, y: 0.85}
+  pitch: {x: 1, y: 1}
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
@@ -37,6 +37,7 @@ MonoBehaviour:
   loop: 0
   quieterWhenRemote: 0
   localPlayerOnly: 0
+  haptic: 0
   spatial: 0
   cooldown: 0.1
   maxConcurrent: 4

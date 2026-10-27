@@ -19632,13 +19632,13 @@ MonoBehaviour:
       RawValue: 262144
     PlatformPrototype:
       Id:
-        Value: 1453906629759128079
+        Value: 1296243609201349578
     PlatformCount: 1
     PlatformPositions:
     - X:
         RawValue: 786432
       Y:
-        RawValue: -65536
+        RawValue: -262144
       Z:
         RawValue: 262144
     - X:

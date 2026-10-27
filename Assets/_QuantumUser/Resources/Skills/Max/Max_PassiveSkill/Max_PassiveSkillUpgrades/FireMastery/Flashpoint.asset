@@ -21,16 +21,13 @@ MonoBehaviour:
   Description: Burning enemies take extra crits, explode on crit, and can be executed.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Gain <color=#FD3971>+10%</color> Crit Chance against Burning enemies.
-  - Gain <color=#FD3971>+10%</color> Crit Chance against Burning enemies. Hitting
-    them can trigger a <color=#FD3971>3m</color> explosion dealing <color=#FD3971>50%</color>
-    Damage.
-  - <color=#FD3971>+10%</color> Crit Chance vs Burning enemies, and hits can trigger
-    a <color=#FD3971>3m</color> explosion (<color=#FD3971>50%</color> Damage). Burning
-    enemies below <color=#FD3971>15%</color> Health are executed; Elites and Bosses
-    take <color=#FD3971>+25%</color> Damage instead.
+  - Gain <color=#FD3971>+15%</color> Crit Chance against Burning enemies.
+  - Gain <color=#FD3971>+30%</color> Crit Chance against Burning enemies. Crits on them explode for <color=#FD3971>50%</color> Damage in <color=#FD3971>3m</color>.
+  - Gain <color=#FD3971>+30%</color> Crit Chance against Burning enemies. Crits on them explode for <color=#FD3971>50%</color> Damage in <color=#FD3971>3m</color>. Burning enemies below <color=#FD3971>15%</color> Health are executed; Elites and Bosses take <color=#FD3971>+25%</color> Damage instead.
   CriticalChanceBonusVsBurning:
-    RawValue: 6554
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 19661
   ExplosionRadius:
     RawValue: 196608
   ExplosionDamageCoefficient:

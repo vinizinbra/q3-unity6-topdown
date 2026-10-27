@@ -90,7 +90,7 @@ component BotBrain
     FP RepathTimer;
 
     // Once-per-Breathing-Break guards for each POI kind the bot uses, compared against
-    // Global.BreathingIndex (same idiom as StorePurchaseEntry.PurchasedAtBreathingIndex). Seeded to
+    // Global.BreathingIndex (same idiom as StoreInventory.RolledAtBreathingIndex). Seeded to
     // -1 (PlayerSpawnUtility.ConvertToBot) so they never false-match BreathingIndex 0.
     Int32 StoreAttemptedAtBreathingIndex;
     Int32 BlacksmithAttemptedAtBreathingIndex;

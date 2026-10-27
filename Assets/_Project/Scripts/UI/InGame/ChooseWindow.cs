@@ -628,7 +628,7 @@ public class ChooseWindow : UiWindow
     // (see GameplayUiController.UpdateUpgradeScreen). secondaryButton always shows here ("KEEP
     // CURRENT") - all 3 weaponCards stay real rolled weapons (see
     // LevelUpUtility.RollChooseWeaponOptionsFor), the button is the sole way to decline them.
-    // Reroll always shows too - only Cursed Rift's own Refresh calls ever hide it.
+    // Reroll always shows too.
     public void RefreshWeaponChoice(string title, float timeRemaining, WeaponCardWidget.CardData[] cardData, int? confirmedIndex, string subtitle = null, WeaponCardWidget.CardData currentWeapon = default)
     {
         SetCardFamilyActive(showCards: false, showWeaponCards: true);
@@ -682,8 +682,8 @@ public class ChooseWindow : UiWindow
     }
 
     // UpdateRerollButton (below) only ever sets .interactable/.text, never visibility - that's
-    // owned here instead, since it has to flip per-screen (Level-Up/Choose-Weapon: on; Cursed
-    // Rift: off) rather than every tick alongside charge count.
+    // owned here instead, since it has to flip per-screen rather than every tick alongside charge
+    // count. Every screen shows it today (Level-Up, Choose-Weapon, Cursed Rift, Store, Blacksmith).
     private void SetRerollButtonActive(bool active)
     {
         if (rerollButton != null)
@@ -907,7 +907,7 @@ public class ChooseWindow : UiWindow
         RefreshSubtitle(subtitle);
         RefreshCountdown(0f, false);
         SetSecondaryButtonActive(true, "CLOSE");
-        SetRerollButtonActive(false);
+        SetRerollButtonActive(true);
 
         // Store is the one screen that can be handed MORE card data than this window was authored
         // with (its rolled food offers plus two guaranteed, never-rolled offers - Increase Weapon
@@ -934,6 +934,7 @@ public class ChooseWindow : UiWindow
             weaponCards[i].Setup(data, interactable: true);
         }
 
+        ReplayCardsIfRerolled(BuildSignature(foodData) + BuildSignature(weaponData));
         ApplyNavigation();
         SelectFirstInteractableOnce();
 

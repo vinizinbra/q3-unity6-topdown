@@ -7,4 +7,8 @@ component VendettaStrikeHitTracker
 {
     array<EntityRef>[8] HitEntities;
     Byte HitCount;
+
+    // Rank 2 - set when this dash passed through at least one enemy; the Dash charge refund itself
+    // lands at the action's End phase (see VendettaStrikeSkillAction.TryRefundDash).
+    Boolean DashRefundEarned;
 }

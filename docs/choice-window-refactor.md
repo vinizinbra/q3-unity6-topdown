@@ -94,7 +94,8 @@ existing call site is unaffected:
 - `Refresh`'s `bool allowReroll = true` param - unlike `secondaryButton`/`allowCancel`, this one
   needed a THIRD state: reroll is valid on a plain Level-Up and on Choose-Weapon
   (`RefreshWeaponChoice` always passes it true), but not on Cursed Rift's own screen
-  (`RefreshCursedRiftWindow` always passes `allowReroll: false` - `allowCancel` alone can't
+  (2026-10-27: every POI screen now shows Reroll on the shared charge pool - see
+  `docs/store-blacksmith.md`. Historical: `RefreshCursedRiftWindow` always passed `allowReroll: false` - `allowCancel` alone can't
   express this, since Cursed Rift's own screen sets that true too). `SetRerollButtonActive`
   toggles `rerollButton`/`rerollChargesText` visibility - the pre-existing
   `UpdateRerollButton(charges, confirmed)` only ever set `.interactable`/`.text`, never visibility,

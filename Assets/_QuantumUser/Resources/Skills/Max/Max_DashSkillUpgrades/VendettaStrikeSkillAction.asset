@@ -19,18 +19,16 @@ MonoBehaviour:
   Icon: {fileID: -3262651373810298449, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Vendetta Strike
   RankDescriptions:
-  - Enemies you Dash through start Burning.
-  - Enemies you Dash through start Burning and are marked by Vendetta.
-  - Enemies you Dash through start Burning and are marked by Vendetta. Dashing also
-    cuts Overdrive's cooldown by <color=#FD3971>2s</color>, or extends an active
-    Overdrive by <color=#FD3971>1s</color>.
+  - Enemies you Dash through are marked by Vendetta.
+  - Enemies you Dash through are marked by Vendetta. Hitting at least one refunds the Dash.
+  - Enemies you Dash through are marked by Vendetta. Hitting at least one refunds the Dash. Each enemy hit cuts Overdrive's cooldown by <color=#FD3971>0.5s</color> (max <color=#FD3971>3s</color>), or extends an active Overdrive by <color=#FD3971>0.5s</color>.
   <MaxRank>k__BackingField: 3
   Priority: 0
-  Phase: 2
+  Phase: 7
   Interval:
     RawValue: 0
   Activated: 1
-  Description: Dashing through an enemy Burns it.
+  Description: Dashing through enemies marks them for Vendetta.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -57,11 +55,7 @@ MonoBehaviour:
     Alignment: 0
   Radius:
     RawValue: 98304
-  BurnDuration:
+  RewardPerHit:
+    RawValue: 32768
+  MaxRewardPerDash:
     RawValue: 196608
-  BurnIntensity:
-    RawValue: 6554
-  CooldownReduction:
-    RawValue: 131072
-  OverdriveDurationBonus:
-    RawValue: 65536

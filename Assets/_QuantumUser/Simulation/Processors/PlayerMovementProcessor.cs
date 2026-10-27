@@ -257,23 +257,25 @@ namespace Quantum
                 return moveDirection;
             }
 
+            // Traversal chunks (docs/traversal-challenge.md) author an intentionally uncrossable-
+            // looking gap on purpose - the temp platforms ARE the crossing, so holding the player at
+            // its edge like an accidental water/void fall would just fight the puzzle. Checked BEFORE
+            // the shore reroute below: rerouting a diagonal input along the edge is exactly the "drag"
+            // a player feels when leaving a traversal platform at an angle (e.g. jumping off a side to
+            // jump + Dash around a wall). Still only pays for a nearest-chunk scan on the already-rare
+            // tick a real edge with no landing was found, same as every other reactive, not per-tick,
+            // use of FallRespawnUtility.TryFindNearestChunk.
+            if (IsInTraversalChunk(context.Frame, position) == true)
+            {
+                movement->WaterEdgeHesitationTimer = FP._0;
+                return moveDirection;
+            }
+
             FPVector3 redirected = TryRerouteAlongShore(context, data, position, moveDirection);
             if (redirected != default)
             {
                 movement->WaterEdgeHesitationTimer = FP._0;
                 return redirected;
-            }
-
-            // Traversal chunks (docs/traversal-challenge.md) author an intentionally uncrossable-
-            // looking gap on purpose - the temp platforms ARE the crossing, so holding the player at
-            // its edge like an accidental water/void fall would just fight the puzzle. Checked here
-            // (not earlier) so this only pays for a nearest-chunk scan on the already-rare tick a
-            // real edge with no landing/reroute was found, same as every other reactive, not per-
-            // tick, use of FallRespawnUtility.TryFindNearestChunk.
-            if (IsInTraversalChunk(context.Frame, position) == true)
-            {
-                movement->WaterEdgeHesitationTimer = FP._0;
-                return moveDirection;
             }
 
             movement->WaterEdgeHesitationTimer += context.Frame.DeltaTime;

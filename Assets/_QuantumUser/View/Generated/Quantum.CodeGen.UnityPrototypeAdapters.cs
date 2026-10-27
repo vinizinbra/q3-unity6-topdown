@@ -1021,14 +1021,14 @@ namespace Quantum.Prototypes.Unity {
     public Quantum.QuantumEntityPrototype Store;
     public Byte OfferIndex;
     public QBoolean IsWeaponOffer;
-    public Int32 PurchasedAtBreathingIndex;
+    public Int32 PurchasedAtRollId;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.StorePurchaseEntryPrototype prototype);
     public override Quantum.Prototypes.StorePurchaseEntryPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.StorePurchaseEntryPrototype();
       converter.Convert(this.Store, out result.Store);
       converter.Convert(this.OfferIndex, out result.OfferIndex);
       converter.Convert(this.IsWeaponOffer, out result.IsWeaponOffer);
-      converter.Convert(this.PurchasedAtBreathingIndex, out result.PurchasedAtBreathingIndex);
+      converter.Convert(this.PurchasedAtRollId, out result.PurchasedAtRollId);
       ConvertUser(converter, ref result);
       return result;
     }
@@ -1226,11 +1226,13 @@ namespace Quantum.Prototypes.Unity {
     [ArrayLengthAttribute(8)]
     public Quantum.QuantumEntityPrototype[] HitEntities = new Quantum.QuantumEntityPrototype[8];
     public Byte HitCount;
+    public QBoolean DashRefundEarned;
     partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.VendettaStrikeHitTrackerPrototype prototype);
     public override Quantum.Prototypes.VendettaStrikeHitTrackerPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
       var result = new Quantum.Prototypes.VendettaStrikeHitTrackerPrototype();
       converter.Convert(this.HitEntities, out result.HitEntities);
       converter.Convert(this.HitCount, out result.HitCount);
+      converter.Convert(this.DashRefundEarned, out result.DashRefundEarned);
       ConvertUser(converter, ref result);
       return result;
     }

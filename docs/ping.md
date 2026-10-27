@@ -19,6 +19,11 @@ Gamepad **Y** (`GamepadControls.PingHeld`), keyboard **middle mouse** (P1 only f
 | Nothing nearby (no Elite/POI) | Ground (marks the pinger's own position) | Look here |
 | 3 Ground pings in 3s | StickTogether (marks the pinger's own position) | Stick together! |
 
+**Auto-ping on first find.** Outside Lobby, the first Alive human player within `PoiDiscoverRadius` (10)
+of a ping-able POI pings it automatically (same `PingPlaced` event/kind/state with `Auto = true`, attributed to that player; the feed shows just "Found <POI>" via `PingPresentation.GetFoundMessage`),
+then the POI gets a `PoiPingDiscovered` marker so it never auto-pings again that run. Skips Team Challenges
+already Done/Failed; ignores the player's ping cooldown; bots don't discover.
+
 Works in Breathing and Survival (not tied to `PoiAvailability`). KO and bots never ping.
 Cooldowns (per player): 0.5s general, 10s on StickTogether. `PlayerPing` is added lazily via `AddOrGet`.
 

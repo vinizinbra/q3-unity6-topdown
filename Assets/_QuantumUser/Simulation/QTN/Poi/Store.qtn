@@ -47,6 +47,11 @@ component StoreInventory
 {
     Int32 RolledAtBreathingIndex; // -1 initially - never matches a real Global.BreathingIndex
 
+    // Bumped by every roll (restock AND RerollStoreCommand) - StorePurchaseEntry.PurchasedAtRollId
+    // compares against this, so a reroll mid-Break frees the rerolled offer slots for everyone.
+    // Starts at 0; the first roll makes it 1, so an empty entry never matches.
+    Int32 RollId;
+
     array<StoreWeaponOffer>[3] WeaponOffers;
     Byte WeaponOfferCount; // may be < 3 if the weapon pool is thin
 
@@ -70,7 +75,7 @@ component StoreInteraction
 // Find-and-overwrite-in-place by (Store, OfferIndex, IsWeaponOffer), same idiom
 // PoiUsageUtility.MarkUsed already uses for its own array. [8] is headroom for the whole run (at
 // most 5 real entries: 3 weapon + 2 food offers from the one Store instance this pass) - the SAME
-// (Store, OfferIndex) slot's entry is simply overwritten with a fresh PurchasedAtBreathingIndex
+// (Store, OfferIndex) slot's entry is simply overwritten with a fresh PurchasedAtRollId
 // once a NEW inventory roll reuses that index for a different item, so this never actually fills up
 // regardless of how many Breaks a run has.
 struct StorePurchaseEntry
@@ -78,7 +83,7 @@ struct StorePurchaseEntry
     EntityRef Store;
     Byte OfferIndex;
     Boolean IsWeaponOffer;
-    Int32 PurchasedAtBreathingIndex;
+    Int32 PurchasedAtRollId; // StoreInventory.RollId at purchase time
 }
 
 component StorePurchases

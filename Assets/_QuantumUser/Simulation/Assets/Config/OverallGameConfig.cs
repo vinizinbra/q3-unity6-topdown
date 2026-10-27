@@ -110,6 +110,11 @@ namespace Quantum
         // BlacksmithUtility and docs/store-blacksmith.md.
         public AssetRef<BlacksmithConfig> BlacksmithConfig;
 
+        // Traversal Challenge timer per difficulty tier - see TraversalChallengeConfig,
+        // TraversalChallengeUtility.TryActivate and docs/traversal-challenge.md. Unassigned falls back to
+        // each activator's own authored TraversalChallenge.Duration.
+        public AssetRef<TraversalChallengeConfig> TraversalChallengeConfig;
+
         [Header("Talents")]
         // Meta-progression talent tuning (flat per-level bonus shared by every leveling talent) -
         // see TalentsConfig, TalentUtility and RuntimePlayer's own Player*/Has*/Can* fields.

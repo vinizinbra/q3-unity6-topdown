@@ -317,6 +317,42 @@ namespace Quantum
             Log.Debug($"[CursedRift] {player} confirmed the sacrifice - interaction complete");
         }
 
+        // Called from CursedRiftSystem when a RerollCursedRiftCommand lands - spends one shared
+        // CharacterStats.RerollQuantity charge to redraw the sacrifice(s) AND the mutation together. The new
+        // pair replaces the cached offer too, so Cancel + reopen keeps the paid-for reroll (still no free
+        // slot machine - every redraw costs a charge). No charge is spent if either roll comes up empty.
+        public static void Reroll(Frame f, EntityRef player, CursedRiftInteraction* interaction)
+        {
+            if (LevelUpUtility.GetRerollCharges(f, player) <= 0)
+                return;
+
+            if (f.GameConfig.CursedRiftConfig.IsValid == false || f.GameConfig.LevelUpConfig.IsValid == false)
+                return;
+
+            CursedRiftConfig config = f.FindAsset(f.GameConfig.CursedRiftConfig);
+
+            if (config.SacrificePool.IsValid == false)
+                return;
+
+            int sacrificeChoices = interaction->AltSacrifice.IsValid ? 2 : 1;
+            AssetRef<SacrificeDefinition>[] rolledSacrifice = RollSacrificeOptions(f, player, f.FindAsset(config.SacrificePool), sacrificeChoices);
+            LevelUpOption[] rolledMutation = LevelUpUtility.RollMutationOptions(f, player, f.FindAsset(f.GameConfig.LevelUpConfig), 1);
+
+            if (rolledSacrifice.Length == 0 || rolledMutation.Length == 0)
+            {
+                Log.Debug($"[CursedRift] {player} reroll found nothing eligible - no charge spent");
+                return;
+            }
+
+            interaction->Sacrifice = rolledSacrifice[0];
+            interaction->AltSacrifice = rolledSacrifice.Length > 1 ? rolledSacrifice[1] : default;
+            interaction->Mutation = rolledMutation[0];
+            SetCachedOffer(f, player, interaction->Rift, interaction->Sacrifice, interaction->AltSacrifice, interaction->Mutation);
+            LevelUpUtility.SpendRerollCharge(f, player);
+
+            Log.Debug($"[CursedRift] {player} rerolled their offer - {LevelUpUtility.GetRerollCharges(f, player)} charge(s) left");
+        }
+
         // Called from CursedRiftSystem when a CancelCursedRiftCommand lands - always meaningful now
         // (nothing is applied until Confirm above), unlike the old two-stage flow where Cancel
         // became a no-op once past the Sacrifice stage. Deliberately does NOT clear the cached

@@ -4,42 +4,32 @@ namespace Quantum
     using Quantum.Physics3D;
     using UnityEngine;
 
-    // Dash line 10 - each rank unlocks a genuinely new effect on top of the last, rather than scaling
-    // the same numbers:
-    //  - Rank 1: applies Burn to any enemy caught in the dash. No Vendetta mark yet - Burn only, also
-    //    granting CanApplyBurn so Flashpoint becomes eligible.
-    //  - Rank 2: also creates/refreshes a RevengeMark on that enemy, even one that's never damaged Max
-    //    (unlike the base Vendetta passive, which only ever marks reactively - see MaxVendettaSystem).
-    //    Deliberate: this is a picked Ascension, not automatic base-passive behavior, so gating
-    //    proactive marking behind it (rather than making every weapon hit mark unconditionally, which
-    //    was tried and reverted - see MaxVendettaSystem's own comment) is what makes it a real choice.
-    //    Worth taking even on a fresh, unmarked enemy purely for the base Vendetta bonus damage the
-    //    mark grants plus the guaranteed RevengeConfig.MinHealFraction/EnemyMaxHealthFraction floor on
-    //    a kill, even with zero StoredDamage banked.
-    //  - Rank 3: also rewards landing the strike depending on Overdrive's own current state - reduces
-    //    the Hero Skill's own cooldown if dormant, or extends the current Overdrive activation if
-    //    already active. That extension goes through OverdriveUtility.TryExtend like every other
-    //    source, so it books against - and is capped by - the same shared per-activation
-    //    OverdriveExtension ledger Uncontrolled Fury uses. There is deliberately no way for this to
-    //    add duration past that ceiling, no matter how many enemies a dash sweeps.
+    // Dash line 10 - the dash marks enemies and feeds Vendetta and Overdrive (deals no damage itself):
+    //  - Rank 1: every enemy the dash passes through is marked by Vendetta (the one deliberate way to
+    //    mark proactively - see MaxVendettaSystem's comment on why weapon hits don't).
+    //  - Rank 2: a dash that passes through at least one enemy hands back the charge it spent
+    //    (TryRefundDash, at End - before SkillSystem.FinishSkill arms that charge's cooldown), so
+    //    Max can keep chaining dashes through a pack.
+    //  - Rank 3: each enemy hit cuts the Hero Skill's cooldown if Overdrive is dormant, or extends an
+    //    active Overdrive, by RewardPerHit - at most MaxRewardPerDash per dash. The extension goes
+    //    through OverdriveUtility.TryExtend, so it also books against the shared per-activation
+    //    OverdriveExtension ledger Uncontrolled Fury uses.
     // Procs at most once per enemy per dash - see VendettaStrikeHitTracker, granted fresh on this
     // action's own Begin phase, same shape/precedent as Brute's IronShoulderSkillAction/
     // IronShoulderHitTracker. Enemy sweep shape copied from Pixie's SlowFuseSkillAction.
     public unsafe partial class VendettaStrikeSkillAction : SkillActionData
     {
         public FP Radius = FP._1_50;
-        public FP BurnDuration = 3;
-        public FP BurnIntensity = FP._0_10;
 
         [Header("Rank 3")]
-        public FP CooldownReduction = 2;
-        public FP OverdriveDurationBonus = 1;
+        public FP RewardPerHit = FP._0_50;
+        public FP MaxRewardPerDash = 3;
 
         private const int MaxTrackedHits = 8;
 
         public VendettaStrikeSkillAction()
         {
-            Phase = SkillActionPhase.Begin | SkillActionPhase.OnGoing;
+            Phase = SkillActionPhase.Begin | SkillActionPhase.OnGoing | SkillActionPhase.End;
             Interval = 0;
         }
 
@@ -50,15 +40,24 @@ namespace Quantum
             {
                 f.AddOrGet<VendettaStrikeHitTracker>(filter.Entity, out var tracker);
                 tracker->HitCount = 0;
+                tracker->DashRefundEarned = false;
                 return;
             }
 
-            ElementalReactionConfig effectConfig = StatusEffectUtility.GetElementalReactionConfig(f);
-
-            if (effectConfig == null)
-                return;
-
             int rank = System.Math.Max(1, SkillUpgradeUtility.GetRank(f, filter.Entity, selfRef));
+
+            if (firedPhase == SkillActionPhase.End)
+            {
+                if (rank >= 2)
+                {
+                    TryRefundDash(f, filter.Entity, slot);
+                }
+
+                return;
+            }
+
+            if (f.Unsafe.TryGetPointer<RevengeConfig>(filter.Entity, out var config) == false)
+                return;
 
             // Skill Area - see StatUtility.GetAreaMultiplier.
             Shape3D sphere = Shape3D.CreateSphere(Radius * StatUtility.GetAreaMultiplier(f, filter.Entity));
@@ -74,23 +73,12 @@ namespace Quantum
                 if (TryMarkProcced(f, filter.Entity, target) == false)
                     continue;
 
-                StatusEffectUtility.ApplyBurn(f, target, BurnDuration, BurnIntensity, filter.Entity, DamageSource.Skill, effectConfig.TickInterval, effectConfig.BurnMaxStacks);
-                f.AddOrGet<CanApplyBurn>(filter.Entity, out _);
-
-                if (rank >= 2 && f.Unsafe.TryGetPointer<RevengeConfig>(filter.Entity, out var config) == true)
+                if (rank >= 2 && f.Unsafe.TryGetPointer<VendettaStrikeHitTracker>(filter.Entity, out var tracker) == true)
                 {
-                    f.AddOrGet<RevengeMark>(target, out var mark);
-
-                    if (mark->MarkedBy != filter.Entity)
-                    {
-                        // A different Vendetta holder (or no holder yet) claims this enemy - any
-                        // previously stored damage belonged to someone else and is discarded.
-                        mark->MarkedBy = filter.Entity;
-                        mark->StoredDamage = FP._0;
-                    }
-
-                    mark->RemainingDuration = config->MarkDuration;
+                    tracker->DashRefundEarned = true;
                 }
+
+                MaxVendettaSystem.ApplyMark(f, filter.Entity, target, config);
 
                 if (rank >= 3)
                 {
@@ -106,9 +94,9 @@ namespace Quantum
         }
 
         // False if target already procced earlier this activation (see VendettaStrikeHitTracker) -
-        // this action has nothing else to gate per hit, so a dedupe here covers the Burn, mark
-        // refresh and rank-3 reward all at once. Once the tracker's capacity is full, any further new
-        // enemy just isn't deduped (falls back to repeat-every-tick behavior).
+        // this action has nothing else to gate per hit, so a dedupe here covers the mark and
+        // rank-3 reward all at once. Once the tracker's capacity is full, any further new enemy just
+        // isn't deduped (falls back to repeat-every-tick behavior).
         private static bool TryMarkProcced(Frame f, EntityRef caster, EntityRef target)
         {
             if (f.Unsafe.TryGetPointer<VendettaStrikeHitTracker>(caster, out var tracker) == false)
@@ -129,20 +117,42 @@ namespace Quantum
             return true;
         }
 
+        // Rank 2 - runs at End, before SkillSystem.FinishSkill arms the cooldown for the charge this
+        // dash spent: putting the charge straight back means FinishSkill finds nothing to recover
+        // (or keeps recovering whatever other charge already was). Capped at the effective max, so
+        // it respects Dead Weight's hard cap.
+        private static void TryRefundDash(Frame f, EntityRef entity, SkillSlot* slot)
+        {
+            if (f.Unsafe.TryGetPointer<VendettaStrikeHitTracker>(entity, out var tracker) == false || tracker->DashRefundEarned == false)
+                return;
+
+            tracker->DashRefundEarned = false;
+
+            if (slot->CurrentStacks < SkillSystem.ResolveEffectiveMaxStacks(f, entity, SkillSlotId.DashSkill, slot))
+            {
+                slot->CurrentStacks++;
+            }
+        }
+
         // Rank 3 - Overdrive's own current state decides the reward: RageOverdrive only exists while
         // an activation is actually running (same presence-as-state-check idiom every other Overdrive
-        // Ascension here uses), so its absence means dormant.
+        // Ascension here uses), so its absence means dormant. Capped per dash off the hit tracker's
+        // own count (this hit is already in it).
         private void TryRewardOverdrive(Frame f, EntityRef entity)
         {
+            if (f.Unsafe.TryGetPointer<VendettaStrikeHitTracker>(entity, out var tracker) == true
+                && (FP)tracker->HitCount * RewardPerHit > MaxRewardPerDash)
+                return;
+
             if (f.Has<RageOverdrive>(entity) == true)
             {
-                OverdriveUtility.TryExtend(f, entity, OverdriveDurationBonus);
+                OverdriveUtility.TryExtend(f, entity, RewardPerHit);
                 return;
             }
 
             if (f.Unsafe.TryGetPointer<CharacterSkills>(entity, out var skills) == true)
             {
-                SkillSystem.ReduceCooldown(f, skills, SkillSlotId.HeroSkill, CooldownReduction);
+                SkillSystem.ReduceCooldown(f, skills, SkillSlotId.HeroSkill, RewardPerHit);
             }
         }
     }

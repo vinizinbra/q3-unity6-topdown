@@ -18,21 +18,20 @@ MonoBehaviour:
       Value: 514137246864066863
   Icon: {fileID: -692279739383949824, guid: 55e70f76dcf764894a0ec67facbecb4b, type: 3}
   DisplayName: Blood Debt
-  Description: Vendetta marks last longer, feed your Rage, and heal you.
+  Description: Vendetta marks hit harder, spread on kill, and feed your Rage.
   <MaxRank>k__BackingField: 3
   RankDescriptions:
-  - Vendetta marks last <color=#FD3971>12s</color>.
-  - Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward
-    them. Vendetta kills grant <color=#FD3971>+2</color> Rage.
-  - Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward
-    them. Vendetta kills grant <color=#FD3971>+2</color> Rage and heal <color=#FD3971>60%</color>
-    of the mark's damage (max <color=#FD3971>15%</color> Max HP).
-  MarkDuration:
-  - RawValue: 786432
-  - RawValue: 786432
-  - RawValue: 786432
+  - Vendetta-marked enemies take <color=#FD3971>+30%</color> Damage.
+  - Vendetta-marked enemies take <color=#FD3971>+30%</color> Damage. Killing one passes its mark to the nearest enemy within <color=#FD3971>6m</color>.
+  - Vendetta-marked enemies take <color=#FD3971>+30%</color> Damage. Killing one passes its mark to the nearest enemy within <color=#FD3971>6m</color>, grants <color=#FD3971>+2</color> Rage and heals <color=#FD3971>3%</color> Max HP.
+  DamageBonus:
+  - RawValue: 19661
+  - RawValue: 19661
+  - RawValue: 19661
+  MarkSpreadRadius:
+    RawValue: 393216
   RageOnVendettaKill: 2
-  HealMultiplierAtMaxRank:
-    RawValue: 39322
+  MinHealFractionAtMaxRank:
+    RawValue: 1966
   MaxHealFractionPerKill:
     RawValue: 9830

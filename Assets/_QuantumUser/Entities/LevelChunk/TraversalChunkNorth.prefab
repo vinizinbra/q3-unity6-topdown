@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 343470159375536174}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4, y: 1.2001001, z: 1}
+  m_LocalPosition: {x: 7, y: 1.2004001, z: 1}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -147,7 +147,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -3, z: 0}
-  m_LocalScale: {x: 20, y: 4, z: 40}
+  m_LocalScale: {x: 20, y: 4, z: 34}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -283,7 +283,6 @@ GameObject:
   - component: {fileID: 6376268145286619357}
   - component: {fileID: 3263875452221699154}
   - component: {fileID: 4622573304980952706}
-  - component: {fileID: 2217608245091223901}
   - component: {fileID: 8059850809554079066}
   m_Layer: 6
   m_Name: VisualCube (8)
@@ -301,8 +300,8 @@ Transform:
   m_GameObject: {fileID: 2588846583440560901}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 14, y: -3, z: 35}
-  m_LocalScale: {x: 6, y: 8, z: 5}
+  m_LocalPosition: {x: 14, y: -4, z: 29}
+  m_LocalScale: {x: 6, y: 9, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -397,23 +396,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 333594bbb5f4445419e59fdae4798824, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkWallCube
---- !u!114 &2217608245091223901
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2588846583440560901}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0c3f10c40a1349a9a438c2f743a6012, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HasBuildingShadow
-  footprintRenderer: {fileID: 6376268145286619357}
-  maxAcquireAttempts: 5
-  acquireRetryInterval: 1
-  bakedShadow: {fileID: 0}
-  bakeShadowPrefabOverride: {fileID: 0}
 --- !u!114 &8059850809554079066
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -562,178 +544,6 @@ MonoBehaviour:
   baseScale: 0.5
   shadowOffset: {x: 0, y: 0}
   shadowAlphaMultiplier: 1
---- !u!1 &3750710248680348189
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6112532186409315495}
-  - component: {fileID: 925991544220395859}
-  - component: {fileID: 3961166231994635615}
-  - component: {fileID: 2884681467347622369}
-  - component: {fileID: 3962287806644805289}
-  - component: {fileID: 4006844483860286359}
-  - component: {fileID: 7127844691328414617}
-  m_Layer: 6
-  m_Name: VisualCube (3)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
-  m_IsActive: 1
---- !u!4 &6112532186409315495
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3750710248680348189}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6, y: -3, z: 7}
-  m_LocalScale: {x: 12, y: 4, z: 6}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8286577222371609028}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &925991544220395859
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3750710248680348189}
-  m_Mesh: {fileID: 2893198932967393565, guid: a25f247b40acd432ca1be94906b989d5, type: 3}
---- !u!23 &3961166231994635615
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3750710248680348189}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 0ca565f904af849d1a19e44b5d468202, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &2884681467347622369
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3750710248680348189}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0.5, y: 0.5001, z: 0.5}
---- !u!114 &3962287806644805289
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3750710248680348189}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 333594bbb5f4445419e59fdae4798824, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChunkWallCube
---- !u!114 &4006844483860286359
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3750710248680348189}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0c3f10c40a1349a9a438c2f743a6012, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HasBuildingShadow
-  footprintRenderer: {fileID: 3961166231994635615}
-  maxAcquireAttempts: 5
-  acquireRetryInterval: 1
-  bakedShadow: {fileID: 0}
-  bakeShadowPrefabOverride: {fileID: 0}
---- !u!114 &7127844691328414617
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3750710248680348189}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed4546a3f32fc4e5992a5d34eb4321e5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TilesetPlatformBuilder
-  tileset: {fileID: 11400000, guid: 2c5f0111590354eadb5216adea1533b9, type: 2}
-  autoGenerate: 0
-  mergeWithNeighbours: 1
-  cellSize: 1
-  mergeTolerance: 0.05
-  verticalOffset: -0.02
-  surfaceDecor: 0
-  groundBelowY: -0.5
-  cameraViewDirection: {x: 0, y: 0, z: 1}
-  wallPropMinY: 0.05
-  waterLevelY: 0
-  variationSeed: 0
-  generatedRoot: {fileID: 0}
-  host: {fileID: 0}
-  members: []
-  hiddenRenderers: []
 --- !u!1 &4233769103029687401
 GameObject:
   m_ObjectHideFlags: 0
@@ -779,7 +589,6 @@ GameObject:
   - component: {fileID: 2109144979241699904}
   - component: {fileID: 8088160984937211628}
   - component: {fileID: 3254881663568208975}
-  - component: {fileID: 4147668375254026226}
   - component: {fileID: 699614710660612794}
   m_Layer: 6
   m_Name: VisualCube (2)
@@ -797,7 +606,7 @@ Transform:
   m_GameObject: {fileID: 4533266606038373292}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6, y: 1, z: 11}
+  m_LocalPosition: {x: 6, y: 1, z: 6}
   m_LocalScale: {x: 12, y: 3, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -893,23 +702,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 333594bbb5f4445419e59fdae4798824, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkWallCube
---- !u!114 &4147668375254026226
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4533266606038373292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0c3f10c40a1349a9a438c2f743a6012, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HasBuildingShadow
-  footprintRenderer: {fileID: 2109144979241699904}
-  maxAcquireAttempts: 5
-  acquireRetryInterval: 1
-  bakedShadow: {fileID: 0}
-  bakeShadowPrefabOverride: {fileID: 0}
 --- !u!114 &699614710660612794
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -967,7 +759,7 @@ Transform:
   m_GameObject: {fileID: 4938076816359322503}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8, y: 1.2001001, z: 4}
+  m_LocalPosition: {x: 17, y: 1.2004001, z: 5}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1083,7 +875,7 @@ Transform:
   m_GameObject: {fileID: 5219888552409475705}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4, y: 1.2001001, z: 4}
+  m_LocalPosition: {x: 7, y: 1.2004001, z: 5}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1199,7 +991,7 @@ Transform:
   m_GameObject: {fileID: 5961549818130779004}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8, y: 1.2001001, z: 1}
+  m_LocalPosition: {x: 17, y: 1.2004001, z: 1}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1299,7 +1091,6 @@ GameObject:
   - component: {fileID: 67993763822311127}
   - component: {fileID: 5764486476167381614}
   - component: {fileID: 8967219424262393551}
-  - component: {fileID: 7880001599352092529}
   - component: {fileID: 6891845014372729857}
   m_Layer: 6
   m_Name: VisualCube (1)
@@ -1317,8 +1108,8 @@ Transform:
   m_GameObject: {fileID: 6115749516927412273}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3, y: 0, z: 0}
-  m_LocalScale: {x: 6, y: 1, z: 5}
+  m_LocalPosition: {x: 6, y: -4, z: 0}
+  m_LocalScale: {x: 12, y: 5, z: 8}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -1413,23 +1204,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 333594bbb5f4445419e59fdae4798824, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkWallCube
---- !u!114 &7880001599352092529
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6115749516927412273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0c3f10c40a1349a9a438c2f743a6012, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HasBuildingShadow
-  footprintRenderer: {fileID: 67993763822311127}
-  maxAcquireAttempts: 5
-  acquireRetryInterval: 1
-  bakedShadow: {fileID: 0}
-  bakeShadowPrefabOverride: {fileID: 0}
 --- !u!114 &6891845014372729857
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1487,7 +1261,7 @@ Transform:
   m_GameObject: {fileID: 6796070158527781268}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6, y: 1.2001001, z: 2.5}
+  m_LocalPosition: {x: 12, y: 1.2004001, z: 3}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1600,7 +1374,7 @@ Transform:
   m_GameObject: {fileID: 7239982266814202712}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.5, y: 1.2001001, z: 2}
+  m_LocalPosition: {x: 12, y: 1.2004001, z: 2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1631,7 +1405,6 @@ GameObject:
   - component: {fileID: 8759386006865265704}
   - component: {fileID: 4521032829177456284}
   - component: {fileID: 1051547774935226370}
-  - component: {fileID: 1498222141561401754}
   - component: {fileID: 5171481402946455002}
   m_Layer: 6
   m_Name: VisualCube (7)
@@ -1649,8 +1422,8 @@ Transform:
   m_GameObject: {fileID: 7394707183724506774}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2, y: -3, z: 29}
-  m_LocalScale: {x: 6, y: 7, z: 6}
+  m_LocalPosition: {x: 2, y: -4, z: 23}
+  m_LocalScale: {x: 6, y: 8, z: 6}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8286577222371609028}
@@ -1745,23 +1518,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 333594bbb5f4445419e59fdae4798824, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkWallCube
---- !u!114 &1498222141561401754
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7394707183724506774}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0c3f10c40a1349a9a438c2f743a6012, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HasBuildingShadow
-  footprintRenderer: {fileID: 8759386006865265704}
-  maxAcquireAttempts: 5
-  acquireRetryInterval: 1
-  bakedShadow: {fileID: 0}
-  bakeShadowPrefabOverride: {fileID: 0}
 --- !u!114 &5171481402946455002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1820,7 +1576,7 @@ Transform:
   m_GameObject: {fileID: 7679472307801411374}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6, y: 1, z: 3.5}
+  m_LocalPosition: {x: 9, y: 1, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1996,7 +1752,6 @@ Transform:
   - {fileID: 2972052385068763407}
   - {fileID: 8453615147836330584}
   - {fileID: 2104948516975709276}
-  - {fileID: 6112532186409315495}
   - {fileID: 1866954171767212709}
   - {fileID: 5366174374532846961}
   - {fileID: 9134888901805021551}
@@ -2107,18 +1862,18 @@ MonoBehaviour:
           RawValue: 131072
         PositionOffset:
           X:
-            RawValue: 393216
+            RawValue: 786432
           Y:
-            RawValue: 32774
+            RawValue: -98271
           Z:
-            RawValue: 163840
+            RawValue: 262144
         BoxExtents:
           X:
-            RawValue: 196608
+            RawValue: 393216
           Y:
-            RawValue: 32768
-          Z:
             RawValue: 163840
+          Z:
+            RawValue: 262144
         RotationOffset:
           X:
             RawValue: 0
@@ -2139,14 +1894,14 @@ MonoBehaviour:
           X:
             RawValue: 1114112
           Y:
-            RawValue: 65588
+            RawValue: 32827
           Z:
-            RawValue: 2457600
+            RawValue: 2064384
         BoxExtents:
           X:
             RawValue: 196608
           Y:
-            RawValue: 262144
+            RawValue: 294912
           Z:
             RawValue: 163840
         RotationOffset:
@@ -2169,44 +1924,14 @@ MonoBehaviour:
           X:
             RawValue: 327680
           Y:
-            RawValue: 32813
+            RawValue: 52
           Z:
-            RawValue: 2097152
+            RawValue: 1703936
         BoxExtents:
           X:
             RawValue: 196608
           Y:
-            RawValue: 229376
-          Z:
-            RawValue: 196608
-        RotationOffset:
-          X:
-            RawValue: 0
-          Y:
-            RawValue: 0
-          Z:
-            RawValue: 0
-        UserTag: 0
-        IsSetFromSourceCollider: 0
-      - ShapeType: 2
-        SphereRadius:
-          RawValue: 32768
-        CapsuleRadius:
-          RawValue: 32768
-        CapsuleHeight:
-          RawValue: 131072
-        PositionOffset:
-          X:
-            RawValue: 786432
-          Y:
-            RawValue: -65509
-          Z:
-            RawValue: 655360
-        BoxExtents:
-          X:
-            RawValue: 393216
-          Y:
-            RawValue: 131072
+            RawValue: 262144
           Z:
             RawValue: 196608
         RotationOffset:
@@ -2231,7 +1956,7 @@ MonoBehaviour:
           Y:
             RawValue: 163859
           Z:
-            RawValue: 786432
+            RawValue: 458752
         BoxExtents:
           X:
             RawValue: 393216
@@ -2406,49 +2131,49 @@ MonoBehaviour:
     Type:
       Value: 4
     ChunkSizeWidth: 20
-    ChunkSizeDepth: 40
+    ChunkSizeDepth: 34
     OriginCellX: 0
     OriginCellZ: 0
     Waypoints:
     - LocalPosition:
         X:
-          RawValue: 262144
+          RawValue: 458752
         Y:
-          RawValue: 78649
+          RawValue: 78669
         Z:
           RawValue: 65536
       ConnectionMask: 30
     - LocalPosition:
         X:
-          RawValue: 524288
+          RawValue: 1114112
         Y:
-          RawValue: 78649
+          RawValue: 78669
         Z:
           RawValue: 65536
       ConnectionMask: 29
     - LocalPosition:
         X:
-          RawValue: 262144
+          RawValue: 458752
         Y:
-          RawValue: 78649
+          RawValue: 78669
         Z:
-          RawValue: 262144
+          RawValue: 327680
       ConnectionMask: 27
     - LocalPosition:
         X:
-          RawValue: 524288
+          RawValue: 1114112
         Y:
-          RawValue: 78649
+          RawValue: 78669
         Z:
-          RawValue: 262144
+          RawValue: 327680
       ConnectionMask: 23
     - LocalPosition:
         X:
-          RawValue: 393216
+          RawValue: 786432
         Y:
-          RawValue: 78649
+          RawValue: 78669
         Z:
-          RawValue: 163840
+          RawValue: 196608
       ConnectionMask: 15
     - LocalPosition:
         X:
@@ -2562,9 +2287,9 @@ MonoBehaviour:
       Value: 1
     RespawnPoint:
       X:
-        RawValue: 294912
+        RawValue: 786432
       Y:
-        RawValue: 78649
+        RawValue: 78669
       Z:
         RawValue: 131072
 --- !u!114 &-2848952897361901041

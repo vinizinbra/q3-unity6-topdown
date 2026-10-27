@@ -313,28 +313,46 @@ All per-layout tuning (platforms, checkpoint, reward, return pad) lives on the A
 `ChunkSpawnConfig` pointing at it. Both layouts share the one Traversal `ChunkPool` entry (weight 1
 each), so a run gets one or the other.
 
+**Variant fallback (2026-10-27).** Each layout attaches on ONE side only (Left / Right / Bottom) and
+has its own footprint, so the rolled layout can have no legal spot while a sibling does. Previously
+`LevelGenerationSystem` rolled one variant per request and dropped the request if that one failed;
+now `TryPlaceRequest` tries the rolled variant, then the entry's other variants (weighted, without
+replacement) before giving up - log line `rolled variant ... placed fallback variant #N instead`.
+The Traversal entry is still in `ChunkPoolGroups` group 1 (min 2 / max 3 of Traversal/HealingShrine/
+CursedRift), so roughly 1 run in 6 excludes it by design.
+
 - **`TraversalChunk`** (left -> right, `AllowedConnectionSides = Left`): `TraversalActivator` +
   `Traversal1ChunkSpawnConfig`. 1 spawned platform; the rest of the crossing is permanent stones with
   3.6-5.4m gaps (dash territory). `TraversalChunk 1.prefab` is an unused duplicate.
 - **`TraversalChunkWest`** (rebuilt from scratch 2026-10-27, right -> left, `AllowedConnectionSides =
   Right`, 40x20): `TraversalActivatorWest` + `TraversalWestChunkSpawnConfig`, standard 4x4x4
-  platforms. START (h0, x34..40) -> P1 (h0) -> P2 (h1) -> P3 (h2, up-screen) -> **jump + Dash 7.5m, +1**
+  platforms. START (h0, x34..40) -> P1 (h0) -> P2 (h1) -> P3 (h2, up-screen) -> **jump + Dash 7m, +1**
   to REST (h3, x12..18 z8..14) -> hop 2m down-screen +1 to P4 (h4) -> GOAL (h4, x0..6 z2..8) at the
   far-left end, where the reward + return pad sit. An h4 pillar (x9..11 z3..5) sits exactly midway between GOAL (x6) and P4 (x14..18), 3m each side, centered on P4's line;
   at h4 it is a stepping stone (P4 -> pillar 3m hop, pillar -> GOAL 3m hop), so the final stretch
   needs no Dash, and REST -> pillar (~3.6m, +1) can skip P4. Labelled top view:
-  `Recordings/TraversalChunkWest-top.png`. 4 spawned platforms, 40s.
+  `Recordings/TraversalChunkWest-top.png`. 4 spawned platforms.
 - **`TraversalChunkNorth`** (reworked 2026-10-27, bottom -> top, `AllowedConnectionSides = Bottom`,
-  20x40): `TraversalActivatorNorth` + `TraversalNorthChunkSpawnConfig`, standard 4x4x4 platforms.
-  START (h0, x3..9 z0..5) -> BIG (permanent h0 island x6..18 z7..13 - one wide platform, since the
-  activator can only spawn one platform prefab) with an h3 WALL (x6..18 z11..13) standing on its back strip (no water seam at the wall base, so no stray edge auto-jumps) along its whole
-  front edge -> jump off BIG's side out over the water and **jump + Dash forward around the wall end**
-  (~6.5m) to P1 (h0, x16..20) -> P2 (h1) -> P3 (h2), climbing left -> **jump + Dash 7.5m, +1** to REST
-  (h3, x2..8 z29..35; wait out the cooldown) -> **jump + Dash 7.5m, +1** right to P4 (h4) -> 2m hop to
-  GOAL (h4, x14..20 z35..40, top edge) with the reward + return pad. 4 spawned platforms, 45s. The h3
-  wall can't be dashed over (Dash height from h0 is ~2.6m, wall top is 4m). Going around the LEFT end
-  can reach P2 (~6.4m, +1) and skip P1 - still a jump + Dash around the wall. Labelled top view:
-  `Recordings/TraversalChunkNorth-top.png`.
+  **20x34**): `TraversalActivatorNorth` + `TraversalNorthChunkSpawnConfig`, standard 4x4x4 platforms.
+  START/BIG (one permanent h0 island x6..18 z0..8 on the bottom edge, activator on it - the start and the
+  old separate big platform merged, so the course begins right at the activator) with an h3 WALL (x6..18
+  z6..8) standing on its back strip -> jump off its side out over the water and **jump + Dash forward
+  around the wall end** (~5.5m) to P1 (h0, x16..20 z11.5..15.5) -> P2 (h1) -> P3 (h2), 1m hops climbing
+  left -> **jump + Dash 7m, +1** to REST (h3, x2..8 z23..29; wait out the cooldown) -> **jump + Dash
+  7m, +1** right to P4 (h4) -> 2m hop to GOAL (h4, x14..20 z29..34, top edge) with the reward +
+  return pad. 4 spawned platforms. The h3 wall can't be dashed over (Dash height from h0 is ~2.6m, wall
+  top is 4m). Going around the LEFT end can reach P2 (~6.6m, +1) and skip P1 - still a jump + Dash
+  around the wall. Labelled top view: `Recordings/TraversalChunkNorth-top.png`.
+
+**Rooted in the water (2026-10-27, all three layouts):** every activator spawns **`TraversalPlatformTall`** (4x10x4 - the shared
+`TraversalPlatform` with root scale 4,10,4; the importer bakes box extents 2,5,2), so a pad's top = center.y + 5 and
+its bottom = top - 10: every pad, whatever its height, reaches y -4 or below and nothing floats above the water.
+Their permanent islands also start at y -4 (tops unchanged; blocks standing ON an island, like the original's
+far-side step and pillars, are untouched). `TraversalChunk 1.prefab` (the unused duplicate) was left as is.
+
+**Shadows (2026-10-27):** in the traversal chunks only the activator casts a shadow (its sign's `HasShadow`).
+The islands and the spawned `TraversalPlatform`/`TraversalPlatformTall` have no `HasBuildingShadow` at all - they
+stand in water, where a building shadow has nothing to land on. (The return pad keeps its own blob shadow.)
 
 **Reach (measured against a West playtest, 2026-10-27).** The hero capsule radius is 0.6
 (`KCCSettings`): the edge auto-jump fires with the centre already past the edge and a landing counts
@@ -343,14 +361,30 @@ Dash (`Dash.asset`) is a flat 5m burst that locks height, works mid-air, stops a
 1 charge - a plain Dash from the edge barely clears ~5.5m, so in practice gaps past jump range are
 **jump + Dash** gaps: ~8-9m flat, ~8m at +1. Nothing reaches +2 (jump apex ~1.6m) - that is the only
 hard gate, and both halves of each course must be separated by >= +2 or > ~9m without the spawned
-platforms. Design: hops 2-3m, jump + Dash gaps 7-8m, walls (h2+) on the straight/diagonal line to force a
+platforms. Design: hops 1-3m, jump + Dash gaps **7.5m flat / 7m at +1**, walls (h2+) on the straight/diagonal line to force a
 sidestep, a rest island between dashes for the cooldown. `PlatformPositions` are pad CENTERS (top =
-y + 2). Waypoints are on the start island only.
+y + 5 on `TraversalPlatformTall`, y + 2 on the 4x4x4 `TraversalPlatform`). Waypoints are on the start island only.
 
 **In-game check (2026-10-27, West, Play mode):** spawned platforms land exactly on the authored
 chunk-relative offsets, with the prefab's baked collider size (root scale -> box extents), Ground
 layer. The tileset view matches the collider except the prebuilt `Block_2x2` piece (used for a 2x2
 pad), which overhangs it by ~0.2m per side.
+
+**Timer per difficulty (2026-10-27):** every activator authors `Duration` = 60 (the Normal time); `TryActivate`
+multiplies it by the `TraversalTime` difficulty channel -> Easy 90s / Medium 60s / Hard 45s / Nightmare 30s at
+every level (see `docs/difficulty.md`).
+
+**Timer per difficulty (2026-10-27):** `TraversalChallengeConfig` (`Resources/Configs/`, on
+`OverallGameConfig.TraversalChallengeConfig`) authors the timer in seconds per tier - Easy 90 / Medium 60 / Hard 45 /
+Nightmare 30 (every Nightmare level, it doesn't shrink further). `TraversalChallengeUtility.TryActivate` reads it by
+`Global.Difficulty.Tier`; each activator's own `TraversalChallenge.Duration` (all 60) is only the fallback when no
+config is assigned. Kept out of `DifficultyConfig` on purpose: it's traversal tuning, not enemy difficulty, and it's
+flat across Nightmare rather than compounding. Verified in Play mode (Medium -> the config's value).
+
+**Water-edge guard off in Traversal chunks (2026-10-27):** `PlayerMovementProcessor.ResolveWaterEdgeMovement`
+skips the guard inside a Traversal chunk, and that check now runs BEFORE `TryRerouteAlongShore`. Before, a
+diagonal input at a water edge was first rerouted along the shore (the player felt a drag and slid along the
+edge instead of leaving it at an angle) and the Traversal exception only applied to straight-on inputs.
 
 **Cheats (CheatMenu > World > Map):** *Teleport To Traversal* (next to the first activator) and
 *Activate Traversal* (TryActivate on every Idle challenge, as the sender) - `CheatActionKind.

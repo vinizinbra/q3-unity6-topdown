@@ -1536,21 +1536,21 @@ namespace Quantum {
     [FieldOffset(8)]
     public QBoolean IsWeaponOffer;
     [FieldOffset(4)]
-    public Int32 PurchasedAtBreathingIndex;
+    public Int32 PurchasedAtRollId;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 7753;
         hash = hash * 31 + Store.GetHashCode();
         hash = hash * 31 + OfferIndex.GetHashCode();
         hash = hash * 31 + IsWeaponOffer.GetHashCode();
-        hash = hash * 31 + PurchasedAtBreathingIndex.GetHashCode();
+        hash = hash * 31 + PurchasedAtRollId.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (StorePurchaseEntry*)ptr;
         serializer.Stream.Serialize(&p->OfferIndex);
-        serializer.Stream.Serialize(&p->PurchasedAtBreathingIndex);
+        serializer.Stream.Serialize(&p->PurchasedAtRollId);
         QBoolean.Serialize(&p->IsWeaponOffer, serializer);
         EntityRef.Serialize(&p->Store, serializer);
     }
@@ -6247,6 +6247,22 @@ namespace Quantum {
     }
   }
   [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct PoiPingDiscovered : Quantum.IComponent {
+    public const Int32 SIZE = 4;
+    public const Int32 ALIGNMENT = 4;
+    [FieldOffset(0)]
+    private fixed Byte _alignment_padding_[4];
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 12959;
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (PoiPingDiscovered*)ptr;
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct PoiUsage : Quantum.IComponent {
     public const Int32 SIZE = 192;
     public const Int32 ALIGNMENT = 8;
@@ -6696,7 +6712,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct RevengeConfig : Quantum.IComponent {
-    public const Int32 SIZE = 56;
+    public const Int32 SIZE = 64;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(24)]
     public FP HealMultiplier;
@@ -6704,14 +6720,16 @@ namespace Quantum {
     public FP MarkDuration;
     [FieldOffset(8)]
     public FP DamageBonus;
-    [FieldOffset(48)]
+    [FieldOffset(56)]
     public FP MinHealFraction;
     [FieldOffset(16)]
     public FP EnemyMaxHealthFraction;
-    [FieldOffset(40)]
+    [FieldOffset(48)]
     public FP MaxHealFractionPerKill;
     [FieldOffset(0)]
     public Byte RageOnVendettaKill;
+    [FieldOffset(40)]
+    public FP MarkSpreadRadius;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 1823;
@@ -6722,6 +6740,7 @@ namespace Quantum {
         hash = hash * 31 + EnemyMaxHealthFraction.GetHashCode();
         hash = hash * 31 + MaxHealFractionPerKill.GetHashCode();
         hash = hash * 31 + RageOnVendettaKill.GetHashCode();
+        hash = hash * 31 + MarkSpreadRadius.GetHashCode();
         return hash;
       }
     }
@@ -6732,6 +6751,7 @@ namespace Quantum {
         FP.Serialize(&p->EnemyMaxHealthFraction, serializer);
         FP.Serialize(&p->HealMultiplier, serializer);
         FP.Serialize(&p->MarkDuration, serializer);
+        FP.Serialize(&p->MarkSpreadRadius, serializer);
         FP.Serialize(&p->MaxHealFractionPerKill, serializer);
         FP.Serialize(&p->MinHealFraction, serializer);
     }
@@ -7756,16 +7776,18 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct StoreInventory : Quantum.IComponent {
-    public const Int32 SIZE = 232;
+    public const Int32 SIZE = 240;
     public const Int32 ALIGNMENT = 8;
-    [FieldOffset(4)]
+    [FieldOffset(8)]
     public Int32 RolledAtBreathingIndex;
-    [FieldOffset(40)]
+    [FieldOffset(4)]
+    public Int32 RollId;
+    [FieldOffset(48)]
     [FramePrinter.FixedArrayAttribute(typeof(StoreWeaponOffer), 3)]
     private fixed Byte _WeaponOffers_[192];
     [FieldOffset(1)]
     public Byte WeaponOfferCount;
-    [FieldOffset(8)]
+    [FieldOffset(16)]
     [FramePrinter.FixedArrayAttribute(typeof(StoreFoodOffer), 2)]
     private fixed Byte _FoodOffers_[32];
     [FieldOffset(0)]
@@ -7784,6 +7806,7 @@ namespace Quantum {
       unchecked { 
         var hash = 2311;
         hash = hash * 31 + RolledAtBreathingIndex.GetHashCode();
+        hash = hash * 31 + RollId.GetHashCode();
         hash = hash * 31 + HashCodeUtils.GetArrayHashCode(WeaponOffers);
         hash = hash * 31 + WeaponOfferCount.GetHashCode();
         hash = hash * 31 + HashCodeUtils.GetArrayHashCode(FoodOffers);
@@ -7795,6 +7818,7 @@ namespace Quantum {
         var p = (StoreInventory*)ptr;
         serializer.Stream.Serialize(&p->FoodOfferCount);
         serializer.Stream.Serialize(&p->WeaponOfferCount);
+        serializer.Stream.Serialize(&p->RollId);
         serializer.Stream.Serialize(&p->RolledAtBreathingIndex);
         FixedArray.Serialize(p->FoodOffers, serializer, Statics.SerializeStoreFoodOffer);
         FixedArray.Serialize(p->WeaponOffers, serializer, Statics.SerializeStoreWeaponOffer);
@@ -8347,6 +8371,8 @@ namespace Quantum {
     private fixed Byte _HitEntities_[64];
     [FieldOffset(0)]
     public Byte HitCount;
+    [FieldOffset(4)]
+    public QBoolean DashRefundEarned;
     public readonly FixedArray<EntityRef> HitEntities {
       get {
         fixed (byte* p = _HitEntities_) { return new FixedArray<EntityRef>(p, 8, 8); }
@@ -8357,12 +8383,14 @@ namespace Quantum {
         var hash = 8147;
         hash = hash * 31 + HashCodeUtils.GetArrayHashCode(HitEntities);
         hash = hash * 31 + HitCount.GetHashCode();
+        hash = hash * 31 + DashRefundEarned.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (VendettaStrikeHitTracker*)ptr;
         serializer.Stream.Serialize(&p->HitCount);
+        QBoolean.Serialize(&p->DashRefundEarned, serializer);
         FixedArray.Serialize(p->HitEntities, serializer, Statics.SerializeEntityRef);
     }
   }
@@ -9833,6 +9861,8 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.PocketBombsUpgrade>();
       BuildSignalsArrayOnComponentAdded<Quantum.PoiActivation>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PoiActivation>();
+      BuildSignalsArrayOnComponentAdded<Quantum.PoiPingDiscovered>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.PoiPingDiscovered>();
       BuildSignalsArrayOnComponentAdded<Quantum.PoiUsage>();
       BuildSignalsArrayOnComponentRemoved<Quantum.PoiUsage>();
       BuildSignalsArrayOnComponentAdded<Quantum.PointBlankUpgrade>();
@@ -10467,6 +10497,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.PocketBombsUpgrade), Quantum.PocketBombsUpgrade.SIZE);
       typeRegistry.Register(typeof(Quantum.PoiActivation), Quantum.PoiActivation.SIZE);
       typeRegistry.Register(typeof(Quantum.PoiAvailability), Quantum.PoiAvailability.SIZE);
+      typeRegistry.Register(typeof(Quantum.PoiPingDiscovered), Quantum.PoiPingDiscovered.SIZE);
       typeRegistry.Register(typeof(Quantum.PoiUsage), Quantum.PoiUsage.SIZE);
       typeRegistry.Register(typeof(Quantum.PoiUsageEntry), Quantum.PoiUsageEntry.SIZE);
       typeRegistry.Register(typeof(Quantum.PoiUsagePolicy), 1);
@@ -10585,7 +10616,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 201)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 202)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryDropHint>(Quantum.AccessoryDropHint.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
@@ -10706,6 +10737,7 @@ namespace Quantum {
         .Add<Quantum.PlayerPing>(Quantum.PlayerPing.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PocketBombsUpgrade>(Quantum.PocketBombsUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PoiActivation>(Quantum.PoiActivation.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.PoiPingDiscovered>(Quantum.PoiPingDiscovered.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PoiUsage>(Quantum.PoiUsage.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PointBlankUpgrade>(Quantum.PointBlankUpgrade.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.PopVelocity>(Quantum.PopVelocity.Serialize, null, null, ComponentFlags.None)

@@ -34,6 +34,11 @@ namespace Quantum
         {
             public ChunkType Type;
             public AssetRef<EntityPrototype> Prototype;
+
+            // The entry's full variant list (read-only asset data) - TryPlaceRequest falls back to
+            // the other variants when the rolled Prototype has no valid spot (e.g. a Bottom-only
+            // Traversal layout when only Left/Right frontier is free).
+            public ChunkPrototypeVariant[] Variants;
             public bool MustHave;
 
             // 0 = ungrouped. See ChunkPoolEntry.GroupId - a nonzero value here means a failure to
@@ -457,6 +462,7 @@ namespace Quantum
                     {
                         Type = entry.Type,
                         Prototype = prototype,
+                        Variants = entry.Prototypes,
                         MustHave = entry.MustHave,
                         GroupId = entry.GroupId,
                     });
@@ -890,6 +896,13 @@ namespace Quantum
         // exists anywhere on the grid. Safe because both happen inside the same tick: the entity
         // never exists in a frame the View layer would see, so a rejected candidate never costs a
         // prefab instantiation (which is what makes generation expensive in the first place).
+        //
+        // The rolled variant is tried first; if it fits nowhere, the entry's other variants are
+        // tried in a weighted-without-replacement order (f.RNG, deterministic) before the request
+        // counts as failed. Variants differ in footprint and AllowedConnectionSides (the Traversal
+        // layouts each attach on one side only), so one layout failing doesn't mean the others
+        // would - without this, a request whose roll landed on the one layout with no room was
+        // dropped even when a sibling layout had space.
         private bool TryPlaceRequest(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, ChunkRequest request, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed)
         {
             if (request.Prototype.Id.IsValid == false)
@@ -898,14 +911,137 @@ namespace Quantum
                 return false;
             }
 
-            EntityRef entity = f.Create(request.Prototype);
+            if (TryPlacePrototype(f, config, gridOriginX, gridOriginZ, request.Type, request.Prototype, occupied, neighborAllowedSides, placed, out int width, out int depth))
+            {
+                return true;
+            }
+
+            int fallbackCount = 0;
+
+            foreach (AssetRef<EntityPrototype> fallback in OrderFallbackVariants(f, request))
+            {
+                fallbackCount++;
+
+                if (TryPlacePrototype(f, config, gridOriginX, gridOriginZ, request.Type, fallback, occupied, neighborAllowedSides, placed, out _, out _))
+                {
+                    Log.Debug($"[LevelGen] {request.Type} rolled variant ({width}x{depth}) had no valid spot - placed fallback variant #{fallbackCount} instead");
+                    return true;
+                }
+            }
+
+            string triedVariants = fallbackCount > 0 ? $" (and {fallbackCount} other variant(s))" : "";
+
+            if (request.GroupId != 0)
+            {
+                // Expected/acceptable on its own - a single group member missing only matters if
+                // the group's aggregate falls short of MinRequired, checked once after generation
+                // finishes (see VerifyGroupRequirements).
+                Log.Debug($"[LevelGen] grouped {request.Type} (group {request.GroupId}, {width}x{depth}){triedVariants} found no valid spot");
+            }
+            else if (request.MustHave)
+            {
+                Log.Error($"[LevelGen] MUST-HAVE {request.Type} ({width}x{depth}){triedVariants} found no valid spot anywhere on the grid. Level will generate without a required chunk.");
+            }
+            else
+            {
+                Log.Debug($"[LevelGen] {request.Type} ({width}x{depth}){triedVariants} found no valid spot");
+            }
+
+            return false;
+        }
+
+        // The request's other usable variants (distinct prototypes, Weight > 0 unless every variant
+        // is <= 0 - same soft-disable rule as PickVariant), drawn weighted-without-replacement via
+        // f.RNG so the more common layouts are still preferred as fallbacks.
+        private List<AssetRef<EntityPrototype>> OrderFallbackVariants(Frame f, ChunkRequest request)
+        {
+            List<AssetRef<EntityPrototype>> ordered = new List<AssetRef<EntityPrototype>>();
+
+            if (request.Variants == null || request.Variants.Length <= 1)
+            {
+                return ordered;
+            }
+
+            bool anyPositive = false;
+
+            foreach (ChunkPrototypeVariant variant in request.Variants)
+            {
+                anyPositive |= variant.Weight > FP._0;
+            }
+
+            List<ChunkPrototypeVariant> pool = new List<ChunkPrototypeVariant>();
+
+            foreach (ChunkPrototypeVariant variant in request.Variants)
+            {
+                if (variant.Prototype.Id.IsValid == false || variant.Prototype.Id == request.Prototype.Id)
+                    continue;
+
+                if (anyPositive && variant.Weight <= FP._0)
+                    continue;
+
+                bool duplicate = false;
+
+                foreach (ChunkPrototypeVariant existing in pool)
+                {
+                    duplicate |= existing.Prototype.Id == variant.Prototype.Id;
+                }
+
+                if (duplicate == false)
+                    pool.Add(variant);
+            }
+
+            while (pool.Count > 0)
+            {
+                int chosen = pool.Count - 1;
+
+                if (anyPositive)
+                {
+                    FP total = FP._0;
+
+                    foreach (ChunkPrototypeVariant variant in pool)
+                    {
+                        total += variant.Weight;
+                    }
+
+                    FP roll = f.RNG->Next(FP._0, total);
+                    FP cumulative = FP._0;
+
+                    for (int i = 0; i < pool.Count; i++)
+                    {
+                        cumulative += pool[i].Weight;
+
+                        if (roll < cumulative)
+                        {
+                            chosen = i;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    chosen = f.RNG->Next(0, pool.Count);
+                }
+
+                ordered.Add(pool[chosen].Prototype);
+                pool.RemoveAt(chosen);
+            }
+
+            return ordered;
+        }
+
+        // One placement attempt for one exact prototype - creates it, scans for a legal origin,
+        // commits on success or destroys the entity on failure. width/depth are the prototype's
+        // footprint in cells, for the caller's logging.
+        private bool TryPlacePrototype(Frame f, LevelConfig config, int gridOriginX, int gridOriginZ, ChunkType type, AssetRef<EntityPrototype> prototype, bool[,] occupied, ChunkConnectionSide[,] neighborAllowedSides, List<PlacedChunk> placed, out int width, out int depth)
+        {
+            EntityRef entity = f.Create(prototype);
             Chunk* chunk = f.Unsafe.GetPointer<Chunk>(entity);
 
             // Chunks are always placed unrotated - the authored Width/Depth map straight onto the
             // world grid's X/Z. (A random per-chunk rotation used to be rolled here, but the rotation
             // pipeline never worked correctly and was removed entirely.)
-            int width = ToCellCount(chunk->ChunkSizeWidth, config);
-            int depth = ToCellCount(chunk->ChunkSizeDepth, config);
+            width = ToCellCount(chunk->ChunkSizeWidth, config);
+            depth = ToCellCount(chunk->ChunkSizeDepth, config);
 
             if (placed.Count == 0)
             {
@@ -917,7 +1053,7 @@ namespace Quantum
 
                 if (FitsInGrid(config, width, depth, centerX, centerZ) && IsFree(occupied, width, depth, centerX, centerZ))
                 {
-                    CommitPlacement(f, config, gridOriginX, gridOriginZ, entity, chunk, request.Type, width, depth, centerX, centerZ, occupied, neighborAllowedSides, placed);
+                    CommitPlacement(f, config, gridOriginX, gridOriginZ, entity, chunk, type, width, depth, centerX, centerZ, occupied, neighborAllowedSides, placed);
                     return true;
                 }
             }
@@ -930,30 +1066,14 @@ namespace Quantum
                 // and get destroyed even when plenty of room for it still existed elsewhere on the
                 // grid. This is exhaustive rather than probabilistic, so a MUST-HAVE request now only
                 // fails when there is genuinely nowhere left to put it.
-                List<(int X, int Z)> candidates = FindAllValidOrigins(config, request.Type, chunk, width, depth, occupied, neighborAllowedSides, placed);
+                List<(int X, int Z)> candidates = FindAllValidOrigins(config, type, chunk, width, depth, occupied, neighborAllowedSides, placed);
 
                 if (candidates.Count > 0)
                 {
                     (int originX, int originZ) = candidates[f.RNG->Next(0, candidates.Count)];
-                    CommitPlacement(f, config, gridOriginX, gridOriginZ, entity, chunk, request.Type, width, depth, originX, originZ, occupied, neighborAllowedSides, placed);
+                    CommitPlacement(f, config, gridOriginX, gridOriginZ, entity, chunk, type, width, depth, originX, originZ, occupied, neighborAllowedSides, placed);
                     return true;
                 }
-            }
-
-            if (request.GroupId != 0)
-            {
-                // Expected/acceptable on its own - a single group member missing only matters if
-                // the group's aggregate falls short of MinRequired, checked once after generation
-                // finishes (see VerifyGroupRequirements).
-                Log.Debug($"[LevelGen] grouped {request.Type} (group {request.GroupId}, {width}x{depth}) found no valid spot - destroying entity {entity}");
-            }
-            else if (request.MustHave)
-            {
-                Log.Error($"[LevelGen] MUST-HAVE {request.Type} ({width}x{depth}) found no valid spot anywhere on the grid - destroying entity {entity}. Level will generate without a required chunk.");
-            }
-            else
-            {
-                Log.Debug($"[LevelGen] {request.Type} ({width}x{depth}) found no valid spot - destroying entity {entity}");
             }
 
             f.Destroy(entity);

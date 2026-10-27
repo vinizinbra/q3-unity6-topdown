@@ -300,16 +300,20 @@ namespace Quantum
                    || offer->RerolledAtBreathingIndexPlusOne != f.Global->BreathingIndex + 1;
         }
 
-        public static bool IsRerollUnlocked(Frame f)
+        // Free reroll (Gunsmith L4) plus the player's shared CharacterStats.RerollQuantity charges.
+        public static int GetRerollCharges(Frame f, EntityRef player)
         {
-            return WorldUnlockUtility.IsUnlocked(f, WorldUnlock.Gunsmith, MetaUnlockLevels.GunsmithReroll);
+            return (CanReroll(f, player) ? 1 : 0) + LevelUpUtility.GetRerollCharges(f, player);
         }
 
         // Called from BlacksmithSystem when a RerollBlacksmithCommand lands - redraws the cached offer AND the
-        // open window's copy (so a Cancel + reopen keeps the rerolled options), once per Break.
+        // open window's copy (so a Cancel + reopen keeps the rerolled options). Uses this Break's free
+        // Gunsmith L4 reroll first, then one shared CharacterStats.RerollQuantity charge.
         public static void Reroll(Frame f, EntityRef player, BlacksmithInteraction* interaction)
         {
-            if (CanReroll(f, player) == false || f.GameConfig.BlacksmithConfig.IsValid == false)
+            bool free = CanReroll(f, player);
+
+            if ((free == false && LevelUpUtility.GetRerollCharges(f, player) <= 0) || f.GameConfig.BlacksmithConfig.IsValid == false)
                 return;
 
             if (f.Unsafe.TryGetPointer<BlacksmithOffer>(player, out var offer) == false)
@@ -327,7 +331,10 @@ namespace Quantum
 
             offer->PerkChoiceCount = (byte)rolled.Length;
             interaction->PerkChoiceCount = (byte)rolled.Length;
-            offer->RerolledAtBreathingIndexPlusOne = f.Global->BreathingIndex + 1;
+            if (free)
+                offer->RerolledAtBreathingIndexPlusOne = f.Global->BreathingIndex + 1;
+            else
+                LevelUpUtility.SpendRerollCharge(f, player);
 
             Log.Debug($"[Blacksmith] {player} rerolled the offer - {rolled.Length} perk option(s)");
         }

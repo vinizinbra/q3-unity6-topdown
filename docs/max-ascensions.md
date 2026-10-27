@@ -334,3 +334,60 @@ Rage?" check ran before `BerserkSkillData.Begin` had created `RageOverdrive` (al
 Rage starting full there is no later threshold crossing - they only turned on after Max lost and
 rebuilt Rage. `BerserkSkillData.Begin` now calls `RageOverdriveUtility.EnterMaxRage` after seeding
 Rage (idempotent via each upgrade's Applied latch). Not yet verified in-Editor.
+
+# 2026-10-27 — Blood Debt, Flashpoint and Vendetta Strike reworked
+
+All three read as too weak in play. Card text below is authored in `MaxAscensionAssetGenerator` and
+in the assets.
+
+- **Blood Debt → "mark spreads on kill".** R1 raises `RevengeConfig.DamageBonus` 15% → **30%**. R2 sets
+  the new `RevengeConfig.MarkSpreadRadius` (6m): when a Vendetta kill consumes a mark,
+  `MaxVendettaSystem.TrySpreadMark` puts a fresh mark (no banked damage) on the nearest enemy around
+  the death that this holder hasn't marked yet, so a single kill can chain through a pack. R3: +2 Rage
+  per Vendetta kill (`RageOnVendettaKill`, moved up from R2) and `MinHealFraction` 1% → **3%**. The 15%
+  per-kill heal cap stays on at every rank. Removed: the 12s mark duration (back to the base 8s), the
+  0.60 `HealMultiplier`, and the `ShieldDamageCountsForRevenge` grant. That tag and its
+  `MaxVendettaSystem` handlers still exist, but nothing grants them now.
+- **Flashpoint.** The crit bonus against Burning enemies is now per rank: **15% / 30% / 30%**
+  (`CriticalChanceBonusVsBurning` is an array). The R2 explosion was always crit-on-Burning
+  (`MaxFireMasteryReactionSystem.OnCriticalHit`); only the card text said "hits". The 2s proc cooldown
+  and R3 Cremation are unchanged.
+- **Vendetta Strike → "damaging dash".** Burn removed. R1: each enemy the dash passes through is marked
+  (`MaxVendettaSystem.ApplyMark`, a shared helper), then takes **150%** of Max's per-shot weapon damage
+  (`WeaponDataAsset.Damage × Weapon.DamageMultiplier`, `DamageSource.Skill`). It marks before dealing
+  damage, so the hit gets the Vendetta bonus and a kill consumes the mark. R2: **250%**, and passing
+  through an enemy that was *already* marked refunds **50%** of the Dash cooldown, once per dash. The
+  refund lands at End, because the Dash cooldown only starts in `SkillSystem.FinishSkill` after
+  End-phase actions run. If no charge is recovering yet, End pre-arms the timer already shortened, and
+  `FinishSkill` leaves it alone. R3: each enemy hit cuts the Hero Skill cooldown by **0.5s**, or extends
+  an active Overdrive by 0.5s, up to **3s** per dash (from the hit tracker's count). Extensions still go
+  into the shared `OverdriveExtension` ledger.
+  - Fixed along the way: the asset was serialized as `Phase: 2` (OnGoing only), so the Begin-phase
+    `VendettaStrikeHitTracker` reset never ran and the once-per-enemy dedupe never applied. The
+    generator now sets `Phase` (Begin | OnGoing | End) explicitly.
+  - **Consequence:** Vendetta Strike no longer grants `CanApplyBurn`. **Ignition is now Max's only Burn
+    source**, so Flashpoint only appears in a draft after Ignition has been picked.
+
+The Balance Simulator models none of these three lines.
+
+**Playtest:** how long R2 spread chains run in a dense pack; whether 250% dash damage, plus the
+Vendetta bonus, plus Blood Debt R1 is too strong on weapons with high per-shot damage (snipers);
+whether the R2 Dash refund happens often enough to notice.
+
+**2026-10-27 fix: proactive marks over-healed.** A Vendetta kill heals at least 5% of the killed
+enemy's own MaxHealth (`EnemyMaxHealthFraction`), so killing a Heavy that never hit Max healed about 15
+HP. That floor now applies only when the mark has banked damage (`StoredDamage > 0`). Proactive marks
+(Vendetta Strike, Blood Debt spread) heal only `MinHealFraction`: 1% of Max HP, or 3% with Blood Debt
+rank 3.
+
+**2026-10-27 tweak:** Vendetta Strike R1 now only marks enemies and deals no damage
+(`WeaponDamagePercent` = 0 / 250% / 250%). The dash starts dealing damage at R2.
+
+**2026-10-27 tweak 2:** Vendetta Strike deals no damage at any rank (`WeaponDamagePercent` removed).
+R1 marks, R2 adds the Dash refund on an already-marked enemy, and R3 adds the per-hit Overdrive reward.
+
+**2026-10-27 tweak 3:** Vendetta Strike R2 now hands back the spent Dash charge (a full refund) whenever
+the dash passes through at least one enemy, not only an already-marked one. `DashRefundFraction` is
+removed. New `VendettaMarkApplied` event (Owner/Target/Position) fires when an enemy is *newly* marked,
+from any source; refreshing an existing mark doesn't fire it. `MaxVendettaHealFxView.markEffectPrefab`
+(on `QMax.prefab`) plays on the marked enemy. It is empty until a particle is assigned.

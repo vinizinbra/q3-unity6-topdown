@@ -75,9 +75,9 @@ namespace QuantumUser.Editor
                 asset.Description = "Max refuses to go down - full Rage hardens him, and hits barely dent it.";
                 asset.RankDescriptions = new[]
                 {
-                    "Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+15%</color> Damage Reduction.",
-                    "Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+25%</color> Damage Reduction. The first hit each Overdrive is blocked.",
-                    "Taking damage costs only <color=#FD3971>25%</color> of your Rage. At max Rage, gain <color=#FD3971>+25%</color> Damage Reduction. The first hit each Overdrive is blocked. Lethal damage ends Overdrive instead, leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>.",
+                    "At max Rage, gain <color=#FD3971>+15%</color> Damage Reduction. Taking damage costs only <color=#FD3971>25%</color> of your Rage.",
+                    "At max Rage, gain <color=#FD3971>+25%</color> Damage Reduction. Taking damage costs only <color=#FD3971>25%</color> of your Rage. The first hit each Overdrive is blocked.",
+                    "At max Rage, gain <color=#FD3971>+25%</color> Damage Reduction. Taking damage costs only <color=#FD3971>25%</color> of your Rage. The first hit each Overdrive is blocked. Lethal damage ends Overdrive instead, leaving you at <color=#FD3971>1</color> HP and Invulnerable for <color=#FD3971>2s</color>.",
                 };
                 asset.RageLossFraction = new[] { FP._0_25, FP._0_25, FP._0_25 };
                 asset.MaxRageDamageReduction = new[] { FP.FromString("0.15"), FP._0_25, FP._0_25 };
@@ -152,16 +152,17 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Blood Debt";
                 asset.MaxRank = 3;
-                asset.Description = "Vendetta marks last longer, feed your Rage, and heal you.";
+                asset.Description = "Vendetta marks hit harder, spread on kill, and feed your Rage.";
                 asset.RankDescriptions = new[]
                 {
-                    "Vendetta marks last <color=#FD3971>12s</color>.",
-                    "Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward them. Vendetta kills grant <color=#FD3971>+2</color> Rage.",
-                    "Vendetta marks last <color=#FD3971>12s</color> and Shield damage counts toward them. Vendetta kills grant <color=#FD3971>+2</color> Rage and heal <color=#FD3971>60%</color> of the mark's damage (max <color=#FD3971>15%</color> Max HP).",
+                    "Vendetta-marked enemies take <color=#FD3971>+30%</color> Damage.",
+                    "Vendetta-marked enemies take <color=#FD3971>+30%</color> Damage. Killing one passes its mark to the nearest enemy within <color=#FD3971>6m</color>.",
+                    "Vendetta-marked enemies take <color=#FD3971>+30%</color> Damage. Killing one passes its mark to the nearest enemy within <color=#FD3971>6m</color>, grants <color=#FD3971>+2</color> Rage and heals <color=#FD3971>3%</color> Max HP.",
                 };
-                asset.MarkDuration = new FP[] { 12, 12, 12 };
+                asset.DamageBonus = new[] { FP.FromString("0.30"), FP.FromString("0.30"), FP.FromString("0.30") };
+                asset.MarkSpreadRadius = 6;
                 asset.RageOnVendettaKill = 2;
-                asset.HealMultiplierAtMaxRank = FP.FromString("0.60");
+                asset.MinHealFractionAtMaxRank = FP.FromString("0.03");
                 asset.MaxHealFractionPerKill = FP.FromString("0.15");
             });
 
@@ -190,11 +191,11 @@ namespace QuantumUser.Editor
                 asset.Description = "Burning enemies take extra crits, explode on crit, and can be executed.";
                 asset.RankDescriptions = new[]
                 {
-                    "Gain <color=#FD3971>+10%</color> Crit Chance against Burning enemies.",
-                    "Gain <color=#FD3971>+10%</color> Crit Chance against Burning enemies. Hitting them can trigger a <color=#FD3971>3m</color> explosion dealing <color=#FD3971>50%</color> Damage.",
-                    "<color=#FD3971>+10%</color> Crit Chance vs Burning enemies, and hits can trigger a <color=#FD3971>3m</color> explosion (<color=#FD3971>50%</color> Damage). Burning enemies below <color=#FD3971>15%</color> Health are executed; Elites and Bosses take <color=#FD3971>+25%</color> Damage instead.",
+                    "Gain <color=#FD3971>+15%</color> Crit Chance against Burning enemies.",
+                    "Gain <color=#FD3971>+30%</color> Crit Chance against Burning enemies. Crits on them explode for <color=#FD3971>50%</color> Damage in <color=#FD3971>3m</color>.",
+                    "Gain <color=#FD3971>+30%</color> Crit Chance against Burning enemies. Crits on them explode for <color=#FD3971>50%</color> Damage in <color=#FD3971>3m</color>. Burning enemies below <color=#FD3971>15%</color> Health are executed; Elites and Bosses take <color=#FD3971>+25%</color> Damage instead.",
                 };
-                asset.CriticalChanceBonusVsBurning = FP._0_10;
+                asset.CriticalChanceBonusVsBurning = new[] { FP.FromString("0.15"), FP.FromString("0.30"), FP.FromString("0.30") };
                 asset.ExplosionRadius = 3;
                 asset.ExplosionDamageCoefficient = FP._0_50;
                 asset.ExplosionProcCooldown = 2;
@@ -228,18 +229,17 @@ namespace QuantumUser.Editor
             {
                 asset.DisplayName = "Vendetta Strike";
                 asset.MaxRank = 3;
-                asset.Description = "Dashing through an enemy Burns it.";
+                asset.Phase = SkillActionPhase.Begin | SkillActionPhase.OnGoing | SkillActionPhase.End;
+                asset.Description = "Dashing through enemies marks them for Vendetta.";
                 asset.RankDescriptions = new[]
                 {
-                    "Enemies you Dash through start Burning.",
-                    "Enemies you Dash through start Burning and are marked by Vendetta.",
-                    "Enemies you Dash through start Burning and are marked by Vendetta. Dashing also cuts Overdrive's cooldown by <color=#FD3971>2s</color>, or extends an active Overdrive by <color=#FD3971>1s</color>.",
+                    "Enemies you Dash through are marked by Vendetta.",
+                    "Enemies you Dash through are marked by Vendetta. Hitting at least one refunds the Dash.",
+                    "Enemies you Dash through are marked by Vendetta. Hitting at least one refunds the Dash. Each enemy hit cuts Overdrive's cooldown by <color=#FD3971>0.5s</color> (max <color=#FD3971>3s</color>), or extends an active Overdrive by <color=#FD3971>0.5s</color>.",
                 };
                 asset.Radius = FP._1_50;
-                asset.BurnDuration = 3;
-                asset.BurnIntensity = FP._0_10;
-                asset.CooldownReduction = 2;
-                asset.OverdriveDurationBonus = 1;
+                asset.RewardPerHit = FP._0_50;
+                asset.MaxRewardPerDash = 3;
             });
 
             // Hero Mastery (see docs/hero-mastery.md) - Light (Weapon Weight) + Fire (Element), drafted

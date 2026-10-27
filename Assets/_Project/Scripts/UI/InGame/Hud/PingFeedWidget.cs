@@ -86,7 +86,7 @@ public class PingFeedWidget : MonoBehaviour
             nickname = $"Player {(int)e.Player + 1}";
 
         string hex = ColorUtility.ToHtmlStringRGB(PingPresentation.GetPlayerColor(e.Player));
-        AddLine(PlayerPortraitUiWidget.ResolveHeadSprite(e.Owner), $"<b><color=#{hex}>{nickname}</color></b>  {PingPresentation.GetMessage(e.Kind, e.State)}");
+        AddLine(PlayerPortraitUiWidget.ResolveHeadSprite(e.Owner), $"<b><color=#{hex}>{nickname}</color></b>  {(e.Auto ? PingPresentation.GetFoundMessage(e.Kind) : PingPresentation.GetMessage(e.Kind, e.State))}");
         PlaySound(e.Kind);
         PingWorldRippleWidget.Spawn(e.Player, e.Position.ToUnityVector3(), PingPresentation.GetPlayerColor(e.Player));
     }
@@ -294,6 +294,23 @@ public static class PingPresentation
     };
 
     private static string H(string word, string hex = Highlight) => $"<color={hex}>{word}</color>";
+
+    // Auto first-discovery POI ping (PingPlaced.Auto): just "Found <POI>".
+    public static string GetFoundMessage(PingKind kind)
+    {
+        switch (kind)
+        {
+            case PingKind.Store: return $"Found {H("Store", StoreColor)}";
+            case PingKind.Blacksmith: return $"Found {H("Gunsmith", GunsmithColor)}";
+            case PingKind.Shrine: return $"Found {H("Healing Shrine", ShrineColor)}";
+            case PingKind.Rift: return $"Found {H("Cursed Rift", RiftColor)}";
+            case PingKind.Traversal: return $"Found {H("Traversal Challenge", ChallengeColor)}";
+            case PingKind.TeamChallengeFound:
+            case PingKind.TeamChallengeStart:
+            case PingKind.TeamChallengeReward: return $"Found {H("Team Challenge", ChallengeColor)}";
+            default: return GetMessage(kind);
+        }
+    }
 
     // state only matters for POI pings: Available (or anything usable) invites the team over, a
     // PhaseUnavailable POI says when it opens, an AlreadyUsed one says it's spent.

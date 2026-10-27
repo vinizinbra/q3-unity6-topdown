@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6a9d9d1c18e948b88511f048f77d390, type: 3}
+  m_Name: TraversalChallengeConfig
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TraversalChallengeConfig
+  Identifier:
+    Path: _QuantumUser/Resources/Configs/TraversalChallengeConfig
+    Guid:
+      Value: 528023848265113520
+  DurationEasy:
+    RawValue: 5898240
+  DurationMedium:
+    RawValue: 3932160
+  DurationHard:
+    RawValue: 2949120
+  DurationNightmare:
+    RawValue: 1966080

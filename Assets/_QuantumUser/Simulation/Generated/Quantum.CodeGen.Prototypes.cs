@@ -3139,6 +3139,21 @@ namespace Quantum.Prototypes {
     }
   }
   [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.PoiPingDiscovered))]
+  public unsafe partial class PoiPingDiscoveredPrototype : ComponentPrototype<Quantum.PoiPingDiscovered> {
+    [HideInInspector()]
+    public Int32 _empty_prototype_dummy_field_;
+    partial void MaterializeUser(Frame frame, ref Quantum.PoiPingDiscovered result, in PrototypeMaterializationContext context);
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.PoiPingDiscovered component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.PoiPingDiscovered result, in PrototypeMaterializationContext context = default) {
+        MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
   [Quantum.Prototypes.Prototype(typeof(Quantum.PoiUsage))]
   public unsafe class PoiUsagePrototype : ComponentPrototype<Quantum.PoiUsage> {
     [ArrayLengthAttribute(8)]
@@ -3457,6 +3472,7 @@ namespace Quantum.Prototypes {
     public FP EnemyMaxHealthFraction;
     public FP MaxHealFractionPerKill;
     public Byte RageOnVendettaKill;
+    public FP MarkSpreadRadius;
     partial void MaterializeUser(Frame frame, ref Quantum.RevengeConfig result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.RevengeConfig component = default;
@@ -3471,6 +3487,7 @@ namespace Quantum.Prototypes {
         result.EnemyMaxHealthFraction = this.EnemyMaxHealthFraction;
         result.MaxHealFractionPerKill = this.MaxHealFractionPerKill;
         result.RageOnVendettaKill = this.RageOnVendettaKill;
+        result.MarkSpreadRadius = this.MarkSpreadRadius;
         MaterializeUser(frame, ref result, in context);
     }
   }
@@ -4185,6 +4202,7 @@ namespace Quantum.Prototypes {
   [Quantum.Prototypes.Prototype(typeof(Quantum.StoreInventory))]
   public unsafe partial class StoreInventoryPrototype : ComponentPrototype<Quantum.StoreInventory> {
     public Int32 RolledAtBreathingIndex;
+    public Int32 RollId;
     [ArrayLengthAttribute(3)]
     public Quantum.Prototypes.StoreWeaponOfferPrototype[] WeaponOffers = new Quantum.Prototypes.StoreWeaponOfferPrototype[3];
     public Byte WeaponOfferCount;
@@ -4199,6 +4217,7 @@ namespace Quantum.Prototypes {
     }
     public void Materialize(Frame frame, ref Quantum.StoreInventory result, in PrototypeMaterializationContext context = default) {
         result.RolledAtBreathingIndex = this.RolledAtBreathingIndex;
+        result.RollId = this.RollId;
         for (int i = 0, count = PrototypeValidator.CheckLength(WeaponOffers, 3, in context); i < count; ++i) {
           this.WeaponOffers[i].Materialize(frame, ref *result.WeaponOffers.GetPointer(i), in context);
         }
@@ -4216,12 +4235,12 @@ namespace Quantum.Prototypes {
     public MapEntityId Store;
     public Byte OfferIndex;
     public QBoolean IsWeaponOffer;
-    public Int32 PurchasedAtBreathingIndex;
+    public Int32 PurchasedAtRollId;
     public void Materialize(Frame frame, ref Quantum.StorePurchaseEntry result, in PrototypeMaterializationContext context = default) {
         PrototypeValidator.FindMapEntity(this.Store, in context, out result.Store);
         result.OfferIndex = this.OfferIndex;
         result.IsWeaponOffer = this.IsWeaponOffer;
-        result.PurchasedAtBreathingIndex = this.PurchasedAtBreathingIndex;
+        result.PurchasedAtRollId = this.PurchasedAtRollId;
     }
   }
   [System.SerializableAttribute()]
@@ -4610,6 +4629,7 @@ namespace Quantum.Prototypes {
     [ArrayLengthAttribute(8)]
     public MapEntityId[] HitEntities = new MapEntityId[8];
     public Byte HitCount;
+    public QBoolean DashRefundEarned;
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.VendettaStrikeHitTracker component = default;
         Materialize((Frame)f, ref component, in context);
@@ -4620,6 +4640,7 @@ namespace Quantum.Prototypes {
           PrototypeValidator.FindMapEntity(this.HitEntities[i], in context, out *result.HitEntities.GetPointer(i));
         }
         result.HitCount = this.HitCount;
+        result.DashRefundEarned = this.DashRefundEarned;
     }
   }
   [System.SerializableAttribute()]

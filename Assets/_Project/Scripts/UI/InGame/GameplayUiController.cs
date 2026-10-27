@@ -507,6 +507,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
         window.RefreshStore("STORE", foodData, weaponData, string.Empty);
         ApplyPoiHeader(frame, entity, window, CurrencyType.Coin);
+        window.UpdateRerollButton(LevelUpUtility.GetRerollCharges(frame, entity), false);
     }
 
     // The Store/Blacksmith/Cursed Rift header: the player's balance of the currency this screen
@@ -552,13 +553,11 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             ? frame.FindAsset(frame.GameConfig.LevelUpConfig)
             : null;
 
-        // Reroll only exists with Gunsmith L4 (meta progression) - one per Break, shown as a 1/0 charge.
-        bool rerollUnlocked = BlacksmithUtility.IsRerollUnlocked(frame);
-        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: string.Empty, allowCancel: true, allowReroll: rerollUnlocked,
+        // Charges = this Break's free Gunsmith L4 reroll (if unlocked) + the shared RerollQuantity pool.
+        window.Refresh("BLACKSMITH", 0f, cardData, null, subtitle: string.Empty, allowCancel: true, allowReroll: true,
             currentWeapon: BuildCurrentWeaponCardData(frame, entity, levelUpConfig));
         ApplyPoiHeader(frame, entity, window, CurrencyType.Coin);
-        if (rerollUnlocked)
-            window.UpdateRerollButton(BlacksmithUtility.CanReroll(frame, entity) ? 1 : 0, false);
+        window.UpdateRerollButton(BlacksmithUtility.GetRerollCharges(frame, entity), false);
     }
 
     // Store food/utility card - mirrors BuildSacrificeCardData's own shape (reads the offer asset's
@@ -797,8 +796,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
             }
             : new[] { BuildCursedRiftOfferCardData(frame, entity, interaction, interaction->Sacrifice) };
 
-        window.Refresh("CURSED RIFT", 0f, cardData, null, subtitle: "SACRIFICE FOR A MUTATION", allowCancel: true, allowReroll: false);
+        window.Refresh("CURSED RIFT", 0f, cardData, null, subtitle: "SACRIFICE FOR A MUTATION", allowCancel: true, allowReroll: true);
         ApplyPoiHeader(frame, entity, window, null);
+        window.UpdateRerollButton(LevelUpUtility.GetRerollCharges(frame, entity), false);
     }
 
     // Reuses BuildCardData unchanged (internal, see its own comment) for the mutation reward's
@@ -1227,10 +1227,17 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
     private void OnRerollClicked(int slotIndex)
     {
-        if (_windowOwner[slotIndex] == ChoiceWindowOwner.Blacksmith)
+        switch (_windowOwner[slotIndex])
         {
-            _game.SendCommand(slotIndex, new RerollBlacksmithCommand());
-            return;
+            case ChoiceWindowOwner.Blacksmith:
+                _game.SendCommand(slotIndex, new RerollBlacksmithCommand());
+                return;
+            case ChoiceWindowOwner.CursedRift:
+                _game.SendCommand(slotIndex, new RerollCursedRiftCommand());
+                return;
+            case ChoiceWindowOwner.Store:
+                _game.SendCommand(slotIndex, new RerollStoreCommand());
+                return;
         }
 
         _game.SendCommand(slotIndex, new RerollLevelUpOptionsCommand());

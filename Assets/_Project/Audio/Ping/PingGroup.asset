@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PingGroup
   m_EditorClassIdentifier: Assembly-CSharp::SoundData
   variants:
-  - clip: {fileID: 8300000, guid: a8e53d4228e6a4c4c935467f77e84224, type: 3}
+  - clip: {fileID: 8300000, guid: 0dcf5622486fce346916bdce4788cf5a, type: 3}
     overrideTrim: 0
     startAt: 0
     endAt: 0
@@ -27,7 +27,7 @@ MonoBehaviour:
   group: 2
   output: {fileID: 0}
   volume: {x: 0.4, y: 0.4}
-  pitch: {x: 0.8, y: 0.85}
+  pitch: {x: 0.8, y: 0.8}
   delay: {x: 0, y: 0}
   startAt: 0
   endAt: 0
@@ -37,6 +37,7 @@ MonoBehaviour:
   loop: 0
   quieterWhenRemote: 0
   localPlayerOnly: 0
+  haptic: 0
   spatial: 0
   cooldown: 0.1
   maxConcurrent: 4

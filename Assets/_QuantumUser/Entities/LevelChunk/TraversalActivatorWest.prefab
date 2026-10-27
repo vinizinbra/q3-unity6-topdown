@@ -19614,7 +19614,7 @@ MonoBehaviour:
       AvailableInBreathing:
         Value: 1
     Duration:
-      RawValue: 2621440
+      RawValue: 3932160
     RemainingTime:
       RawValue: 0
     State:
@@ -19632,31 +19632,31 @@ MonoBehaviour:
       RawValue: 163840
     PlatformPrototype:
       Id:
-        Value: 1453906629759128079
+        Value: 1296243609201349578
     PlatformCount: 4
     PlatformPositions:
     - X:
         RawValue: 2097152
       Y:
-        RawValue: -65536
+        RawValue: -262144
       Z:
         RawValue: 294912
     - X:
         RawValue: 1769472
       Y:
-        RawValue: 0
+        RawValue: -196608
       Z:
         RawValue: 196608
     - X:
-        RawValue: 1802240
+        RawValue: 1769472
       Y:
-        RawValue: 65536
+        RawValue: -131072
       Z:
         RawValue: 622592
     - X:
         RawValue: 1048576
       Y:
-        RawValue: 196608
+        RawValue: 0
       Z:
         RawValue: 262144
     - X:

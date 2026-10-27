@@ -6,7 +6,7 @@ Configs come in two kinds, and they now live in two places.
 |---|---|---|
 | What | Shared tuning that's the same for every match and barely changes | What this match plays |
 | Where | `Resources/Configs/OverallGameConfig.asset` | MenuScene's `MatchMakingConfig`, plus each gameplay scene's `QuantumDebugRunner` |
-| Holds | ExplodeOnDeath, Effect, ElementalReaction, EnemyTierResistance, EnemyTierStats, Balance, Difficulty (the table), Director, Lifecycle, Experience, LevelUp, Scrap, RiftShard, Coin, HealthOrb, CursedRift, Store, Blacksmith, Talents, AccessoryGuard, Revive, `Prefabs` (orb/accessory prototypes) | `GameConfig` (→ the asset), Map/Seed, `LevelConfig` (normal vs Training Zone), `WorldDefinition` (+ derived hidden `SurvivalConfig`/`WorldBalance`), `Difficulty`/`NightmareLevel` (the pick), `WorldUnlocks`, `Bots`, the `Debug*` knobs |
+| Holds | ExplodeOnDeath, Effect, ElementalReaction, EnemyTierResistance, EnemyTierStats, Balance, Difficulty (the table), Director, Lifecycle, Experience, LevelUp, Scrap, RiftShard, Coin, HealthOrb, CursedRift, Store, Blacksmith, TraversalChallenge (timer per difficulty), Talents, AccessoryGuard, Revive, `Prefabs` (orb/accessory prototypes) | `GameConfig` (→ the asset), Map/Seed, `LevelConfig` (normal vs Training Zone), `WorldDefinition` (+ derived hidden `SurvivalConfig`/`WorldBalance`), `Difficulty`/`NightmareLevel` (the pick), `WorldUnlocks`, `Bots`, the `Debug*` knobs |
 | Read in the sim as | `f.GameConfig.StoreConfig` (`Frame.User.cs` resolves `RuntimeConfig.GameConfig`) | `f.RuntimeConfig.WorldDefinition` |
 
 **Why:** before this, every `RuntimeConfig` (menu + one per debug-runner scene) carried its own copy of ~25 asset

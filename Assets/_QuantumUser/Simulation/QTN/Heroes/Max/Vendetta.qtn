@@ -53,6 +53,11 @@ component RevengeConfig
     // stack count rather than a fraction, since Rage itself is a small integer counter. 0 (the base
     // passive's default, and rank 1) grants nothing.
     Byte RageOnVendettaKill;
+
+    // Blood Debt rank 2 - when a Vendetta kill consumes a mark, the mark jumps to the nearest
+    // enemy within this radius of the death that this holder hasn't already marked (see
+    // MaxVendettaSystem.TrySpreadMark). 0 (the base passive's default) = no spread.
+    FP MarkSpreadRadius;
 }
 
 // Unbroken Spirit upgrade - tag only, no fields. Presence means Shield damage from an active

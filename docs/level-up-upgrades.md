@@ -184,7 +184,10 @@ Flow, mirroring `SelectLevelUpUpgradeCommand`'s shape end to end:
    identically for a Choose-Weapon screen - all 3 slots redraw as real weapons. `keepCurrentButton`
    itself is untouched by a reroll (it isn't one of the rolled `Options`, see "Keep Current" above)
    and stays available throughout.
-3. Only the charge itself gates frequency - no per-screen reroll limit beyond however many charges
+3. **Shared pool (2026-10-27):** the same charges also reroll Cursed Rift (`RerollCursedRiftCommand`),
+   the Store's rolled stock (`RerollStoreCommand`) and the Gunsmith (after its free L4 reroll) - helpers
+   `LevelUpUtility.GetRerollCharges`/`SpendRerollCharge`. See `docs/store-blacksmith.md`/`docs/breathing-poi.md`.
+4. Only the charge itself gates frequency - no per-screen reroll limit beyond however many charges
    the player has banked, and no cooldown between rerolls within the same screen.
 
 ## Why pause via `GameplaySystemGroup`, not a hand-rolled flag

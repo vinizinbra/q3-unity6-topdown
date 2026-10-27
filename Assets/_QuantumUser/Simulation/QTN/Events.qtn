@@ -123,6 +123,16 @@ event VendettaRevengeHealed
     FP        Amount;
 }
 
+// Fired when an enemy becomes newly marked by a Vendetta holder (not on a refresh of a mark it
+// already holds) - reactive, Vendetta Strike and Blood Debt spread alike. Position is the enemy's
+// at that moment, for a one-shot "marked" VFX (see MaxVendettaHealFxView).
+event VendettaMarkApplied
+{
+    EntityRef  Owner;
+    EntityRef  Target;
+    FPVector3  Position;
+}
+
 // Shield counterpart to EntityHealed - see ShieldUtility.ApplyFlatShield. Amount is what was
 // actually applied after Max capped it, same reasoning EntityHealed's own comment gives. Fired for
 // a genuine grant only (Bodyguard, Portable Cover, ShieldEffectData) - passive recharge

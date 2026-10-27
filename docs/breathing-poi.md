@@ -180,9 +180,10 @@ worth, and hiding the cost on a prior screen meant the player couldn't see what 
 the moment they saw the reward. Now exactly one sacrifice and one mutation are rolled together the
 instant the interaction begins, shown on ONE card (the mutation's own Icon/DisplayName/
 Description/Rarity, with the sacrifice's cost folded directly onto it via `ValuePreview` - see
-`docs/choice-window-refactor.md`), and a single "SACRIFICE" button commits both at once. No reroll
-(confirmed with the user - still a blind roll on both the cost and the reward, just no longer split
-across two clicks), and no separate confirm step, same "one click = one irreversible pick" idiom
+`docs/choice-window-refactor.md`), and a single "SACRIFICE" button commits both at once. Reroll
+(2026-10-27): the ChooseWindow Reroll button spends one shared `CharacterStats.RerollQuantity` charge
+(`RerollCursedRiftCommand` → `CursedRiftUtility.Reroll`) to redraw the sacrifice(s) + mutation together
+and overwrites the cached offer, so Cancel + reopen keeps the paid reroll. No separate confirm step, same "one click = one irreversible pick" idiom
 every other Choice Window screen (Level-Up, Choose Weapon) already uses.
 
 ```

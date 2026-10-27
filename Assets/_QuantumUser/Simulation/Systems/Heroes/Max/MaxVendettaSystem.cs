@@ -1,6 +1,7 @@
 namespace Quantum
 {
     using Photon.Deterministic;
+    using Quantum.Physics3D;
     using UnityEngine.Scripting;
 
     // Max's Vendetta passive - reacts to Combat.qtn's OnHealthDamageApplied/OnShieldDamageApplied
@@ -69,18 +70,78 @@ namespace Quantum
             if (IsValidVendettaAttacker(f, owner) == false)
                 return; // no source entity, dead/invulnerable, or non-hostile - no mark created
 
-            f.AddOrGet<RevengeMark>(owner, out var mark);
+            RevengeMark* mark = ApplyMark(f, target, owner, config);
+            mark->StoredDamage += amount;
+        }
 
-            if (mark->MarkedBy != target)
+        // Creates or refreshes holder's mark on enemy. Shared by the reactive path above, Blood
+        // Debt's spread (TrySpreadMark) and Vendetta Strike's proactive mark.
+        public static RevengeMark* ApplyMark(Frame f, EntityRef holder, EntityRef enemy, RevengeConfig* config)
+        {
+            f.AddOrGet<RevengeMark>(enemy, out var mark);
+
+            if (mark->MarkedBy != holder)
             {
-                // A different Vendetta holder claims this enemy - its previously stored damage
-                // belonged to the old holder and is discarded, not carried over.
-                mark->MarkedBy = target;
+                // A different Vendetta holder claims this enemy (or nobody did yet) - its previously
+                // stored damage belonged to the old holder and is discarded, not carried over.
+                mark->MarkedBy = holder;
                 mark->StoredDamage = FP._0;
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(enemy, out var transform) == true)
+                {
+                    f.Events.VendettaMarkApplied(holder, enemy, transform->Position);
+                }
             }
 
             mark->RemainingDuration = config->MarkDuration;
-            mark->StoredDamage += amount;
+            return mark;
+        }
+
+        public static bool IsMarkedBy(Frame f, EntityRef enemy, EntityRef holder)
+        {
+            return f.Unsafe.TryGetPointer<RevengeMark>(enemy, out var mark) == true && mark->MarkedBy == holder;
+        }
+
+        // Blood Debt rank 2 - the consumed mark jumps to the nearest enemy around the death that
+        // this holder hasn't already marked. Fresh mark, no banked StoredDamage - the heal floors in
+        // OnEntityKilled still pay out when it's consumed. Chains naturally: that kill spreads again.
+        private static void TrySpreadMark(Frame f, EntityRef holder, EntityRef killed, RevengeConfig* config)
+        {
+            if (config->MarkSpreadRadius <= FP._0 || f.Unsafe.TryGetPointer<Transform3D>(killed, out var killedTransform) == false)
+                return;
+
+            Shape3D sphere = Shape3D.CreateSphere(config->MarkSpreadRadius);
+            var hits = f.Physics3D.OverlapShape(killedTransform->Position, FPQuaternion.Identity, sphere, EnemyMovementUtility.GetEnemyLayerMask(f), QueryOptions.HitAll);
+
+            EntityRef closest = EntityRef.None;
+            FP closestSqrDistance = FP.MaxValue;
+
+            for (int i = 0; i < hits.Count; i++)
+            {
+                EntityRef candidate = hits[i].Entity;
+
+                if (candidate == killed || f.Unsafe.TryGetPointer<Enemy>(candidate, out var enemy) == false)
+                    continue;
+
+                if (enemy->Phase == EnemyActionPhase.Dead || f.Has<Invulnerable>(candidate) == true || IsMarkedBy(f, candidate, holder) == true)
+                    continue;
+
+                if (f.Unsafe.TryGetPointer<Transform3D>(candidate, out var transform) == false)
+                    continue;
+
+                FP sqrDistance = (transform->Position - killedTransform->Position).SqrMagnitude;
+
+                if (sqrDistance >= closestSqrDistance)
+                    continue;
+
+                closestSqrDistance = sqrDistance;
+                closest = candidate;
+            }
+
+            if (closest != EntityRef.None)
+            {
+                ApplyMark(f, holder, closest, config);
+            }
         }
 
         private static bool IsValidVendettaAttacker(Frame f, EntityRef owner)
@@ -96,21 +157,24 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<RevengeMark>(target, out var mark) == false || mark->MarkedBy != owner)
                 return; // this kill didn't consume owner's own Vendetta mark on target
 
-            if (f.Unsafe.TryGetPointer<RevengeConfig>(owner, out var config) == true
-                && f.Unsafe.TryGetPointer<Health>(owner, out var health) == true)
+            RevengeConfig* config = f.Unsafe.TryGetPointer<RevengeConfig>(owner, out var ownerConfig) == true ? ownerConfig : null;
+
+            if (config != null && f.Unsafe.TryGetPointer<Health>(owner, out var health) == true)
             {
                 // Two floors beneath the damage-based heal, so a kill on a mark that barely damaged
-                // Max (or a Vendetta Strike proactive mark with no banked StoredDamage at all) still
-                // heals something meaningful - MinHealFraction off Max's own MaxHealth, and
+                // Max still heals something meaningful - MinHealFraction off Max's own MaxHealth, and
                 // EnemyMaxHealthFraction off the killed enemy's, so a genuinely tough kill heals more
-                // than a Filler one even at the floor. Highest of all three wins.
-                FP targetMaxHealth = f.Unsafe.TryGetPointer<Health>(target, out var targetHealth) == true ? targetHealth->MaxHealth : FP._0;
+                // than a Filler one even at the floor. Highest of all three wins. The enemy-MaxHealth
+                // floor only applies to a mark that actually hurt Max: a proactive mark (Vendetta
+                // Strike, Blood Debt spread) with nothing banked would otherwise heal 5% of a Heavy's
+                // HP for a kill that cost Max nothing, so it gets MinHealFraction only.
+                FP targetMaxHealth = mark->StoredDamage > FP._0 && f.Unsafe.TryGetPointer<Health>(target, out var targetHealth) == true ? targetHealth->MaxHealth : FP._0;
 
                 FP heal = FPMath.Max(mark->StoredDamage * config->HealMultiplier,
                     FPMath.Max(health->MaxHealth * config->MinHealFraction, targetMaxHealth * config->EnemyMaxHealthFraction));
 
-                // Blood Debt's hard per-kill ceiling - keeps rank 3's higher HealMultiplier from
-                // turning a single big banked hit into a full heal. 0 = uncapped, for a build that
+                // Blood Debt's hard per-kill ceiling - keeps a single big banked hit (or a
+                // long spread chain) from turning into a full heal. 0 = uncapped, for a build that
                 // never picked Blood Debt at all (the base passive leaves this unset).
                 if (config->MaxHealFractionPerKill > FP._0)
                 {
@@ -129,6 +193,11 @@ namespace Quantum
             }
 
             f.Remove<RevengeMark>(target);
+
+            if (config != null)
+            {
+                TrySpreadMark(f, owner, target, config);
+            }
 
             // Burn spread on a Vendetta kill used to live here as its own Ascension line (Burning
             // Vengeance) - merged into Wildfire, which now owns every Burn-spread trigger from one

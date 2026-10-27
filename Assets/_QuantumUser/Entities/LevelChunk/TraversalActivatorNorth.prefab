@@ -19614,7 +19614,7 @@ MonoBehaviour:
       AvailableInBreathing:
         Value: 1
     Duration:
-      RawValue: 2949120
+      RawValue: 3932160
     RemainingTime:
       RawValue: 0
     State:
@@ -19627,38 +19627,38 @@ MonoBehaviour:
       Y:
         RawValue: 327680
       Z:
-        RawValue: 2457600
+        RawValue: 2064384
     CheckpointRadius:
       RawValue: 163840
     PlatformPrototype:
       Id:
-        Value: 1453906629759128079
+        Value: 1296243609201349578
     PlatformCount: 4
     PlatformPositions:
     - X:
         RawValue: 1179648
       Y:
-        RawValue: -65536
+        RawValue: -262144
       Z:
-        RawValue: 1277952
+        RawValue: 884736
     - X:
-        RawValue: 786432
+        RawValue: 851968
+      Y:
+        RawValue: -196608
+      Z:
+        RawValue: 884736
+    - X:
+        RawValue: 524288
+      Y:
+        RawValue: -131072
+      Z:
+        RawValue: 917504
+    - X:
+        RawValue: 1114112
       Y:
         RawValue: 0
       Z:
-        RawValue: 1277952
-    - X:
-        RawValue: 393216
-      Y:
-        RawValue: 65536
-      Z:
-        RawValue: 1277952
-    - X:
-        RawValue: 1146880
-      Y:
-        RawValue: 196608
-      Z:
-        RawValue: 2031616
+        RawValue: 1638400
     - X:
         RawValue: 0
       Y:
@@ -19698,7 +19698,7 @@ MonoBehaviour:
       Y:
         RawValue: 372244
       Z:
-        RawValue: 2542796
+        RawValue: 2162688
     RewardPrototypeCount: 4
     RewardPrototypes:
     - Id:
@@ -19722,14 +19722,14 @@ MonoBehaviour:
       Y:
         RawValue: 327680
       Z:
-        RawValue: 2392064
+        RawValue: 1985740
     ReturnDestinationPosition:
       X:
-        RawValue: 491520
+        RawValue: 983040
       Y:
         RawValue: 65536
       Z:
-        RawValue: 163840
+        RawValue: 196608
     SpawnedReturnTeleport: {fileID: 0}
 --- !u!114 &4724026707207944512
 MonoBehaviour:

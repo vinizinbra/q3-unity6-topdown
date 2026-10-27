@@ -38,6 +38,10 @@ namespace Quantum
                     case CancelCursedRiftCommand:
                         CursedRiftUtility.Cancel(f, entity, interaction);
                         break;
+
+                    case RerollCursedRiftCommand:
+                        CursedRiftUtility.Reroll(f, entity, interaction);
+                        break;
                 }
             }
         }

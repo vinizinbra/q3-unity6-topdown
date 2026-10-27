@@ -49,6 +49,10 @@ namespace Quantum
                         AccessoryServiceUtility.TryPurchaseService(f, entity);
                         break;
 
+                    case RerollStoreCommand:
+                        StoreUtility.Reroll(f, entity, interaction);
+                        break;
+
                     case CloseStoreCommand:
                         StoreUtility.Close(f, entity);
                         break;
