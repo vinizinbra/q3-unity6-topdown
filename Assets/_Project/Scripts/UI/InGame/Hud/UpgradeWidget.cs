@@ -20,8 +20,32 @@ public class UpgradeWidget : MonoBehaviour
     private GameObject levelRoot;
     [SerializeField] private TMP_Text levelText;
 
+    [Header("Rank pips (optional)")]
+    [SerializeField, Tooltip("Parent of the rank pips - one pip per possible rank, filled up to the owned rank. While pips show, the title drops its Roman numeral (the pips already say it).")]
+    private RectTransform rankPipsRoot;
+    [SerializeField, Tooltip("Inactive pip Image under rankPipsRoot, cloned per rank and never destroyed.")]
+    private Image rankPipTemplate;
+    [SerializeField] private Color pipFilledColor = new Color(0.25f, 0.85f, 0.95f);
+    [SerializeField] private Color pipEmptyColor = new Color(1f, 1f, 1f, 0.15f);
+    [SerializeField, Tooltip("More ranks than this fall back to the Roman numeral - a 10-pick upgrade would be a row of dots.")]
+    private int maxPips = 5;
+
+    private readonly System.Collections.Generic.List<Image> _pips = new System.Collections.Generic.List<Image>();
+
     public void Setup(Sprite icon, string title, string description, int level)
     {
+        Setup(icon, title, description, level, 0);
+    }
+
+    // maxRank 0 = unknown/unlimited (no pips, Roman numeral as before).
+    public void Setup(Sprite icon, string title, string description, int level, int maxRank)
+    {
+        bool pips = rankPipsRoot != null && rankPipTemplate != null && maxRank > 1 && maxRank <= maxPips;
+        RefreshPips(pips ? maxRank : 0, level);
+
+        if (pips)
+            level = 0;
+
         if (this.icon != null)
             this.icon.sprite = icon;
 
@@ -39,5 +63,26 @@ public class UpgradeWidget : MonoBehaviour
 
         if (levelText != null)
             levelText.text = StringUtility.ToRomanNumeral(level);
+    }
+
+    private void RefreshPips(int count, int filled)
+    {
+        if (rankPipsRoot == null || rankPipTemplate == null)
+            return;
+
+        rankPipTemplate.gameObject.SetActive(false);
+        rankPipsRoot.gameObject.SetActive(count > 0);
+
+        while (_pips.Count < count)
+            _pips.Add(Instantiate(rankPipTemplate, rankPipsRoot));
+
+        for (int i = 0; i < _pips.Count; i++)
+        {
+            bool shown = i < count;
+            _pips[i].gameObject.SetActive(shown);
+
+            if (shown)
+                _pips[i].color = i < filled ? pipFilledColor : pipEmptyColor;
+        }
     }
 }

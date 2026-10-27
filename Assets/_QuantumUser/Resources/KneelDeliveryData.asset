@@ -21,6 +21,6 @@ MonoBehaviour:
   MaxRandomOffset:
     RawValue: 0
   Duration:
-    RawValue: 327680
+    RawValue: 196608
   DamageMultiplier:
     RawValue: 98304

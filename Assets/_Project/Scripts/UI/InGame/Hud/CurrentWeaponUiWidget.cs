@@ -1,3 +1,4 @@
+using Photon.Deterministic;
 using Quantum;
 using QuantumUser.View;
 using TMPro;
@@ -19,6 +20,15 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
 
     [SerializeField, Tooltip("Optional - \"Pistol | Light | Fire\" (family, weight, element) under the name. Weight explains the move-speed nudge, element the status the weapon applies; Medium/Neutral are left out as the neutral defaults.")]
     private TMP_Text weaponTagsText;
+
+    [Header("Stats (optional - each left unassigned is skipped)")]
+    [SerializeField, Tooltip("Shots per second, after perks, Attack Speed and timed Haste.")]
+    private TMP_Text fireRateText;
+    [SerializeField, Tooltip("Reload seconds, after perks and Reload Speed.")]
+    private TMP_Text reloadText;
+    [SerializeField] private TMP_Text magazineText;
+    [SerializeField] private Color statBetterColor = new Color(0.35f, 0.9f, 0.4f);
+    [SerializeField] private Color statWorseColor = new Color(1f, 0.35f, 0.35f);
 
     [SerializeField, Tooltip("Fixed rows, one per Weapon.Perks slot (5) - rows past the equipped perk count are hidden.")]
     private WeaponCardPerkRowWidget[] perkRows;
@@ -92,7 +102,41 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
         if (weaponTagsText != null)
             weaponTagsText.text = BuildTags(weaponData);
 
+        RefreshStats(frame, weapon, weaponData);
         RefreshPerks(frame, weapon);
+    }
+
+    // The same formulas WeaponSystem fires and reloads with (minus shot-to-shot ramp perks), each tinted
+    // against the weapon's own authored value so a build that moved it reads at a glance.
+    private void RefreshStats(Frame frame, Weapon weapon, WeaponDataAsset weaponData)
+    {
+        if (fireRateText != null && weaponData.FireRate > FP._0)
+        {
+            FP cooldown = StatUtility.GetFireCooldown(frame, _entityRef, FP._1 / weaponData.FireRate * weapon.FireCooldownMultiplier);
+            float rate = cooldown > FP._0 ? 1f / cooldown.AsFloat : 0f;
+            fireRateText.text = Tint($"{rate:0.#}/s", rate, weaponData.FireRate.AsFloat, true);
+        }
+
+        if (reloadText != null)
+        {
+            float reload = StatUtility.GetReloadDuration(frame, _entityRef, weapon.ReloadDuration).AsFloat;
+            reloadText.text = Tint($"{reload:0.0#}s", reload, weaponData.ReloadDuration.AsFloat, false);
+        }
+
+        if (magazineText != null)
+            magazineText.text = Tint(weapon.MagazineSize.ToString(), weapon.MagazineSize, weaponData.MagazineSize, true);
+    }
+
+    // Compared after display rounding, so a change too small to show never tints the number.
+    private string Tint(string text, float value, float authored, bool higherIsBetter)
+    {
+        float delta = Mathf.Round(value * 10f) - Mathf.Round(authored * 10f);
+
+        if (Mathf.Approximately(delta, 0f))
+            return text;
+
+        Color color = (delta > 0f) == higherIsBetter ? statBetterColor : statWorseColor;
+        return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{text}</color>";
     }
 
     private void RefreshPerks(Frame frame, Weapon weapon)

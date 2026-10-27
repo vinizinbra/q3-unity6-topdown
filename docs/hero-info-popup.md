@@ -9,24 +9,47 @@ The Tab-hold overlay, previously `UpgradePopupWidget` (a pure upgrade-history li
 place (same `.cs.meta` GUID, so the existing scene component and every wired field survived the
 rename untouched).
 
-## Layout (2026-10-26 readability pass)
+## Layout (2026-10-27 reference-style pass)
 
-Laid out in the `Canvas.prefab` on a fixed grid - 36px outer margin, 20px gutter - with the same pink
-(#FD3971) uppercase section headers everywhere:
+Laid out in the `Canvas.prefab` on a fixed grid (36px outer margin, 20px gutter). Every panel opens
+with a pointed pink section banner (`RR_Diamond32`, sliced so its ends stay arrow tips, #FD3971, white label) plus a pink rule to
+the panel edge; sub-sections get the same shape in cyan with dark text.
 
-1. **Hero panel** (top-left, 540x392) - portrait, uppercase name, Health and Shield side by side (the
-   Shield readout hides itself for a hero with no shield, `HeroInfoWidget.UpdateShieldRow`, instead of
-   leaving `ShieldUiWidget`'s placeholder text), a divider, then `HeroBuildStatsWidget`'s
-   OFFENSE / DEFENSE & UTILITY columns. Base/Passive Skill rows are retired from this popup.
-2. **Weapon panel** (top-right, 539x392) - `CurrentWeaponUiWidget`: icon, name (+level), a tags line
-   (`weaponTagsText`: family | weight | element, element tinted; Medium/Neutral omitted), a divider and
-   the 5 perk rows as compact one-line-or-two "**Name** - effect" rows that always fit the panel, with a
-   "No perks yet" label (`noPerksLabel`) when empty. `separatePerkTitles` exists for roomier layouts but
-   is off here.
-3. **Run Upgrades** (bottom, full width) - title pinned above the scroll viewport (not a list child), and
-   the history cards in a 2-column `GridLayoutGroup` (514x98 cells), so roughly twice as many are visible
-   before scrolling; "No upgrades yet" (`emptyUpgradesLabel`) when nothing has been picked, including
-   before the entity even has an `UpgradeHistory`.
+1. **PLAYER** (top-left, 610x515) - portrait, then a `NameRow` (HorizontalLayoutGroup): name (white, 36)
+   followed by the **icon of every Rift Mutation picked**, bare sprites with no frame
+   (`HeroInfoPopupWidget.riftIconsRoot`/`riftIconTemplate`, filled from the same UpgradeHistory rebuild) so
+   they follow any name length. Hovering an icon opens a small panel with the mutation's name and
+   description: `UpgradeTooltipWidget` (the `UpgradeTooltip` child, last in the window so it draws on
+   top; sizes to its text, placed under the icon, clamped inside the window) fed by an
+   `UpgradeTooltipTriggerWidget` on each icon (pointer enter/exit; hides itself if the icon is
+   disabled while hovered). Mouse only for now - no gamepad focus path. Then Health only - the **Shield readout is removed from this popup**
+   (`HeroInfoWidget.shieldWidget` unassigned on this instance, `Shield` object off, since the widget
+   re-activates it every frame otherwise). Then a cyan **STATS** header, then `HeroBuildStatsWidget`: two
+   columns split by a faint divider, each row icon + label + value. Column headers are off
+   (`showColumnHeaders`) since the STATS banner already titles them.
+2. **WEAPON** (top-right, 469x515) - `CurrentWeaponUiWidget`: icon frame, name (+level), tags line
+   (family | weight | element), a 3-cell stat strip (**Fire Rate** shots/s, **Reload** s, **Magazine** -
+   `fireRateText`/`reloadText`/`magazineText`, each tinted green/red vs the weapon's authored value),
+   then a cyan **PERKS** header over the 5 perk rows - one "**Name** - effect" block per perk
+   (`separatePerkTitles` off), wrapping to a second line when long, auto-sized 12-16 to stay inside the
+   two lines ("No perks yet" when empty).
+3. **RUN UPGRADES** (bottom, 1099x323) - 3-column `GridLayoutGroup` of 336x110 cards (hex `RR_Hex32_Outline` background, PPU multiplier 2): icon, title
+   (Overflow + auto-size 14-20 - Ellipsis/Truncate hide this font's single line entirely), description,
+   and **rank pips** under the icon (`UpgradeWidget.rankPipsRoot`/`rankPipTemplate`, `RR_Diamond32`;
+   filled cyan up to the owned rank). Pips show when the max rank is 2..5 (`IRankedUpgrade.MaxRank` or
+   `GlobalUpgradeData.MaxPicks`); single-pick and unlimited upgrades get none and keep the Roman
+   numeral. **Order: Rift Mutations first**, then hero upgrades (Skill + Passive), then Global Upgrades;
+   inside the hero and global groups, highest owned rank first, pick order breaking ties
+   (`SortByRank`). All lists share one Content, so `HeroInfoPopupWidget.Rebuild` sets sibling order
+   explicitly after each rebuild.
+
+Stat rows (`HeroBuildStatsWidget`, all always shown so the grid never reflows): Damage (total per trigger
+pull, tinted vs base; multishot adds a gray "(6x9)"), Crit Chance, Crit Damage, Area | Max Health,
+Move Speed, Skill Cooldown, Dash Cooldown. Cooldowns are the **real seconds** (`StatUtility.GetSkillCooldown`
+on the slot's SkillData, i.e. what the sim arms) tinted green when shorter - no separate %, which didn't fit.
+Deltas render at `deltaSizePercent` (85%) so the number reads first. Icons are the white silhouettes from
+`RiftRaidersSilhouetteIcons` (Damage, Target, Crit, Passive, Health, Wind, Skill, Cooldown), assigned per stat
+on the widget.
 
 Mockups: `HeroBuildStatsWidget`'s Build Preview rows are `HideFlags.DontSave`, so they can never be
 written into the prefab/scene (a prefab instance can't delete inherited children, so a saved mockup used to
@@ -37,9 +60,9 @@ sections 1 and 2, and section 3's own pooled rebuild. Weapon perks deliberately 
 section 3 - `LevelUpUtility.RecordHistory` early-outs on `WeaponPerk`/`ChooseWeapon` because they're
 already visible on the weapon itself, which is exactly what section 2 shows.
 
-## Build Stats (HeroBuildStatsWidget)
+## Build Stats (HeroBuildStatsWidget) - history
 
-`HeroArea` is now: icon + name + health/shield on top, then `BuildStats` below with two titled columns,
+Earlier (2026-10-26) shape, superseded by the layout above where they differ: `HeroArea` was icon + name + health/shield on top, then `BuildStats` below with two titled columns,
 **Offense** (Damage, Crit Chance, Crit Damage, Area) and **Defense & Utility** (Max Health, Move Speed,
 Skill Cooldown, Dash Cooldown). Rows are built in code; each shows value + colored delta (green better /
 red worse, cooldowns invert). Damage, Crit Chance/Damage, Max Health and Move Speed always show; Area and

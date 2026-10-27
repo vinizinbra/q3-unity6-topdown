@@ -6,14 +6,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// "How is my build doing" readout for HeroInfoPopupWidget - two titled columns (Offense / Defense &
-// Utility), one row per stat: label on the left, value plus a colored "+15%" delta on the right
-// (green = better, red = worse; cooldowns invert so lower reads green).
+// "How is my build doing" readout for HeroInfoPopupWidget - two columns (offense / defense & utility),
+// one row per stat: icon, label, then value plus a colored "+15%" delta on the right (green = better,
+// red = worse; cooldowns invert so lower reads green).
 //
 // Rows are built in code under `content` from the fontSource's font, so the widget needs no per-row
-// prefab. Core rows are always shown; the rest only appear once the build has moved them off
-// baseline, which keeps the panel short early in a run. Deltas are relative to a neutral 1.0
-// multiplier, i.e. they already include the hero's own authored baseline.
+// prefab. Every row is always shown, so the grid never reflows while the popup is open. Deltas are
+// relative to a neutral 1.0 multiplier, i.e. they already include the hero's own authored baseline.
 //
 // Bound externally via Initialize (HeroInfoPopupWidget owns the binding) - no self-binding default.
 public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
@@ -28,14 +27,32 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
     [SerializeField] private float headerFontSize = 22f;
     [SerializeField] private float rowHeight = 26f;
     [SerializeField] private float valueWidth = 96f;
+    [SerializeField] private float iconSize = 26f;
+    [SerializeField, Tooltip("The +15% delta's size relative to the value, so the number stays the thing you read first.")]
+    private int deltaSizePercent = 85;
+    [SerializeField, Tooltip("Off when the panel already carries its own section header (e.g. a STATS banner) above the columns.")]
+    private bool showColumnHeaders = true;
+    [SerializeField, Tooltip("Thin vertical line between the two columns - alpha 0 for none.")]
+    private Color columnDividerColor = new Color(1f, 1f, 1f, 0f);
     [SerializeField] private Color headerColor = new Color(0.99f, 0.22f, 0.44f); // #FD3971
     [SerializeField] private Color labelColor = new Color(0.85f, 0.85f, 0.85f);
+    [SerializeField] private Color iconColor = Color.white;
     [SerializeField] private Color valueColor = Color.white;
     [SerializeField] private Color neutralColor = new Color(0.6f, 0.6f, 0.6f);
     [SerializeField] private Color positiveColor = new Color(0.35f, 0.9f, 0.4f);
     [SerializeField] private Color negativeColor = new Color(1f, 0.35f, 0.35f);
     [SerializeField, Tooltip("Delta color while a timed bonus is running (Overdrive, Juggernaut, Flow, Energy Drink, Danger Pay...) so a temporary spike reads differently from the permanent build.")]
     private Color buffedColor = new Color(1f, 0.78f, 0.29f);
+
+    [Header("Icons (optional - a stat without one gets no icon slot)")]
+    [SerializeField] private Sprite damageIcon;
+    [SerializeField] private Sprite critChanceIcon;
+    [SerializeField] private Sprite critDamageIcon;
+    [SerializeField] private Sprite areaIcon;
+    [SerializeField] private Sprite maxHealthIcon;
+    [SerializeField] private Sprite moveSpeedIcon;
+    [SerializeField] private Sprite skillCooldownIcon;
+    [SerializeField] private Sprite dashCooldownIcon;
 
     [SerializeField] private EntityRef _entityRef;
 
@@ -80,7 +97,7 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
         SetRow(Stat.CritChance, critUp ? $"<color=#{ColorUtility.ToHtmlStringRGB(positiveColor)}>{critText}</color>" : critText, string.Empty, critUp ? 1 : 0, true);
         SetRow(Stat.CritDamage, $"x{critMultiplier.AsFloat:0.0#}", string.Empty, critMultiplier > FP._1 ? 1 : 0, true);
 
-        Multiplier(Stat.Area, stats.AreaRadiusMultiplier, true, false);
+        Multiplier(Stat.Area, stats.AreaRadiusMultiplier, true, true);
 
         if (frame.TryGet<Health>(_entityRef, out var health))
         {
@@ -89,8 +106,10 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
         }
 
         RefreshMoveSpeed(frame);
-        Cooldown(Stat.SkillCooldown, stats.SkillCooldownMultiplier);
-        Cooldown(Stat.DashCooldown, stats.DashCooldownMultiplier);
+
+        frame.TryGet<CharacterSkills>(_entityRef, out var skills);
+        Cooldown(frame, Stat.SkillCooldown, SkillSlotId.HeroSkill, skills.HeroSkill.Skill, stats.SkillCooldownMultiplier);
+        Cooldown(frame, Stat.DashCooldown, SkillSlotId.DashSkill, skills.DashSkill.Skill, stats.DashCooldownMultiplier);
     }
 
     // The live total (upgrades + weapon weight + hero skill states + timed buffs) - skills like Overdrive
@@ -128,8 +147,8 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
         // shotgun reads as what one shot is worth rather than one pellet. Each pellet is rounded UP first,
         // the same way DamageNumberUiWidget prints each pellet's own number (and HealthUiWidget rounds
         // health), so the total is exactly the sum of the numbers the player sees pop. A multi-pellet
-        // weapon shows its "(6x9)" split in gray; a single-shot one its authored "(base N)" once the build
-        // has moved it - never a "+N" delta, which would read as additive on top of the total.
+        // weapon shows its "(6x9)" split in gray; the tint alone says the build moved it - never a "+N"
+        // delta, which would read as additive on top of the total.
         int pellets = Mathf.Max(1, weaponData.PelletCount);
         int perPellet = Mathf.CeilToInt(final.AsFloat);
         int basePerPellet = Mathf.CeilToInt(baseline.AsFloat);
@@ -137,7 +156,7 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
         int sign = perPellet == basePerPellet ? 0 : perPellet > basePerPellet ? 1 : -1;
         Color totalColor = sign > 0 ? positiveColor : sign < 0 ? negativeColor : valueColor;
         string value = $"<color=#{ColorUtility.ToHtmlStringRGB(totalColor)}>{total}</color>";
-        string reference = pellets > 1 ? $"({pellets}x{perPellet})" : sign == 0 ? string.Empty : $"(base {basePerPellet})";
+        string reference = pellets > 1 ? $"({pellets}x{perPellet})" : string.Empty;
 
         // sign 0 on the delta channel renders it in the neutral gray; the total carries the tint itself.
         SetRow(Stat.Damage, value, reference, 0, true);
@@ -152,18 +171,21 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
     }
 
     // The cooldown stats are RATE multipliers - StatUtility.GetSkillCooldown divides the base cooldown by
-    // them, so a 1.15 stat is a 13% SHORTER cooldown, not 15% longer. Shown as the real change to the
-    // cooldown itself (lower reads green).
-    private void Cooldown(Stat stat, FP rateMultiplier)
+    // them, so a 1.15 stat is a 13% SHORTER cooldown, not 15% longer. Shown as the real seconds (the
+    // same GetSkillCooldown the sim arms the slot with), tinted green when shorter than authored - the
+    // seconds already say how much, so no separate % (which also wouldn't fit the column).
+    private void Cooldown(Frame frame, Stat stat, SkillSlotId slot, AssetRef<SkillData> skillRef, FP rateMultiplier)
     {
-        if (rateMultiplier <= FP._0)
+        if (rateMultiplier <= FP._0 || skillRef.IsValid == false)
         {
-            SetRow(stat, string.Empty, string.Empty, 0, false);
+            SetRow(stat, "-", string.Empty, 0, true);
             return;
         }
 
-        string delta = DeltaPercent(FP._1 / rateMultiplier, false, out int sign);
-        SetRow(stat, string.Empty, delta, sign, false);
+        FP seconds = StatUtility.GetSkillCooldown(frame, _entityRef, slot, frame.FindAsset(skillRef).Cooldown);
+        DeltaPercent(FP._1 / rateMultiplier, false, out int sign);
+        Color tint = sign > 0 ? positiveColor : sign < 0 ? negativeColor : valueColor;
+        SetRow(stat, $"<color=#{ColorUtility.ToHtmlStringRGB(tint)}>{seconds.AsFloat:0.#}s</color>", string.Empty, 0, true);
     }
 
     private static int Pct(FP value) => Mathf.RoundToInt(value.AsFloat * 100f);
@@ -191,12 +213,12 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
             return;
 
         string deltaHex = ColorUtility.ToHtmlStringRGB(sign > 1 ? buffedColor : sign > 0 ? positiveColor : sign < 0 ? negativeColor : neutralColor);
-        string valueHex = ColorUtility.ToHtmlStringRGB(sign == 0 && delta.Length == 0 && value.StartsWith("x") ? neutralColor : valueColor);
+        string valueHex = ColorUtility.ToHtmlStringRGB(sign == 0 && delta.Length == 0 && (value.StartsWith("x") || value == "-") ? neutralColor : valueColor);
 
         string text = value.Length > 0 ? $"<color=#{valueHex}>{value}</color>" : string.Empty;
 
         if (delta.Length > 0)
-            text += (text.Length > 0 ? " " : string.Empty) + $"<color=#{deltaHex}>{delta}</color>";
+            text += (text.Length > 0 ? " " : string.Empty) + $"<size={deltaSizePercent}%><color=#{deltaHex}>{delta}</color></size>";
 
         row.Value.text = text;
     }
@@ -232,14 +254,14 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
 
         const string up = "59E566";
         const string down = "FF5959";
-        Preview(Stat.Damage, $"<color=#{up}>31</color> <color=#{ColorUtility.ToHtmlStringRGB(neutralColor)}>(base 26)</color>");
+        Preview(Stat.Damage, $"<color=#{up}>31</color>");
         Preview(Stat.CritChance, $"<color=#{up}>25%</color>");
         Preview(Stat.CritDamage, "x1.5");
         Preview(Stat.Area, $"<color=#{up}>+15%</color>");
-        Preview(Stat.MaxHealth, $"120 <color=#{up}>+20%</color>");
+        Preview(Stat.MaxHealth, $"120 <size=85%><color=#{up}>+20%</color></size>");
         Preview(Stat.MoveSpeed, $"<color=#{down}>-10%</color>");
-        Preview(Stat.SkillCooldown, $"<color=#{up}>-15%</color>");
-        Preview(Stat.DashCooldown, $"<color=#{up}>-10%</color>");
+        Preview(Stat.SkillCooldown, $"<color=#{up}>10.2s</color>");
+        Preview(Stat.DashCooldown, "3s");
     }
 
     [Button("Clear Preview")]
@@ -293,16 +315,19 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
         }
 
         Transform offense = AddColumn("Offense", "OFFENSE");
-        Add(offense, Stat.Damage, "Damage");
-        Add(offense, Stat.CritChance, "Crit Chance");
-        Add(offense, Stat.CritDamage, "Crit Damage");
-        Add(offense, Stat.Area, "Area");
+        Add(offense, Stat.Damage, "Damage", damageIcon);
+        Add(offense, Stat.CritChance, "Crit Chance", critChanceIcon);
+        Add(offense, Stat.CritDamage, "Crit Damage", critDamageIcon);
+        Add(offense, Stat.Area, "Area", areaIcon);
+
+        if (columnDividerColor.a > 0f)
+            AddColumnDivider();
 
         Transform defense = AddColumn("Defense", "DEFENSE & UTILITY");
-        Add(defense, Stat.MaxHealth, "Max Health");
-        Add(defense, Stat.MoveSpeed, "Move Speed");
-        Add(defense, Stat.SkillCooldown, "Skill Cooldown");
-        Add(defense, Stat.DashCooldown, "Dash Cooldown");
+        Add(defense, Stat.MaxHealth, "Max Health", maxHealthIcon);
+        Add(defense, Stat.MoveSpeed, "Move Speed", moveSpeedIcon);
+        Add(defense, Stat.SkillCooldown, "Skill Cooldown", skillCooldownIcon);
+        Add(defense, Stat.DashCooldown, "Dash Cooldown", dashCooldownIcon);
     }
 
     private Transform AddColumn(string name, string title)
@@ -320,14 +345,33 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
 
         column.GetComponent<LayoutElement>().flexibleWidth = 1f;
 
-        TMP_Text header = CreateText(column.transform, "Header", title, TextAlignmentOptions.MidlineLeft, headerColor, 0f, headerFontSize);
-        header.fontStyle = FontStyles.Bold;
-        SetHeight(header.GetComponent<LayoutElement>(), rowHeight + 4f);
+        if (showColumnHeaders)
+        {
+            TMP_Text header = CreateText(column.transform, "Header", title, TextAlignmentOptions.MidlineLeft, headerColor, 0f, headerFontSize);
+            header.fontStyle = FontStyles.Bold;
+            SetHeight(header.GetComponent<LayoutElement>(), rowHeight + 4f);
+        }
 
         return column.transform;
     }
 
-    private void Add(Transform column, Stat stat, string label)
+    private void AddColumnDivider()
+    {
+        var divider = new GameObject("ColumnDivider", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        divider.layer = content.gameObject.layer;
+        divider.transform.SetParent(content, false);
+
+        var image = divider.GetComponent<Image>();
+        image.color = columnDividerColor;
+        image.raycastTarget = false;
+
+        var element = divider.GetComponent<LayoutElement>();
+        element.minWidth = 2f;
+        element.preferredWidth = 2f;
+        element.flexibleWidth = 0f;
+    }
+
+    private void Add(Transform column, Stat stat, string label, Sprite icon)
     {
         var rowObject = new GameObject(stat.ToString(), typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(LayoutElement));
         rowObject.layer = content.gameObject.layer;
@@ -343,6 +387,10 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
         group.spacing = 12f;
 
         SetHeight(rowObject.GetComponent<LayoutElement>(), rowHeight);
+        group.childAlignment = TextAnchor.MiddleLeft;
+
+        if (icon != null)
+            CreateIcon(rowObject.transform, icon);
 
         TMP_Text labelText = CreateText(rowObject.transform, "Label", label, TextAlignmentOptions.MidlineLeft, labelColor, 1f, fontSize);
         SetHeight(labelText.GetComponent<LayoutElement>(), rowHeight);
@@ -360,6 +408,25 @@ public class HeroBuildStatsWidget : QuantumGlobalMonoBehaviour
     {
         element.minHeight = height;
         element.preferredHeight = height;
+    }
+
+    private void CreateIcon(Transform parent, Sprite sprite)
+    {
+        var go = new GameObject("Icon", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        go.layer = parent.gameObject.layer;
+        go.transform.SetParent(parent, false);
+
+        var image = go.GetComponent<Image>();
+        image.sprite = sprite;
+        image.color = iconColor;
+        image.preserveAspect = true;
+        image.raycastTarget = false;
+
+        var element = go.GetComponent<LayoutElement>();
+        element.minWidth = iconSize;
+        element.preferredWidth = iconSize;
+        element.flexibleWidth = 0f;
+        SetHeight(element, iconSize);
     }
 
     private TMP_Text CreateText(Transform parent, string name, string text, TextAlignmentOptions alignment, Color color, float flexibleWidth, float size)

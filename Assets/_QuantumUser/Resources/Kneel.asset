@@ -29,7 +29,7 @@ MonoBehaviour:
   IgnoreY: 1
   Origin: 0
   DownTime:
-    RawValue: 65536
+    RawValue: 32768
   CooldownTime:
     RawValue: 65536
   TelegraphStartPercent:

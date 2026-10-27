@@ -29,7 +29,7 @@ MonoBehaviour:
   IgnoreY: 1
   Origin: 0
   DownTime:
-    RawValue: 65536
+    RawValue: 32768
   CooldownTime:
     RawValue: 65536
   TelegraphStartPercent:
@@ -2584,7 +2584,7 @@ MonoBehaviour:
   GlobalActionSlots: 
   Stagger:
     ThresholdPercents:
-    - RawValue: 13107
+    - RawValue: 22938
     RegenRatePercent:
       RawValue: 655
     MinHealthPercent:
@@ -3074,7 +3074,7 @@ MonoBehaviour:
   MaxRandomOffset:
     RawValue: 0
   Duration:
-    RawValue: 327680
+    RawValue: 196608
   DamageMultiplier:
     RawValue: 98304
 --- !u!114 &3087523772760397048

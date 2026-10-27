@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Quantum;
 using QuantumUser.View;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Tab-hold "everything I'm currently running" overlay for one player, top to bottom:
 //   1. HeroInfoWidget  - head icon, health/shield readouts, Base Skill and Passive Skill rows.
@@ -54,6 +55,14 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Parent for RiftMarkMutation entries - typically a ScrollRect Content with a VerticalLayoutGroup.")]
     private Transform riftMarkContent;
 
+    [Header("Rift Mutation icons")]
+    [SerializeField, Tooltip("Optional row (e.g. next to the hero name) showing just the icon of every Rift Mutation picked - the build's defining picks at a glance.")]
+    private Transform riftIconsRoot;
+    [SerializeField, Tooltip("Inactive Image under riftIconsRoot, cloned per mutation and never destroyed.")]
+    private Image riftIconTemplate;
+    [SerializeField, Tooltip("Optional hover panel - each icon's UpgradeTooltipTriggerWidget (if the template has one) shows the mutation's name and description in it.")]
+    private UpgradeTooltipWidget riftIconTooltip;
+
     [SerializeField, Tooltip("Optional - shown while the bound player has picked no upgrades yet, instead of an empty list.")]
     private GameObject emptyUpgradesLabel;
 
@@ -74,6 +83,8 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
     private readonly List<UpgradeWidget> _globalPool = new List<UpgradeWidget>();
     private readonly List<UpgradeWidget> _riftPool = new List<UpgradeWidget>();
     private readonly List<UpgradeWidget> _riftMarkPool = new List<UpgradeWidget>();
+
+    private readonly List<Image> _riftIcons = new List<Image>();
 
     private readonly List<UpgradeHistoryEntry> _heroEntries = new List<UpgradeHistoryEntry>();
     private readonly List<UpgradeHistoryEntry> _globalEntries = new List<UpgradeHistoryEntry>();
@@ -230,10 +241,23 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
             }
         }
 
+        // Strongest first within each group: highest owned rank on top, pick order breaking ties.
+        SortByRank(_heroEntries);
+        SortByRank(_globalEntries);
+
         RebuildList(frame, heroContent, _heroPool, _heroEntries);
         RebuildList(frame, globalContent, _globalPool, _globalEntries);
         RebuildList(frame, riftContent, _riftPool, _riftEntries);
         RebuildList(frame, riftMarkContent, _riftMarkPool, _riftMarkEntries);
+
+        // The lists can share one Content (the popup's single grid does), where card order would
+        // otherwise be whichever pool happened to spawn first - Rift Mutations lead, being the rarest,
+        // most build-defining picks.
+        OrderSiblings(_riftPool);
+        OrderSiblings(_riftMarkPool);
+        OrderSiblings(_heroPool);
+        OrderSiblings(_globalPool);
+        RebuildRiftIcons(frame);
 
         bool empty = _heroEntries.Count + _globalEntries.Count + _riftEntries.Count + _riftMarkEntries.Count == 0;
 
@@ -265,11 +289,67 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
             // on every single row. Passing 0 is UpgradeWidget's own "no rank" input, the same thing
             // HeroInfoWidget passes for the Base/Passive Skill rows.
             widget.gameObject.SetActive(true);
-            widget.Setup(data.Icon, data.DisplayName, description, GameplayUiController.CanStack(data) ? count : 0);
+            widget.Setup(data.Icon, data.DisplayName, description, GameplayUiController.CanStack(data) ? count : 0, GetMaxRank(data));
         }
 
         for (int i = entries.Count; i < pool.Count; i++)
             pool[i].gameObject.SetActive(false);
+    }
+
+    private void RebuildRiftIcons(Frame frame)
+    {
+        if (riftIconsRoot == null || riftIconTemplate == null)
+            return;
+
+        riftIconTemplate.gameObject.SetActive(false);
+
+        for (int i = 0; i < _riftEntries.Count; i++)
+        {
+            if (i == _riftIcons.Count)
+                _riftIcons.Add(Instantiate(riftIconTemplate, riftIconsRoot));
+
+            UpgradeData data = frame.FindAsset(_riftEntries[i].Upgrade);
+            _riftIcons[i].sprite = data.Icon;
+            _riftIcons[i].gameObject.SetActive(true);
+
+            if (_riftIcons[i].TryGetComponent(out UpgradeTooltipTriggerWidget trigger))
+                trigger.Setup(riftIconTooltip, data.DisplayName, data.GetDescription());
+        }
+
+        for (int i = _riftEntries.Count; i < _riftIcons.Count; i++)
+            _riftIcons[i].gameObject.SetActive(false);
+    }
+
+    private readonly List<UpgradeHistoryEntry> _sortScratch = new List<UpgradeHistoryEntry>();
+
+    // List.Sort isn't stable, so ties fall back to the original (pick-order) index explicitly.
+    private void SortByRank(List<UpgradeHistoryEntry> entries)
+    {
+        _sortScratch.Clear();
+        _sortScratch.AddRange(entries);
+        entries.Sort((a, b) =>
+        {
+            int byRank = b.Count.CompareTo(a.Count);
+            return byRank != 0 ? byRank : _sortScratch.IndexOf(a).CompareTo(_sortScratch.IndexOf(b));
+        });
+    }
+
+    private static void OrderSiblings(List<UpgradeWidget> pool)
+    {
+        for (int i = 0; i < pool.Count; i++)
+            pool[i].transform.SetAsLastSibling();
+    }
+
+    // 0 = single-pick or unlimited - UpgradeWidget then shows no rank pips.
+    private static int GetMaxRank(UpgradeData data)
+    {
+        if (data is IRankedUpgrade ranked)
+            return ranked.MaxRank;
+
+        if (data is GlobalUpgradeData globalUpgrade)
+            return globalUpgrade.MaxPicks;
+
+        return 0;
     }
 
     private UpgradeWidget Spawn(Transform content, List<UpgradeWidget> pool)
@@ -281,6 +361,9 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
 
     private void SetShown(bool shown)
     {
+        if (shown == false && riftIconTooltip != null)
+            riftIconTooltip.Hide();
+
         if (root != null && root.activeSelf != shown)
             root.SetActive(shown);
     }

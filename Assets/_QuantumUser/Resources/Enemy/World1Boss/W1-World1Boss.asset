@@ -1638,7 +1638,7 @@ MonoBehaviour:
   GlobalActionSlots: 00000000010000000200000003000000
   Stagger:
     ThresholdPercents:
-    - RawValue: 13107
+    - RawValue: 22938
     RegenRatePercent:
       RawValue: 655
     MinHealthPercent:
