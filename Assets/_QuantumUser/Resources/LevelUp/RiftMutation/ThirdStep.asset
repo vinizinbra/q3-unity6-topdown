@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fafd210f60a74675b3ed2d512ebb618, type: 3}
+  m_Name: ThirdStep
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.ThirdStepMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/ThirdStep
+    Guid:
+      Value: 413350527524467354
+  Icon: {fileID: -4775723135357521536, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  DisplayName: Third Step
+  Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
+  Description: Every {0}rd Dash refunds its charge
+  Interval: 3

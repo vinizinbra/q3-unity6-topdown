@@ -1,6 +1,6 @@
 // Generic, hero-agnostic gameplay moments a voice line can react to. Deliberately no hero-specific
 // values (no MaxRageFull, no PixieClusterBomb) - a hero's identity travels alongside the trigger as
-// a HeroId, and anything genuinely unique goes through HeroExceptionalEvent with its own context.
+// a HeroId.
 //
 // Append new values at the END: these are lookup keys in authored voice banks, so reordering
 // silently reassigns lines.
@@ -14,8 +14,6 @@ public enum VoiceLineTrigger
     // Fired once the Break's area is actually SECURED, not the instant the phase begins - the
     // leftover enemies are still combat, and this should read as "we can breathe now".
     BreathingTimeStarted = 3,
-    BossStarted = 4,
-    BossDefeated = 5,
 
     // ---- Hero action ----
     HeroSkillUsed = 10,
@@ -52,6 +50,10 @@ public enum VoiceLineTrigger
     // A single damage event above a configured fraction of the victim's max health.
     HeavyHitReceived = 30,
 
+    // An Elite enemy just spawned (any route - Director, guaranteed phase spawn, summons). Nobody in
+    // particular says it, so every local player is the speaker; the global cooldown keeps it to one.
+    EliteSpawned = 31,
+
     // A rejected activation press - NOT merely "a cooldown exists", but the player actually pressing
     // the button and nothing happening.
     //
@@ -66,8 +68,6 @@ public enum VoiceLineTrigger
     // ---- Life state ----
     PlayerDowned = 50,
     PlayerKO = 51,
-    // Raised on the OBSERVERS, never on the player who went down (that's PlayerDowned).
-    TeammateDowned = 53,
 
     // I have STARTED reviving a teammate. Spoken by the reviver, with the downed player as Other.
     //
@@ -117,8 +117,35 @@ public enum VoiceLineTrigger
     // case goes through the generic ContextInteractionRejected toast instead, not a voice line).
     HealingShrineUsed = 70,
 
-    // ---- Extension point. Keyed by a context value rather than growing this enum per mechanic. ----
-    HeroExceptionalEvent = 90,
+    // ---- Challenges (Traversal + Optional Team Challenge) ----
+    // I made the FIRST interaction with a challenge: pressed the Traversal Challenge, or was the
+    // first Raider to Ready up on a Team Challenge. Spoken by that player.
+    ChallengeStarted = 80,
+
+    // I joined a Team Challenge that someone else already activated - the 2nd, 3rd, 4th... Raider
+    // to Ready up. Team Challenge only; a Traversal Challenge has no ready-up.
+    ChallengeAccepted = 81,
+
+    // The challenge was lost (Traversal timer ran out, or a Team Challenge timed out / broke its
+    // rule). Nobody in particular failed it, so every local player is the speaker.
+    ChallengeFailed = 82,
+
+    // The Raider who caused a Team Challenge to fail says "sorry guys" - their HP loss (Flawless
+    // Hunt) or incapacitation (Cursed Survival). Replaces ChallengeFailed for that failure: with a
+    // culprit only they speak. A failure nobody caused (timeout, Traversal) stays ChallengeFailed.
+    ChallengeCulprit = 83,
+
+    // ---- Pings. See docs/ping.md. Spoken by whoever pinged. ----
+    // Ping resolved to an Elite ("focus that one").
+    PingElite = 100,
+
+    // Ping resolved to an important POI: Store, Blacksmith, Shrine, Rift, Traversal, or a Team
+    // Challenge that is found/ready/has a reward. PingKind rides along in ContextValue for a line
+    // that wants to name it. Ground / StickTogether / finished-challenge pings stay silent.
+    PingPoi = 101,
+
+    // A Downed player pinging themselves for help.
+    PingReviveMe = 102,
 }
 
 // Who is meant to hear a line. Presentation decides what each of these means in practice; the

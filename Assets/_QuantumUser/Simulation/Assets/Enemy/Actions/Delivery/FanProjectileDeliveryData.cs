@@ -89,8 +89,11 @@ namespace Quantum
             // - covers a SpawnAnchor.OnTarget/SpawnOffset.Y setup too) so delta.Y is exactly 0 below,
             // not merely close to it. Left alone for UseArc - a lob's whole shape IS its vertical
             // component - and harmless for Radial, which never reads targetPosition/delta at all.
+            // Both ends are lifted/dropped to ResolveFlatShotY first (SpawnOffset.Y kept on top) so
+            // the flat plane is the target's body height, not this enemy's sphere centre.
             if (action.IgnoreY == true && UseArc == false)
             {
+                resolvedOrigin.Y += ResolveFlatShotY(f, filter.Entity, origin, target) - origin.Y;
                 targetPosition.Y = resolvedOrigin.Y;
             }
 

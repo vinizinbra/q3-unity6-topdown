@@ -28,6 +28,8 @@ namespace QuantumUser.Editor.BalanceSimulator
         public readonly List<SimEnemy> Alive = new();
         public int SpawnedTotal;
         public int RetiredTotal;
+        // Leakers retired since the runner last drained this (it rolls fall/water-death loot for them).
+        public readonly List<SimEnemy> RetiredLeakers = new List<SimEnemy>();
         public double BudgetGranted;
         public double BudgetSpent;
         public int FailedPurchases;
@@ -379,6 +381,7 @@ namespace QuantumUser.Editor.BalanceSimulator
                 Budget += enemy.Cost * D(assets.Lifecycle.RefundFraction);
                 Remove(enemy);
                 RetiredTotal++;
+                RetiredLeakers.Add(enemy);
             }
         }
     }

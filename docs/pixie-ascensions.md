@@ -493,7 +493,7 @@ arc this changes the launch direction too, not just its magnitude.
 
 ## Same bug, wider blast radius: the global "Projectile Speed" upgrade
 
-`CharacterStats.ProjectileSpeedMultiplier` (the `ProjectileSpeedUpgradeData` global upgrade) was applied
+`CharacterStats.ProjectileSpeedMultiplier` (the `ProjectileSpeedUpgradeData` global upgrade - both since removed, 2026-10-26) was applied
 the same way in `ProjectileSpawner.Spawn`, so **every arcing projectile in the game** — Bunny Bomb, any
 `BallisticProjectileMovementData` mortar lob, cluster bomblets — overshot its aim point in proportion to
 that stat, and a `BallisticProjectileMovementData` shot no longer landed on the point `SolveLaunch` had

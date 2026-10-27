@@ -40,14 +40,12 @@ MonoBehaviour:
   SkillDamageMultiplier:
     RawValue: 65536
   CriticalChance:
-    RawValue: 3277
+    RawValue: 0
   CriticalDamageMultiplier:
     RawValue: 65536
   AttackSpeedMultiplier:
     RawValue: 65536
   ReloadSpeedMultiplier:
-    RawValue: 65536
-  ProjectileSpeedMultiplier:
     RawValue: 65536
   AreaRadiusMultiplier:
     RawValue: 65536

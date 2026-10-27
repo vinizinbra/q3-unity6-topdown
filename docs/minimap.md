@@ -125,6 +125,26 @@ simulation.
   `TraversalChallenge.qtn`) - there's no cooldown concept for Traversal Challenge at all, so
   `cooldownIconTint` is never used for it.
 
+  **Team Challenge** (2026-10-27): Team Challenge chunks share `ChunkType.Traversal` (see
+  `docs/talents.md`), so a Traversal chunk that holds no `TraversalChallenge` falls back to linking
+  its `TeamChallenge` entity into `_iconTeamChallengeEntity`. Before that, those chunks never
+  linked, so `PinToEdge` stayed false and the icon never edge-pinned. It gets `usedIconTint` and
+  stops pinning once `Completed`/`Failed`; `RewardAvailable` stays pinned until the reward is claimed.
+
+  **Local per-player state + faded/cooldown looks** (2026-10-27): per-player policies (Cooldown,
+  OncePerPlayerPerRun, OncePerPlayerPerBreak - Healing Shrine, Cursed Rift, Blacksmith) now resolve
+  against THIS instance's own `localSlotIndex` player's `PoiUsage` directly (`PoiUsageUtility.CanUse`
+  + `TryGetLocalCooldownProgress`), not `PoiActivation.State`. `PoiLocalViewState` only narrows an
+  *Active* shared state, so outside the availability window (Inactive, i.e. Combat) a shrine on your
+  cooldown or a rift you'd already sacrificed at read as fully usable and pinned again. Reusable
+  POIs (Store/Repair Station) keep the `PoiLocalViewState` path. Looks:
+  - **Used up** (`ApplyUsedLook`) - `usedIconTint` × alpha `usedIconAlpha` (faded/disabled), not
+    pinned. Also used by Traversal/Team Challenge `Completed`/`Failed`.
+  - **On cooldown** (`ApplyCooldownLook`) - `cooldownIconTint`-darkened icon plus a code-built
+    `Radial360` fill of the same sprite at full color (`MapOverlay.SetCooldownFill`), sweeping in
+    from the top as `1 - CooldownRemaining / HealingShrine.CooldownDuration`; not pinned.
+    `showCooldownFill` turns the fill off.
+
   **Edge-pinning active POIs** (2026-09-25, minimap only): `UpdateIconTints` also sets
   `MapOverlay.PinToEdge` - true whenever the icon is NOT tinted (POI not `Expired`, Traversal not
   `Completed`/`Failed`). `PinActiveIconsToViewportEdge` runs right after `CenterOnLocalPlayer` and

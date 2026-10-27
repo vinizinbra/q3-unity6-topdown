@@ -82,7 +82,7 @@ ReviveConfig.ReviveHealthPercent` **directly** rather than through `HealUtility.
 no-op against a Downed/KO player's exactly-0 Health. Shield is left untouched, same as
 `HealingShrineUtility`'s own heal. `Invulnerable` is left exactly as-is (zero add/remove gap) and
 re-justified by a fresh `StatusEffects.ReviveImmunityRemaining` timer (`ReviveInvulnerabilityDuration`,
-default 2s) - a second, independent reason the tag can be present, ticked down by
+default 1s) - a second, independent reason the tag can be present, ticked down by
 `StatusEffectSystem.TickReviveImmunity`, the exact same guarded-decrement-then-remove shape
 `TickCheatDeathImmunity` already established.
 
@@ -590,7 +590,7 @@ Two menu Upgrades lines feed this (see `docs/talents.md`, "Meta progression"). R
 
 - **Reviver grace**: `Revive()` gives a teammate reviver `ReviveConfig.ReviverInvulnerabilityDuration` (1s)
   via `PlayerLifeStateUtility.GrantGraceInvulnerability` (the revived keeps `ReviveInvulnerabilityDuration`).
-- **Post-pick grace**: `LevelUpUtility.Resolve` grants every player `PostChoiceInvulnerabilityDuration` (1s)
+- **Post-pick grace**: `LevelUpUtility.Resolve` grants every player `PostChoiceInvulnerabilityDuration` (0.5s)
   after a level-up/chest upgrade or weapon pick.
 - **Level-up revives Downed** teammates (`ReviveAllDowned`, called from `OpenUpgradeScreen` for real
   level-ups only, not chests). KO is untouched (still a dead end until the area is secured).
@@ -601,6 +601,7 @@ Two menu Upgrades lines feed this (see `docs/talents.md`, "Meta progression"). R
 ### Grace-window feedback
 
 `HitFeedback.UpdateImmunityPulse`: while `StatusEffects.ReviveImmunityRemaining > 0` (Alive players only), the
-hero's tint pulses (`immunityColor`, white, 2 Hz, 4 Hz in the last 0.3s; hero + equipped weapon sprites on the same flash shader). The sprite shaders tint via
-`SpriteRenderer.color` (alpha = mix strength), so it is a tint pulse, not an alpha fade. Yields to any playing
-flash tween; skipped for Max's Cheat Death (`MaxImmortalView` aura) and Downed/KO.
+hero **and equipped weapon** SpriteRenderers blink on/off (`renderer.enabled`, `immunityBlinkRate` 4 Hz) and are
+restored when the window closes. Skipped for Max's Cheat Death (`MaxImmortalView` aura) and Downed/KO.
+`immunityStartSound`/`immunityEndSound` are wired (`EntitySound.PlayAttached` on the window opening/closing) but
+unassigned - no audio authored yet.

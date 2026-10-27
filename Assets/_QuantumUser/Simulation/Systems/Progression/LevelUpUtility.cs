@@ -776,7 +776,7 @@ namespace Quantum
                 // Grace window so nobody resumes into a hit while still reading their pick.
                 ReviveConfig reviveConfig = PlayerLifeStateUtility.GetConfig(f);
                 PlayerLifeStateUtility.GrantGraceInvulnerability(f, entity,
-                    reviveConfig != null ? reviveConfig.PostChoiceInvulnerabilityDuration : FP._1);
+                    reviveConfig != null ? reviveConfig.PostChoiceInvulnerabilityDuration : FP._0_50);
             }
 
             f.Global->LevelUpScreenOpen = false;

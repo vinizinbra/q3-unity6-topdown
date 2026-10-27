@@ -46,10 +46,9 @@ namespace Quantum
             FPVector3 velocityDirection = input->Direction.XOY;
             FP targetSpeed = input->Run.IsDown ? data.RunSpeed : data.WalkSpeed;
 
-            if (frame.Unsafe.TryGetPointer<CharacterStats>(entity, out var stats) == true)
-            {
-                targetSpeed *= stats->MoveSpeedMultiplier;
-            }
+            // CharacterStats, timed buffs (Energy Drink etc.), Weapon Weight and Danger Pay - see
+            // StatUtility.ResolveBaselineMoveSpeedMultiplier. Ice/Tar slows and CC stay below.
+            targetSpeed *= StatUtility.ResolveBaselineMoveSpeedMultiplier(frame, entity);
 
             // Ice slows, Stun/Root stop movement outright - gravity/friction below still process
             // normally either way, same as knockback not gating movement integration. Root
@@ -57,24 +56,11 @@ namespace Quantum
             // Stun which also silences firing/skills in their own separate checks.
             targetSpeed *= StatusEffectUtility.GetSpeedMultiplier(frame, entity);
 
-            // Store's Energy Drink food offer (see docs/store-blacksmith.md) - composes
-            // multiplicatively alongside Ice's own slow, same pattern.
-            targetSpeed *= StatusEffectUtility.GetTempMoveSpeedMultiplier(frame, entity);
-
             // Tar puddles (World 2 Tar Launcher) - see StatusEffectUtility.ApplyStickySlow.
             targetSpeed *= StatusEffectUtility.GetStickySlowMultiplier(frame, entity);
 
-            // Weapon Weight (docs/hero-mastery.md) - Light/Heavy weapons nudge move speed ±10%,
-            // Medium is neutral. A general weapon property, not Hero Mastery, so it lives in its own
-            // utility read straight off the equipped WeaponDataAsset rather than any Mastery component.
-            targetSpeed *= WeaponWeightUtility.GetMoveSpeedMultiplier(frame, entity);
-
-            // Danger Pay (Rift Mutation) - a CONDITION, not a timed buff, so it can't live in the
-            // StatusEffects slots above: it has to appear and disappear the instant health crosses
-            // its threshold in either direction, with nothing to expire. Evaluated fresh every
-            // movement tick from the same helper the damage half uses, so the two can never
-            // disagree about whether the player is currently in danger.
-            targetSpeed *= MutationModifierUtility.ResolveLiveMoveSpeedMultiplier(frame, entity);
+            // Weapon Weight (Light/Heavy) and Danger Pay (a live CONDITION, re-evaluated every tick from
+            // the same helper the damage half uses) are folded into the shared multiplier above.
 
             // PoiInteractionLockUtility.IsInputLocked - a player with their own Cursed Rift/Store/
             // Blacksmith Choice Window open (see docs/breathing-poi.md/docs/store-blacksmith.md) is

@@ -161,7 +161,7 @@ namespace QuantumUser.Editor
             // Interaction Area radius). Re-author per POI instance once that radius is authored.
             if (isNew)
             {
-                config.ReadyCancelRadius = FP.FromString("15");
+                config.ReadyCancelRadius = FP.FromString("25");
                 config.CountdownDuration = 3;
             }
 

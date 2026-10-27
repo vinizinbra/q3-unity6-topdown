@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 891f73551efd74161b84901c28e81ad0, type: 3}
+  m_Name: DeflectionShield
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DeflectionShieldMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/DeflectionShield
+    Guid:
+      Value: 296711657223204463
+  Icon: {fileID: -5817012681416042433, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  DisplayName: Deflection Shield
+  Rarity: 3
+  Scope: 0
+  IncompatibleWith: []
+  Description: '{0:+0;-0}% damage from distant enemies, but {1:+0;-0}% from close
+    ones'
+  RangedDamageTaken:
+    RawValue: 26214
+  CloseDamageTaken:
+    RawValue: 91750

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b19d2c3c3a432408883fce580a72f7f7, type: 3}
+  m_Name: Lifesaver
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.LifesaverMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/Lifesaver
+    Guid:
+      Value: 289094053127586891
+  Icon: {fileID: -7380912895900834879, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  DisplayName: Lifesaver
+  Rarity: 3
+  Scope: 0
+  IncompatibleWith: []
+  Description: Once per run, a lethal hit leaves you at 1 HP - get a kill within
+    {0:0}s to survive and heal {1:0}%
+  Duration:
+    RawValue: 327680
+  SurviveHeal:
+    RawValue: 19661
+  Charges: 1

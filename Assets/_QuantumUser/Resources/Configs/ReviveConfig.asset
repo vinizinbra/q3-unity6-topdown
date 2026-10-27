@@ -27,6 +27,6 @@ MonoBehaviour:
   ReviveHealthPercent:
     RawValue: 26214
   ReviveInvulnerabilityDuration:
-    RawValue: 131072
+    RawValue: 65536
   ReviveInteractionRange:
     RawValue: 196608

@@ -255,7 +255,13 @@ namespace QuantumUser.Editor.BalanceSimulator
                 minuteKills++;
                 players[killer].Kills++;
                 players[killer].KillsByTier[(int)enemy.Tier]++;
+                DropLoot(enemy);
+            }
 
+            // Orb drops of one dead enemy: shared by player kills and fall/water deaths
+            // (DamageUtility.ResolveDeath drops for an ownerless fall death too).
+            void DropLoot(SimEnemy enemy)
+            {
                 // XP orbs credit the shared total scaled by the finder's own multiplier; coin orbs
                 // credit EVERY wallet (CoinUtility.GrantAll), each scaled by that player's own multiplier.
                 // A per-orb roll against the survival-minute pickup efficiency curve; a missed orb waits
@@ -335,6 +341,12 @@ namespace QuantumUser.Editor.BalanceSimulator
             while ((director.SurvivalTime < duration || director.Phase.Kind == SurvivalPhaseKind.Breathing) && director.RunTime < duration * 4)
             {
                 director.Tick(dt, out bool _);
+
+                // Leakers that were left behind and fell in water instead of being retired quietly.
+                foreach (SimEnemy fallen in director.RetiredLeakers)
+                    if (rng.Chance(scenario.FallDeathFraction))
+                        DropLoot(fallen);
+                director.RetiredLeakers.Clear();
 
                 if (director.BossReached)
                 {

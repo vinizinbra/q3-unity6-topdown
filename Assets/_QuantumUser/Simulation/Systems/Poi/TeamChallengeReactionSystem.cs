@@ -58,7 +58,7 @@ namespace Quantum
             if (definition == null || definition.Type != ChallengeType.FlawlessHunt)
                 return;
 
-            TeamChallengeUtility.End(f, participant->Poi, challenge, success: false);
+            TeamChallengeUtility.End(f, participant->Poi, challenge, success: false, culprit: target);
         }
     }
 }

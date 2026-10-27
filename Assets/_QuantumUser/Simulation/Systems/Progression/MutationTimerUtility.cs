@@ -18,6 +18,7 @@ namespace Quantum
         public static void Tick(Frame f, EntityRef entity, CharacterStats* stats)
         {
             TickPressureCooker(f, stats);
+            MutationCombatUtility.Tick(f, entity, stats);
         }
 
         // Pressure Cooker - accumulates uninterrupted time. Reset to 0 by the damage reactions, not

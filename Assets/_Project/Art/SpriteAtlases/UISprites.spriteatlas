@@ -146,6 +146,7 @@ SpriteAtlas:
     - {fileID: 2800000, guid: 8a35b77046da446fa839fc58f0ae540d, type: 3}
     - {fileID: 2800000, guid: 747e2d4777d464d3b904ef3e8f83c104, type: 3}
     - {fileID: 2800000, guid: bede341d29758405bb8d09d359e83e42, type: 3}
+    - {fileID: 2800000, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -447,6 +448,20 @@ SpriteAtlas:
     - 22d281b779f8c49dba31479e82c1cb37: -3302862223752042547
     - 22d281b779f8c49dba31479e82c1cb37: 6242535781864138924
     - ff2bf8b7ad0e5475b9b2f797d571588d: 21300000
+    - 786b17c7e01304ee2a7436d749b69e8e: 8436827121501920838
+    - 786b17c7e01304ee2a7436d749b69e8e: 1640981016616695523
+    - 786b17c7e01304ee2a7436d749b69e8e: -4775723135357521536
+    - 786b17c7e01304ee2a7436d749b69e8e: -1799633678727710426
+    - 786b17c7e01304ee2a7436d749b69e8e: -7380912895900834879
+    - 786b17c7e01304ee2a7436d749b69e8e: 3482719673054867742
+    - 786b17c7e01304ee2a7436d749b69e8e: -1497030017596441835
+    - 786b17c7e01304ee2a7436d749b69e8e: 972750695316632751
+    - 786b17c7e01304ee2a7436d749b69e8e: -5817012681416042433
+    - 786b17c7e01304ee2a7436d749b69e8e: 5780534662424010148
+    - 786b17c7e01304ee2a7436d749b69e8e: -5659065995605585607
+    - 786b17c7e01304ee2a7436d749b69e8e: 5975183571883052661
+    - 786b17c7e01304ee2a7436d749b69e8e: 7546404549819496275
+    - 786b17c7e01304ee2a7436d749b69e8e: 1234658923531883592
     - 1320a1e7b556d4c05a7f3feb67e51888: 21300000
     - 117dd14813c1a46749133b8a0a8243a1: 21300000
     - 94d2c8585e09744cb8fc08d2a38e0887: 21300000
@@ -989,6 +1004,20 @@ SpriteAtlas:
   - {fileID: -3302862223752042547, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
   - {fileID: 6242535781864138924, guid: 22d281b779f8c49dba31479e82c1cb37, type: 3}
   - {fileID: 21300000, guid: ff2bf8b7ad0e5475b9b2f797d571588d, type: 3}
+  - {fileID: 8436827121501920838, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: 1640981016616695523, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: -4775723135357521536, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: -1799633678727710426, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: -7380912895900834879, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: 3482719673054867742, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: -1497030017596441835, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: 972750695316632751, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: -5817012681416042433, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: 5780534662424010148, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: -5659065995605585607, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: 5975183571883052661, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: 7546404549819496275, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  - {fileID: 1234658923531883592, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
   - {fileID: 21300000, guid: 1320a1e7b556d4c05a7f3feb67e51888, type: 3}
   - {fileID: 21300000, guid: 117dd14813c1a46749133b8a0a8243a1, type: 3}
   - {fileID: 21300000, guid: 94d2c8585e09744cb8fc08d2a38e0887, type: 3}
@@ -1530,6 +1559,20 @@ SpriteAtlas:
   - RR_StarWinged
   - RR_ChainBroken
   - Button_Round04_Oblique
+  - RiftMutation_SpiritFeline
+  - RiftMutation_GiantSlayer
+  - RiftMutation_ThirdStep
+  - RiftMutation_MercilessCombo
+  - RiftMutation_Lifesaver
+  - RiftMutation_HairTrigger
+  - RiftMutation_Overcharge
+  - RiftMutation_ElementalBestowment
+  - RiftMutation_DeflectionShield
+  - RiftMutation_TimeSlip
+  - RiftMutation_Slipstream
+  - RiftMutation_DeadlyCurse
+  - RiftMutation_BlinkStep
+  - RiftMutation_SanguineRelic
   - Alert_Circle_l_Border
   - RR_Icon_Mail_Focus
   - Popup03_Gradient

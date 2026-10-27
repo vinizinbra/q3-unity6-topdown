@@ -71,6 +71,11 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
     private readonly HashSet<EntityRef> _knownRevivers = new();
     private readonly HashSet<EntityRef> _activeRevivers = new();
 
+    // Raider -> the Team Challenge POI they are Ready on, as last polled.
+    private readonly Dictionary<EntityRef, EntityRef> _knownReady = new();
+    private readonly HashSet<EntityRef> _activeReady = new();
+    private bool _readySeeded;
+
     private void Awake()
     {
         Instance = this;
@@ -97,7 +102,12 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         QuantumEvent.Subscribe<EventAccessoryBroken>(this, OnAccessoryBroken);
         QuantumEvent.Subscribe<EventAccessoryRestored>(this, OnAccessoryRestored);
         QuantumEvent.Subscribe<EventHealingShrineUsed>(this, OnHealingShrineUsed);
-        QuantumEvent.Subscribe<EventBossDefeatBurst>(this, OnBossDefeatBurst);
+        QuantumEvent.Subscribe<EventPingPlaced>(this, OnPingPlaced);
+        QuantumEvent.Subscribe<EventEliteSpawned>(this, OnEliteSpawned);
+        QuantumEvent.Subscribe<EventTraversalChallengeActivated>(this, OnTraversalChallengeActivated);
+        QuantumEvent.Subscribe<EventTraversalChallengeFailed>(this, OnTraversalChallengeFailed);
+        QuantumEvent.Subscribe<EventTeamChallengeActivated>(this, OnTeamChallengeActivated);
+        QuantumEvent.Subscribe<EventTeamChallengeFailed>(this, OnTeamChallengeFailed);
     }
 
     // Everything here is a silent no-op when unassigned, so say so once at startup rather than
@@ -153,6 +163,7 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
 
         PollRunFlow(frame);
         PollReviveChannels(game, frame);
+        PollTeamChallengeReady(game, frame);
     }
 
     private unsafe void PollRunFlow(Frame frame)
@@ -200,10 +211,6 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
                 case GameState.Survival when previous == GameState.Breathing || previous == GameState.Lobby:
                     RaiseForEveryLocalPlayer(frame, VoiceLineTrigger.SurvivalStarted);
                     break;
-
-                case GameState.Boss:
-                    RaiseForEveryLocalPlayer(frame, VoiceLineTrigger.BossStarted);
-                    break;
             }
         }
 
@@ -223,16 +230,7 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
     private void OnPlayerDowned(EventPlayerDowned e)
     {
         Raise(e.Game, VoiceLineTrigger.PlayerDowned, e.Entity);
-
-        // Observers get their own line. Only the OTHER players speak here - the one who went down
-        // already has PlayerDowned, and duplicating it would have them announce their own fall twice.
-        ForEachLocalPlayerExcept(e.Game, e.Entity, observer =>
-            Raise(e.Game, VoiceLineTrigger.TeammateDowned, observer, e.Entity));
     }
-
-    // The defeat cinematic's final burst (BossDefeatSystem) - lands with the "BOSS DEFEATED" banner
-    // instead of when the body is finally removed at the end of the sequence.
-    private void OnBossDefeatBurst(EventBossDefeatBurst e) => RaiseForEveryLocalPlayer(e.Game.Frames.Predicted, VoiceLineTrigger.BossDefeated);
 
     private void OnPlayerKO(EventPlayerKO e) => Raise(e.Game, VoiceLineTrigger.PlayerKO, e.Entity);
 
@@ -338,12 +336,116 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
     private void OnHealingShrineUsed(EventHealingShrineUsed e)
         => Raise(e.Game, VoiceLineTrigger.HealingShrineUsed, e.Player);
 
+    private void OnEliteSpawned(EventEliteSpawned e)
+        => RaiseForEveryLocalPlayer(e.Game.Frames.Predicted, VoiceLineTrigger.EliteSpawned);
+
+    private void OnPingPlaced(EventPingPlaced e)
+    {
+        VoiceLineTrigger trigger;
+
+        switch (e.Kind)
+        {
+            case PingKind.Elite:
+                trigger = VoiceLineTrigger.PingElite;
+                break;
+
+            case PingKind.ReviveMe:
+                trigger = VoiceLineTrigger.PingReviveMe;
+                break;
+
+            case PingKind.Store:
+            case PingKind.Blacksmith:
+            case PingKind.Shrine:
+            case PingKind.Rift:
+            case PingKind.Traversal:
+            case PingKind.TeamChallengeFound:
+            case PingKind.TeamChallengeStart:
+            case PingKind.TeamChallengeReward:
+                trigger = VoiceLineTrigger.PingPoi;
+                break;
+
+            default:
+                return;
+        }
+
+        Raise(e.Game, trigger, e.Owner, contextValue: (int)e.Kind);
+    }
+
+    private void OnTraversalChallengeActivated(EventTraversalChallengeActivated e)
+        => Raise(e.Game, VoiceLineTrigger.ChallengeStarted, e.Player);
+
+    private void OnTraversalChallengeFailed(EventTraversalChallengeFailed e)
+        => RaiseForEveryLocalPlayer(e.Game.Frames.Predicted, VoiceLineTrigger.ChallengeFailed);
+
+    private void OnTeamChallengeActivated(EventTeamChallengeActivated e)
+        => Raise(e.Game, VoiceLineTrigger.ChallengeStarted, e.Player);
+
+    private void OnTeamChallengeFailed(EventTeamChallengeFailed e)
+    {
+        if (e.Culprit != EntityRef.None)
+        {
+            Raise(e.Game, VoiceLineTrigger.ChallengeCulprit, e.Culprit);
+            return;
+        }
+
+        RaiseForEveryLocalPlayer(e.Game.Frames.Predicted, VoiceLineTrigger.ChallengeFailed);
+    }
+
+    // TeamChallengeActivated is deliberately only the FIRST Ready (see Events.qtn), so a 2nd/3rd/4th
+    // Raider joining has no event - but TeamChallengeReady appearing on them is exactly that edge,
+    // visible as component state. The first Ready on a POI is skipped here: it is the activator,
+    // already covered by ChallengeStarted. Judged by "nobody was Ready on this POI yet" rather than
+    // by event order, so it holds whichever of the two the View sees first.
+    private unsafe void PollTeamChallengeReady(QuantumGame game, Frame frame)
+    {
+        _activeReady.Clear();
+
+        var filter = frame.Filter<TeamChallengeReady>();
+        while (filter.NextUnsafe(out EntityRef player, out TeamChallengeReady* ready))
+        {
+            _activeReady.Add(player);
+
+            if (_knownReady.ContainsKey(player))
+                continue;
+
+            bool someoneAlreadyReady = false;
+            foreach (var pair in _knownReady)
+            {
+                if (pair.Value == ready->Poi)
+                {
+                    someoneAlreadyReady = true;
+                    break;
+                }
+            }
+
+            _knownReady[player] = ready->Poi;
+
+            // First poll only records, so joining a run mid-challenge doesn't replay old Readies.
+            if (_readySeeded && someoneAlreadyReady)
+                Raise(game, VoiceLineTrigger.ChallengeAccepted, player);
+        }
+
+        _readySeeded = true;
+
+        // Rebuilt rather than trimmed: a cancelled or converted Ready is forgotten, so the next
+        // Ready on that POI is judged fresh.
+        _toForget.Clear();
+        foreach (var pair in _knownReady)
+        {
+            if (_activeReady.Contains(pair.Key) == false)
+                _toForget.Add(pair.Key);
+        }
+
+        foreach (EntityRef gone in _toForget)
+            _knownReady.Remove(gone);
+    }
+
+    private readonly List<EntityRef> _toForget = new();
+
     // ------------------------------------------------------------------ public entry points
     //
     // For the triggers only a caller can know about. HeroSkillUsed / SkillNotReady / DashNotReady are
-    // raised by SkillSoundView-style view code that already watches those slots, and
-    // HeroExceptionalEvent is the extension point a future hero mechanic bridges into rather than
-    // growing the trigger enum.
+    // raised by SkillSoundView-style view code that already watches those slots.
 
     public void Report(QuantumGame game, VoiceLineTrigger trigger, EntityRef speaker, int contextValue = 0)
         => Raise(game, trigger, speaker, contextValue: contextValue);
@@ -634,18 +736,6 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         {
             if (slot.IsSet && slot.EntityRef != EntityRef.None)
                 Raise(_game, trigger, slot.EntityRef);
-        }
-    }
-
-    private void ForEachLocalPlayerExcept(QuantumGame game, EntityRef excluded, System.Action<EntityRef> action)
-    {
-        if (MyLocalPlayer.Instance == null)
-            return;
-
-        foreach (var slot in MyLocalPlayer.Instance.Slots)
-        {
-            if (slot.IsSet && slot.EntityRef != EntityRef.None && slot.EntityRef != excluded)
-                action(slot.EntityRef);
         }
     }
 }

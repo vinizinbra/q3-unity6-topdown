@@ -222,7 +222,7 @@ MonoBehaviour:
   Duration:
     RawValue: 655360
   Range:
-    RawValue: 196608
+    RawValue: 393216
   SkillDamage:
     RawValue: 9830400
   BaselineWeapon:

@@ -26,9 +26,7 @@ public readonly struct VoiceLineRequest
     // name/rank for a line or a subtitle. Default for every other trigger.
     public readonly AssetRef<UpgradeData> Upgrade;
 
-    // Free-form, trigger-specific: the accessory's remaining durability, an upgrade's new rank, or
-    // whatever a HeroExceptionalEvent wants to distinguish itself by. Beats growing the trigger enum
-    // once per hero mechanic.
+    // Free-form, trigger-specific: the accessory's remaining durability, or an upgrade's new rank.
     public readonly int ContextValue;
 
     public VoiceLineRequest(

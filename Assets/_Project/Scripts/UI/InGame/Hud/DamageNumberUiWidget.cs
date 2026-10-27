@@ -88,7 +88,7 @@ public class DamageNumberUiWidget : MonoBehaviour
         {
             valueText.text = style.HideNumber
                 ? style.Prefix + style.Suffix
-                : style.Prefix + Mathf.RoundToInt(damage).ToString() + style.Suffix;
+                : style.Prefix + Mathf.CeilToInt(damage).ToString() + style.Suffix;
             valueText.color = style.Color;
             valueText.fontSize = _restFontSize * style.FontSizeMultiplier * (style.HideNumber ? 1f : ResolveDamageScale(damage));
         }

@@ -24,9 +24,9 @@ MonoBehaviour:
   Family: 6
   Weight: 2
   CriticalChance:
-    RawValue: 6554
+    RawValue: 3276
   CriticalDamageBonus:
-    RawValue: 98304
+    RawValue: 131072
   FireRate:
     RawValue: 65536
   AnticipationTime:
@@ -117,11 +117,19 @@ MonoBehaviour:
     ProjectileDestroyScale: {x: 1, y: 1, z: 1}
     ProjectileExtraParticle: {fileID: 2303534806004991678, guid: 090744af9ace74be9a6bd478027920f1, type: 3}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
-  _dpsPreview: 'Burst DPS: 26.3
+  _dpsPreview: 'Burst DPS: 57.7
 
-    Sustained DPS (incl. reload): 22.5
+    Sustained DPS (incl. reload): 49.5
 
     Damage/min:
-    1350
+    2970
 
-    Crit dmg/shot: 37.5 (vs 25 normal) @ 10 % chance, x1.5'
+    Crit dmg/shot: 110 (vs 55 normal) @ 5 % chance, x2
+
+    Est. targets/shot:
+    3.5
+
+    Effective Burst DPS (all targets): 202.1
+
+    Effective Sustained DPS
+    (all targets): 173.2'

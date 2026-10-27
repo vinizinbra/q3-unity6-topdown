@@ -11,9 +11,9 @@ namespace Quantum
         private static readonly FP LightMoveSpeedMultiplier = FP.FromString("1.05");
         private static readonly FP HeavyMoveSpeedMultiplier = FP.FromString("0.95");
 
-        // Read by PlayerMovementProcessor.BeforeMove, the same "targetSpeed *= X.ResolveY(...)" idiom
-        // every other move-speed contributor there already uses (CharacterStats/StatusEffect/
-        // MutationModifier) - 1x (no effect) for Medium or for an owner with no equipped weapon.
+        // Folded into the player's move speed by StatUtility.ResolveBaselineMoveSpeedMultiplier (read
+        // by PlayerMovementProcessor and the Hero Info "Move Speed" row alike), next to the other
+        // always-on contributors (CharacterStats/timed buffs/MutationModifier) - 1x (no effect) for Medium or for an owner with no equipped weapon.
         // A max-rank Weight Mastery with IgnoreMoveSpeedPenalty (Brute/Kai Heavy R3) cancels the
         // penalty of a matching weapon; bonuses are never cancelled.
         public static FP GetMoveSpeedMultiplier(Frame f, EntityRef owner)

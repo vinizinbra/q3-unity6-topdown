@@ -558,7 +558,7 @@ namespace Quantum
         // TeamChallengeSystem's own RunFailed/Victory interruption safety check. Guarded on
         // ChallengeActive so a same-tick race between two of those callers can only ever end the
         // challenge once.
-        public static void End(Frame f, EntityRef poi, TeamChallenge* challenge, bool success)
+        public static void End(Frame f, EntityRef poi, TeamChallenge* challenge, bool success, EntityRef culprit = default)
         {
             if (challenge->State != TeamChallengeState.ChallengeActive)
                 return;
@@ -579,7 +579,7 @@ namespace Quantum
             if (success == true)
                 f.Events.TeamChallengeCompleted(poi);
             else
-                f.Events.TeamChallengeFailed(poi);
+                f.Events.TeamChallengeFailed(poi, culprit);
 
             Log.Debug($"[TeamChallenge] {poi} - ended, success={success}, new State={challenge->State}");
         }

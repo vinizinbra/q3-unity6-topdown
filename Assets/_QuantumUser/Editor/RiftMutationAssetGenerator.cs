@@ -182,8 +182,8 @@ namespace QuantumUser.Editor
                 Configure = p =>
                 {
                     var mutation = (MoneyTalksMutationData)p;
-                    mutation.DamagePerHundredCoins = FP.FromString("0.05");
-                    mutation.MaxDamageBonus = FP.FromString("0.40");
+                    mutation.DamagePerHundredCoins = FP.FromString("0.015");
+                    mutation.MaxDamageBonus = FP.FromString("0.60");
                 }
             },
             new MutationSpec
@@ -268,6 +268,124 @@ namespace QuantumUser.Editor
                     mutation.DashChargeHardCap = 1;
                     mutation.DashCooldownMultiplier = FP.FromString("1.50");
                 }
+            },
+            // Skill/Dash tradeoffs (2026-10-26) - one reusable SkillTradeoffMutationData, factors on
+            // the cooldown/damage/distance the player feels (0.5 cooldown = half the cooldown).
+            new MutationSpec
+            {
+                Type = typeof(SkillTradeoffMutationData), FileName = "HairTrigger",
+                DisplayName = "Hair Trigger", Rarity = UpgradeRarity.Epic,
+                Description = "{0:+0;-0}% Skill Cooldown, but {1:+0;-0}% Skill Damage",
+                IncompatibleWithFileNames = new[] { "Overcharge" },
+                Configure = p =>
+                {
+                    var mutation = (SkillTradeoffMutationData)p;
+                    mutation.SkillCooldownFactor = FP._0_50;
+                    mutation.SkillDamageFactor = FP.FromString("0.60");
+                }
+            },
+            new MutationSpec
+            {
+                Type = typeof(SkillTradeoffMutationData), FileName = "Overcharge",
+                DisplayName = "Overcharge", Rarity = UpgradeRarity.Epic,
+                Description = "{1:+0;-0}% Skill Damage, but {0:+0;-0}% Skill Cooldown",
+                Configure = p =>
+                {
+                    var mutation = (SkillTradeoffMutationData)p;
+                    mutation.SkillCooldownFactor = FP.FromString("1.40");
+                    mutation.SkillDamageFactor = FP.FromString("1.70");
+                }
+            },
+            new MutationSpec
+            {
+                Type = typeof(SkillTradeoffMutationData), FileName = "BlinkStep",
+                DisplayName = "Blink Step", Rarity = UpgradeRarity.Epic,
+                Description = "{2:+0;-0}% Dash Cooldown, but {3:+0;-0}% Dash Distance",
+                Configure = p =>
+                {
+                    var mutation = (SkillTradeoffMutationData)p;
+                    mutation.DashCooldownFactor = FP._0_50;
+                    mutation.DashDistanceFactor = FP.FromString("0.70");
+                }
+            },
+            // 2026-10-26 pass - numbers are the class field defaults, so Configure has nothing to set.
+            new MutationSpec
+            {
+                Type = typeof(SpiritFelineMutationData), FileName = "SpiritFeline",
+                DisplayName = "Spirit Feline", Rarity = UpgradeRarity.Legendary,
+                Description = "{0:+0;-0}% damage taken, but no single hit can deal more than {1:0}% of your Max Health",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(DeflectionShieldMutationData), FileName = "DeflectionShield",
+                DisplayName = "Deflection Shield", Rarity = UpgradeRarity.Legendary,
+                Description = "{0:+0;-0}% damage from distant enemies, but {1:+0;-0}% from close ones",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(LifesaverMutationData), FileName = "Lifesaver",
+                DisplayName = "Lifesaver", Rarity = UpgradeRarity.Legendary,
+                Description = "Once per run, a lethal hit leaves you at 1 HP - get a kill within {0:0}s to survive and heal {1:0}%",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(TimeSlipMutationData), FileName = "TimeSlip",
+                DisplayName = "Time Slip", Rarity = UpgradeRarity.Epic,
+                Description = "Dashing heals {0:0}% of the damage you took in the last {1:0.#}s",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(SlipstreamMutationData), FileName = "Slipstream",
+                DisplayName = "Slipstream", Rarity = UpgradeRarity.Rare,
+                Description = "Dashing grants +{0:0}% Move Speed for {1:0.#}s",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(ThirdStepMutationData), FileName = "ThirdStep",
+                DisplayName = "Third Step", Rarity = UpgradeRarity.Rare,
+                Description = "Every {0}rd Dash refunds its charge",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(MercilessComboMutationData), FileName = "MercilessCombo",
+                DisplayName = "Merciless Combo", Rarity = UpgradeRarity.Epic,
+                Description = "Keep hitting: +{0:0}% Weapon Damage every {4:0.##}s, up to +{3:0}% - lost after {2:0.#}s without a hit",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(GiantSlayerMutationData), FileName = "GiantSlayer",
+                DisplayName = "Giant Slayer", Rarity = UpgradeRarity.Legendary,
+                Description = "Weapon hits deal bonus damage equal to {0:0.#}% of the target's current health ({1:0.#}% vs Bosses)",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(ElementalBestowmentMutationData), FileName = "ElementalBestowment",
+                DisplayName = "Elemental Bestowment", Rarity = UpgradeRarity.Rare,
+                Description = "Applying Burn, Chill or Shock heals {0:0}% Max Health (at most every {1:0.#}s)",
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(DeadlyCurseMutationData), FileName = "DeadlyCurse",
+                DisplayName = "Deadly Curse", Rarity = UpgradeRarity.Legendary,
+                Description = "+{0:0}% Damage, but {1:+0;-0}% Max Health",
+                IncompatibleWithFileNames = new[] { "GlassCore" },
+                Configure = p => { }
+            },
+            new MutationSpec
+            {
+                Type = typeof(SanguineRelicMutationData), FileName = "SanguineRelic",
+                DisplayName = "Sanguine Relic", Rarity = UpgradeRarity.Legendary,
+                Description = "{0:+0}% Max Health and {1:0}% Lifesteal (up to {2:0}% HP/s), but {3:+0}% damage taken",
+                Configure = p => { }
             },
             new MutationSpec
             {

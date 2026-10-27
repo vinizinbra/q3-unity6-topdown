@@ -111,7 +111,8 @@ namespace QuantumUser.Editor
                 Type = typeof(DashCooldownUpgradeData), FileName = "DashCooldown",
                 DisplayName = "Dash Cooldown",
                 Description = "-{0}% Dash Cooldown",
-                Configure = p => Multiplier(p, "1.15")
+                // Per-pick totals come from CooldownReductionUpgradeData.TotalReduction's defaults.
+                Configure = p => { }
             },
             new UpgradeSpec
             {
@@ -134,7 +135,7 @@ namespace QuantumUser.Editor
                 Type = typeof(SkillCooldownUpgradeData), FileName = "SkillCooldown",
                 DisplayName = "Skill Cooldown",
                 Description = "-{0}% Cooldown",
-                Configure = p => Multiplier(p, "1.15")
+                Configure = p => { }
             },
             new UpgradeSpec
             {

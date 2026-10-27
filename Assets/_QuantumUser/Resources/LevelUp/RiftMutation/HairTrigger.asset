@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19d8f6d00028d45cda9aa82f6abe47a5, type: 3}
+  m_Name: HairTrigger
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SkillTradeoffMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/HairTrigger
+    Guid:
+      Value: 408498589321637135
+  Icon: {fileID: 3482719673054867742, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  DisplayName: Hair Trigger
+  Rarity: 2
+  Scope: 0
+  IncompatibleWith:
+  - Id:
+      Value: 438491809508702669
+  Description: '{0:+0;-0}% Skill Cooldown, but {1:+0;-0}% Skill Damage'
+  SkillCooldownFactor:
+    RawValue: 32768
+  SkillDamageFactor:
+    RawValue: 39322
+  DashCooldownFactor:
+    RawValue: 65536
+  DashDistanceFactor:
+    RawValue: 65536

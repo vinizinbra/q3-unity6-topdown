@@ -161,7 +161,8 @@ namespace Quantum
             if (filter.KCC->Data.IsGrounded == false)
                 return;
 
-            FP distance = f.FindAsset(slot->Skill) is DashSkillData dash ? dash.DashDistance : DefaultDashDistance;
+            FP distance = (f.FindAsset(slot->Skill) is DashSkillData dash ? dash.DashDistance : DefaultDashDistance)
+                * StatUtility.GetDashDistanceMultiplier(f, filter.Entity);
             FPVector3 position = filter.Transform->Position;
             BotBrain* brain = filter.Brain;
 

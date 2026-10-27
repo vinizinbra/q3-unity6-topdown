@@ -62,7 +62,7 @@ a parallel do-nothing `CharacterStats` field.
 | Critical Chance | `CriticalChanceUpgradeData` | `CharacterStats.CriticalChance` (flat add) | ✅ |
 | Critical Damage | `CriticalDamageUpgradeData` | `CharacterStats.CriticalDamageMultiplier` | ✅ |
 | Weapon Range | `WeaponRangeUpgradeData` | `Weapon.RangeMultiplier` (stacks with `RangeMultiplierWeaponPerkData`) and `CharacterStats.WeaponRangeMultiplier`, re-applied on every equip by `WeaponSystem.ApplyOwnerWeaponRange`. Used to be wiped by the next weapon pickup. | ✅ |
-| Projectile Speed | `ProjectileSpeedUpgradeData` | `CharacterStats.ProjectileSpeedMultiplier` | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted, stat field kept) |
+| Projectile Speed | `ProjectileSpeedUpgradeData` | `CharacterStats.ProjectileSpeedMultiplier` | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted; the `CharacterStats` field itself was removed 2026-10-26, see below) |
 
 ### Hero
 
@@ -79,7 +79,7 @@ a parallel do-nothing `CharacterStats` field.
 
 | Upgrade | Class | Target | Status |
 |---|---|---|---|
-| Dash Cooldown | `DashCooldownUpgradeData` | `CharacterStats.DashCooldownMultiplier` (new field, split from the old dead `CooldownMultiplier` - see `StatUtility.GetSkillCooldown`) | ✅ |
+| Dash Cooldown | `DashCooldownUpgradeData` | `CharacterStats.DashCooldownMultiplier` (new field, split from the old dead `CooldownMultiplier` - see `StatUtility.GetSkillCooldown`); exact totals -15/-30/-50% per pick, see below | ✅ |
 | Dash Charge | `DashChargeUpgradeData` | `CharacterSkills.DashSkill.MaxStacks`/`CurrentStacks` (+1, usable immediately) | ✅ |
 | Dash Invulnerability | *(none)* | — | ❌ `DashSkillData` swaps to the `IgnoreProjectile` layer for the dash's *entire* active duration already - it's 100% immune for 100% of the dash. There is no partial i-frame window for "+20% duration" to extend unless the dash itself changes to a partial-invuln model. Not building a redesign of the dash mechanic to manufacture a slot for this upgrade. |
 
@@ -88,7 +88,7 @@ a parallel do-nothing `CharacterStats` field.
 | Upgrade | Class | Target | Status |
 |---|---|---|---|
 | Skill Damage | `SkillDamageUpgradeData` | `CharacterStats.SkillDamageMultiplier` | ✅ |
-| Skill Cooldown | `SkillCooldownUpgradeData` | `CharacterStats.SkillCooldownMultiplier` (new field, HeroSkill's independent half of the old shared `CooldownMultiplier`) | ✅ |
+| Skill Cooldown | `SkillCooldownUpgradeData` | `CharacterStats.SkillCooldownMultiplier` (new field, HeroSkill's independent half of the old shared `CooldownMultiplier`); exact totals -15/-30/-50% per pick, see below | ✅ |
 | Skill Duration | `SkillDurationUpgradeData` | `CharacterStats.SkillDurationMultiplier` | 🗑️ removed 2026-10-13 (was never in `LevelUpConfig.GlobalUpgrades`; asset + class deleted, stat field kept) |
 | Skill Area | `SkillAreaUpgradeData` | `CharacterStats.AreaRadiusMultiplier` (wired into `HitPathSkillAction`/`SpawnEntitySkillAction` via `StatUtility.GetAreaMultiplier`, stacking with `SkillSlot.AreaMultiplier`; also folded into `AreaHitData.Detonate`/`ExplodeOnDestroyUtility.ResolveBlastRadius`'s own radius calc, so a thrown bomb like Bunny Bomb scales too, alongside `BlastRadiusUpgrade`/Bigger Boom) | ✅ |
 | Hero Skill Charge | `HeroSkillChargeUpgradeData` | `CharacterSkills.HeroSkill.MaxStacks`/`CurrentStacks` (+1, usable immediately - same shape as Dash Charge) | ✅ |
@@ -142,10 +142,13 @@ Several `CharacterStats` fields were seeded but had **zero consumers anywhere** 
   calcs and `SpawnEntitySkillAction.ApplyScale` now multiply in `StatUtility.GetAreaMultiplier(f,
   owner)` alongside the existing `SkillSlot.AreaMultiplier` (which can't hold a permanent bonus
   itself - it resets to 1 every activation, see `SkillSystem.TryBegin`).
-- **`ProjectileSpeedMultiplier`** had no consumer - `ProjectileSpawner.Spawn` now scales
+- **`ProjectileSpeedMultiplier`** (**removed 2026-10-26**: the `CharacterStats`/`CharacterData` field,
+  `StatUtility.GetProjectileSpeedMultiplier` and its term in `ProjectileSpawner.Spawn` are gone - nothing
+  wrote it after the upgrade was deleted and every hero authored 1.0; weapon/enemy/boss projectile-speed
+  multipliers are different fields and remain). It used to scale
   `projectile->Velocity` by `StatUtility.GetProjectileSpeedMultiplier(f, owner)` once at spawn,
   rather than threading it through every `ProjectileMovementData` subclass's own `Speed` field.
-  Known limitation: `HomingProjectileMovementData.UpdateVelocity` re-derives velocity magnitude from
+  Known limitation (historical): `HomingProjectileMovementData.UpdateVelocity` re-derives velocity magnitude from
   its own `Speed` every tick once it starts turning, so the multiplier only reliably holds for a
   homing projectile's initial launch, not its whole flight.
 - **`HealingReceivedMultiplier`** had no consumer - `HealUtility.ResolveHealMultiplier` now folds it
@@ -264,3 +267,20 @@ an authored field because it is a reachability guard, not a balance knob.
 
 Applies to every orb that pops (Coin, Rift Shard, Scrap). Exp orbs are unaffected - they deliberately
 spawn exactly on the death point and never arc (see `ExperienceUtility.TrySpawnDrop`).
+
+
+## Skill / Dash Cooldown: exact per-pick totals (2026-10-26)
+
+Both now derive from `CooldownReductionUpgradeData` (an `IRankedUpgrade`, MaxRank 3 = MaxPicks 3)
+instead of `CharacterStatMultiplierUpgradeData`. `TotalReduction` = **-15% / -30% / -50%** of the
+cooldown after picks 1/2/3, and the card/history text is that running total.
+
+**Why:** the stat is a rate (`StatUtility.GetSkillCooldown` *divides* the base cooldown by it), but the old
+upgrade multiplied the rate by 1.15 per pick while its card computed `|Multiplier - 1|` - so it advertised
+-15/-30/-45% and delivered -13/-24/-34%. The Hero Info panel showed the same stat as "+15%" in red.
+
+**How:** a pick multiplies the rate by `(1 - previous total) / (1 - next total)` (x1.176, x1.214, x1.4), so
+the upgrade's own share is exact while still composing multiplicatively with Talents and Dead Weight. The
+pick index is `GlobalUpgradeUtility.GetPickCount` read inside `Apply` (Grant applies before it records the
+pick). `BalanceSimModel` applies the same `GetRateStep`, and `GlobalUpgradeAssetGenerator` no longer sets
+a `Multiplier` for these two.

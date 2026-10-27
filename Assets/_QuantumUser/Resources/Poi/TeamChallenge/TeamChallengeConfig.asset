@@ -24,6 +24,6 @@ MonoBehaviour:
   - Id:
       Value: 469807075581237661
   ReadyCancelRadius:
-    RawValue: 983040
+    RawValue: 1638400
   CountdownDuration:
     RawValue: 196608

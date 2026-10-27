@@ -9,22 +9,54 @@ The Tab-hold overlay, previously `UpgradePopupWidget` (a pure upgrade-history li
 place (same `.cs.meta` GUID, so the existing scene component and every wired field survived the
 rename untouched).
 
-## Layout
+## Layout (2026-10-26 readability pass)
 
-Three stacked sections, top to bottom:
+Laid out in the `Canvas.prefab` on a fixed grid - 36px outer margin, 20px gutter - with the same pink
+(#FD3971) uppercase section headers everywhere:
 
-1. **`HeroInfoWidget`** (new) - head icon, health and shield readouts, one row each for the hero's
-   **Base Skill** and **Passive Skill** (icon + name + description), and three live equipped-weapon
-   stat readouts, **Current Damage**, **Current Elemental**, and **Current Critical** (see below).
-2. **`CurrentWeaponUiWidget`** (existing, reused as-is) - the equipped weapon plus one row per
-   granted perk.
-3. **The upgrade history lists** (unchanged) - the 4 `LevelUpPoolKind`-split vertical scroll lists
-   that were the whole widget before: hero (SkillUpgrade + PassiveUpgrade), global, rift, rift mark.
+1. **Hero panel** (top-left, 540x392) - portrait, uppercase name, Health and Shield side by side (the
+   Shield readout hides itself for a hero with no shield, `HeroInfoWidget.UpdateShieldRow`, instead of
+   leaving `ShieldUiWidget`'s placeholder text), a divider, then `HeroBuildStatsWidget`'s
+   OFFENSE / DEFENSE & UTILITY columns. Base/Passive Skill rows are retired from this popup.
+2. **Weapon panel** (top-right, 539x392) - `CurrentWeaponUiWidget`: icon, name (+level), a tags line
+   (`weaponTagsText`: family | weight | element, element tinted; Medium/Neutral omitted), a divider and
+   the 5 perk rows as compact one-line-or-two "**Name** - effect" rows that always fit the panel, with a
+   "No perks yet" label (`noPerksLabel`) when empty. `separatePerkTitles` exists for roomier layouts but
+   is off here.
+3. **Run Upgrades** (bottom, full width) - title pinned above the scroll viewport (not a list child), and
+   the history cards in a 2-column `GridLayoutGroup` (514x98 cells), so roughly twice as many are visible
+   before scrolling; "No upgrades yet" (`emptyUpgradesLabel`) when nothing has been picked, including
+   before the entity even has an `UpgradeHistory`.
+
+Mockups: `HeroBuildStatsWidget`'s Build Preview rows are `HideFlags.DontSave`, so they can never be
+written into the prefab/scene (a prefab instance can't delete inherited children, so a saved mockup used to
+stack under every rebuild). Nothing layout-related lives as a scene-instance override.
 
 `HeroInfoPopupWidget` itself only owns the Tab toggle, the entity binding it forwards down to
 sections 1 and 2, and section 3's own pooled rebuild. Weapon perks deliberately never appear in
 section 3 - `LevelUpUtility.RecordHistory` early-outs on `WeaponPerk`/`ChooseWeapon` because they're
 already visible on the weapon itself, which is exactly what section 2 shows.
+
+## Build Stats (HeroBuildStatsWidget)
+
+`HeroArea` is now: icon + name + health/shield on top, then `BuildStats` below with two titled columns,
+**Offense** (Damage, Crit Chance, Crit Damage, Area) and **Defense & Utility** (Max Health, Move Speed,
+Skill Cooldown, Dash Cooldown). Rows are built in code; each shows value + colored delta (green better /
+red worse, cooldowns invert). Damage, Crit Chance/Damage, Max Health and Move Speed always show; Area and
+the two cooldowns only once the build moves them off baseline. Damage shows the TOTAL baseline hit (the same number as the floating damage text, tinted green/red vs base) with the weapon's authored damage as a gray "(base N)" - never a "+N", which reads additive (both rounded UP, like the floating damage text and the health readout). Skill/Dash Cooldown show the real change to the cooldown (`1 / CooldownMultiplier` - the stat is a rate that `StatUtility.GetSkillCooldown` divides by, so a 1.15 pick is -13%, not +15%). Every other row is a % delta vs a neutral 1.0 multiplier
+(include the hero's own baseline). Wired to `HeroInfoPopupWidget.buildStatsWidget`. Attack Speed, Reload,
+Skill Damage, Dmg Reduction, Life Steal, Pickup, XP/Coin Gain and Luck were deliberately left off.
+
+**`CharacterStats.ProjectileSpeedMultiplier` was removed from the game** (field in `CharacterStats.qtn`,
+`CharacterData`, `CharacterSystem` seeding, `StatUtility.GetProjectileSpeedMultiplier`, and its term in
+`ProjectileSpawner.Spawn`). Nothing wrote it after the global upgrade was deleted and every hero authored
+1.0, so gameplay is unchanged. Weapon, enemy/boss, Pixie Blast Jump and Kai Event Horizon projectile-speed
+multipliers are different fields and remain.
+
+Base Skill / Passive rows: the `Passive`/`BaseSkill` objects are off and `HeroInfoWidget.baseSkillWidget`/
+`passiveSkillWidget` are unassigned on the popup's instance - `UpdateBaseSkill`/`UpdatePassive` re-activate
+their object every frame, so disabling the GameObject alone does nothing. The old Damage/Crit text lines
+on `HeroInfoWidget` are also unassigned (superseded by Offense).
 
 ## Composition, not reimplementation
 

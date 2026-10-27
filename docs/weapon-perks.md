@@ -583,3 +583,31 @@ toward 2 nearby enemies (40% Damage)". `SplitAngle` is now unused by the aimed p
 `ClusterLauncherSplit` base trait (ProjectileOverride bomblets via `WeaponPerkUtility.SpawnSplitProjectiles`) is
 untouched. The DPS preview and Balance Simulator already value it as `1 + Count x DamageMultiplier` "assumed to
 land" - which the aimed fork now makes true.
+
+## Weapon crit baselines (2026-10-26 pass)
+
+Crit multiplier was a flat x1.5 on everything but the snipers, which made crit a ~5-7% damage
+afterthought and crit builds unviable. Rule now: **x2.0 is the default, snipers x2.5-3.0, and the
+per-family identity comes from chance**. Heroes now author **0% base `CriticalChance`** (all 6
+`CharacterData` assets + the C# default) - the weapon's own `CriticalChance` is the whole base chance, so
+the number on the asset is what you get, and weapon-vs-weapon balance doesn't depend on who holds it
+(heroes swap weapons via Choose Weapon). Upgrades/mutations/Hot Target still add on top through
+`CharacterStats.CriticalChance`. The multiplier is the weapon's alone (hero multiplier stays 1.0).
+
+| Family | Chance | Mult |
+| --- | --- | --- |
+| Pistol (Pistol, Disruptor, Flare, Frost Revolver, Sword), Slugger | 15% | x2.0 |
+| Sniper (Sniper, Frostbite) | 20% | x3.0 |
+| Sniper (Arcshot, Hellshot) | 20% | x2.5 |
+| AR (Assault, Burst, Storm), Shotgun x4, SMG x4, Dual Uzi | 10% | x2.0 |
+| Explosives (Cluster, Napalm, Grenade Launcher) | 5% | x2.0 |
+
+Dual Uzi (was higher) now matches its twin Drum SMG; Explosives were set to 5% (below the other families) by design.
+Lux sentries, Beam guns and Flamethrower still author no crit. Caveat of 0% heroes: a *skill* hit rolls
+crit off `CharacterStats` alone, so skills only crit via upgrades/mutations/passives now (their crit
+multiplier was already 1.0, i.e. no extra damage, unless a Crit Damage upgrade is held). Crit is rolled per
+hit, so a 5-6 pellet shotgun rolls per pellet - on-crit perks (Critical Rebound, Bottomless Momentum) can
+fire more than once per shot.
+
+The Inspector DPS preview and `BalanceSimModel` both read these assets and now agree exactly (neither has
+a hero base term anymore).

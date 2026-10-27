@@ -51,7 +51,7 @@ namespace Quantum
 
                 if (PlayerLifeStateUtility.IsIncapacitated(f, entity) == true)
                 {
-                    TeamChallengeUtility.End(f, poi, challenge, success: false);
+                    TeamChallengeUtility.End(f, poi, challenge, success: false, culprit: entity);
                     return;
                 }
             }

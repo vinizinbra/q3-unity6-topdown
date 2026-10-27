@@ -251,8 +251,7 @@ adds `BossDefeatSequence` (`QTN/Enemy/BossDefeatSequence.qtn`), **disables `Game
 - **`DefeatSequenceDuration`** (4.5s) - destroys the boss, re-enables the group; `VictorySystem` sees it
   gone the same tick (last phase) -> `RunResultManager` popup.
 
-`VoiceDirector` now plays `BossDefeated` VO on `BossDefeatBurst` (its old "boss entity disappeared"
-poll would now fire 4.5s late). Haptics' `bossKilled` still fires on `EntityDied` = killing blow.
+Boss start/defeat have no voice-over triggers (removed). Haptics' `bossKilled` still fires on `EntityDied` = killing blow.
 
 **View** - `Assets/_Project/Scripts/Boss/BossDefeatSequenceDirector.cs`, self-installed (like
 `HapticsDirector`, nothing to place in a scene), all tuning in its serialized fields. Off `BossDefeated`:

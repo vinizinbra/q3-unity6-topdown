@@ -159,3 +159,8 @@ RectTransform/CanvasGroup/art as the visual (generalized to take dynamic text), 
 `AnnouncerManager` needs one.
 
 Not yet manually verified end-to-end in-Editor.
+
+
+## Lifesaver banner (2026-10-26)
+
+`AnnouncerManager` also listens to `EventLifesaverTriggered`/`EventLifesaverEnded` (Lifesaver Rift Mutation) and, for the LOCAL player only (`MyLocalPlayer.IsLocalEntity`), announces "LAST CHANCE - GET A KILL!" and "SAVED!". The countdown itself is not a banner - see `docs/hero-skill-state.md`.

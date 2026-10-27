@@ -104,6 +104,8 @@ public class AnnouncerManager : MonoBehaviour
 
         QuantumEvent.Subscribe<EventGameStateChanged>(this, OnGameStateChanged);
         QuantumEvent.Subscribe<EventEliteSpawned>(this, OnEliteSpawned);
+        QuantumEvent.Subscribe<EventLifesaverTriggered>(this, OnLifesaverTriggered);
+        QuantumEvent.Subscribe<EventLifesaverEnded>(this, OnLifesaverEnded);
     }
 
     // Defensive: the banner must start hidden regardless of how the scene authored the slide
@@ -166,6 +168,21 @@ public class AnnouncerManager : MonoBehaviour
 
         _eliteAnnouncementPending = true;
         Announce("ELITE INCOMING", () => _eliteAnnouncementPending = false);
+    }
+
+    // Lifesaver (Rift Mutation) - personal, so only the player it fired for gets the banner; the
+    // countdown itself is the hero-state ring/3-2-1 above the hero (HeroSkillStateUtility), which
+    // teammates see too.
+    private void OnLifesaverTriggered(EventLifesaverTriggered e)
+    {
+        if (QuantumUser.View.MyLocalPlayer.Instance != null && QuantumUser.View.MyLocalPlayer.Instance.IsLocalEntity(e.Entity))
+            Announce("LAST CHANCE - GET A KILL!");
+    }
+
+    private void OnLifesaverEnded(EventLifesaverEnded e)
+    {
+        if (e.Survived && QuantumUser.View.MyLocalPlayer.Instance != null && QuantumUser.View.MyLocalPlayer.Instance.IsLocalEntity(e.Entity))
+            Announce("SAVED!");
     }
 
     // Unscaled, matching every other HUD banner timer in this codebase - a Level-Up screen can ramp

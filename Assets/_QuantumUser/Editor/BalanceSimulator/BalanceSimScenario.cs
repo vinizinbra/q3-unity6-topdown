@@ -102,6 +102,8 @@ namespace QuantumUser.Editor.BalanceSimulator
         [Header("Enemy behaviour")]
         [Tooltip("Share of Director spawns (below Elite) that get retired/refunded instead of killed - left behind as the party moves on. Calibrated 2026-10-20 from a recorded Brute W2 solo run: 775 kills of ~1043 spawns.")]
         [Range(0f, 1f)] public float EnemyLeakFraction = 0.25f;
+        [Tooltip("Share of leakers that end up dying in water/off the level and still drop their orbs (fall deaths drop XP/coin/shard since 2026-10-26). Placeholder until a recorded run measures it.")]
+        [Range(0f, 1f)] public float FallDeathFraction = 0.4f;
         [Tooltip("Share of Director purchases that find no valid spawn anchor (walls, chunk edges). Like the real Director, a failed placement forfeits the rest of that pulse's purchases.")]
         [Range(0f, 1f)] public float SpawnFailureChance = 0.1f;
         [Tooltip("Fraction of the spawn ring (DirectorConfig.SpawnRingRadiusMin/Max average) an enemy must close, at its own MoveSpeed, before the player is effectively shooting it. It holds Director pressure but can't be damaged until then.")]

@@ -42,7 +42,10 @@ namespace Quantum
         public FP WeaponDamageMultiplier = FP._1;
         public FP SkillDamageMultiplier = FP._1;
 
-        public FP CriticalChance = FP._0_05;
+        // 0 by design: the equipped weapon's own CriticalChance is the whole base chance (heroes swap
+        // weapons, so a hero-side base would make weapon crit depend on who holds it). Upgrades,
+        // mutations and passives still add to this at runtime - see docs/weapon-perks.md.
+        public FP CriticalChance = FP._0;
 
         // Neutral baseline (a crit deals normal damage until a weapon's own CriticalDamageBonus
         // multiplies this up) - matches every hero's already-authored CharacterData asset, which
@@ -52,7 +55,6 @@ namespace Quantum
         public FP AttackSpeedMultiplier = FP._1;
         public FP ReloadSpeedMultiplier = FP._1;
 
-        public FP ProjectileSpeedMultiplier = FP._1;
         public FP AreaRadiusMultiplier = FP._1;
 
         [Tooltip("Attacker-side range falloff (Close Quarters/Longshot Global Upgrades) - lerped between off attacker-target distance, see DamageUtility.ResolveRangeDamageMultiplier.")]
@@ -61,6 +63,9 @@ namespace Quantum
 
         public FP DashCooldownMultiplier = FP._1;
         public FP SkillCooldownMultiplier = FP._1;
+
+        [Tooltip("Scales DashSkillData.DashDistance (1 = the dash's authored distance).")]
+        public FP DashDistanceMultiplier = FP._1;
 
         [Tooltip("Scales how long a skill's spawned effects last - a decoy, a fire trail.")]
         public FP SkillDurationMultiplier = FP._1;

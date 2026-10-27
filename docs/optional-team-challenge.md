@@ -13,7 +13,7 @@ Interaction Area to Ready up, then stay inside the larger Ready/Cancel Area
 (`TeamChallengeConfig.ReadyCancelRadius`) - leaving it cancels that Raider's own Ready with no
 timeout. As soon as anyone has Readied (WaitingForTeam), `InteractionPromptWidget` shows the POI prompt
 to every local Raider inside the Ready/Cancel Area, not only inside the small Interaction Area, so the
-rest of the team sees the roster and can walk in (2026-10-25: Interaction radius 6, `ReadyCancelRadius` 15).
+rest of the team sees the roster and can walk in (2026-10-26: Interaction radius 6, `ReadyCancelRadius` 25).
 Survival runs completely normally while waiting. Once every required Raider is
 simultaneously Ready, activation locks in (no more cancelling), every enemy alive is wiped (same
 no-reward wipe described below) and Director spawning holds, an optional
@@ -155,7 +155,9 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
   value; folded into `GameState.TeamChallenge` directly as part of the later Announcer/event-driven-
   HUD pass (see `docs/game-state.md`).
 - `Assets/_QuantumUser/Simulation/QTN/Events.qtn` - `TeamChallengeActivated`/`Started`/`Completed`/
-  `Failed`.
+  `Failed`. `Failed` carries a `Culprit` (the Raider whose HP loss ended a Flawless Hunt, or whose
+  incapacitation ended Cursed Survival; none for a timeout or the run ending) - `VoiceDirector` plays
+  the `ChallengeCulprit` "sorry guys" line from them instead of the whole-team `ChallengeFailed`.
 - `Assets/_QuantumUser/Simulation/Default/RuntimeConfig.User.cs` - new
   `Bots.DisableTeamChallenge` opt-out. Bots no longer auto-Ready: `BotPoiUtility` treats the POI like any other (walk in, `TeamChallengeUtility.TryInteract`, Available/WaitingForTeam only, also mid-Survival), and a Ready bot holds at the POI (`BotInputSystem.TrySelectInteract`) so the Ready/Cancel Area sweep doesn't cancel it. Reward claim stays human.
 - `Assets/_QuantumUser/Simulation/Assets/Poi/ChallengeDefinition.cs` - new asset: `Type`,

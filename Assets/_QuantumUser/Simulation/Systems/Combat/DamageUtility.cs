@@ -75,6 +75,11 @@ namespace Quantum
                 return;
             }
 
+            // Lifesaver's "get a kill" window - the player already took their lethal hit, so nothing
+            // else may land until the window closes (see MutationCombatUtility).
+            if (MutationCombatUtility.IsLifesaverActive(f, target) == true)
+                return;
+
             // Co-op is friendly-fire-free by design - since every damage source (weapon, skill,
             // area, DoT) ultimately funnels through here, one check covers all of them instead of
             // each delivery type needing its own owner-vs-target guard. Self-damage (owner ==
@@ -221,6 +226,10 @@ namespace Quantum
             FP frontalMultiplier = ResolveFrontalDamageMultiplier(f, target, owner);
             totalDamage *= frontalMultiplier;
 
+            // Target-side Rift Mutations - Deflection Shield (attacker distance) and Spirit Feline's
+            // per-hit cap, which must come after every multiplier above so it caps the real hit.
+            totalDamage = MutationCombatUtility.ResolveIncomingDamage(f, target, owner, totalDamage);
+
             FP mitigatedDamage = ReduceByArmor(f, target, totalDamage);
             FP remaining = AbsorbWithShield(f, target, mitigatedDamage);
             FP shieldAbsorbed = mitigatedDamage - remaining;
@@ -251,6 +260,9 @@ namespace Quantum
             if (f.Has<Enemy>(target) == true && f.Unsafe.TryGetPointer<CharacterStats>(owner, out var dealerStats) == true)
             {
                 dealerStats->DamageDealt += remaining - overkillDamage;
+
+                // Sanguine Relic - lifesteal off exactly what landed, same clamp as the stat above.
+                MutationCombatUtility.TryLifeSteal(f, owner, dealerStats, remaining - overkillDamage);
             }
 
             // Too Angry to Die - a hit that would otherwise be lethal instead leaves the owner at 1
@@ -258,6 +270,11 @@ namespace Quantum
             // ever intervenes on an actually-lethal hit, never a survivable one.
             if (healthAfter <= FP._0 && CheatDeathUtility.TryPreventLethal(f, target) == true)
             {
+                healthAfter = FP._1;
+            }
+            else if (healthAfter <= FP._0 && MutationCombatUtility.TryTriggerLifesaver(f, target) == true)
+            {
+                // Lifesaver - checked after Cheat Death so a hero-specific save is never wasted on top.
                 healthAfter = FP._1;
             }
 
@@ -290,6 +307,18 @@ namespace Quantum
             {
                 ResolveDeath(f, target, owner, source, overkillDamage, isChainedExplosion, isExplosion);
             }
+        }
+
+        // Direct kill through the normal death tail - for an effect that has already decided the target
+        // dies (Lifesaver's window running out), where re-routing a fake hit through ApplyDamage would
+        // be capped by Spirit Feline or reduced by DR. No owner: nobody gets kill credit.
+        public static void Kill(Frame f, EntityRef target)
+        {
+            if (f.Unsafe.TryGetPointer<Health>(target, out var health) == false || health->CurrentHealth <= FP._0)
+                return;
+
+            health->CurrentHealth = FP._0;
+            ResolveDeath(f, target, EntityRef.None, DamageSource.None, FP._0, false, false);
         }
 
         // The shared kill-resolution tail - everything that happens once a target's Health has
@@ -976,6 +1005,9 @@ namespace Quantum
             if (source == DamageSource.Weapon)
             {
                 damage *= StatusEffectUtility.GetTemporaryWeaponDamageMultiplier(f, owner);
+
+                // Merciless Combo stacks and Giant Slayer's current-health bonus (Rift Mutations).
+                damage = MutationCombatUtility.ResolveWeaponDamage(f, target, stats, damage);
 
                 // Kindling (Fire SMG's signature) - bonus vs a Burning target, see KindlingWeaponPerkData.
                 if (f.Unsafe.TryGetPointer<WeaponConditionalDamage>(owner, out var conditional) == true

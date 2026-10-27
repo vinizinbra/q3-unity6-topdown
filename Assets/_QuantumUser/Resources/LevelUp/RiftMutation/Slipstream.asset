@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 457560d700251491cb3f4e943be67138, type: 3}
+  m_Name: Slipstream
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SlipstreamMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/Slipstream
+    Guid:
+      Value: 419720220336152160
+  Icon: {fileID: -5659065995605585607, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  DisplayName: Slipstream
+  Rarity: 1
+  Scope: 0
+  IncompatibleWith: []
+  Description: Dashing grants +{0:0}% Move Speed for {1:0.#}s
+  MoveSpeedBonus:
+    RawValue: 19661
+  Duration:
+    RawValue: 196608

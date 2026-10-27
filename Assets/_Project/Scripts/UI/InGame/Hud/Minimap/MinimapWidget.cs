@@ -160,6 +160,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     private Color usedIconTint = new Color(0.45f, 0.45f, 0.45f, 1f);
     [SerializeField, Tooltip("Same as usedIconTint, but for a POI whose PoiUsagePolicy is Cooldown (e.g. Healing Shrine) instead of a one-time-use policy - lets cooldown read as a different (typically darker/blacker) shade than \"used up for the Break/run\". Store never resolves Expired at all (always Reusable), so it never uses either tint.")]
     private Color cooldownIconTint = new Color(0.22f, 0.22f, 0.22f, 1f);
+    [SerializeField, Range(0f, 1f), Tooltip("Alpha multiplier on top of usedIconTint - a used-up POI (this local player already used a one-time POI, or a Traversal/Team Challenge ended Completed/Failed) reads as faded out/disabled, not just darker.")]
+    private float usedIconAlpha = 0.4f;
+    [SerializeField, Tooltip("While THIS instance's local player is on a Cooldown-policy POI's cooldown (e.g. Healing Shrine), a radial fill of the icon's own sprite at full color sweeps back in over the cooldownIconTint-darkened icon as the cooldown recovers. Built from code - no prefab needed.")]
+    private bool showCooldownFill = true;
     [SerializeField, Tooltip("A POI icon that's still usable (not tinted by usedIconTint/cooldownIconTint) is clamped to the edge of mapRect's parent (the masked viewport) whenever its real spot is off-screen, along the line from the viewport center toward it - so the player can still read which way it is. Used-up POIs and non-POI icons (Boss/LobbyStart) stay at their real spot and get clipped by the mask as before. See PinActiveIconsToViewportEdge.")]
     private bool pinActivePoisToEdge = true;
     [SerializeField, Tooltip("Extra inset (UI units) between a pinned icon and the viewport's edge, on top of the icon's own half-size (which is always inset so the icon never gets half-clipped by the mask).")]
@@ -211,6 +215,12 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // TraversalChallenge.qtn/docs/traversal-challenge.md), so UpdateIconTints has to read its
     // TraversalChallengeState directly instead.
     private readonly Dictionary<EntityRef, EntityRef> _iconTraversalEntity = new();
+
+    // Same shape again for a Team Challenge chunk's own TeamChallenge entity - Team Challenge chunks
+    // share ChunkType.Traversal (see docs/talents.md), so a Traversal chunk links whichever of the
+    // two it actually holds. TeamChallenge also carries no PoiActivation, so its TeamChallengeState
+    // is read directly too.
+    private readonly Dictionary<EntityRef, EntityRef> _iconTeamChallengeEntity = new();
 
     // Chunk entity -> its own (Chunk, Transform3D) value copy, for a chunk whose Type CAN link a
     // POI (see ChunkTypeCanLinkPoi) but hasn't resolved one YET. Needed because the POI/
@@ -289,6 +299,10 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
         // usable (untinted), which is what PinActiveIconsToViewportEdge keys off.
         public bool PinToEdge;
 
+        // Chunk icons only - radial "cooldown recovering" fill over the darkened icon, created
+        // lazily the first time its POI goes on cooldown for this local player (see SetCooldownFill).
+        public Image CooldownFill;
+
         public void SetActive(bool active)
         {
             if (Rect != null)
@@ -306,6 +320,47 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             BaseColor = color;
             if (Icon != null)
                 Icon.color = color;
+        }
+
+        // progress01 < 0 hides the fill. Otherwise 0 = cooldown just started, 1 = ready again.
+        public void SetCooldownFill(float progress01, Color color)
+        {
+            if (progress01 < 0f)
+            {
+                if (CooldownFill != null && CooldownFill.gameObject.activeSelf)
+                    CooldownFill.gameObject.SetActive(false);
+                return;
+            }
+
+            if (CooldownFill == null)
+            {
+                if (Icon == null)
+                    return;
+
+                var go = new GameObject("CooldownFill", typeof(RectTransform), typeof(Image));
+                var rect = (RectTransform)go.transform;
+                rect.SetParent(Icon.rectTransform, false);
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+
+                CooldownFill = go.GetComponent<Image>();
+                CooldownFill.sprite = Icon.sprite;
+                CooldownFill.material = Icon.material;
+                CooldownFill.preserveAspect = Icon.preserveAspect;
+                CooldownFill.raycastTarget = false;
+                CooldownFill.type = Image.Type.Filled;
+                CooldownFill.fillMethod = Image.FillMethod.Radial360;
+                CooldownFill.fillOrigin = (int)Image.Origin360.Top;
+                CooldownFill.fillClockwise = true;
+            }
+
+            if (CooldownFill.gameObject.activeSelf == false)
+                CooldownFill.gameObject.SetActive(true);
+
+            CooldownFill.color = color;
+            CooldownFill.fillAmount = Mathf.Clamp01(progress01);
         }
 
         public void Destroy()
@@ -1461,13 +1516,22 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     {
         // TraversalChallenge deliberately carries no PoiActivation (see TraversalChallenge.qtn), so
         // it's resolved/tracked through its own dictionary instead of _iconPoiEntity below.
+        // Team Challenge chunks share ChunkType.Traversal, so a Traversal chunk links whichever of
+        // the two challenge kinds actually lives inside it (also no PoiActivation on TeamChallenge).
         if (chunk.Type == ChunkType.Traversal)
         {
             EntityRef traversalEntity = ResolveEntityForChunk<TraversalChallenge>(frame, chunk, chunkTransform);
-            if (traversalEntity == EntityRef.None)
+            if (traversalEntity != EntityRef.None)
+            {
+                _iconTraversalEntity[entity] = traversalEntity;
+                return true;
+            }
+
+            EntityRef teamChallengeEntity = ResolveEntityForChunk<TeamChallenge>(frame, chunk, chunkTransform);
+            if (teamChallengeEntity == EntityRef.None)
                 return false;
 
-            _iconTraversalEntity[entity] = traversalEntity;
+            _iconTeamChallengeEntity[entity] = teamChallengeEntity;
             return true;
         }
 
@@ -1567,8 +1631,16 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
     // Store is always PoiUsagePolicy.Reusable (see PoiActivationSystem's own comment), so it never
     // resolves Expired here, which is correct - there's nothing to darken on a POI you can always
     // walk back into.
+    //
+    // Per-player policies (Cooldown/OncePerPlayerPerRun/OncePerPlayerPerBreak - Healing Shrine,
+    // Cursed Rift, Blacksmith) resolve against THIS instance's own local player's PoiUsage directly,
+    // NOT through PoiActivation.State: PoiLocalViewState only narrows an Active shared state, so
+    // outside the POI's availability window (Inactive - e.g. back in Combat) a shrine still on your
+    // cooldown or a rift you already sacrificed at used to read as fully usable again.
     private unsafe void UpdateIconTints(Frame frame)
     {
+        EntityRef localPlayer = ResolveLocalPlayerEntity(frame);
+
         foreach (var kvp in _iconPoiEntity)
         {
             if (frame.Unsafe.TryGetPointer<PoiActivation>(kvp.Value, out var activation) == false)
@@ -1577,18 +1649,23 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (_iconOverlays.TryGetValue(kvp.Key, out MapOverlay pair) == false)
                 continue;
 
-            // Local, not shared - dims once this client's own player(s) can't use it (see PoiLocalViewState).
-            PoiViewState state = PoiLocalViewState.Resolve(frame, kvp.Value, activation->State);
+            PoiUsagePolicy policy = _iconPoiUsagePolicy.TryGetValue(kvp.Key, out var cachedPolicy) ? cachedPolicy : PoiUsagePolicy.Reusable;
 
-            Color color = _iconBaseColor;
-            if (state == PoiViewState.Expired)
+            if (localPlayer != EntityRef.None && IsPerPlayerPolicy(policy))
             {
-                PoiUsagePolicy policy = _iconPoiUsagePolicy.TryGetValue(kvp.Key, out var cachedPolicy) ? cachedPolicy : PoiUsagePolicy.Reusable;
-                color = _iconBaseColor * (policy == PoiUsagePolicy.Cooldown ? cooldownIconTint : usedIconTint);
+                if (policy == PoiUsagePolicy.Cooldown && TryGetLocalCooldownProgress(frame, localPlayer, kvp.Value, out float progress))
+                    ApplyCooldownLook(pair, progress);
+                else if (PoiUsageUtility.CanUse(frame, localPlayer, kvp.Value, policy) == false)
+                    ApplyUsedLook(pair, true);
+                else
+                    ApplyUsedLook(pair, false);
+
+                continue;
             }
 
-            pair.SetIconColor(color);
-            pair.PinToEdge = state != PoiViewState.Expired;
+            // Reusable POIs (Store/Repair Station) - local-narrowed shared state, see PoiLocalViewState.
+            PoiViewState state = PoiLocalViewState.Resolve(frame, kvp.Value, activation->State);
+            ApplyUsedLook(pair, state == PoiViewState.Expired);
         }
 
         foreach (var kvp in _iconTraversalEntity)
@@ -1599,10 +1676,96 @@ public class MinimapWidget : QuantumGlobalMonoBehaviour
             if (_iconOverlays.TryGetValue(kvp.Key, out MapOverlay pair) == false)
                 continue;
 
-            bool usedUp = challenge->State == TraversalChallengeState.Completed || challenge->State == TraversalChallengeState.Failed;
-            pair.SetIconColor(usedUp ? _iconBaseColor * usedIconTint : _iconBaseColor);
-            pair.PinToEdge = usedUp == false;
+            ApplyUsedLook(pair, challenge->State == TraversalChallengeState.Completed || challenge->State == TraversalChallengeState.Failed);
         }
+
+        // Completed (reward claimed) and Failed are both terminal - RewardAvailable stays pinned,
+        // since someone still has to walk back and claim it.
+        foreach (var kvp in _iconTeamChallengeEntity)
+        {
+            if (frame.Unsafe.TryGetPointer<TeamChallenge>(kvp.Value, out var challenge) == false)
+                continue;
+
+            if (_iconOverlays.TryGetValue(kvp.Key, out MapOverlay pair) == false)
+                continue;
+
+            ApplyUsedLook(pair, challenge->State == TeamChallengeState.Completed || challenge->State == TeamChallengeState.Failed);
+        }
+    }
+
+    // OncePerWorld is excluded - PoiUsageUtility.CanUse logs an error for it every call (not implemented).
+    private static bool IsPerPlayerPolicy(PoiUsagePolicy policy)
+    {
+        return policy == PoiUsagePolicy.Cooldown
+            || policy == PoiUsagePolicy.OncePerPlayerPerRun
+            || policy == PoiUsagePolicy.OncePerPlayerPerBreak;
+    }
+
+    // Used up = usedIconTint + faded by usedIconAlpha, not pinned. Usable = authored color, pinned.
+    private void ApplyUsedLook(MapOverlay pair, bool usedUp)
+    {
+        Color color = _iconBaseColor;
+        if (usedUp)
+        {
+            color *= usedIconTint;
+            color.a *= usedIconAlpha;
+        }
+
+        pair.SetIconColor(color);
+        pair.SetCooldownFill(-1f, default);
+        pair.PinToEdge = usedUp == false;
+    }
+
+    // On cooldown = cooldownIconTint-darkened icon with a full-color radial fill sweeping back in as
+    // it recovers. Not pinned while cooling down, same as before.
+    private void ApplyCooldownLook(MapOverlay pair, float progress01)
+    {
+        pair.SetIconColor(_iconBaseColor * cooldownIconTint);
+        pair.SetCooldownFill(showCooldownFill ? progress01 : -1f, _iconBaseColor);
+        pair.PinToEdge = false;
+    }
+
+    // True while localPlayer still has cooldown left on poi - progress01 is 0 right after use, ->1 as
+    // it recovers. Duration comes off the POI's own component (only Healing Shrine has one today);
+    // without one the fill just shows empty while the icon stays darkened.
+    private unsafe bool TryGetLocalCooldownProgress(Frame frame, EntityRef localPlayer, EntityRef poi, out float progress01)
+    {
+        progress01 = 0f;
+
+        if (frame.Unsafe.TryGetPointer<PoiUsage>(localPlayer, out var usage) == false)
+            return false;
+
+        var entries = usage->Entries;
+        for (int i = 0; i < entries.Length; i++)
+        {
+            if (entries[i].Poi != poi)
+                continue;
+
+            float remaining = entries[i].CooldownRemaining.AsFloat;
+            if (remaining <= 0f)
+                return false;
+
+            float duration = frame.Unsafe.TryGetPointer<HealingShrine>(poi, out var shrine) ? shrine->CooldownDuration.AsFloat : 0f;
+            progress01 = duration > 0f ? 1f - Mathf.Clamp01(remaining / duration) : 0f;
+            return true;
+        }
+
+        return false;
+    }
+
+    // This instance's own local player (localSlotIndex), or None while not yet spawned - every
+    // per-player icon state then falls back to the shared PoiActivation path.
+    private EntityRef ResolveLocalPlayerEntity(Frame frame)
+    {
+        if (MyLocalPlayer.Instance == null)
+            return EntityRef.None;
+
+        var slots = MyLocalPlayer.Instance.Slots;
+        if (localSlotIndex < 0 || localSlotIndex >= slots.Count || slots[localSlotIndex].IsSet == false)
+            return EntityRef.None;
+
+        EntityRef playerEntity = slots[localSlotIndex].EntityRef;
+        return frame.Exists(playerEntity) ? playerEntity : EntityRef.None;
     }
 
     // Runs right after CenterOnLocalPlayer (mapRect has already panned this tick). Every minimap

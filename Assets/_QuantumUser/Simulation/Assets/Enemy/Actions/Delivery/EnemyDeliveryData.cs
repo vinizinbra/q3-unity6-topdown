@@ -53,6 +53,19 @@ namespace Quantum
                 f.Events.ProjectileLandingWarning(point, flightTime, radius, EntityRef.None);
         }
 
+        // World Y a flat (action.IgnoreY) straight shot flies at: the target's own body-centre height
+        // above THIS enemy's feet. Not the enemy's own position - that's its sphere centre, i.e.
+        // ground + Stats.Radius * tier ScaleMultiplier, so a big enemy (Shotgunner: 1.4 * 0.8 =
+        // 1.12) fired every pellet clean over a hero whose capsule tops out ~1.1 above the ground.
+        // Falls back to the enemy's own Y when the target has no collider to read a centroid from.
+        protected static FP ResolveFlatShotY(Frame f, EntityRef self, FPVector3 selfPosition, EntityRef target)
+        {
+            if (ProjectileAimUtility.TryGetCenterOffset(f, target, out FPVector3 centerOffset) == false)
+                return selfPosition.Y;
+
+            return selfPosition.Y - EnemyMovementUtility.ResolveEntityRadius(f, self) + centerOffset.Y;
+        }
+
         // A projectile's Hit only sometimes carries a meaningful blast radius (AreaHitData) - a
         // direct-hit/pierce type has none. Reading it back here rather than authoring a second
         // WarningRadius field on the delivery is the same "single source of truth" fix as routing

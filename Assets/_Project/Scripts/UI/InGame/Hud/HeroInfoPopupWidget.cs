@@ -33,6 +33,10 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Head icon, health/shield readouts, Base Skill and Passive Skill rows. Optional - left unassigned, this section is simply absent.")]
     private HeroInfoWidget heroInfoWidget;
 
+    [Header("Build Stats")]
+    [SerializeField, Tooltip("Colored per-stat readout (Damage, Crit, Move Speed... with +15% style deltas). Optional - left unassigned, this section is simply absent.")]
+    private HeroBuildStatsWidget buildStatsWidget;
+
     [Header("Weapon")]
     [SerializeField, Tooltip("The same always-on equipped-weapon readout used on the player's own HUD cluster, reused here so a perk reads identically in both places. Optional - left unassigned, this section is simply absent.")]
     private CurrentWeaponUiWidget currentWeaponWidget;
@@ -49,6 +53,9 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
     private Transform riftContent;
     [SerializeField, Tooltip("Parent for RiftMarkMutation entries - typically a ScrollRect Content with a VerticalLayoutGroup.")]
     private Transform riftMarkContent;
+
+    [SerializeField, Tooltip("Optional - shown while the bound player has picked no upgrades yet, instead of an empty list.")]
+    private GameObject emptyUpgradesLabel;
 
     [SerializeField, Tooltip("On: binds itself to local slot 0 (player 1) automatically. Off: stays unbound until something else calls Initialize (e.g. the party HUD).")]
     private bool autoBindLocalPlayerOne = true;
@@ -100,6 +107,9 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
 
         if (heroInfoWidget != null)
             heroInfoWidget.Initialize(entityRef);
+
+        if (buildStatsWidget != null)
+            buildStatsWidget.Initialize(entityRef);
 
         if (currentWeaponWidget != null)
             currentWeaponWidget.Initialize(entityRef);
@@ -156,8 +166,14 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
 
         Frame frame = game.Frames.Predicted;
 
+        // No UpgradeHistory yet simply means nothing has been picked - still an empty list to show.
         if (frame.TryGet<UpgradeHistory>(_entityRef, out var history) == false)
+        {
+            if (emptyUpgradesLabel != null && emptyUpgradesLabel.activeSelf == false)
+                emptyUpgradesLabel.SetActive(true);
+
             return;
+        }
 
         int signature = ComputeSignature(history);
 
@@ -218,6 +234,11 @@ public class HeroInfoPopupWidget : QuantumGlobalMonoBehaviour
         RebuildList(frame, globalContent, _globalPool, _globalEntries);
         RebuildList(frame, riftContent, _riftPool, _riftEntries);
         RebuildList(frame, riftMarkContent, _riftMarkPool, _riftMarkEntries);
+
+        bool empty = _heroEntries.Count + _globalEntries.Count + _riftEntries.Count + _riftMarkEntries.Count == 0;
+
+        if (emptyUpgradesLabel != null && emptyUpgradesLabel.activeSelf != empty)
+            emptyUpgradesLabel.SetActive(empty);
     }
 
     private void RebuildList(Frame frame, Transform content, List<UpgradeWidget> pool, List<UpgradeHistoryEntry> entries)

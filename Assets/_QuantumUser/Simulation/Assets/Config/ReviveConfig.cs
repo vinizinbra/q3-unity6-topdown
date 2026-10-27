@@ -25,7 +25,7 @@ namespace Quantum
         public FP ReviveProgressDecayRate = FP._0_50;
 
         public FP ReviveHealthPercent = FP.FromString("0.40");
-        public FP ReviveInvulnerabilityDuration = 2;
+        public FP ReviveInvulnerabilityDuration = 1;
         public FP ReviveInteractionRange = 3;
 
         // Brief grace window for the teammate who just completed a revive hold (the revived player
@@ -34,6 +34,6 @@ namespace Quantum
 
         // Grace window for every player once a level-up/chest pick (upgrade or weapon) resolves and
         // gameplay resumes - see LevelUpUtility.Resolve.
-        public FP PostChoiceInvulnerabilityDuration = 1;
+        public FP PostChoiceInvulnerabilityDuration = FP._0_50;
     }
 }

@@ -813,7 +813,7 @@ Beyond the missing assets/wiring:
 
 ## Post-pick grace & Downed revive (2026-10-25)
 
-`Resolve` grants each player a 1s `Invulnerable` window (`ReviveConfig.PostChoiceInvulnerabilityDuration`);
+`Resolve` grants each player a 0.5s `Invulnerable` window (`ReviveConfig.PostChoiceInvulnerabilityDuration`);
 a real level-up (not a Chest) first revives every Downed player. See `docs/revive.md`.
 
 ## Timeout behaviour & urgency feedback (2026-10-25)

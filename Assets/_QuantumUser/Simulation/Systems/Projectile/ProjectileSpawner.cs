@@ -63,13 +63,12 @@ namespace Quantum
             // re-homes velocity later (HomingProjectileMovementData.UpdateVelocity) re-derives its own
             // magnitude, so this only guarantees the multiplier holds for the initial launch.
             //
-            // GetProjectileSpeedMultiplier is 1 for anything without CharacterStats (every enemy
-            // today) - BossPhaseUtility.ResolveProjectileSpeedMultiplier is the enemy-side equivalent
-            // (1 for anything that isn't a boss currently authoring one), composed alongside it here
-            // so this single call site covers both. DifficultyUtility.GetEnemyProjectileSpeed is the
-            // difficulty tier's enemy-only term (1 for any non-Enemy owner).
+            // BossPhaseUtility.ResolveProjectileSpeedMultiplier is the enemy-side term (1 for anything
+            // that isn't a boss currently authoring one). DifficultyUtility.GetEnemyProjectileSpeed is
+            // the difficulty tier's enemy-only term (1 for any non-Enemy owner). There is no hero-wide
+            // projectile speed stat anymore - only the weapon's own multiplier below.
             ProjectileMovementData movement = f.FindAsset(projectileData.Movement);
-            FP totalSpeedMultiplier = StatUtility.GetProjectileSpeedMultiplier(f, owner) * BossPhaseUtility.ResolveProjectileSpeedMultiplier(f, owner)
+            FP totalSpeedMultiplier = BossPhaseUtility.ResolveProjectileSpeedMultiplier(f, owner)
                 * DifficultyUtility.GetEnemyProjectileSpeed(f, owner);
 
             if (speedMultiplier > FP._0)

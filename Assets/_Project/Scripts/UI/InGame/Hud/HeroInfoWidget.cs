@@ -87,6 +87,7 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
         Frame frame = game.Frames.Predicted;
 
         UpdateHeroName(frame);
+        UpdateShieldRow(frame);
         UpdateBaseSkill(frame);
         UpdatePassive(frame);
         RefreshWeaponStats(frame);
@@ -186,6 +187,20 @@ public class HeroInfoWidget : QuantumGlobalMonoBehaviour
     {
         if (text != null && text.gameObject.activeSelf != active)
             text.gameObject.SetActive(active);
+    }
+
+    // ShieldUiWidget simply stops updating for a hero with no shield (Max <= 0), which would leave the
+    // prefab's placeholder text on screen - so the whole shield readout is hidden for that hero instead.
+    // A temporary shield (Brute's Juggernaut) keeps a Max while it can be granted, so it still shows.
+    private void UpdateShieldRow(Frame frame)
+    {
+        if (shieldWidget == null)
+            return;
+
+        bool hasShield = frame.TryGet<Shield>(_entityRef, out var shield) && shield.Max > FP._0;
+
+        if (shieldWidget.gameObject.activeSelf != hasShield)
+            shieldWidget.gameObject.SetActive(hasShield);
     }
 
     private void UpdateHeroName(Frame frame)

@@ -24,7 +24,7 @@ Read `docs/level-up-upgrades.md` first if you haven't touched a ranked Ascension
 
 ## Baseline: deliberately minimal
 
-`SpawnSentrySkillAction` now deploys **one Cannon, 3 range, 10s life, 20s cooldown** — no shield, no
+`SpawnSentrySkillAction` now deploys **one Cannon, 6 range (was 3, too short to fight around), 10s life, 20s cooldown** — no shield, no
 aura, no fire-rate bonus, no on-death explosion. Removed from the baseline and turned into Ascensions:
 Rocket, Minigun, Laser, Shield Battery, Fire Support, Overclock, Extended Range, Overload Core.
 

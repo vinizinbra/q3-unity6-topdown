@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using QuantumUser.View.Util;
 using UnityEditor;
 using UnityEngine;
@@ -130,6 +131,8 @@ namespace Project.Audio.EditorTools
                 return;
             }
 
+            ApplyHeroNaming(_clip);
+
             EditorUtility.DisplayProgressBar("Split Audio by Silence", $"Decoding {_clip.name}...", 0.5f);
             try
             {
@@ -141,6 +144,62 @@ namespace Project.Audio.EditorTools
             }
 
             Redetect();
+        }
+
+        // Fills Base Name and both Prefix fields from the hero the clip belongs to, on every load, so
+        // a Kai recording comes out as KaiRunStarted1... without touching the Naming section. Clip
+        // not recognised as a hero: the fields are left alone, so a hand-typed name survives.
+        private void ApplyHeroNaming(AudioClip clip)
+        {
+            string hero = DetectHero(clip);
+
+            if (hero == null)
+            {
+                return;
+            }
+
+            _settings.BaseName = hero;
+            _settings.SequencePrefix = hero;
+            _transcribe.Prefix = hero;
+        }
+
+        // File name first (KaiFullVoiceOver3), then each parent folder, nearest first (Voice/Kai/...).
+        // A hero name only counts as a word: "Kai" matches KaiVO / final_kai, not "Kaiju" or "Maximum".
+        private static string DetectHero(AudioClip clip)
+        {
+            string path = AssetDatabase.GetAssetPath(clip);
+            List<string> candidates = new List<string> { clip.name };
+
+            for (string folder = Path.GetDirectoryName(path); !string.IsNullOrEmpty(folder); folder = Path.GetDirectoryName(folder))
+            {
+                candidates.Add(Path.GetFileName(folder));
+            }
+
+            string[] heroes = System.Enum.GetNames(typeof(HeroId)).Where(n => n != nameof(HeroId.None)).ToArray();
+
+            foreach (string candidate in candidates)
+            {
+                string best = null;
+                int bestIndex = int.MaxValue;
+
+                foreach (string hero in heroes)
+                {
+                    Match match = Regex.Match(candidate, $"(?<![A-Za-z])(?i:{hero})(?![a-z])|(?-i:{hero})(?![a-z])");
+
+                    if (match.Success && match.Index < bestIndex)
+                    {
+                        best = hero;
+                        bestIndex = match.Index;
+                    }
+                }
+
+                if (best != null)
+                {
+                    return best;
+                }
+            }
+
+            return null;
         }
 
         private void Redetect()
@@ -411,6 +470,8 @@ namespace Project.Audio.EditorTools
             EditorGUILayout.LabelField("Output", EditorStyles.boldLabel);
             _settings.Padding = EditorGUILayout.Slider(
                 new GUIContent("Padding (s)", "Silence kept on each side of a take."), _settings.Padding, 0f, 0.5f);
+            _settings.TrimSilence = EditorGUILayout.Toggle(
+                new GUIContent("Trim Silence", "Cut every take right after its last word (plus Padding), so the pauses between takes aren't kept at the end of each file."), _settings.TrimSilence);
             _settings.Fade = EditorGUILayout.Slider(
                 new GUIContent("Fade (s)", "Short fade on each end, so a cut mid-waveform doesn't click."), _settings.Fade, 0f, 0.1f);
             _settings.Normalize = EditorGUILayout.Toggle(
@@ -1065,6 +1126,14 @@ namespace Project.Audio.EditorTools
                     // name and get uniquified into nonsense.
                     AudioSilenceSplitter.Settings settings = JsonUtility.FromJson<AudioSilenceSplitter.Settings>(JsonUtility.ToJson(_settings));
                     settings.BaseName = "";
+
+                    // Each clip names itself after its own hero; the window-level prefix only
+                    // reflects the clip last loaded.
+                    string clipHero = DetectHero(clips[i]);
+                    if (clipHero != null)
+                    {
+                        settings.SequencePrefix = clipHero;
+                    }
 
                     // Sequence naming is rebuilt per clip, and its prefix falls back to the clip's
                     // own name for the same reason Base Name does - one recording per hero, all

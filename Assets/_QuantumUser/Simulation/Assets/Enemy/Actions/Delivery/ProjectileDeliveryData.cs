@@ -79,6 +79,11 @@ namespace Quantum
             FPVector3 resolvedOrigin = ProjectileSpawner.ResolveSpawnOrigin(origin, targetPosition, filter.Aim->Angle, SpawnAnchor, SpawnOffset);
             ProjectileDataAsset projectileData = f.FindAsset(ProjectileData);
 
+            // Flat straight shot flies at the target's body height, not this enemy's sphere centre -
+            // see ResolveFlatShotY. SolveLaunch then flattens targetPosition onto this same Y.
+            if (action.IgnoreY == true && UseArc == false)
+                resolvedOrigin.Y += ResolveFlatShotY(f, filter.Entity, origin, target) - origin.Y;
+
             FPVector3 lockedPosition = targetPosition;
             ProjectileLaunch launch = SolveLaunch(f, action, projectileData, resolvedOrigin, ref targetPosition, target);
 

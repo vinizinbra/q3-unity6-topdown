@@ -26,7 +26,7 @@ MonoBehaviour:
   CriticalChance:
     RawValue: 13107
   CriticalDamageBonus:
-    RawValue: 163840
+    RawValue: 196608
   FireRate:
     RawValue: 65536
   AnticipationTime:
@@ -111,19 +111,20 @@ MonoBehaviour:
     ProjectileGlowScale: {x: 1, y: 1, z: 1}
     EnableProjectileLight: 1
     ProjectileLightColor: {r: 1, g: 1, b: 1, a: 1}
+    EnableProjectileDestroyEffect: 1
     ProjectileDestroyColor: {r: 0, g: 1.245172, b: 2, a: 1}
     ProjectileDestroyGlowColor: {r: 0, g: 0.8518257, b: 1, a: 1}
     ProjectileDestroyScale: {x: 1, y: 1, z: 1}
     ProjectileExtraParticle: {fileID: 0}
     ProjectileExtraParticleScale: {x: 1, y: 1, z: 1}
-  _dpsPreview: 'Burst DPS: 130
+  _dpsPreview: 'Burst DPS: 140
 
-    Sustained DPS (incl. reload): 86.7
+    Sustained DPS (incl. reload): 93.3
 
     Damage/min:
-    5200
+    5600
 
-    Crit dmg/shot: 250 (vs 100 normal) @ 20 % chance, x2.5
+    Crit dmg/shot: 300 (vs 100 normal) @ 20 % chance, x3
 
-    Not in
-    DPS (unmodelled traits): Deep Freeze'
+    Not in DPS
+    (unmodelled traits): Deep Freeze'

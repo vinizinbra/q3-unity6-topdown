@@ -68,7 +68,7 @@ namespace QuantumUser.Editor
             config.ReviveMoveSpeedMultiplier = FP.FromString("0.30");
             config.ReviveProgressDecayRate = FP._0_50;
             config.ReviveHealthPercent = FP.FromString("0.40");
-            config.ReviveInvulnerabilityDuration = 2;
+            config.ReviveInvulnerabilityDuration = 1;
             config.ReviveInteractionRange = 3;
 
             FinalizeAsset(config, ReviveConfigPath, isNew);

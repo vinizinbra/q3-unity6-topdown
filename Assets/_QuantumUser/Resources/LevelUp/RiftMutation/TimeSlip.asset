@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756a5aac327774a9895bfbb93ce67d94, type: 3}
+  m_Name: TimeSlip
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.TimeSlipMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/TimeSlip
+    Guid:
+      Value: 323526582276840954
+  Icon: {fileID: 5780534662424010148, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  DisplayName: Time Slip
+  Rarity: 2
+  Scope: 0
+  IncompatibleWith: []
+  Description: Dashing heals {0:0}% of the damage you took in the last {1:0.#}s
+  RewindFraction:
+    RawValue: 32768
+  Window:
+    RawValue: 65536

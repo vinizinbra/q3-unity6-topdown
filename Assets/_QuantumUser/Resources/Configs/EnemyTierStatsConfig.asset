@@ -30,7 +30,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 2621
     CoinValue:
-      RawValue: 327680
+      RawValue: 229376
     CoinDropChance:
       RawValue: 65536
     Shield:
@@ -60,7 +60,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 7864
     CoinValue:
-      RawValue: 655360
+      RawValue: 458752
     CoinDropChance:
       RawValue: 65536
     Shield:
@@ -90,7 +90,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 65536
     CoinValue:
-      RawValue: 2621440
+      RawValue: 1835008
     CoinDropChance:
       RawValue: 65536
     Shield:
@@ -120,7 +120,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 65536
     CoinValue:
-      RawValue: 3276800
+      RawValue: 2293760
     CoinDropChance:
       RawValue: 65536
     Shield:
@@ -150,7 +150,7 @@ MonoBehaviour:
     RiftShardDropChance:
       RawValue: 65536
     CoinValue:
-      RawValue: 6553600
+      RawValue: 4587520
     CoinDropChance:
       RawValue: 65536
     Shield:

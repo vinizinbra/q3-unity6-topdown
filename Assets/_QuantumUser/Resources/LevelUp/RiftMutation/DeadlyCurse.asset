@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dcc1c0234d1d43aaadd400df8736b83, type: 3}
+  m_Name: DeadlyCurse
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.DeadlyCurseMutationData
+  Identifier:
+    Path: _QuantumUser/Resources/LevelUp/RiftMutation/DeadlyCurse
+    Guid:
+      Value: 517343898106316950
+  Icon: {fileID: 5975183571883052661, guid: 786b17c7e01304ee2a7436d749b69e8e, type: 3}
+  DisplayName: Deadly Curse
+  Rarity: 3
+  Scope: 0
+  IncompatibleWith:
+  - Id:
+      Value: 325283577507392568
+  Description: +{0:0}% Damage, but {1:+0;-0}% Max Health
+  DamageBonus:
+    RawValue: 39322
+  HealthMultiplier:
+    RawValue: 32768

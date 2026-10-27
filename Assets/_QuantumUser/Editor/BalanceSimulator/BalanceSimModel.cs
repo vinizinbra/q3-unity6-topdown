@@ -61,6 +61,10 @@ namespace QuantumUser.Editor.BalanceSimulator
             MaxShield = D(data.BaseMaxShield),
         };
 
+        // Picks taken so far of each cooldown upgrade - CooldownReductionUpgradeData's step depends on it.
+        public int SkillCooldownPicks;
+        public int DashCooldownPicks;
+
         public SimStats Clone() => (SimStats)MemberwiseClone();
 
         // Returns false when the upgrade has no effect the simulator tracks (move speed, regen...).
@@ -77,8 +81,9 @@ namespace QuantumUser.Editor.BalanceSimulator
                 case CriticalChanceUpgradeData crit: CriticalChance += D(crit.Chance); return true;
                 case CriticalDamageUpgradeData: CriticalDamageMultiplier *= m; return true;
                 case SkillDamageUpgradeData: SkillDamageMultiplier *= m; return true;
-                case SkillCooldownUpgradeData: SkillCooldownMultiplier *= m; return true;
-                case DashCooldownUpgradeData: DashCooldownMultiplier *= m; return true;
+                // Exact per-pick totals (-15/-30/-50%) - the same step CooldownReductionUpgradeData.Apply uses.
+                case SkillCooldownUpgradeData cd: SkillCooldownMultiplier *= D(cd.GetRateStep(SkillCooldownPicks++)); return true;
+                case DashCooldownUpgradeData cd: DashCooldownMultiplier *= D(cd.GetRateStep(DashCooldownPicks++)); return true;
                 case SkillAreaUpgradeData: AreaRadiusMultiplier *= m; return true;
                 case ExperienceGainUpgradeData: ExperienceGainMultiplier *= m; return true;
                 case CoinGainUpgradeData: CoinGainMultiplier *= m; return true;

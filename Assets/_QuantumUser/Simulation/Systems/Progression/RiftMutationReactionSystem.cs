@@ -14,7 +14,7 @@ namespace Quantum
     [Preserve]
     public unsafe class RiftMutationReactionSystem : SystemMainThread, ISignalOnCriticalHit, ISignalOnEntityKilled,
         ISignalOnAccessoryBlocked, ISignalOnAccessoryRecovered, ISignalOnHealthDamageApplied, ISignalOnShieldDamageApplied,
-        ISignalOnDestructibleBroken
+        ISignalOnDestructibleBroken, ISignalOnSkillActivated, ISignalOnWeaponHitLanded
     {
         public override void Update(Frame f)
         {
@@ -56,6 +56,9 @@ namespace Quantum
         // overwrites on reapply, so repeated kills REFRESH the window rather than stacking it.
         public void OnEntityKilled(Frame f, EntityRef target, EntityRef owner, DamageSource source)
         {
+            // Lifesaver - a kill inside the window is the way out (no-op when the window isn't open).
+            MutationCombatUtility.OnKill(f, owner);
+
             if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false
                 || stats->NearKillMoveSpeedBonus <= FP._0
                 || stats->NearKillMoveSpeedDuration <= FP._0)
@@ -116,6 +119,7 @@ namespace Quantum
             {
                 ResetPressureCooker(f, target, stats);
                 ApplyBloodMoneyLoss(f, target, stats);
+                MutationCombatUtility.RecordDamageTaken(f, target, amount); // Time Slip
             }
 
             // Executioner - keyed off the OWNER's own stats (whoever dealt THIS hit), not the
@@ -254,6 +258,19 @@ namespace Quantum
             }
 
             Log.Debug($"[RiftMutation] Scavenger Rush triggered for {owner} - {entity} destroyed, buff for {stats->ScavengerBuffDuration}s");
+        }
+
+        // Time Slip / Slipstream / Third Step - every Dash, including a paid Infinite Momentum one.
+        public void OnSkillActivated(Frame f, EntityRef entity, SkillSlotId slotId)
+        {
+            if (slotId == SkillSlotId.DashSkill)
+                MutationCombatUtility.OnDashActivated(f, entity);
+        }
+
+        // Merciless Combo - a real landed weapon hit (OnWeaponHitLanded already excludes DoT ticks).
+        public void OnWeaponHitLanded(Frame f, EntityRef target, EntityRef owner)
+        {
+            MutationCombatUtility.OnWeaponHitLanded(f, owner);
         }
     }
 }

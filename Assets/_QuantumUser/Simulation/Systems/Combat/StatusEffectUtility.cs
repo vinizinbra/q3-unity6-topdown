@@ -1071,6 +1071,10 @@ namespace Quantum
         private static void ApplyElementBaseline(Frame f, EntityRef target, EntityRef owner,
             DamageSource source, ElementType element, FP hitDamage, ElementalReactionConfig config)
         {
+            // Elemental Bestowment (Rift Mutation) - applying any baseline status heals the applier.
+            if (element != ElementType.Neutral)
+                MutationCombatUtility.TryElementHeal(f, owner);
+
             switch (element)
             {
                 case ElementType.Fire:

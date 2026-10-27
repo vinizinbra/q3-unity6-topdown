@@ -21,7 +21,6 @@ component CharacterStats
     FP AttackSpeedMultiplier;
     FP ReloadSpeedMultiplier;
 
-    FP ProjectileSpeedMultiplier;
     FP AreaRadiusMultiplier;
 
     // Attacker-side range falloff - DamageUtility.ResolveRangeDamageMultiplier lerps between these
@@ -38,6 +37,10 @@ component CharacterStats
     // Dash and Hero Skill are picked independently at level-up - see StatUtility.GetSkillCooldown.
     FP DashCooldownMultiplier;
     FP SkillCooldownMultiplier;
+
+    // Scales DashSkillData.DashDistance at Begin (1 = authored distance) - read through
+    // StatUtility.GetDashDistanceMultiplier by the dash itself and by the bot's dash planning.
+    FP DashDistanceMultiplier;
 
     // Scales how long a skill's spawned effects last - a decoy, a fire trail. Only applies to
     // DamageSource.Skill, so a weapon-spawned area keeps its authored lifetime.
@@ -346,4 +349,69 @@ component CharacterStats
     // off for that tier. Checked only against damage whose OWNER holds this mutation - see
     // RiftMutationReactionSystem.OnHealthDamageApplied.
     array<FP>[6] ExecutionThresholds;
+
+    // ---- 2026-10-26 mutation pass (docs/rift-mutations.md). Every field is 0 = off. ----
+
+    // Spirit Feline: no single incoming hit can take more than this fraction of MaxHealth (applied
+    // after every DR/vulnerability term, before Armor/Shield). Its "-100% resistance" half rides the
+    // existing DamageTakenMultiplier.
+    FP HitDamageCapFraction;
+
+    // Deflection Shield: incoming-damage multipliers by attacker distance - beyond / within
+    // DamageUtility.RangeDamageNearThreshold. 0 = off (read as 1).
+    FP RangedDamageTakenMultiplier;
+    FP CloseDamageTakenMultiplier;
+
+    // Lifesaver: a lethal hit instead leaves you at 1 HP, immune, with LifesaverDuration seconds to
+    // get a kill (heal LifesaverSurviveHealFraction of MaxHealth) or go down anyway. Charges are spent
+    // on trigger - one per run. LifesaverRemaining > 0 is the live window.
+    Byte LifesaverCharges;
+    FP LifesaverDuration;
+    FP LifesaverRemaining;
+    FP LifesaverSurviveHealFraction;
+
+    // Time Slip: Dashing heals DashRewindFraction of the HEALTH damage taken in the last
+    // DashRewindWindow seconds. A small ring of (time, amount) entries - older ones simply age out.
+    FP DashRewindFraction;
+    FP DashRewindWindow;
+    array<FP>[8] RecentDamageAmounts;
+    array<FP>[8] RecentDamageTimes;
+    Byte RecentDamageHead;
+
+    // Slipstream: a timed Move Speed buff on every Dash (generic temp-move-speed slot).
+    FP DashMoveSpeedBonus;
+    FP DashMoveSpeedDuration;
+
+    // Third Step: every DashRefundInterval-th Dash hands its charge straight back.
+    Byte DashRefundInterval;
+    Byte DashRefundProgress;
+
+    // Merciless Combo: landed weapon hits add a stack (+ComboDamagePerStack Weapon Damage), at most one
+    // per ComboStackInterval seconds, up to ComboMaxStacks; ComboDecayTime seconds without a hit drops
+    // them all. ComboTimer / ComboGainCooldown count down.
+    FP ComboDamagePerStack;
+    Byte ComboMaxStacks;
+    Byte ComboStacks;
+    FP ComboDecayTime;
+    FP ComboTimer;
+    FP ComboStackInterval;
+    FP ComboGainCooldown;
+
+    // Giant Slayer: a weapon hit deals bonus damage equal to this fraction of the target's CURRENT
+    // health (Boss tier uses the Boss fraction), never more than CurrentHealthBonusHitCap x the hit.
+    FP CurrentHealthDamageFraction;
+    FP CurrentHealthDamageBossFraction;
+    FP CurrentHealthBonusHitCap;
+
+    // Sanguine Relic: LifeSteal (above, finally read) heals that fraction of damage dealt to enemies,
+    // capped at LifeStealCapPerSecond x MaxHealth per rolling 1s window.
+    FP LifeStealCapPerSecond;
+    FP LifeStealWindowTimer;
+    FP LifeStealHealedInWindow;
+
+    // Elemental Bestowment: applying Burn/Chill/Shock heals ElementHealFraction of MaxHealth, at most
+    // once per ElementHealCooldown seconds.
+    FP ElementHealFraction;
+    FP ElementHealCooldown;
+    FP ElementHealCooldownRemaining;
 }

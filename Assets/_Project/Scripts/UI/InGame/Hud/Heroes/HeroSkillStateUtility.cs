@@ -49,6 +49,17 @@ public static class HeroSkillStateUtility
         if (frame.Exists(entity) == false)
             return false;
 
+        // Lifesaver's "get a kill" window outranks everything: it is the one thing on screen that
+        // decides whether this player survives, so the ring and the 3-2-1 countdown show it.
+        if (frame.TryGet<CharacterStats>(entity, out var stats) && stats.LifesaverRemaining > FP._0 && stats.LifesaverDuration > FP._0)
+        {
+            state.Active = true;
+            state.Full = true;
+            state.SecondsLeft = stats.LifesaverRemaining.AsFloat;
+            state.Fill = Mathf.Clamp01((stats.LifesaverRemaining / stats.LifesaverDuration).AsFloat);
+            return true;
+        }
+
         // Passives first: the component is hero-specific, so a hero that owns one is showing THAT
         // meter on its ring, whatever else its Hero Skill happens to do.
         if (frame.TryGet<ZaraFlow>(entity, out var flow))

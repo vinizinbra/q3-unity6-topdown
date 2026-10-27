@@ -24,7 +24,7 @@ MonoBehaviour:
     Chance:
       RawValue: 65536
     Value:
-      RawValue: 3276800
+      RawValue: 1966080
     Count: 1
   - Prototype:
       Id:

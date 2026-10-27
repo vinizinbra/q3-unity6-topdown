@@ -45,3 +45,8 @@ Passives are checked first (the component is hero-specific). A future timed skil
 - Fill-ring colour is derived from `CharacterData.RingColor`; a hero whose ring is already yellow gets a yellow-green
   fill - override with `skillFillColor` if one looks off.
 - Verified in-Editor 2026-10-22 (Max, Brute, Zara, Lux; Zara/Lux meters were forced through the Verified frame).
+
+
+## Lifesaver window (2026-10-26)
+
+`HeroSkillStateUtility.TryGet` checks `CharacterStats.LifesaverRemaining` FIRST: while the Lifesaver Rift Mutation's "get a kill" window is open it reports a timed, full state (`SecondsLeft` = remaining, `Fill` = remaining / duration), so the foot ring and the big 3-2-1 countdown show the window for every player - it outranks the hero's own skill/passive state because it decides whether the player survives.

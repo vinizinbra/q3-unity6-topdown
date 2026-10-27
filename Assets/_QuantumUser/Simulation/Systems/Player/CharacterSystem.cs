@@ -60,7 +60,6 @@ namespace Quantum
             stats->AttackSpeedMultiplier = data.AttackSpeedMultiplier;
             stats->ReloadSpeedMultiplier = data.ReloadSpeedMultiplier;
 
-            stats->ProjectileSpeedMultiplier = data.ProjectileSpeedMultiplier;
             stats->AreaRadiusMultiplier = data.AreaRadiusMultiplier;
 
             stats->NearDamageMultiplier = data.NearDamageMultiplier;
@@ -68,6 +67,7 @@ namespace Quantum
 
             stats->DashCooldownMultiplier = data.DashCooldownMultiplier;
             stats->SkillCooldownMultiplier = data.SkillCooldownMultiplier;
+            stats->DashDistanceMultiplier = data.DashDistanceMultiplier;
             stats->SkillDurationMultiplier = data.SkillDurationMultiplier;
             stats->KnockbackMultiplier = data.KnockbackMultiplier;
 

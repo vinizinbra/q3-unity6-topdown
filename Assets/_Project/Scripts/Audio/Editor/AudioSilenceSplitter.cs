@@ -50,6 +50,9 @@ namespace Project.Audio.EditorTools
             [Tooltip("Seconds of the surrounding silence kept on each side, so a segment doesn't start hard on the first syllable.")]
             public float Padding = 0.05f;
 
+            [Tooltip("Cut each take at the end of its last spoken word (plus Padding) instead of letting it run on to the next take, so the pauses between takes don't ride along inside the file. Start is always the first word minus Padding.")]
+            public bool TrimSilence = true;
+
             [Tooltip("Fade applied to each end of every segment. A few ms is enough to kill the click from cutting mid-waveform.")]
             public float Fade = 0.005f;
 
@@ -319,6 +322,7 @@ namespace Project.Audio.EditorTools
             // A small lead-in rather than a hard cut on the first sample of speech: opening exactly
             // on the onset shaves the attack off a plosive and can click. It is short enough not to
             // read as silence, and Padding = 0 still gives the exact onset for anyone who wants it.
+            // The same Padding is kept after the last word when TrimSilence is on.
             int pad = Mathf.RoundToInt(settings.Padding * data.Frequency);
 
             for (int s = 0; s < startRuns.Count; s++)
@@ -337,6 +341,13 @@ namespace Project.Audio.EditorTools
                 int end = s + 1 < startRuns.Count
                     ? Mathf.Max(start + 1, runs[startRuns[s + 1]].StartFrame - pad)
                     : data.Frames;
+
+                // Trim mode ends the take where its own last word ends. Only ever shortens: the
+                // next take's lead-in is still the hard limit.
+                if (settings.TrimSilence)
+                {
+                    end = Mathf.Min(end, runs[lastRun].EndFrame + pad);
+                }
 
                 segments.Add(new Segment
                 {

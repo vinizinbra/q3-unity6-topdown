@@ -130,7 +130,7 @@ namespace Quantum
             // reusing the Invulnerable tag" shape CheatDeathUtility already established.
             if (f.Unsafe.TryGetPointer<StatusEffects>(target, out var status) == true)
             {
-                FP invulnDuration = config != null ? config.ReviveInvulnerabilityDuration : 2;
+                FP invulnDuration = config != null ? config.ReviveInvulnerabilityDuration : 1;
                 status->ReviveImmunityRemaining = invulnDuration;
             }
 

@@ -31,18 +31,6 @@ MonoBehaviour:
     Cooldown: 30
     Priority: 1
     Audience: 0
-  - name: BossStarted
-    Trigger: 4
-    Probability: 1
-    Cooldown: 0
-    Priority: 2
-    Audience: 2
-  - name: BossDefeated
-    Trigger: 5
-    Probability: 1
-    Cooldown: 0
-    Priority: 2
-    Audience: 2
   - name: HeroSkillUsed
     Trigger: 10
     Probability: 0.2
@@ -73,6 +61,12 @@ MonoBehaviour:
     Cooldown: 15
     Priority: 1
     Audience: 0
+  - name: EliteSpawned
+    Trigger: 31
+    Probability: 0.6
+    Cooldown: 25
+    Priority: 1
+    Audience: 2
   - name: AbilityNotReady
     Trigger: 40
     Probability: 1
@@ -91,12 +85,6 @@ MonoBehaviour:
     Cooldown: 0
     Priority: 3
     Audience: 2
-  - name: TeammateDowned
-    Trigger: 53
-    Probability: 0.8
-    Cooldown: 8
-    Priority: 2
-    Audience: 0
   - name: RevivingTeammate
     Trigger: 55
     Probability: 0.6
@@ -145,11 +133,47 @@ MonoBehaviour:
     Cooldown: 5
     Priority: 1
     Audience: 0
-  - name: HeroExceptionalEvent
-    Trigger: 90
+  - name: ChallengeStarted
+    Trigger: 80
     Probability: 1
-    Cooldown: 20
+    Cooldown: 0
+    Priority: 1
+    Audience: 2
+  - name: ChallengeAccepted
+    Trigger: 81
+    Probability: 1
+    Cooldown: 0
+    Priority: 1
+    Audience: 2
+  - name: ChallengeFailed
+    Trigger: 82
+    Probability: 1
+    Cooldown: 0
     Priority: 2
-    Audience: 1
+    Audience: 2
+  - name: ChallengeCulprit
+    Trigger: 83
+    Probability: 1
+    Cooldown: 0
+    Priority: 2
+    Audience: 2
+  - name: PingElite
+    Trigger: 100
+    Probability: 0.6
+    Cooldown: 10
+    Priority: 1
+    Audience: 2
+  - name: PingPoi
+    Trigger: 101
+    Probability: 0.5
+    Cooldown: 15
+    Priority: 1
+    Audience: 2
+  - name: PingReviveMe
+    Trigger: 102
+    Probability: 1
+    Cooldown: 8
+    Priority: 2
+    Audience: 2
   perSpeakerCooldown: 4
   globalCooldown: 2

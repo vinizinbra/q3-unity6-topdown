@@ -614,7 +614,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ParticleSound
   mode: 0
-  sound: {fileID: 11400000, guid: 58bcd8d43411c48fab7da064cf22cf56, type: 2}
+  sound: {fileID: 11400000, guid: ae937b31f4df3480193c404cabcd1437, type: 2}
   loop:
     intro: {fileID: 0}
     loop: {fileID: 0}

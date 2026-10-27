@@ -39,17 +39,21 @@ namespace QuantumUser.View.Util
         // docs/elemental-reactions.md's "Current status").
         private EnemyBlobAnimationView _enemyBlobAnimationView;
 
-        [Header("Immunity Pulse (players)")]
-        [SerializeField, Tooltip("White flash blinked on the hero (and its weapon) while the Invulnerable grace window is open (post-revive, post-pick, reviver). Keep RGB white - on the Status Colorise Flash shader non-white RGB colorizes instead of flashing; alpha is the flash strength at the peak.")]
-        private Color immunityColor = new Color(1f, 1f, 1f, 0.85f);
-        [SerializeField, Tooltip("Pulses per second while the window is open.")]
-        private float immunityPulseRate = 2f;
-        [SerializeField, Tooltip("Pulses per second during the last 'Immunity Urgent Seconds' of the window.")]
-        private float immunityUrgentPulseRate = 4f;
-        [SerializeField, Tooltip("How long before the window ends the pulse speeds up.")]
-        private float immunityUrgentSeconds = 0.3f;
+        [Header("Immunity Blink (players)")]
+        [SerializeField, Tooltip("Blinks per second (hero + equipped weapon sprites toggle on/off) while the Invulnerable grace window is open - post-revive, post-pick, reviver.")]
+        private float immunityBlinkRate = 4f;
+        [SerializeField, SoundDataPicker, Tooltip("Played once when the grace window opens. Leave empty to skip (no sound authored yet).")]
+        private SoundData immunityStartSound;
+        [SerializeField, SoundDataPicker, Tooltip("Played once when the grace window closes. Leave empty to skip (no sound authored yet).")]
+        private SoundData immunityEndSound;
 
-        private bool _immunityPulsing;
+        private bool _immunityActive;
+        private bool _immunityHidden;
+        private bool _immunityVisible = true;
+        private GameObject _weaponInstance;
+        private WeaponViewController _weaponController;
+        private bool _weaponControllerSearched;
+        private readonly List<SpriteRenderer> _weaponRenderers = new List<SpriteRenderer>();
 
         [Header("Hit Flash")]
         [SerializeField, HideIf(nameof(HasFxConfig)), Tooltip("Used for a Neutral-element hit (plain weapon/skill damage) - everything without a more specific color below. Ignored (hidden) once Fx Config above is assigned - see ApplyFxConfig.")]
@@ -301,98 +305,76 @@ namespace QuantumUser.View.Util
             UpdateImmunityPulse(frame);
         }
 
-        // Players only: pulses the tint while the grace window (StatusEffects.ReviveImmunityRemaining -
-        // post-revive, reviver, post-pick) is open. Skipped for Max's Cheat Death (MaxImmortalView has
-        // its own aura), for Downed/KO (Invulnerable is just their life state), and while any flash
-        // tween is playing - a hit/heal/pickup flash always wins, the pulse resumes right after.
+        // Players only: blinks hero + equipped weapon sprites (renderer.enabled) while the grace window
+        // (StatusEffects.ReviveImmunityRemaining - post-revive, reviver, post-pick) is open. Skipped for
+        // Max's Cheat Death (MaxImmortalView has its own aura) and Downed/KO.
         private void UpdateImmunityPulse(Frame frame)
         {
             bool eligible = frame.Has<PlayerLink>(_entityRef) && frame.Has<StatusEffects>(_entityRef)
                 && PlayerLifeStateUtility.IsIncapacitated(frame, _entityRef) == false;
 
-            FP remaining = eligible ? frame.Get<StatusEffects>(_entityRef).ReviveImmunityRemaining : FP._0;
-            bool active = eligible && remaining > FP._0 && frame.Has<Invulnerable>(_entityRef)
-                && frame.Get<StatusEffects>(_entityRef).CheatDeathImmunityRemaining <= FP._0;
+            StatusEffects status = eligible ? frame.Get<StatusEffects>(_entityRef) : default;
+            bool active = eligible && status.ReviveImmunityRemaining > FP._0 && frame.Has<Invulnerable>(_entityRef)
+                && status.CheatDeathImmunityRemaining <= FP._0;
+
+            if (active != _immunityActive)
+            {
+                _immunityActive = active;
+                SoundData sound = active ? immunityStartSound : immunityEndSound;
+                if (sound != null)
+                    EntitySound.PlayAttached(sound, transform, _entityRef);
+            }
 
             if (active == false)
             {
-                if (_immunityPulsing)
-                {
-                    _immunityPulsing = false;
-                    ApplyRestColor();
-                }
+                if (_immunityHidden)
+                    SetImmunityVisible(true);
 
                 return;
             }
 
-            if (_tweens != null && _tweens.Length > 0 && _tweens[0].isAlive)
-                return;
-
-            _immunityPulsing = true;
-
-            float left = remaining.AsFloat;
-            float rate = left <= immunityUrgentSeconds ? immunityUrgentPulseRate : immunityPulseRate;
-            // Sharpened sine (near on/off blink, readable at the gameplay camera's distance). Only the
-            // ALPHA (mix strength) animates - lerping RGB from restColor (clear black on heroes) would
-            // darken the sprite at the troughs instead of leaving it untinted.
-            float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * rate * Mathf.PI * 2f);
-            float pulse = Mathf.SmoothStep(0f, 1f, Mathf.SmoothStep(0f, 1f, wave));
-            Color color = immunityColor;
-            color.a = Mathf.Lerp(restColor.a, immunityColor.a, pulse);
-
-            for (var i = 0; i < sprites.Length; i++)
-                sprites[i].color = color;
-
-            RefreshWeaponRenderers();
-            for (var i = 0; i < _weaponRenderers.Count; i++)
-                _weaponRenderers[i].color = color;
+            bool visible = Mathf.Sin(Time.unscaledTime * immunityBlinkRate * Mathf.PI * 2f) >= 0f;
+            SetImmunityVisible(visible);
         }
 
-        // The equipped weapon's SpriteRenderers (swapped at runtime by WeaponViewController), cached per
-        // weapon instance. Only renderers on the same flash shader as the hero are included - on any
-        // other shader a white/alpha colour would fade the sprite instead of flashing it.
-        private WeaponViewController _weaponController;
-        private GameObject _weaponInstance;
-        private readonly List<SpriteRenderer> _weaponRenderers = new List<SpriteRenderer>();
-        private readonly List<Color> _weaponRestColors = new List<Color>();
-
-        private void RefreshWeaponRenderers()
+        // Only touches renderers when visibility actually flips (~20 writes/s total, no per-frame work);
+        // the weapon's renderers are re-collected only when the equipped weapon instance changes.
+        private void SetImmunityVisible(bool visible)
         {
-            if (_weaponController == null)
-                _weaponController = GetComponentInChildren<WeaponViewController>();
+            GameObject weapon = null;
 
-            GameObject instance = _weaponController != null ? _weaponController.CurrentWeaponInstance : null;
-            if (instance == _weaponInstance)
-                return;
-
-            _weaponInstance = instance;
-            _weaponRenderers.Clear();
-            _weaponRestColors.Clear();
-
-            if (instance == null || sprites == null || sprites.Length == 0 || sprites[0].sharedMaterial == null)
-                return;
-
-            Shader flashShader = sprites[0].sharedMaterial.shader;
-            var found = instance.GetComponentsInChildren<SpriteRenderer>(true);
-            for (var i = 0; i < found.Length; i++)
+            if (_weaponControllerSearched == false)
             {
-                if (found[i].sharedMaterial == null || found[i].sharedMaterial.shader != flashShader)
-                    continue;
-
-                _weaponRenderers.Add(found[i]);
-                _weaponRestColors.Add(found[i].color);
+                _weaponControllerSearched = true;
+                _weaponController = GetComponentInChildren<WeaponViewController>();
             }
-        }
 
-        private void ApplyRestColor()
-        {
+            if (_weaponController != null)
+                weapon = _weaponController.CurrentWeaponInstance;
+
+            bool weaponChanged = weapon != _weaponInstance;
+            if (weaponChanged)
+            {
+                _weaponInstance = weapon;
+                _weaponRenderers.Clear();
+
+                if (weapon != null)
+                    weapon.GetComponentsInChildren(true, _weaponRenderers);
+            }
+
+            if (visible == _immunityVisible && weaponChanged == false)
+                return;
+
+            _immunityVisible = visible;
+            _immunityHidden = visible == false;
+
             for (var i = 0; i < sprites.Length; i++)
-                sprites[i].color = restColor;
+                sprites[i].enabled = visible;
 
             for (var i = 0; i < _weaponRenderers.Count; i++)
             {
                 if (_weaponRenderers[i] != null)
-                    _weaponRenderers[i].color = _weaponRestColors[i];
+                    _weaponRenderers[i].enabled = visible;
             }
         }
 

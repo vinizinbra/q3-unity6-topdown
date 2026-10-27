@@ -65,9 +65,10 @@ ways to run it:
   `WeaponWeight.Medium` and simply never matches a Light or Heavy Mastery. `Medium` is the enum's ordinal-0 default deliberately, so an un-tagged weapon reads as
   neutral rather than silently getting the Light speed bonus or Heavy penalty (see below).
   **Move speed**: `WeaponWeightUtility.GetMoveSpeedMultiplier` (`Systems/Weapon/`) resolves the
-  equipped weapon's Weight into +5%/0%/-5% (Light/Medium/Heavy), read by `PlayerMovementProcessor.
-  BeforeMove` in the same `targetSpeed *= X.ResolveY(...)` chain every other move-speed contributor
-  (CharacterStats/StatusEffect/MutationModifier) already uses - a general weapon property, not part of
+  equipped weapon's Weight into +5%/0%/-5% (Light/Medium/Heavy), folded in by
+  `StatUtility.ResolveBaselineMoveSpeedMultiplier` together with the other always-on move-speed terms
+  (CharacterStats/timed buffs/MutationModifier) - `PlayerMovementProcessor` and the Hero Info "Move
+  Speed" row both read that one helper. A general weapon property, not part of
   Hero Mastery, so it lives in its own utility rather than duplicating resolution logic inside Mastery.
   One Mastery hook: `WeaponWeightMasteryData.IgnoreMoveSpeedPenaltyAtMaxRank` (on for Brute's and Kai's
   Heavy lines) sets `WeaponWeightMastery.IgnoreMoveSpeedPenalty` at R3, and the utility then returns 1x

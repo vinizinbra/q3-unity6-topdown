@@ -23,6 +23,6 @@ MonoBehaviour:
   IncompatibleWith: []
   Description: +{0:0.#}% Damage per {1:0} Coins you are carrying, up to +{2:0}%
   DamagePerHundredCoins:
-    RawValue: 3277
+    RawValue: 983
   MaxDamageBonus:
-    RawValue: 26214
+    RawValue: 39322

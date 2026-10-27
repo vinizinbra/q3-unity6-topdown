@@ -1029,9 +1029,13 @@ event TeamChallengeCompleted
 // HP loss, or a Cursed Survival incapacitation) - View-only hook for the whole-team
 // "CHALLENGE FAILED" toast (TeamChallengeWidget). State is already Completed by the time this
 // fires - one attempt only, no retry.
+// Culprit is the Raider whose HP loss (Flawless Hunt) or incapacitation (Cursed Survival) ended
+// the attempt - the voice "sorry guys" speaker. None for a failure nobody caused (timeout, run
+// ending mid-challenge).
 event TeamChallengeFailed
 {
     EntityRef Poi;
+    EntityRef Culprit;
 }
 
 // Fired by PlayerLifeStateUtility.EnterDowned the instant a player's Health hits 0 (see
@@ -1233,4 +1237,19 @@ event ExplosiveRoundDetonated
     EntityRef  Owner;
     FPVector3  Position;
     FP         Radius;
+}
+
+// Lifesaver Rift Mutation (docs/rift-mutations.md, 2026-10-26 pass) - a lethal hit opened the
+// "get a kill or go down" window (Duration seconds), and that window closed (Survived = a kill landed in
+// time). The View announces it for the local player; the countdown itself rides HeroSkillStateUtility.
+event LifesaverTriggered
+{
+    EntityRef Entity;
+    FP Duration;
+}
+
+event LifesaverEnded
+{
+    EntityRef Entity;
+    Boolean Survived;
 }

@@ -53,6 +53,16 @@ namespace Quantum
             return baseCooldown / multiplier;
         }
 
+        // Plain size multiplier on DashSkillData.DashDistance (1 = authored), like GetAreaMultiplier
+        // below. Read by the dash itself and by the bot's dash planning so they agree.
+        public static FP GetDashDistanceMultiplier(Frame f, EntityRef owner)
+        {
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
+                return FP._1;
+
+            return stats->DashDistanceMultiplier;
+        }
+
         // Multiplies rather than divides, unlike the rate-based stats above - AreaRadiusMultiplier
         // expresses a size directly (1 = authored size), same convention as SkillSlot.AreaMultiplier
         // it stacks alongside (see HitPathSkillAction/SpawnEntitySkillAction).
@@ -85,15 +95,22 @@ namespace Quantum
             return stats->DamageMultiplier * stats->SkillDamageMultiplier;
         }
 
-        // Same shape as GetAreaMultiplier - a plain size multiplier (1 = authored speed), folded
-        // into a projectile's spawn velocity once in ProjectileSpawner.Spawn rather than threaded
-        // through every ProjectileMovementData subclass's own Speed field.
-        public static FP GetProjectileSpeedMultiplier(Frame f, EntityRef owner)
+        // Every always-on build term of the player's move speed - CharacterStats, timed buffs (Energy
+        // Drink, Scavenger Rush, Close Quarters), Weapon Weight (Light x1.05 / Heavy x0.95) and live
+        // Rift Mutation bonuses (Danger Pay). Deliberately excludes crowd-control (Ice/Tar slow, Stun/
+        // Root) and revive channelling, which are momentary states rather than the build. Shared by
+        // PlayerMovementProcessor and the Hero Info "Move Speed" row so they can never disagree.
+        public static FP ResolveBaselineMoveSpeedMultiplier(Frame f, EntityRef owner)
         {
-            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == false)
-                return FP._1;
+            FP multiplier = FP._1;
 
-            return stats->ProjectileSpeedMultiplier;
+            if (f.Unsafe.TryGetPointer<CharacterStats>(owner, out var stats) == true)
+                multiplier *= stats->MoveSpeedMultiplier;
+
+            multiplier *= StatusEffectUtility.GetTempMoveSpeedMultiplier(f, owner);
+            multiplier *= WeaponWeightUtility.GetMoveSpeedMultiplier(f, owner);
+            multiplier *= MutationModifierUtility.ResolveLiveMoveSpeedMultiplier(f, owner);
+            return multiplier;
         }
 
         // The wielder's per-character WeaponPosition, mirrored onto the muzzle: X flips sign with

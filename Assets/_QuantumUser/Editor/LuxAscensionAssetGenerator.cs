@@ -351,7 +351,7 @@ namespace QuantumUser.Editor
             }
 
             spawn.Duration = 10;
-            spawn.Range = 3;
+            spawn.Range = 6;
             spawn.SkillDamage = 20;
             spawn.BaselineWeapon = LoadWeapon(BaselineCannonPath);
             spawn.BaselineWeaponOffset = new FPVector3(-FP._0_50, FP._0_50, FP._0_50);

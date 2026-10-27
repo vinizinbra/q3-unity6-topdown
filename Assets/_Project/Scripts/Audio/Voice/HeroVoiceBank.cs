@@ -66,7 +66,7 @@ public class HeroVoiceBank : ScriptableObject
         "Several clips on one entry are VARIANTS of the same line - picked at random, never the same " +
         "one twice in a row. They are not a conversation.\\n\\n" +
         "Only these triggers ever involve an ally, so Pair Overrides do nothing on any other: " +
-        "AccessoryReturnedToAlly, TeammateDowned, RevivingTeammate, RevivedTeammate.",
+        "AccessoryReturnedToAlly, RevivingTeammate, RevivedTeammate.",
         EInfoBoxType.Normal)]
     [SerializeField] public List<Entry> entries = new List<Entry>();
 

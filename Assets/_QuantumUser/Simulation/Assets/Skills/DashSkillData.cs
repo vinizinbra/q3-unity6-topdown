@@ -39,7 +39,9 @@ namespace Quantum
         {
             FPVector3 direction = ResolveDashDirection(filter, input);
 
-            slot->TargetPosition = slot->StartPosition + direction * DashDistance;
+            // DashDistanceMultiplier (Blink Step etc.) - a shorter dash also arrives sooner, so
+            // DashDuration stays a pure safety timeout.
+            slot->TargetPosition = slot->StartPosition + direction * DashDistance * StatUtility.GetDashDistanceMultiplier(f, filter.Entity);
             slot->StateTimer = DashDuration;
 
             filter.KCC->SetActive(false);

@@ -20,7 +20,7 @@ The game's level-up pools now split into four categories:
    - see `docs/level-up-upgrades.md`). Naming only - no separate `LevelUpPoolKind` value.
 4. **Rift Mutations** (this doc, "## Roster" below) - rare, non-stackable, build-defining: a one-shot
    tradeoff (Glass Core, Heavy Arsenal), a new reactive rule (Adrenaline Kick, Critical Focus), a
-   run-wide encounter/economy change (Overpopulation, Greed), or a mix. 28 entries.
+   run-wide encounter/economy change (Overpopulation, Greed), or a mix. 42 entries.
 
 "Non-stackable" is a **pool-wide** property here, not an opt-in per-asset cap the way
 `GlobalUpgradeData.MaxPicks` is - every `RiftMutationData` is implicitly picked at most once per
@@ -92,7 +92,7 @@ list (`RiftMutations`) - see "Mechanism" below.
 ## Roster
 
 The **Rift Mutation** pool (`LevelUpPoolKind.RiftMutation`/`LevelUpCategory.RiftMutation`,
-`LevelUpConfig.RiftMutations`) - 28 entries (23 `Player`-scope + 5 `Run`-scope), the pool Cursed
+`LevelUpConfig.RiftMutations`) - 42 entries (37 `Player`-scope + 5 `Run`-scope), the pool Cursed
 Rift's reward roll draws from exclusively. Rewritten and expanded 2026-08-27 - see "2026-08-27 pass"
 below for what changed and why. Ultimate Commitment/Spare Parts removed, Focused Power/Scavenger
 Rush/Second Wind reworked, and Bro Mutation/Boss Destroyer/Executioner added in a later pass - see
@@ -122,8 +122,22 @@ exactly once per run no matter how many players are offered it (see "Player vs R
 | No Safety Net | `NoSafetyNetMutationData` | Legendary | Player | +75% ALL damage while the Accessory is Airborne/Dropped/Broken. Tracks no state of its own - reads `AccessoryGuard.State` via `AccessoryGuardUtility.IsExposed` at every hit. Deliberately inert (and unofferable) for a player whose Accessory was removed by Last Bastion, which would otherwise be a permanent free bonus. |
 | Second Wind | `SecondWindMutationData` | Epic | Player | Recovering your Accessory heals 10% Max Health AND grants +15% Move Speed for 4s. Reacts to `OnAccessoryRecovered`, which fires only on a real world recovery - so a Merchant repair/replacement never heals/buffs, re-touching the collectible can't farm it, and a teammate returning it heals/buffs the OWNER. The Move Speed half rides the shared timed-buff slot, so recovering again while it's up refreshes rather than stacks it. |
 | Dead Weight | `DeadWeightMutationData` | Legendary | Player | +50% Weapon Damage, Dash hard-capped at 1 charge, Dash cooldown x1.5. The cap is `min(MaxStacks, cap)` at every availability read, never a subtraction - see "Dead Weight hard cap" below. |
+| Hair Trigger | `SkillTradeoffMutationData` | Epic | Player | Hero Skill cooldown x0.5, Skill Damage x0.6 - cast twice as often (~+20% skill damage/min). **Incompatible with Overcharge.** |
+| Overcharge | `SkillTradeoffMutationData` | Epic | Player | Hero Skill cooldown x1.4, Skill Damage x1.7 - rarer, much bigger casts (~+21% skill damage/min). |
+| Blink Step | `SkillTradeoffMutationData` | Epic | Player | Dash cooldown x0.5, Dash distance x0.7 - short hops, twice as often. Uses the new `CharacterStats.DashDistanceMultiplier`. |
+| Spirit Feline | `SpiritFelineMutationData` | Legendary | Player | Damage taken x2 (`DamageTakenMultiplier`), but no single hit can deal more than 14% of Max Health (`HitDamageCapFraction`, applied after every DR term, before Armor/Shield). Enemy base hits are 6-50 vs 100 HP heroes, so almost every hit lands at ~14: big hitters stop mattering, swarms become the threat. |
+| Deflection Shield | `DeflectionShieldMutationData` | Legendary | Player | -60% damage from enemies beyond `RangeDamageNearThreshold` (5u), +40% from closer ones - by attacker distance, so mortar/sniper/projectile damage all count as ranged. |
+| Lifesaver | `LifesaverMutationData` | Legendary | Player | Once per run: a lethal hit (after Cheat Death had its chance) leaves you at 1 HP and immune for 5s - get a kill to survive and heal 30%, otherwise `DamageUtility.Kill` downs you. Countdown = the hero-state ring/3-2-1 (`HeroSkillStateUtility`), banner via `EventLifesaverTriggered/Ended` -> `AnnouncerManager` (local player only). |
+| Time Slip | `TimeSlipMutationData` | Epic | Player | Dashing heals 50% of the Health damage taken in the last 1s (8-entry ring on `CharacterStats`, cleared on use so two Dashes can't claim the same hit). |
+| Slipstream | `SlipstreamMutationData` | Rare | Player | Every Dash: +30% Move Speed for 3s (generic temp-move-speed slot - refreshes, doesn't stack). Merges the two "dash grants move speed" ideas. |
+| Third Step | `ThirdStepMutationData` | Rare | Player | Every 3rd Dash refunds its charge (`SkillSystem.ResetCooldown`). A count, not the proposed 30% roll - an escape button shouldn't be a coin flip. |
+| Merciless Combo | `MercilessComboMutationData` | Epic | Player | +2% Weapon Damage per landed weapon hit, max 25 stacks (+50%), all lost after 2s without a hit. Retuned from the pitched +15% x50 (= +750%). At most one stack per 0.25s (`StackInterval`): every hit refreshes the decay timer, but pellets / pierced targets of one shot count once and fast weapons build no faster than slow ones - the cap takes ~6s of sustained fire for every weapon. |
+| Giant Slayer | `GiantSlayerMutationData` | Legendary | Player | Weapon hits add 2% of the target's CURRENT health as bonus (0.5% vs Boss), capped at 1x the hit itself so fire rate can't shred a full-health giant. Executioner's mirror. |
+| Elemental Bestowment | `ElementalBestowmentMutationData` | Rare | Player | Applying Burn/Chill/Shock heals 2% Max Health, at most every 1.5s (hook at the top of `StatusEffectUtility.ApplyElementBaseline`). `IsEligible` only while the weapon has an element or an Element Infusion. |
+| Deadly Curse | `DeadlyCurseMutationData` | Legendary | Player | +60% ALL damage, Max Health x0.5. **Incompatible with Glass Core** (both halve HP). |
+| Sanguine Relic | `SanguineRelicMutationData` | Legendary | Player | Max Health x1.4, 5% lifesteal capped at 2% Max HP per rolling second, damage taken x1.3. First real reader of the long-dead `CharacterStats.LifeSteal`. |
 | Pressure Cooker | `PressureCookerMutationData` | Epic | Player | +3% ALL damage per full second without taking damage, capped at +30%; any real hit resets it. Counter is `CharacterStats.SafeTimeSeconds`, advanced off `f.DeltaTime` in `MutationTimerUtility` - deterministic, never a View timer. An Accessory block leaves the streak intact (it never reaches a damage signal); **a Shield-only hit DOES reset it**, by explicit request - this deviates from the original brief, which asked for Shield-only hits to be ignored. |
-| Money Talks | `MoneyTalksMutationData` | Epic | Player | +5% ALL damage per full 100 Coins currently carried, capped at +40% (800 Coins). Resolved **live** per hit by `CoinUtility.ResolveDamageBonus` from `DamageUtility.ResolveOutgoingDamage` - never baked at pick time, because the point is that it climbs as you save and drops the moment you spend at the Store. Stepped per whole 100 so the next breakpoint is a number the player can aim at. |
+| Money Talks | `MoneyTalksMutationData` | Epic | Player | +1.5% ALL damage per full 100 Coins currently carried, capped at +60% (4000 Coins; was 5%/+40% at 800 until 2026-10-26, rebalanced so maxing it means hoarding ~a whole run's Store budget). Resolved **live** per hit by `CoinUtility.ResolveDamageBonus` from `DamageUtility.ResolveOutgoingDamage` - never baked at pick time, because the point is that it climbs as you save and drops the moment you spend at the Store. Stepped per whole 100 so the next breakpoint is a number the player can aim at. |
 | Bro Mutation | `BroMutationData` | Epic | Player | +15% ALL damage, +10% MORE for every OTHER Raider in the run who also owns Bro Mutation (2 owners -> +25% each, 3 -> +35%, 4 -> +45%). Counted by ownership alone (a live `PlayerLink`+`CharacterStats` scan, `MutationModifierUtility.CountOtherBroMutationOwners`), never proximity or being alive. Resolved live, not baked, so a teammate picking it up LATER retroactively raises everyone who already holds it. Passive co-op synergy needing no combat coordination. |
 | Boss Destroyer | `BossDestroyerMutationData` | Epic | Player | +40% damage against Heavy/Elite/Boss, -20% against Filler/Normal/Specialist. Reads the target's own `EnemyDataAsset.Tier` generically (`DamageUtility.ResolveTargetTierDamageMultiplier`, attacker-side, next to the Close Quarters/Longshot range term) - no per-enemy-type list, any current or future enemy is covered by its tier alone. |
 | Executioner | `ExecutionerMutationData` | Epic | Player | After this player's own damage lands on an enemy, if what it has left falls below its OWN tier's HP% threshold (15% Filler/Normal/Specialist, 8% Heavy/Elite, 3% Boss), it is immediately finished off - through the exact same kill pipeline a lethal hit resolves through (`DamageUtility.TryExecute`/`ResolveDeath`, the tail of `ApplyDamage`'s death handling pulled out for reuse - see "Executioner / generic execution pipeline" below). Only ever reacts to damage whose OWNER holds this mutation; a teammate's hit bringing the same enemy below threshold can never trigger it. |
@@ -469,6 +483,58 @@ own execution check, never a teammate's hit on the same enemy. This reaction fir
 triggering `ApplyDamage` call, still before ITS OWN death branch runs - safe only because
 `ResolveDeath`'s pre-existing reentrancy guard (`f.Exists(target)` / already-`Dead`-phase check,
 originally written for `OnCriticalHit`'s own nested-call hazard) already covers exactly this case.
+
+## 2026-10-26 pass - skill/dash tradeoffs
+
+Three Player-scope Epics on ONE reusable class, `SkillTradeoffMutationData` (factors on what the player
+feels, 1 = unchanged: `SkillCooldownFactor`, `SkillDamageFactor`, `DashCooldownFactor`,
+`DashDistanceFactor`): **Hair Trigger** (skill cooldown x0.5 / damage x0.6), **Overcharge** (x1.4 /
+x1.7) and **Blink Step** (dash cooldown x0.5 / distance x0.7). Hair Trigger lists Overcharge in
+`IncompatibleWith` (symmetric), so the pair is a real style choice - the reason they don't repeat the
+removed Ultimate Commitment's "flat swap with no identity" problem. Overcharge's damage was set to +70%
+(not +50%) because +40% cooldown / +50% damage nets only ~1.07x skill damage per minute.
+
+Cooldown stats are rates, so the factor divides the rate; everything composes multiplicatively - Hair
+Trigger plus three Skill Cooldown picks (-50%) is 0.5 x 0.5 = **25%** of the base cooldown, never 0.
+
+**New generic stat:** `CharacterStats.DashDistanceMultiplier` (seeded from `CharacterData`, default 1),
+read through `StatUtility.GetDashDistanceMultiplier` by `DashSkillData.Begin` and by
+`BotSkillUtility`'s dash planning. Hero-specific dash replacements that don't go through
+`DashSkillData.Begin` ignore it.
+
+**Gotcha hit on this pass:** the three assets were created by script and were NOT in `QuantumUnityDB`
+until `QuantumUnityDBUtilities.RefreshGlobalDB(true)` - until then `FindAsset` returned null, so
+`IsBlocked` silently treated them as unofferable. After creating mutation assets outside the generator,
+force the DB refresh and verify. They also have no icon yet (the atlas has 28 cells - see item 4 below).
+
+## 2026-10-26 pass B - eleven mutations from the design pitch
+
+Spirit Feline, Deflection Shield, Lifesaver, Time Slip, Slipstream, Third Step, Merciless Combo, Giant
+Slayer, Elemental Bestowment, Deadly Curse and Sanguine Relic (see the roster). Cut from the same pitch:
+flat -25% Dash cooldown (duplicates the Dash Cooldown Global Upgrade), Perfect Sixth (weapon-perk shaped -
+Final Round/Explosive Sequence already exist), Flowing Time (near-duplicate of Critical Focus, and an
+always-on ~-33% CDR). Deferred: Iron Circuit (needs an ally link + tether visual; would reuse
+`KaiUndertowLinksView`'s LineRenderer approach and must be ineligible solo).
+
+**Architecture:** all runtime logic lives in `MutationCombatUtility` (`Systems/Progression/`); the mutation
+classes only write `CharacterStats` fields in `Apply`. Hooks, one line each:
+- `DamageUtility.ApplyDamage` - Lifesaver immunity (after `Invulnerable`), `ResolveIncomingDamage` (after the
+  frontal multiplier), Lifesaver at the lethal clamp (after Cheat Death), `TryLifeSteal` (next to
+  `DamageDealt`); `ResolveOutgoingDamage`'s weapon block - `ResolveWeaponDamage` (Combo, Giant Slayer);
+  new `DamageUtility.Kill` (ownerless death through `ResolveDeath`, so no DR/cap can soften it).
+- `RiftMutationReactionSystem` - now also `ISignalOnSkillActivated` (Dash slot -> Time Slip/Slipstream/Third
+  Step, includes paid Infinite Momentum dashes) and `ISignalOnWeaponHitLanded` (Combo); `OnEntityKilled` ->
+  Lifesaver survive; `OnHealthDamageApplied` -> Time Slip's ring.
+- `MutationTimerUtility.Tick` -> `MutationCombatUtility.Tick` (Combo decay, element-heal cooldown, lifesteal
+  window, Lifesaver expiry).
+
+**Verified in a live match (2026-10-26):** each one granted through `RiftMutationUtility.Grant` and driven
+through the real `ApplyDamage`/signals - the numbers in the roster rows are what came out. Two test-only
+gotchas worth knowing: the Hero Intro popup solo-pauses the systems, so signal-driven mutations (Time Slip)
+do nothing until it closes; and a hand-made Enemy entity needs a real `EnemyData` or other damage code
+NREs. **Not verified:** Deflection/Giant Slayer against real spawned enemies, and the Lifesaver banner/
+countdown visually (the hero-state data was checked, not the rendered widget). **No icons** for these 11 or
+the 3 from pass A (the atlas holds 28).
 
 ## Current status / known simplifications
 

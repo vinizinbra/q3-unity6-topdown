@@ -17,8 +17,17 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Optional - left unassigned to skip showing the weapon's name.")]
     private TMP_Text weaponName;
 
+    [SerializeField, Tooltip("Optional - \"Pistol | Light | Fire\" (family, weight, element) under the name. Weight explains the move-speed nudge, element the status the weapon applies; Medium/Neutral are left out as the neutral defaults.")]
+    private TMP_Text weaponTagsText;
+
     [SerializeField, Tooltip("Fixed rows, one per Weapon.Perks slot (5) - rows past the equipped perk count are hidden.")]
     private WeaponCardPerkRowWidget[] perkRows;
+
+    [SerializeField, Tooltip("On: the perk name gets its own title line and the description is the effect alone (roomy layouts like the Hero Info popup). Off: one \"<b>Name</b> - effect\" line (compact HUD).")]
+    private bool separatePerkTitles;
+
+    [SerializeField, Tooltip("Optional - shown instead of the rows while the weapon has no perks.")]
+    private GameObject noPerksLabel;
 
     [SerializeField, Tooltip("On: binds itself to local slot 0 (player 1) automatically. Off: stays unbound until something else calls Initialize (e.g. the party HUD).")]
     private bool autoBindLocalPlayerOne = true;
@@ -80,6 +89,9 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
             weaponName.text = StringUtility.WithLevelSuffix(baseName, weapon.Level);
         }
 
+        if (weaponTagsText != null)
+            weaponTagsText.text = BuildTags(weaponData);
+
         RefreshPerks(frame, weapon);
     }
 
@@ -99,8 +111,8 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
             perkRows[shownCount].Setup(new WeaponCardWidget.PerkRowData
             {
                 Icon = perkData.Icon,
-                Title = string.Empty,
-                Description = perkData.GetDescription(),
+                Title = separatePerkTitles ? ResolvePerkName(perkData) : string.Empty,
+                Description = separatePerkTitles ? perkData.GetFormattedDescription() : perkData.GetDescription(),
                 RarityIndex = (int)perkData.Rarity
             });
 
@@ -109,6 +121,54 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
 
         for (int i = shownCount; i < perkRows.Length; i++)
             perkRows[i].gameObject.SetActive(false);
+
+        if (noPerksLabel != null && noPerksLabel.activeSelf != (shownCount == 0))
+            noPerksLabel.SetActive(shownCount == 0);
+    }
+
+    private static string ResolvePerkName(WeaponPerkData perk)
+    {
+        return string.IsNullOrEmpty(perk.DisplayName) ? StringUtility.Beautify(perk.name, "WeaponPerkData") : perk.DisplayName;
+    }
+
+    private static string BuildTags(WeaponDataAsset data)
+    {
+        const string separator = " <color=#7A7A7A>|</color> ";
+        string tags = data.Family switch
+        {
+            WeaponFamily.Pistol => "Pistol",
+            WeaponFamily.SMG => "SMG",
+            WeaponFamily.AssaultRifle => "Assault Rifle",
+            WeaponFamily.Shotgun => "Shotgun",
+            WeaponFamily.Sniper => "Sniper",
+            WeaponFamily.GrenadeLauncher => "Launcher",
+            _ => string.Empty
+        };
+
+        string weight = data.Weight switch
+        {
+            WeaponWeight.Light => "Light",
+            WeaponWeight.Heavy => "Heavy",
+            _ => string.Empty
+        };
+
+        string element = data.Element switch
+        {
+            ElementType.Fire => "<color=#FF8A3D>Fire</color>",
+            ElementType.Ice => "<color=#7FD8FF>Ice</color>",
+            ElementType.Lightning => "<color=#FFE15A>Lightning</color>",
+            _ => string.Empty
+        };
+
+        foreach (string tag in new[] { weight, element })
+        {
+            if (tag.Length == 0)
+                continue;
+
+            tags = tags.Length == 0 ? tag : tags + separator + tag;
+        }
+
+        return tags;
     }
 
     private void SetShown(bool shown)

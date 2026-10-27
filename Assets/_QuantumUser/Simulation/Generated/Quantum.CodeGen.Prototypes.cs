@@ -751,12 +751,12 @@ namespace Quantum.Prototypes {
     public FP CriticalDamageMultiplier;
     public FP AttackSpeedMultiplier;
     public FP ReloadSpeedMultiplier;
-    public FP ProjectileSpeedMultiplier;
     public FP AreaRadiusMultiplier;
     public FP NearDamageMultiplier;
     public FP FarDamageMultiplier;
     public FP DashCooldownMultiplier;
     public FP SkillCooldownMultiplier;
+    public FP DashDistanceMultiplier;
     public FP SkillDurationMultiplier;
     public FP KnockbackMultiplier;
     public FP LifeSteal;
@@ -825,6 +825,40 @@ namespace Quantum.Prototypes {
     public FP BossDestroyerLightDamagePenalty;
     [ArrayLengthAttribute(6)]
     public FP[] ExecutionThresholds = new FP[6];
+    public FP HitDamageCapFraction;
+    public FP RangedDamageTakenMultiplier;
+    public FP CloseDamageTakenMultiplier;
+    public Byte LifesaverCharges;
+    public FP LifesaverDuration;
+    public FP LifesaverRemaining;
+    public FP LifesaverSurviveHealFraction;
+    public FP DashRewindFraction;
+    public FP DashRewindWindow;
+    [ArrayLengthAttribute(8)]
+    public FP[] RecentDamageAmounts = new FP[8];
+    [ArrayLengthAttribute(8)]
+    public FP[] RecentDamageTimes = new FP[8];
+    public Byte RecentDamageHead;
+    public FP DashMoveSpeedBonus;
+    public FP DashMoveSpeedDuration;
+    public Byte DashRefundInterval;
+    public Byte DashRefundProgress;
+    public FP ComboDamagePerStack;
+    public Byte ComboMaxStacks;
+    public Byte ComboStacks;
+    public FP ComboDecayTime;
+    public FP ComboTimer;
+    public FP ComboStackInterval;
+    public FP ComboGainCooldown;
+    public FP CurrentHealthDamageFraction;
+    public FP CurrentHealthDamageBossFraction;
+    public FP CurrentHealthBonusHitCap;
+    public FP LifeStealCapPerSecond;
+    public FP LifeStealWindowTimer;
+    public FP LifeStealHealedInWindow;
+    public FP ElementHealFraction;
+    public FP ElementHealCooldown;
+    public FP ElementHealCooldownRemaining;
     partial void MaterializeUser(Frame frame, ref Quantum.CharacterStats result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.CharacterStats component = default;
@@ -841,12 +875,12 @@ namespace Quantum.Prototypes {
         result.CriticalDamageMultiplier = this.CriticalDamageMultiplier;
         result.AttackSpeedMultiplier = this.AttackSpeedMultiplier;
         result.ReloadSpeedMultiplier = this.ReloadSpeedMultiplier;
-        result.ProjectileSpeedMultiplier = this.ProjectileSpeedMultiplier;
         result.AreaRadiusMultiplier = this.AreaRadiusMultiplier;
         result.NearDamageMultiplier = this.NearDamageMultiplier;
         result.FarDamageMultiplier = this.FarDamageMultiplier;
         result.DashCooldownMultiplier = this.DashCooldownMultiplier;
         result.SkillCooldownMultiplier = this.SkillCooldownMultiplier;
+        result.DashDistanceMultiplier = this.DashDistanceMultiplier;
         result.SkillDurationMultiplier = this.SkillDurationMultiplier;
         result.KnockbackMultiplier = this.KnockbackMultiplier;
         result.LifeSteal = this.LifeSteal;
@@ -916,6 +950,42 @@ namespace Quantum.Prototypes {
         for (int i = 0, count = PrototypeValidator.CheckLength(ExecutionThresholds, 6, in context); i < count; ++i) {
           *result.ExecutionThresholds.GetPointer(i) = this.ExecutionThresholds[i];
         }
+        result.HitDamageCapFraction = this.HitDamageCapFraction;
+        result.RangedDamageTakenMultiplier = this.RangedDamageTakenMultiplier;
+        result.CloseDamageTakenMultiplier = this.CloseDamageTakenMultiplier;
+        result.LifesaverCharges = this.LifesaverCharges;
+        result.LifesaverDuration = this.LifesaverDuration;
+        result.LifesaverRemaining = this.LifesaverRemaining;
+        result.LifesaverSurviveHealFraction = this.LifesaverSurviveHealFraction;
+        result.DashRewindFraction = this.DashRewindFraction;
+        result.DashRewindWindow = this.DashRewindWindow;
+        for (int i = 0, count = PrototypeValidator.CheckLength(RecentDamageAmounts, 8, in context); i < count; ++i) {
+          *result.RecentDamageAmounts.GetPointer(i) = this.RecentDamageAmounts[i];
+        }
+        for (int i = 0, count = PrototypeValidator.CheckLength(RecentDamageTimes, 8, in context); i < count; ++i) {
+          *result.RecentDamageTimes.GetPointer(i) = this.RecentDamageTimes[i];
+        }
+        result.RecentDamageHead = this.RecentDamageHead;
+        result.DashMoveSpeedBonus = this.DashMoveSpeedBonus;
+        result.DashMoveSpeedDuration = this.DashMoveSpeedDuration;
+        result.DashRefundInterval = this.DashRefundInterval;
+        result.DashRefundProgress = this.DashRefundProgress;
+        result.ComboDamagePerStack = this.ComboDamagePerStack;
+        result.ComboMaxStacks = this.ComboMaxStacks;
+        result.ComboStacks = this.ComboStacks;
+        result.ComboDecayTime = this.ComboDecayTime;
+        result.ComboTimer = this.ComboTimer;
+        result.ComboStackInterval = this.ComboStackInterval;
+        result.ComboGainCooldown = this.ComboGainCooldown;
+        result.CurrentHealthDamageFraction = this.CurrentHealthDamageFraction;
+        result.CurrentHealthDamageBossFraction = this.CurrentHealthDamageBossFraction;
+        result.CurrentHealthBonusHitCap = this.CurrentHealthBonusHitCap;
+        result.LifeStealCapPerSecond = this.LifeStealCapPerSecond;
+        result.LifeStealWindowTimer = this.LifeStealWindowTimer;
+        result.LifeStealHealedInWindow = this.LifeStealHealedInWindow;
+        result.ElementHealFraction = this.ElementHealFraction;
+        result.ElementHealCooldown = this.ElementHealCooldown;
+        result.ElementHealCooldownRemaining = this.ElementHealCooldownRemaining;
         MaterializeUser(frame, ref result, in context);
     }
   }

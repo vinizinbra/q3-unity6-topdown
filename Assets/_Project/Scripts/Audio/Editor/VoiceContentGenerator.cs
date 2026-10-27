@@ -29,8 +29,6 @@ internal static class VoiceContentGenerator
         (VoiceLineTrigger.RunStarted,             1.00f,   0f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
         (VoiceLineTrigger.SurvivalStarted,        0.50f,  30f, VoicePriority.Normal,   VoiceAudience.LocalOnly),
         (VoiceLineTrigger.BreathingTimeStarted,   0.60f,  30f, VoicePriority.Normal,   VoiceAudience.LocalOnly),
-        (VoiceLineTrigger.BossStarted,            1.00f,   0f, VoicePriority.High,     VoiceAudience.AllPlayers),
-        (VoiceLineTrigger.BossDefeated,           1.00f,   0f, VoicePriority.High,     VoiceAudience.AllPlayers),
 
         // Frequent action - low probability is what stops a line becoming a catchphrase.
         (VoiceLineTrigger.HeroSkillUsed,          0.20f,  25f, VoicePriority.Normal,   VoiceAudience.NearbyPlayers),
@@ -48,13 +46,15 @@ internal static class VoiceContentGenerator
 
         // Combat meter topping out (Max's Overdrive Rage, Brute's Juggernaut charge). A personal
 
+        // An Elite showing up. Fires per Elite, so probability + cooldown keep a pack from nagging.
+        (VoiceLineTrigger.EliteSpawned,           0.60f,  25f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
+
         // Failed presses can happen several times a second - lowest priority, longest cooldown.
         (VoiceLineTrigger.AbilityNotReady,        0.25f,  12f, VoicePriority.Low,      VoiceAudience.LocalOnly),
 
         // Life state - always heard, and able to cut through whatever chatter is playing.
         (VoiceLineTrigger.PlayerDowned,           1.00f,   0f, VoicePriority.Critical, VoiceAudience.AllPlayers),
         (VoiceLineTrigger.PlayerKO,               1.00f,   0f, VoicePriority.Critical, VoiceAudience.AllPlayers),
-        (VoiceLineTrigger.TeammateDowned,         0.80f,   8f, VoicePriority.High,     VoiceAudience.LocalOnly),
         // Both halves of a revive are two-player moments, so both are heard by both participants.
         (VoiceLineTrigger.RevivingTeammate,      0.60f,   8f, VoicePriority.Normal,   VoiceAudience.RelevantPlayers),
         (VoiceLineTrigger.RevivedTeammate,        1.00f,   0f, VoicePriority.High,     VoiceAudience.RelevantPlayers),
@@ -72,7 +72,19 @@ internal static class VoiceContentGenerator
         // Breathing-only, one-shot per Break per player - no heavy rate limiting needed.
         (VoiceLineTrigger.HealingShrineUsed,       0.70f,  10f, VoicePriority.Normal,   VoiceAudience.LocalOnly),
 
-        (VoiceLineTrigger.HeroExceptionalEvent,   1.00f,  20f, VoicePriority.High,     VoiceAudience.NearbyPlayers),
+        // Challenges. Started is the activator's own call-out, heard by everyone; Accepted fires per
+        // joining Raider so it is capped by the per-speaker cooldown; Failed is whole-team.
+        (VoiceLineTrigger.ChallengeStarted,       1.00f,   0f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
+        (VoiceLineTrigger.ChallengeAccepted,      1.00f,   0f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
+        (VoiceLineTrigger.ChallengeFailed,        1.00f,   0f, VoicePriority.High,     VoiceAudience.AllPlayers),
+        // Spoken by the one who caused the failure, so it always plays.
+        (VoiceLineTrigger.ChallengeCulprit,       1.00f,   0f, VoicePriority.High,     VoiceAudience.AllPlayers),
+
+        // Pings already have their own cooldown; this only keeps the CALLOUT from repeating. A
+        // Revive-me ping is a plea for help, so it always plays and cuts through chatter.
+        (VoiceLineTrigger.PingElite,              0.60f,  10f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
+        (VoiceLineTrigger.PingPoi,                0.50f,  15f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
+        (VoiceLineTrigger.PingReviveMe,           1.00f,   8f, VoicePriority.High,     VoiceAudience.AllPlayers),
     };
 
     [MenuItem("Tools/RiftRaiders/Generate Voice Content")]

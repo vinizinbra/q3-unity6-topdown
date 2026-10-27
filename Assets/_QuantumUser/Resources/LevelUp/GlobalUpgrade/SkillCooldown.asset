@@ -20,5 +20,7 @@ MonoBehaviour:
   DisplayName: Skill Cooldown
   MaxPicks: 3
   Description: -{0}% Cooldown
-  Multiplier:
-    RawValue: 75366
+  TotalReduction:
+  - RawValue: 9830
+  - RawValue: 19661
+  - RawValue: 32768

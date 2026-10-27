@@ -76,7 +76,7 @@ and steps the run analytically. Nothing in `Assets/_QuantumUser/Simulation` chan
   (`ExperienceConfig.DamageBonusPerLevel` x displayed Level, weapon and skill alike), Hero Mastery
   (Weapon Weight / Element lines, while the equipped weapon matches), x `HitEfficiency`.
   - **Crit** is `CharacterStats.CriticalDamageMultiplier x max(1, Weapon.CriticalDamageBonus)`, multiplicative
-    (`ResolveCriticalTerms`). Heroes author 1.0, so the weapon's bonus IS the multiplier.
+    (`ResolveCriticalTerms`). Heroes author 1.0, so the weapon's bonus IS the multiplier. Heroes also author **0%** base `CriticalChance` (2026-10-26) - the weapon's own chance is the whole base chance; see `docs/weapon-perks.md` "Weapon crit baselines".
   - **Magazine cycle** (`SimWeapon.MagazineCycleSeconds`): the reload starts on the last shot and overlaps
     its cooldown. Every wait (fire cooldown, burst delay, reload) is rounded up to whole Quantum ticks
     (SessionConfig `UpdateFPS`, 20 = 0.05 s), because `WeaponSystem` sets each timer fresh (no carried
@@ -291,3 +291,18 @@ Result for the same config: kills 755 (actual 775), level 21.7 (20), coins 9624 
 pickup ~67% (63%). Still open: Specialist kills 58 vs 44, so shards come out at 51 vs 36. That's probably ranged Specialists
 being left behind more; confirm with a second run before adding a per-tier leak. DPS couldn't be checked: the run was
 spawn-limited, so landed damage is capped by enemy supply rather than player damage.
+
+## Fall/water-death drops + coin retune 2026-10-26
+
+Enemies that fall off the level / into water now drop XP, coins and shards (`DamageUtility.ResolveDeath` -> `fellOffLevel`), and
+every orb is swept at the end of a Survival phase (240 s lifetime, already mirrored). The sim never saw fall deaths, so it
+under-predicted income. New knob `FallDeathFraction` (**0.4**, placeholder, no recorded run yet): share of retired leakers that
+still drop their loot (`BalanceSimDirector.RetiredLeakers` -> runner `DropLoot`, the same path as a player kill).
+With it, solo BreakAfford read 0.66 / 1.03 / 1.25 (Breaks at 4/7/10 min), well over the 0.55 -> 0.8 target, so every non-Boss tier
+`CoinValue` in `EnemyTierStatsConfig` was multiplied by 0.7. Result: solo 0.55 / 0.77 / 0.88, 4P 0.49 / 0.73 / 0.73.
+Measure the real fall-death share from a recorded run and update `FallDeathFraction`.
+
+Barrels 2026-10-26: recorded Pixie solo run earned +35% more than the sim in the first 4 min (2797 vs 2068), likely barrel loot
+(the sim counts 80 barrels/run via `BarrelsPerEnemyChunk` override 4, which may undercount). `BarrelLootData` coin value 50 -> **30** (25 first, raised: sim barrel count is a floor).
+Sim afford after: solo 0.41 / 0.64 / 0.77; the real run should land higher because the sim's barrel count is a floor. Calibrate
+`BarrelsPerEnemyChunk` from a recorded barrel count before retuning further.
