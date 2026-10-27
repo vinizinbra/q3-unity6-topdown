@@ -84,7 +84,7 @@ namespace Quantum {
       Button("OpenHeroInfo", "<Gamepad>/leftTrigger", "<Gamepad>/select");
       Button("ToggleMap", "<Gamepad>/rightTrigger");
 
-      Button("Submit", "<Gamepad>/buttonSouth", "<Keyboard>/enter", "<Keyboard>/numpadEnter", "<Keyboard>/space");
+      Button("Submit", "<Gamepad>/buttonSouth", "<Keyboard>/enter", "<Keyboard>/numpadEnter", "<Keyboard>/space", "<Keyboard>/e");
       Button("Cancel", "<Gamepad>/buttonEast", "<Keyboard>/escape");
       Button("TabPrev", "<Gamepad>/leftShoulder", "<Keyboard>/leftBracket");
       Button("TabNext", "<Gamepad>/rightShoulder", "<Keyboard>/rightBracket");

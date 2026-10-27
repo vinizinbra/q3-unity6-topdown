@@ -93,6 +93,9 @@ public class UiPressDetector : MonoBehaviour
 
     private static bool SubmitPressed(EventSystem eventSystem)
     {
+        if (UiKeyboardSubmit.PressedThisFrame)
+            return true;
+
         var module = eventSystem.currentInputModule as InputSystemUIInputModule;
         InputAction submit = module != null && module.submit != null ? module.submit.action : null;
         return submit != null && submit.WasPressedThisFrame();

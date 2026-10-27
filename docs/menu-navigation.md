@@ -66,6 +66,14 @@ control **nearest to its centre**; if the selection leaks to something behind it
 straight back (to where it was, else the nearest control). A popup with nothing selectable leaves focus empty - input
 never reaches what is behind it. Not applied while the popup is still popping in (its first focus is pending).
 
+## Keyboard Submit = Enter, Space or E
+The EventSystems use the package's default UI actions, whose keyboard Submit is Enter only. `UiKeyboardSubmit`
+(`UI/Common/`, self-installed) sends the Submit to the selected element on **Space / E** itself, and
+`UiPressDetector` counts it as a submit (sounds/haptics); `GamepadControls.Submit` has the same keys for
+`MenuNavigationController`. E is also the gameplay Skill key, so during a match the extra keys only submit while
+`UiInputGate.IsBlocked` (a popup/ChooseWindow/BossWindow is up) - a HUD button left selected by a click can't be
+pressed by a skill press. Ignored while a text field is being edited (they're characters there).
+
 ## Text fields
 `SubmitToEditInputField` (a `TMP_InputField` subclass) is what text fields use. Navigating onto the field only focuses it;
 **Submit** (or a mouse/touch click) starts typing, Enter ends it. Two stock-TMP behaviours are overridden: it no longer

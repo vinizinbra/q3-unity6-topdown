@@ -141,7 +141,7 @@ public static class TrainingZoneBuilder
 
         Label(s, "TRAINING ZONE", 6, 9.5f, Floor, TitleSize * 1.2f, TitleColor);
         Label(s, "MOVE", 6, 3.2f, Floor, TitleSize, TitleColor);
-        Label(s, "WASD  /  Left Stick", 6, 1.8f, Floor, HintSize, HintColor);
+        Prompt(Label(s, "WASD  /  Left Stick", 6, 1.8f, Floor, HintSize, HintColor), TrainingInputPromptWidget.GamepadGlyph.LeftStick, "", true, "W", "A", "S", "D");
         Label(s, ">>>", 11, 6, Floor, TitleSize, TitleColor);
         return s;
     }
@@ -204,7 +204,7 @@ public static class TrainingZoneBuilder
         Respawn(s, 2, 6, Floor);
 
         Label(s, "DASH", 3, 9, Floor, TitleSize, TitleColor);
-        Label(s, "Shift  /  A", 3, 7.6f, Floor, HintSize, HintColor);
+        Prompt(Label(s, "Shift  /  A", 3, 7.6f, Floor, HintSize, HintColor), TrainingInputPromptWidget.GamepadGlyph.A, "", false, "Shift");
         Label(s, "Wide gaps:", 3, 4.6f, Floor, HintSize, HintColor);
         Label(s, "run and dash", 3, 3.6f, Floor, HintSize, HintColor);
         return s;
@@ -302,7 +302,7 @@ public static class TrainingZoneBuilder
         Dummy(s, 12.6f, 7.6f);
 
         Label(s, "SKILL", 4, 9.6f, Floor, TitleSize, TitleColor);
-        Label(s, "E  /  X", 4, 8.3f, Floor, HintSize, HintColor);
+        Prompt(Label(s, "E  /  X", 4, 8.3f, Floor, HintSize, HintColor), TrainingInputPromptWidget.GamepadGlyph.X, "", false, "E");
         Label(s, "Use it on a group", 4, 4.4f, Floor, HintSize, HintColor);
         return s;
     }
@@ -326,7 +326,7 @@ public static class TrainingZoneBuilder
             SetBlobShadow(poiSign.GetComponent<HasShadow>(), 2f, new Vector2(0f, 0.1f));
 
         Label(s, "INTERACT", 4, 4.2f, Floor, TitleSize, TitleColor);
-        Label(s, "E  /  X  next to the sign", 4, 3.0f, Floor, HintSize, HintColor);
+        Prompt(Label(s, "E  /  X  next to the sign", 4, 3.0f, Floor, HintSize, HintColor), TrainingInputPromptWidget.GamepadGlyph.X, "next to the sign", false, "E");
         return s;
     }
 
@@ -639,7 +639,7 @@ public static class TrainingZoneBuilder
 
     // Text lying flat on the ground, readable from the gameplay camera (looks +Z, tilted down).
     // onGround false = floating over water (still flat) for stations whose floor is all gaps.
-    private static void Label(GameObject station, string text, float x, float z, float top, float size, Color color, bool onGround = true)
+    private static GameObject Label(GameObject station, string text, float x, float z, float top, float size, Color color, bool onGround = true)
     {
         var go = new GameObject($"Text_{text}");
         go.transform.SetParent(station.transform, false);
@@ -660,6 +660,25 @@ public static class TrainingZoneBuilder
         MeshRenderer renderer = go.GetComponent<MeshRenderer>();
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows = false;
+        return go;
+    }
+
+    // Makes a key-hint label device-aware: at runtime TrainingInputPromptWidget replaces its text with keyboard
+    // keycaps or an Xbox button (+ suffix), following InputDeviceMode. The label's baked text stays as the
+    // edit-time / fallback reading.
+    private static void Prompt(GameObject label, TrainingInputPromptWidget.GamepadGlyph gamepadButton, string suffix, bool keyCluster, params string[] keyboardKeys)
+    {
+        var prompt = new SerializedObject(label.AddComponent<TrainingInputPromptWidget>());
+        SerializedProperty keys = prompt.FindProperty("keyboardKeys");
+        keys.arraySize = keyboardKeys.Length;
+
+        for (int i = 0; i < keyboardKeys.Length; i++)
+            keys.GetArrayElementAtIndex(i).stringValue = keyboardKeys[i];
+
+        prompt.FindProperty("keyCluster").boolValue = keyCluster;
+        prompt.FindProperty("gamepadButton").enumValueIndex = (int)gamepadButton;
+        prompt.FindProperty("suffix").stringValue = suffix;
+        prompt.ApplyModifiedPropertiesWithoutUndo();
     }
 
     // ---------------------------------------------------------------- helpers

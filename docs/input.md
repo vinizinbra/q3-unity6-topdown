@@ -20,7 +20,7 @@ Quantum side: `Quantum.Unity.asmdef` already references `Unity.InputSystem` and 
 
 Dash = South (✕/A), Skill = West (□/X), Ping = North (△/Y), SwitchTarget = R1 (no Fire binding), Move = left stick/D-pad,
 Settings = Start/Options, HeroInfo (held) = L2 (or Select/Share), Minimap toggle = R2, Cancel = East (○/B),
-Submit = South, Tabs = L1/R1 (also `[` `]`), Emoji = right stick flick (see `docs/emoji.md`).
+Submit = South (keyboard: Enter, Space, E - see `docs/menu-navigation.md`), Tabs = L1/R1 (also `[` `]`), Emoji = right stick flick (see `docs/emoji.md`).
 
 Why: the legacy Input Manager numbers joystick buttons per device and OS (D3 on iOS reports DualShock 4
 as buttons 10/11/13/14/15), which forced a parallel named-entry set per pad (`Editor*` for the macOS Xbox

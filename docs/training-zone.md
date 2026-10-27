@@ -121,6 +121,40 @@ so the Director never spawns enemies.
     that event for a local player: it waits `LeaveDelay`, then calls `MatchMakingConfig.LeaveMatch()`.
 - There are no toasts: encouraging toasts were tried and removed.
 
+## Device-aware key prompts
+
+- The four key hints (Move, Dash, Skill, Interact) carry a `TrainingInputPromptWidget` next to their
+  TextMeshPro. The builder adds it with `Prompt(...)`.
+- At runtime the widget replaces the label's text with **keyboard keycaps** or an **Xbox button**, plus
+  an optional `suffix` ("next to the sign"). It swaps them live when `InputDeviceMode` flips.
+- The baked label text ("Shift  /  A") is only the edit-time reading.
+- `InputDeviceMode` (`UI/Common/`, self-installed) decides which set shows:
+  - It starts on gamepad if one is connected.
+  - Any gamepad button press or stick push past the press point switches to gamepad.
+  - Any key or mouse click switches back to keyboard.
+- The glyphs are built from code, with no art: flat SpriteRenderers using generated circle /
+  9-sliced rounded-square sprites, and TMP letters in the label's font.
+- Both devices share one look: a dark `#1E1C28` outline with a thicker bottom lip around a flat face.
+  - Keycaps are white with a dark letter. Move is the W/ASD inverted-T cluster (`keyCluster`).
+  - Pad buttons are slate `#403D52` with the Xbox letter colour (A green, B red, X blue, Y yellow).
+    LB/RB are slate pills; LS/RS circles have an inner ring.
+- Sizes are relative to the label: `glyphScale` × line height, and `letterScale` × font size.
+- **Animation** (unscaled time):
+  - Every button and keycap presses on a loop (`pressPeriod`): the face and letter sink onto the lip.
+  - The LS cap circles its well counter-clockwise from up (`stickCircleDuration`, `stickTravel`).
+  - The W A S D cluster presses W, A, S, D in turn, each as the stick passes that direction.
+- `sortingOrder` is negative (-8), like the ping ripple, so heroes and enemies standing on a prompt draw
+  over it. With a positive order the glyphs drew on top of the character.
+- The glyphs are children of the label and are built in `Start`, so `TrainingZoneGuideWidget`'s pop
+  (which collects the labels in `Awake`) scales them along with the label.
+
+| Station | Keyboard | Xbox |
+|---------|----------|------|
+| Start | W A S D | LS |
+| Dash | Shift | A |
+| Skill | E | X |
+| Finish | E + "next to the sign" | X + "next to the sign" |
+
 ## Building / editing the course
 
 The layout is code: `Assets/_Project/Scripts/TrainingZone/Editor/TrainingZoneBuilder.cs`. To change
@@ -177,7 +211,7 @@ Then save the scene.
 
 - Gap and ledge sizes come from the movement numbers (jump reach about 2.9 units, Dash 5 units) and
   have not been playtested yet. Tune them in the builder if a gap turns out too easy or impossible.
-- Key prompts are fixed text (keyboard / gamepad). They are not device-aware and have no touch
-  wording.
+- Key prompts switch between keyboard and Xbox only. Touch has no wording of its own: a phone without
+  a pad shows the keycaps. PlayStation glyphs aren't drawn either; any pad shows the Xbox letters.
 - There is no completion tracking or reward, and no "first launch → Training Zone" prompt.
 - The dummies use the Turret view as a placeholder.
