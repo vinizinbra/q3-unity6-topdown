@@ -63,20 +63,23 @@ namespace Quantum
         public FP KnockbackUpwardForce = 1;
 
         // Discharge LAUNCHES Filler/Normal/Specialist/Heavy (full KnockbackUpwardForce * KnockbackForce
-        // vertical speed, ignoring the tier KnockbackMultiplier - see DamageUtility.ApplyLaunch) and
-        // deals its damage when they land. Heavy gets this fraction of the launch so it rises a little
+        // vertical speed, ignoring the tier KnockbackMultiplier - see DamageUtility.ApplyLaunch); its
+        // damage still lands on contact. Heavy gets this fraction of the launch so it rises a little
         // lower than the crowd but still visibly leaves the ground. Elite/Boss are not launched at
-        // all: they keep the plain tier-scaled knockback and take their damage on contact.
+        // all: they keep the plain tier-scaled knockback.
         public FP HeavyLaunchScale = FP._0_75;
 
-        // "Juggernaut Skill Damage" - the percentage basis every Ascension in this pool (Bone
-        // Breaker's own multiplier, Aftershock, Concussive Impact's landing/shockwave, Iron Shoulder)
-        // scales off - see BruteAscensionUtility.ResolveJuggernautSkillDamage. Applied directly as
-        // Discharge's own per-hit damage (scaled by Bone Breaker there specifically), but every OTHER
-        // consumer reads this raw, un-Bone-Breaker-scaled value, so investing in Bone Breaker doesn't
-        // silently also buff Aftershock/Concussive Impact/Iron Shoulder. Placeholder pending a balance
-        // pass alongside the rest of Brute's kit.
-        public FP Damage = 30;
+        // "Juggernaut Skill Damage" - the percentage basis every Ascension in this pool (Aftershock,
+        // Concussive Impact's landing/shockwave, Iron Shoulder, Groundbreaker) scales off - see
+        // BruteAscensionUtility.ResolveJuggernautSkillDamage. Deliberately NOT the ram's own damage
+        // (DischargeDamage below), so the base Discharge can stay weak without dragging every
+        // Ascension down with it.
+        public FP Damage = 120;
+
+        // The ram's own contact hit, per enemy per Discharge - scaled by Bone Breaker (which therefore
+        // never buffs the other Ascensions). Kept below a Normal enemy's HP on purpose: the un-upgraded
+        // ram softens and scatters, Concussive Impact's landing hit is what turns it into a kill.
+        public FP DischargeDamage = 45;
 
         // Aftershock's own blast radius baseline - "use existing/current Aftershock radius" per
         // design, matches the old (dead) JuggernautEndExplosionUpgrade's working default.
@@ -546,7 +549,7 @@ namespace Quantum
         // a single burst). Every target caught gets pushed by the exact same impulse - built from
         // Brutus's own velocity, not a per-target radial direction, so this isn't "away from Brutus" so
         // much as "flattened by Brutus" in whichever way he's currently moving. Damage is Bone
-        // Breaker's own domain - always applied at the baseline Damage value, scaled up by
+        // Breaker's own domain - always applied at the baseline DischargeDamage value, scaled up by
         // BoneBreakerUpgrade (and its Specialist/Heavy tier bonus) when equipped.
         private void Discharge(Frame f, EntityRef owner, FPVector3 center, JuggernautCharge* charge, FPVector3 velocityXZ)
         {
@@ -611,9 +614,9 @@ namespace Quantum
                     ShieldUtility.ApplyFlatShield(f, owner, owner, ownerShield, ShieldGainPerHit);
                 }
 
-                // Bone Breaker - always dealt now (baseline Damage), scaled by the Ascension's own
-                // multiplier and, at rank 3, a further bonus against Specialist/Heavy tier targets.
-                FP damage = Damage;
+                // Bone Breaker - always dealt now (baseline DischargeDamage), scaled by the Ascension's
+                // own multiplier and, at rank 3, a further bonus against Specialist/Heavy tier targets.
+                FP damage = DischargeDamage;
 
                 if (hasBoneBreaker == true)
                 {
@@ -625,14 +628,9 @@ namespace Quantum
                     }
                 }
 
-                // A launched enemy takes the Discharge damage when it comes back down (baked onto it
-                // below, resolved by JuggernautLandingImpactSystem) rather than on contact. Anything
-                // that wasn't launched - Elite/Boss, or a kinematic mid-charge/leap enemy the push
-                // couldn't move - has no landing to wait for and is hit right away.
-                if (launched == false)
-                {
-                    DamageUtility.ApplyDamage(f, target, damage, owner, DamageSource.Skill);
-                }
+                // Brutus's two-hit identity: the Discharge itself always hits on contact, launched or
+                // not. The second hit - on landing - is Concussive Impact's own (baked below).
+                DamageUtility.ApplyDamage(f, target, damage, owner, DamageSource.Skill);
 
                 f.Events.JuggernautDischargeHit(target, targetPosition, this);
 
@@ -645,35 +643,23 @@ namespace Quantum
                 f.AddOrGet<JuggernautDischargeCooldown>(target, out var cooldown);
                 cooldown->Remaining = DischargeCooldownPerEnemy;
 
-                if (launched == false)
+                if (launched == false || hasConcussiveImpact == false)
                     continue;
 
                 // Baked onto the target itself (not tracked on Brutus) so JuggernautLandingImpactSystem
                 // can resolve everything it needs purely off the launched enemy, even if Brutus's own
-                // skill has already ended by the time it lands. Baseline carries just the Discharge
-                // damage; Concussive Impact layers its landing damage, stun, shockwave and impact VFX
-                // on top.
+                // skill has already ended by the time it lands. Concussive Impact's landing damage,
+                // stun, shockwave and impact VFX - the second hit, on top of the contact one above.
                 f.AddOrGet<JuggernautLaunched>(target, out var launchedState);
                 launchedState->Owner = owner;
                 launchedState->GroundCheckDelay = FP._0_20;
-                launchedState->Damage = damage;
-                launchedState->StunChance = FP._0;
-                launchedState->StunDuration = FP._0;
-                launchedState->ShockwaveRadius = FP._0;
-                launchedState->ShockwaveDamagePercent = FP._0;
-                launchedState->ShockwaveStunDuration = FP._0;
-                launchedState->Source = default;
-
-                if (hasConcussiveImpact == true)
-                {
-                    launchedState->Damage += concussiveImpact->LandingDamagePercent * Damage;
-                    launchedState->StunChance = FP._1;
-                    launchedState->StunDuration = concussiveImpact->LandingStunDuration;
-                    launchedState->ShockwaveRadius = concussiveImpact->ShockwaveRadius;
-                    launchedState->ShockwaveDamagePercent = concussiveImpact->ShockwaveDamagePercent;
-                    launchedState->ShockwaveStunDuration = concussiveImpact->ShockwaveStunDuration;
-                    launchedState->Source = concussiveImpact->Source;
-                }
+                launchedState->Damage = concussiveImpact->LandingDamagePercent * Damage;
+                launchedState->StunChance = FP._1;
+                launchedState->StunDuration = concussiveImpact->LandingStunDuration;
+                launchedState->ShockwaveRadius = concussiveImpact->ShockwaveRadius;
+                launchedState->ShockwaveDamagePercent = concussiveImpact->ShockwaveDamagePercent;
+                launchedState->ShockwaveStunDuration = concussiveImpact->ShockwaveStunDuration;
+                launchedState->Source = concussiveImpact->Source;
             }
 
             f.Events.JuggernautDischarged(owner, center, KnockbackRadius, this);

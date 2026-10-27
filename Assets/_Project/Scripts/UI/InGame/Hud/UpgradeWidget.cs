@@ -30,6 +30,9 @@ public class UpgradeWidget : MonoBehaviour
     [SerializeField, Tooltip("More ranks than this fall back to the Roman numeral - a 10-pick upgrade would be a row of dots.")]
     private int maxPips = 5;
 
+    [SerializeField, Tooltip("Optional - hover shows the full title + description (the row's own description can be cut short).")]
+    private UpgradeTooltipTriggerWidget tooltipTrigger;
+
     private readonly System.Collections.Generic.List<Image> _pips = new System.Collections.Generic.List<Image>();
 
     public void Setup(Sprite icon, string title, string description, int level)
@@ -40,6 +43,10 @@ public class UpgradeWidget : MonoBehaviour
     // maxRank 0 = unknown/unlimited (no pips, Roman numeral as before).
     public void Setup(Sprite icon, string title, string description, int level, int maxRank)
     {
+        // Tooltip always carries the rank in the title, even while the pips replace it on the row.
+        if (tooltipTrigger != null)
+            tooltipTrigger.SetText(StringUtility.WithRankSuffix(title, level), description);
+
         bool pips = rankPipsRoot != null && rankPipTemplate != null && maxRank > 1 && maxRank <= maxPips;
         RefreshPips(pips ? maxRank : 0, level);
 

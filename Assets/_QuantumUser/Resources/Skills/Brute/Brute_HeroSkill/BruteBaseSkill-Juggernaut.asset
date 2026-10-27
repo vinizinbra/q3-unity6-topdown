@@ -314,6 +314,8 @@ MonoBehaviour:
     RawValue: 49152
   Damage:
     RawValue: 7864320
+  DischargeDamage:
+    RawValue: 2949120
   AftershockRadius:
     RawValue: 262144
   AftershockPushDuration:

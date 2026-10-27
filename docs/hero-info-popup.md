@@ -20,15 +20,20 @@ the panel edge; sub-sections get the same shape in cyan with dark text.
    (`HeroInfoPopupWidget.riftIconsRoot`/`riftIconTemplate`, filled from the same UpgradeHistory rebuild) so
    they follow any name length. Hovering an icon opens a small panel with the mutation's name and
    description: `UpgradeTooltipWidget` (the `UpgradeTooltip` child, last in the window so it draws on
-   top; sizes to its text, placed under the icon, clamped inside the window) fed by an
-   `UpgradeTooltipTriggerWidget` on each icon (pointer enter/exit; hides itself if the icon is
-   disabled while hovered). Mouse only for now - no gamepad focus path. Then Health only - the **Shield readout is removed from this popup**
+   top; sizes to its text, placed under the hovered element - above it when there's no room below - and
+   clamped inside the window) fed by an `UpgradeTooltipTriggerWidget` on each icon (pointer enter/exit;
+   hides itself if the icon is disabled while hovered). The **same panel** also serves the weapon icon
+   (`CurrentWeaponUiWidget.weaponTooltipTrigger`: name+level, `WeaponDataAsset.Description` or the tags
+   line), each perk row (`WeaponCardPerkRowWidget.tooltipTrigger` via `SetTooltip`: perk name + formatted
+   effect) and each Run Upgrades card (`UpgradeWidget.tooltipTrigger`: title with rank + full,
+   untruncated description) - those triggers have the panel wired in the prefab and are filled with
+   `SetText`. Mouse only for now - no gamepad focus path. Then Health only - the **Shield readout is removed from this popup**
    (`HeroInfoWidget.shieldWidget` unassigned on this instance, `Shield` object off, since the widget
    re-activates it every frame otherwise). Then a cyan **STATS** header, then `HeroBuildStatsWidget`: two
    columns split by a faint divider, each row icon + label + value. Column headers are off
    (`showColumnHeaders`) since the STATS banner already titles them.
 2. **WEAPON** (top-right, 469x515) - `CurrentWeaponUiWidget`: icon frame, name (+level), tags line
-   (family | weight | element), a 3-cell stat strip (**Fire Rate** shots/s, **Reload** s, **Magazine** -
+   (family | weight | element), a 4-cell stat strip (**Damage** per trigger pull, pellets summed with a gray "6x9" split, same rounding as the BuildStats Damage row; **Fire Rate** shots/s, **Reload** s, **Magazine** -
    `fireRateText`/`reloadText`/`magazineText`, each tinted green/red vs the weapon's authored value),
    then a cyan **PERKS** header over the 5 perk rows - one "**Name** - effect" block per perk
    (`separatePerkTitles` off), wrapping to a second line when long, auto-sized 12-16 to stay inside the

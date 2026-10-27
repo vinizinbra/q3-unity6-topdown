@@ -155,10 +155,10 @@ Heavy Impact + old Concussive Impact + Lasting Impact + Overwhelming Force + Cru
   onto the launched target via `JuggernautLaunched` (not tracked on Brute) so
   `JuggernautLandingImpactSystem` can resolve everything purely off the target even if Brute's own
   Juggernaut has already ended.
-- Rank 1: launched enemies take landing damage (30% of Juggernaut Skill Damage, unconditional - not a
+- Rank 1: launched enemies take landing damage (20% of Juggernaut Skill Damage, unconditional - not a
   chance roll) + Stunned 0.75s on landing.
-- Rank 2: +25% launch/knockback force; landing damage 50%; landing stun 1.0s.
-- Rank 3: landing damage 75%; landing stun 1.25s; landing also creates a 2.5m impact shockwave (40%
+- Rank 2: +25% launch/knockback force; landing damage 30%; landing stun 1.0s.
+- Rank 3: landing damage 40%; landing stun 1.25s; landing also creates a 2.5m impact shockwave (40%
   Juggernaut damage, 1s Stun on nearby enemies); Brute additionally deals +40% damage to any enemy he's
   Stunned, via `StunDamageBonusUpgrade` (renamed from the old standalone Crushing Blow ascension's own
   `CrushingBlowUpgrade` - same component, same read site in `DamageUtility.ResolveOutgoingDamage`, just
@@ -986,3 +986,26 @@ temporary-Shield timer (6s) starts at cast and is only refreshed by another gran
 including a Momentum R3 hold). `JuggernautSkillData.End` resets `ExpirationRemaining` to the full
 `TemporaryDuration`, so the 6s decay window starts only after Juggernaut is over. Damage still drains the
 Shield during the channel as normal — only the timed expiry is paused.
+
+# 2026-10-27 — Two hits again: contact + landing
+
+The 2026-10-19 launch change had moved the whole Discharge damage onto the landing, so a launched
+enemy took nothing on contact. That erased Brute's identity of hitting twice, once on the ram and once
+on the landing.
+
+- **Contact:** Discharge always deals its Bone-Breaker-scaled `DischargeDamage` on contact, launched or not.
+- **Landing:** only Concussive Impact. `JuggernautLaunched` is baked only when the Ascension is equipped and
+  carries just its landing payload (`LandingDamagePercent * Damage` + stun/shockwave). Without the
+  Ascension there is no landing hit.
+- **Rebalance: the ram's damage is split from the Ascension basis.** Design rule (user, 2026-10-27): **the
+  base skill must not kill a Normal enemy without upgrades.** New `JuggernautSkillData.DischargeDamage`
+  (**45**) is the ram's contact hit, which Bone Breaker scales. `Damage` stays **120** as "Juggernaut Skill
+  Damage", the basis for Aftershock, the CI shockwave, Iron Shoulder and Groundbreaker, so none of them lost
+  anything. 45 kills Filler (20) only. A Normal (60) flies and lands at 15 HP. Concussive Impact landing is
+  now **20/30/40%** of the basis (24/36/48), so R1 finishes the Normal on landing and the second hit is the
+  kill. Specialists need Bone Breaker or the weapon. Base per-cast single-target is ~225, about half the ~450
+  target, by design (control skill, like Yoru's).
+  Playtest knobs: `DischargeDamage` (stay < 60), then `LandingDamagePercent`. Don't go back to deferring the
+  contact damage.
+- Balance Simulator: discharge hits now multiply `DischargeDamage`; `Basis` stays `Damage` for the
+  Ascension percentages.

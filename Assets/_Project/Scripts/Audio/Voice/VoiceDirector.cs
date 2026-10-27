@@ -76,6 +76,30 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
     private readonly HashSet<EntityRef> _activeReady = new();
     private bool _readySeeded;
 
+    // Lines whose rule has QueueIfBusy, waiting for their turn. E.g. the culprit of a Cursed Survival
+    // failure is whoever just went Down, so their PlayerDowned line is still playing when the
+    // failure lands, and an equal-priority line never cuts another - it would just be dropped.
+    private const float QueueMaxWaitSeconds = 6f;
+    private const int MaxQueuedLines = 4;
+
+    private readonly struct QueuedLine
+    {
+        public readonly VoiceLineRequest Request;
+        public readonly float At;
+        public readonly float ExpiresAt;
+
+        public QueuedLine(VoiceLineRequest request, float at, float expiresAt)
+        {
+            Request = request;
+            At = at;
+            ExpiresAt = expiresAt;
+        }
+    }
+
+    private readonly List<QueuedLine> _queued = new();
+    private readonly List<QueuedLine> _due = new();
+    private float _currentEndsAt;
+
     private void Awake()
     {
         Instance = this;
@@ -164,6 +188,7 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         PollRunFlow(frame);
         PollReviveChannels(game, frame);
         PollTeamChallengeReady(game, frame);
+        FlushQueuedLines();
     }
 
     private unsafe void PollRunFlow(Frame frame)
@@ -375,7 +400,7 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         => Raise(e.Game, VoiceLineTrigger.ChallengeStarted, e.Player);
 
     private void OnTraversalChallengeFailed(EventTraversalChallengeFailed e)
-        => RaiseForEveryLocalPlayer(e.Game.Frames.Predicted, VoiceLineTrigger.ChallengeFailed);
+        => RaiseForFirstLocalPlayer(VoiceLineTrigger.ChallengeFailed);
 
     private void OnTeamChallengeActivated(EventTeamChallengeActivated e)
         => Raise(e.Game, VoiceLineTrigger.ChallengeStarted, e.Player);
@@ -388,7 +413,32 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
             return;
         }
 
-        RaiseForEveryLocalPlayer(e.Game.Frames.Predicted, VoiceLineTrigger.ChallengeFailed);
+        RaiseForFirstLocalPlayer(VoiceLineTrigger.ChallengeFailed);
+    }
+
+    private void FlushQueuedLines()
+    {
+        if (_queued.Count == 0)
+            return;
+
+        float now = Time.unscaledTime;
+        _due.Clear();
+
+        for (int i = _queued.Count - 1; i >= 0; i--)
+        {
+            if (now < _queued[i].At)
+                continue;
+
+            _due.Add(_queued[i]);
+            _queued.RemoveAt(i);
+        }
+
+        // Collected back to front, so flip to play the oldest request first.
+        for (int i = _due.Count - 1; i >= 0; i--)
+        {
+            if (now < _due[i].ExpiresAt)
+                Play(_due[i].Request, _due[i].ExpiresAt);
+        }
     }
 
     // TeamChallengeActivated is deliberately only the FIRST Ready (see Events.qtn), so a 2nd/3rd/4th
@@ -532,7 +582,7 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         return HeroId.None;
     }
 
-    private void Play(VoiceLineRequest request)
+    private void Play(VoiceLineRequest request, float expiresAt = 0f)
     {
         if (logTriggers)
             LogHelper.Log(LogTag, request.ToString(), this);
@@ -550,6 +600,33 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
                 LogHelper.Log(LogTag, $"  -> no rule authored for {request.Trigger}, silent", this);
 
             return;
+        }
+
+        if (rule.QueueIfBusy)
+        {
+            float now = Time.unscaledTime;
+
+            if (expiresAt <= 0f)
+                expiresAt = now + QueueMaxWaitSeconds;
+
+            float waitUntil = WaitUntil(request, rule);
+
+            if (waitUntil > now)
+            {
+                if (waitUntil < expiresAt && _queued.Count < MaxQueuedLines)
+                {
+                    _queued.Add(new QueuedLine(request, waitUntil, expiresAt));
+
+                    if (logTriggers)
+                        LogHelper.Log(LogTag, $"  -> queued {request.Trigger}, plays in {waitUntil - now:0.0}s", this);
+                }
+                else if (logTriggers)
+                {
+                    LogHelper.Log(LogTag, $"  -> {request.Trigger} dropped, would wait too long or queue is full", this);
+                }
+
+                return;
+            }
         }
 
         if (ShouldSpeak(request, rule, out string reason) == false)
@@ -584,11 +661,30 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
 
         _currentPriority = rule.Priority;
         _current = PlayForAudience(request, rule, settings, line);
+        _currentEndsAt = Time.unscaledTime + line.length;
 
         // Hold BOTH participants silent for the length of the clip. A pair line is the whole
         // interaction baked into one take - Max reacting to Pixie already contains Pixie - so letting
         // her start her own line over it would be two people talking at once about the same moment.
         LockSpeakers(request, line.length);
+    }
+
+    // When this request could next play: after its speaker (and the other participant) finish their
+    // line, and after the line currently playing if that one would not be cut by this priority.
+    private float WaitUntil(VoiceLineRequest request, VoiceLineConfig.Rule rule)
+    {
+        float until = 0f;
+
+        if (_busyUntil.TryGetValue(request.Speaker, out float speakerBusy))
+            until = Mathf.Max(until, speakerBusy);
+
+        if (request.RelatedPlayer != EntityRef.None && _busyUntil.TryGetValue(request.RelatedPlayer, out float relatedBusy))
+            until = Mathf.Max(until, relatedBusy);
+
+        if (_current.IsPlaying && rule.Priority <= _currentPriority)
+            until = Mathf.Max(until, _currentEndsAt + crossTalkGap);
+
+        return until;
     }
 
     // Reports WHICH check rejected a request. A single "suppressed" covering six unrelated reasons
@@ -636,13 +732,18 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
 
         float now = Time.unscaledTime;
 
-        if (now < _globalCooldownUntil)
+        // Critical moments (going down, KO, a failed challenge) and rules flagged BypassPacing skip the
+        // two pacing cooldowns: they are always heard, and a burst of chatter right before them must
+        // not silence them. They still respect the busy lock above, so nobody talks over their own line.
+        bool critical = rule.Priority == VoicePriority.Critical || rule.BypassPacing;
+
+        if (critical == false && now < _globalCooldownUntil)
         {
             reason = $"global cooldown ({_globalCooldownUntil - now:0.0}s left)";
             return false;
         }
 
-        if (_speakerCooldowns.TryGetValue(request.Speaker, out float speakerUntil) && now < speakerUntil)
+        if (critical == false && _speakerCooldowns.TryGetValue(request.Speaker, out float speakerUntil) && now < speakerUntil)
         {
             reason = $"per-speaker cooldown ({speakerUntil - now:0.0}s left)";
             return false;
@@ -726,6 +827,23 @@ public class VoiceDirector : QuantumGlobalMonoBehaviour
         => entity != EntityRef.None
            && MyLocalPlayer.Instance != null
            && MyLocalPlayer.Instance.IsLocalEntity(entity);
+
+    // One speaker for a whole-team moment. With several local players (couch co-op) every one of
+    // them speaking in turn would turn a single failure into a chorus.
+    private void RaiseForFirstLocalPlayer(VoiceLineTrigger trigger)
+    {
+        if (MyLocalPlayer.Instance == null)
+            return;
+
+        foreach (var slot in MyLocalPlayer.Instance.Slots)
+        {
+            if (slot.IsSet && slot.EntityRef != EntityRef.None)
+            {
+                Raise(_game, trigger, slot.EntityRef);
+                return;
+            }
+        }
+    }
 
     private void RaiseForEveryLocalPlayer(Frame frame, VoiceLineTrigger trigger)
     {

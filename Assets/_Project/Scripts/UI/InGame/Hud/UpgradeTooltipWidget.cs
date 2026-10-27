@@ -4,7 +4,8 @@ using UnityEngine;
 // Small hover panel (title + description) shown next to whatever UpgradeTooltipTriggerWidget the mouse
 // is over - first used by HeroInfoPopupWidget's Rift Mutation icon row. Lives inside the window it
 // serves (last sibling, so it draws on top) and sizes itself to its text via its own layout group +
-// ContentSizeFitter. Placed below the hovered element and clamped inside `bounds`.
+// ContentSizeFitter. Placed below the hovered element - above it when there's no room below (bottom
+// rows) - and clamped inside `bounds`.
 public class UpgradeTooltipWidget : MonoBehaviour
 {
     [SerializeField] private RectTransform panel;
@@ -42,10 +43,18 @@ public class UpgradeTooltipWidget : MonoBehaviour
         target.GetWorldCorners(corners);
 
         // Bottom-left corner of the hovered element, in the panel's parent space.
-        Vector2 anchor = parent.InverseTransformPoint(corners[0]);
+        Vector2 below = (Vector2)parent.InverseTransformPoint(corners[0]) + offset;
         panel.pivot = new Vector2(0f, 1f);
         panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
-        panel.anchoredPosition = anchor + offset;
+        panel.anchoredPosition = below;
+
+        // Not enough room under it: hang it off the element's top-left corner instead.
+        if (bounds != null && below.y - panel.rect.height < BoundsMin(parent).y)
+        {
+            Vector2 above = (Vector2)parent.InverseTransformPoint(corners[1]) - offset;
+            panel.pivot = new Vector2(0f, 0f);
+            panel.anchoredPosition = above;
+        }
 
         Clamp(parent);
     }
@@ -66,10 +75,19 @@ public class UpgradeTooltipWidget : MonoBehaviour
         Vector2 min = parent.InverseTransformPoint(corners[0]);
         Vector2 max = parent.InverseTransformPoint(corners[2]);
 
+        // Works on the panel's bottom-left corner, so it holds for either pivot Show picked.
         Vector2 size = panel.rect.size;
-        Vector2 position = panel.anchoredPosition;
-        position.x = Mathf.Clamp(position.x, min.x, max.x - size.x);
-        position.y = Mathf.Clamp(position.y, min.y + size.y, max.y);
-        panel.anchoredPosition = position;
+        Vector2 offsetToCorner = Vector2.Scale(panel.pivot, size);
+        Vector2 corner = panel.anchoredPosition - offsetToCorner;
+        corner.x = Mathf.Clamp(corner.x, min.x, max.x - size.x);
+        corner.y = Mathf.Clamp(corner.y, min.y, max.y - size.y);
+        panel.anchoredPosition = corner + offsetToCorner;
+    }
+
+    private Vector2 BoundsMin(RectTransform parent)
+    {
+        var corners = new Vector3[4];
+        bounds.GetWorldCorners(corners);
+        return parent.InverseTransformPoint(corners[0]);
     }
 }

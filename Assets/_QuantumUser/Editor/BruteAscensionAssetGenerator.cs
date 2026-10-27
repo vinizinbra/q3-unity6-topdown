@@ -132,11 +132,11 @@ namespace QuantumUser.Editor
                 asset.Description = "Enemies your discharge launches no longer land safely - they take damage, get Stunned, and crack the ground.";
                 asset.RankDescriptions = new[]
                 {
-                    "Enemies launched by Discharge take <color=#FD3971>30%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>0.75s</color> when they land.",
-                    "Discharge has <color=#FD3971>+25%</color> Knockback. Launched enemies take <color=#FD3971>50%</color> Juggernaut Skill Damage and are Stunned for <color=#FD3971>1s</color> when they land.",
-                    "Discharge has <color=#FD3971>+25%</color> Knockback. Launched enemies take <color=#FD3971>75%</color> Juggernaut Skill Damage, are Stunned for <color=#FD3971>1.25s</color>, and land with a <color=#FD3971>2.5m</color> shockwave (<color=#FD3971>40%</color> Damage, <color=#FD3971>1s</color> Stun). Stunned enemies take <color=#FD3971>+40%</color> Damage.",
+                    "Launched enemies take a second hit on landing: <color=#FD3971>20%</color> Juggernaut Skill Damage and a <color=#FD3971>0.75s</color> Stun.",
+                    "Discharge has <color=#FD3971>+25%</color> Knockback. Landing hits for <color=#FD3971>30%</color> Juggernaut Skill Damage and Stuns for <color=#FD3971>1s</color>.",
+                    "Discharge has <color=#FD3971>+25%</color> Knockback. Landing hits for <color=#FD3971>40%</color> Juggernaut Skill Damage, Stuns for <color=#FD3971>1.25s</color>, and sends out a <color=#FD3971>2.5m</color> shockwave (<color=#FD3971>40%</color> Damage, <color=#FD3971>1s</color> Stun). Stunned enemies take <color=#FD3971>+40%</color> Damage.",
                 };
-                asset.LandingDamagePercent = new[] { FP.FromString("0.30"), FP._0_50, FP.FromString("0.75") };
+                asset.LandingDamagePercent = new[] { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
                 asset.LandingStunDuration = new[] { FP.FromString("0.75"), FP._1, FP.FromString("1.25") };
                 asset.KnockbackForceBonus = new[] { FP._0, FP.FromString("0.25"), FP.FromString("0.25") };
                 asset.ShockwaveRadius = new[] { FP._0, FP._0, FP.FromString("2.5") };

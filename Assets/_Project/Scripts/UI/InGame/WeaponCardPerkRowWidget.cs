@@ -14,6 +14,14 @@ public class WeaponCardPerkRowWidget : MonoBehaviour
     [SerializeField] private TMP_Text descriptionText;
     [SerializeField, Tooltip("One color per UpgradeRarity value, in enum order: Common, Rare, Epic, Legendary. Applied to titleText/descriptionText - optional, leave empty to skip.")]
     private Color[] rarityColors;
+    [SerializeField, Tooltip("Optional - hover shows the perk's name + effect, filled by the caller via SetTooltip.")]
+    private UpgradeTooltipTriggerWidget tooltipTrigger;
+
+    public void SetTooltip(string title, string description)
+    {
+        if (tooltipTrigger != null)
+            tooltipTrigger.SetText(title, description);
+    }
 
     public void Setup(WeaponCardWidget.PerkRowData data)
     {

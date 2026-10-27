@@ -1,5 +1,6 @@
 // Baked onto an enemy by JuggernautSkillData.Discharge when the Concussive Impact Ascension is
-// equipped, the moment it's successfully launched - JuggernautLandingImpactSystem watches for this
+// equipped, the moment it's successfully launched (the Discharge's own damage already landed on
+// contact - this is the second, landing hit) - JuggernautLandingImpactSystem watches for this
 // entity to touch ground or a wall again (EnemyMovementUtility.IsGrounded/IsBlockedByWall), then deals
 // Damage, applies StunDuration (StunChance is always 1 - Concussive Impact's landing stun is
 // unconditional, not a roll), and - rank 3 only, ShockwaveRadius > 0 - a further radial

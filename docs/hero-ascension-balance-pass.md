@@ -218,7 +218,7 @@ This was done by retuning each skill's authored values. `CharacterData.SkillDama
 | Hero | Asset / field | Old → New |
 |---|---|---|
 | Pixie | `PixieBaseSkill` `Damage` (and its description text) | 100 → 450 |
-| Brute | `BruteBaseSkill-Juggernaut` `Damage` (per discharge) | 30 → 120 |
+| Brute | `BruteBaseSkill-Juggernaut` `Damage` (per discharge) | 30 → 120 (Ascension basis; the ram itself is `DischargeDamage` 45 since 2026-10-27, see brute-ascensions.md) |
 | Zara | `ZaraBaseSkill` `Damage` basis + `SpawnAlternatingAreaEffectData.DamageAmount` (per beat) | 10 → 60 |
 | Yoru | `YoruVortexSkill` `Damage` (cast hit + Ascension basis) | 20 → 100 |
 | Capy | `CapySkill` `SpawnSentrySkillAction.SkillDamage` (Ascension basis) | 50 → 150 |

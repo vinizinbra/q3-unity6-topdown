@@ -45,9 +45,9 @@ namespace QuantumUser.Editor.BalanceSimulator
                     est.ChannelDuration = D(jug.Duration);
                     est.HitsPerActivation = discharges;
                     est.Basis = D(jug.Damage);
-                    est.DamagePerActivation = D(jug.Damage) * discharges;
+                    est.DamagePerActivation = D(jug.DischargeDamage) * discharges;
                     est.UsesArea = true;
-                    est.Model = $"Juggernaut ({discharges:0.#} discharge hits x {D(jug.Damage)} @ {scenario.ChannelContactUptime:P0} contact uptime, cycle = channel + cooldown)";
+                    est.Model = $"Juggernaut ({discharges:0.#} discharge hits x {D(jug.DischargeDamage)} @ {scenario.ChannelContactUptime:P0} contact uptime, cycle = channel + cooldown)";
                     AddGenericActions(skill, assets, scenario, est, area, discharges);
                     return est;
                 }

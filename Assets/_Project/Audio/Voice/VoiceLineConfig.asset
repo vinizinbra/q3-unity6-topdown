@@ -143,20 +143,26 @@ MonoBehaviour:
     Trigger: 81
     Probability: 1
     Cooldown: 0
-    Priority: 1
+    Priority: 2
     Audience: 2
+    BypassPacing: 1
+    QueueIfBusy: 1
   - name: ChallengeFailed
     Trigger: 82
     Probability: 1
     Cooldown: 0
-    Priority: 2
+    Priority: 3
     Audience: 2
+    BypassPacing: 0
+    QueueIfBusy: 1
   - name: ChallengeCulprit
     Trigger: 83
     Probability: 1
     Cooldown: 0
-    Priority: 2
+    Priority: 3
     Audience: 2
+    BypassPacing: 0
+    QueueIfBusy: 1
   - name: PingElite
     Trigger: 100
     Probability: 0.6

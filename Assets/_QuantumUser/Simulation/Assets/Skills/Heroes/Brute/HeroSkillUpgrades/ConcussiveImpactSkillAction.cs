@@ -15,7 +15,7 @@ namespace Quantum
     // GroundPoundPassiveUpgradeData.Source/VortexExplodeOnDestroy.Source already use.
     public unsafe partial class ConcussiveImpactSkillAction : SkillActionData
     {
-        public FP[] LandingDamagePercent = { FP.FromString("0.30"), FP._0_50, FP.FromString("0.75") };
+        public FP[] LandingDamagePercent = { FP.FromString("0.20"), FP.FromString("0.30"), FP.FromString("0.40") };
         public FP[] LandingStunDuration = { FP.FromString("0.75"), FP._1, FP.FromString("1.25") };
         public FP[] KnockbackForceBonus = { FP._0, FP.FromString("0.25"), FP.FromString("0.25") };
         public FP[] ShockwaveRadius = { FP._0, FP._0, FP.FromString("2.5") };

@@ -21,7 +21,12 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
     [SerializeField, Tooltip("Optional - \"Pistol | Light | Fire\" (family, weight, element) under the name. Weight explains the move-speed nudge, element the status the weapon applies; Medium/Neutral are left out as the neutral defaults.")]
     private TMP_Text weaponTagsText;
 
+    [SerializeField, Tooltip("Optional - hover on the weapon shows its name + Description blurb (tags line when it has none).")]
+    private UpgradeTooltipTriggerWidget weaponTooltipTrigger;
+
     [Header("Stats (optional - each left unassigned is skipped)")]
+    [SerializeField, Tooltip("Damage per trigger pull (all pellets summed), after perks and damage bonuses - same number as HeroBuildStatsWidget's Damage row.")]
+    private TMP_Text damageText;
     [SerializeField, Tooltip("Shots per second, after perks, Attack Speed and timed Haste.")]
     private TMP_Text fireRateText;
     [SerializeField, Tooltip("Reload seconds, after perks and Reload Speed.")]
@@ -87,20 +92,23 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
         if (weaponIcon != null)
             weaponIcon.sprite = weaponData.GetIcon();
 
-        if (weaponName != null)
-        {
-            string baseName = string.IsNullOrEmpty(weaponData.DisplayName)
-                ? StringUtility.Beautify(weaponData.name, "WeaponData")
-                : weaponData.DisplayName;
+        // weapon.Level - Store's "Increase Weapon Level" purchase, or a Break-leveled Store
+        // weapon offer (see docs/store-blacksmith.md) - same "+N" suffix
+        // GameplayUiController.BuildWeaponCardData already shows on a Store offer card.
+        string displayName = StringUtility.WithLevelSuffix(string.IsNullOrEmpty(weaponData.DisplayName)
+            ? StringUtility.Beautify(weaponData.name, "WeaponData")
+            : weaponData.DisplayName, weapon.Level);
 
-            // weapon.Level - Store's "Increase Weapon Level" purchase, or a Break-leveled Store
-            // weapon offer (see docs/store-blacksmith.md) - same "+N" suffix
-            // GameplayUiController.BuildWeaponCardData already shows on a Store offer card.
-            weaponName.text = StringUtility.WithLevelSuffix(baseName, weapon.Level);
-        }
+        if (weaponName != null)
+            weaponName.text = displayName;
+
+        string tags = BuildTags(weaponData);
 
         if (weaponTagsText != null)
-            weaponTagsText.text = BuildTags(weaponData);
+            weaponTagsText.text = tags;
+
+        if (weaponTooltipTrigger != null)
+            weaponTooltipTrigger.SetText(displayName, string.IsNullOrEmpty(weaponData.Description) ? tags : weaponData.Description);
 
         RefreshStats(frame, weapon, weaponData);
         RefreshPerks(frame, weapon);
@@ -110,6 +118,17 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
     // against the weapon's own authored value so a build that moved it reads at a glance.
     private void RefreshStats(Frame frame, Weapon weapon, WeaponDataAsset weaponData)
     {
+        if (damageText != null)
+        {
+            // Same rounding as HeroBuildStatsWidget.RefreshDamage: each pellet rounded up, then summed.
+            FP final = weaponData.Damage * weapon.DamageMultiplier * DamageUtility.ResolveBaselineDamageMultiplier(frame, _entityRef, DamageSource.Weapon);
+            int pellets = Mathf.Max(1, weaponData.PelletCount);
+            int perPellet = Mathf.CeilToInt(final.AsFloat);
+            int basePerPellet = Mathf.CeilToInt(weaponData.Damage.AsFloat);
+            string total = Tint((perPellet * pellets).ToString(), perPellet, basePerPellet, true);
+            damageText.text = pellets > 1 ? $"{total} <size=65%><color=#9AA0A6>{pellets}x{perPellet}</color></size>" : total;
+        }
+
         if (fireRateText != null && weaponData.FireRate > FP._0)
         {
             FP cooldown = StatUtility.GetFireCooldown(frame, _entityRef, FP._1 / weaponData.FireRate * weapon.FireCooldownMultiplier);
@@ -159,6 +178,7 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
                 Description = separatePerkTitles ? perkData.GetFormattedDescription() : perkData.GetDescription(),
                 RarityIndex = (int)perkData.Rarity
             });
+            perkRows[shownCount].SetTooltip(ResolvePerkName(perkData), perkData.GetFormattedDescription());
 
             shownCount++;
         }

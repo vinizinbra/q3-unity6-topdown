@@ -33,6 +33,12 @@ public class VoiceLineConfig : ScriptableObject
         public VoicePriority Priority = VoicePriority.Normal;
 
         public VoiceAudience Audience = VoiceAudience.LocalOnly;
+
+        [Tooltip("Ignore the global and per-speaker pacing cooldowns. Critical priority already does; this lets a High line (a teammate joining a challenge) be heard even right after another line. Still never talks over its own speaker.")]
+        public bool BypassPacing;
+
+        [Tooltip("If the line cannot play yet (another line is playing, or its speaker is mid-line), wait a few seconds for its turn instead of being dropped.")]
+        public bool QueueIfBusy;
     }
 
     [SerializeField, Tooltip("One row per trigger you want to be audible. A trigger with NO row here never plays - opt-in, so adding a trigger to the enum can't accidentally make the game chattier.")]

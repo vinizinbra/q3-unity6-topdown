@@ -75,16 +75,30 @@ internal static class VoiceContentGenerator
         // Challenges. Started is the activator's own call-out, heard by everyone; Accepted fires per
         // joining Raider so it is capped by the per-speaker cooldown; Failed is whole-team.
         (VoiceLineTrigger.ChallengeStarted,       1.00f,   0f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
-        (VoiceLineTrigger.ChallengeAccepted,      1.00f,   0f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
-        (VoiceLineTrigger.ChallengeFailed,        1.00f,   0f, VoicePriority.High,     VoiceAudience.AllPlayers),
+        (VoiceLineTrigger.ChallengeAccepted,      1.00f,   0f, VoicePriority.High,     VoiceAudience.AllPlayers),
+        (VoiceLineTrigger.ChallengeFailed,        1.00f,   0f, VoicePriority.Critical, VoiceAudience.AllPlayers),
         // Spoken by the one who caused the failure, so it always plays.
-        (VoiceLineTrigger.ChallengeCulprit,       1.00f,   0f, VoicePriority.High,     VoiceAudience.AllPlayers),
+        (VoiceLineTrigger.ChallengeCulprit,       1.00f,   0f, VoicePriority.Critical, VoiceAudience.AllPlayers),
 
         // Pings already have their own cooldown; this only keeps the CALLOUT from repeating. A
         // Revive-me ping is a plea for help, so it always plays and cuts through chatter.
         (VoiceLineTrigger.PingElite,              0.60f,  10f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
         (VoiceLineTrigger.PingPoi,                1.00f,  30f, VoicePriority.Normal,   VoiceAudience.AllPlayers),
         (VoiceLineTrigger.PingReviveMe,           1.00f,   8f, VoicePriority.High,     VoiceAudience.AllPlayers),
+    };
+
+    // A teammate joining a challenge is heard even right after another line (Critical lines already
+    // skip pacing). These three wait for their turn instead of being dropped when something is playing.
+    private static readonly HashSet<VoiceLineTrigger> BypassPacingTriggers = new HashSet<VoiceLineTrigger>
+    {
+        VoiceLineTrigger.ChallengeAccepted,
+    };
+
+    private static readonly HashSet<VoiceLineTrigger> QueueIfBusyTriggers = new HashSet<VoiceLineTrigger>
+    {
+        VoiceLineTrigger.ChallengeAccepted,
+        VoiceLineTrigger.ChallengeFailed,
+        VoiceLineTrigger.ChallengeCulprit,
     };
 
     [MenuItem("Tools/RiftRaiders/Generate Voice Content")]
@@ -121,6 +135,8 @@ internal static class VoiceContentGenerator
             Cooldown = r.Cooldown,
             Priority = r.Priority,
             Audience = r.Audience,
+            BypassPacing = BypassPacingTriggers.Contains(r.Trigger),
+            QueueIfBusy = QueueIfBusyTriggers.Contains(r.Trigger),
         }).ToList();
 
         EditorUtility.SetDirty(config);

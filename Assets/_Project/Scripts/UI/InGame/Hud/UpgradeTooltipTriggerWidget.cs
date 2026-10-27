@@ -2,7 +2,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 // Put on any UI element (its Graphic must be a raycast target) to show an UpgradeTooltipWidget while
-// the mouse is over it. Plain data-in: whoever fills the element calls Setup with the text.
+// the mouse is over it. Plain data-in: whoever fills the element calls Setup (runtime-cloned elements
+// that don't know the panel) or SetText (the panel already wired in the Inspector) with the text.
 public class UpgradeTooltipTriggerWidget : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private UpgradeTooltipWidget tooltip;
@@ -14,6 +15,14 @@ public class UpgradeTooltipTriggerWidget : MonoBehaviour, IPointerEnterHandler, 
     public void Setup(UpgradeTooltipWidget tooltip, string title, string description)
     {
         this.tooltip = tooltip;
+        SetText(title, description);
+    }
+
+    public void SetText(string title, string description)
+    {
+        if (_title == title && _description == description)
+            return;
+
         _title = title;
         _description = description;
 

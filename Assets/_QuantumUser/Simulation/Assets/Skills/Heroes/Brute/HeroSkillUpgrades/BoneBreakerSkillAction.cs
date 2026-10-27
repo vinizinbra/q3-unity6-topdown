@@ -4,7 +4,7 @@ namespace Quantum
 
     // Ranked Juggernaut Ascension - "Discharge damage progression." Lives on JuggernautSkillData.
     // Actions (Activated = false) - see MomentumSkillAction's own comment for why this is a Hero Skill
-    // Ascension, not PassiveUpgradeData. Discharge deals JuggernautSkillData.Damage unconditionally
+    // Ascension, not PassiveUpgradeData. Discharge deals JuggernautSkillData.DischargeDamage unconditionally
     // (a real baseline number, not gated behind this or any Ascension) - this scales that baseline up,
     // plus (rank 3) an additional bonus specifically against Specialist/Heavy tier targets. See
     // JuggernautSkillData.Discharge - reads this component directly and feeds the already-scaled value
