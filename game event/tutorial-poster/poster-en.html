@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rift Jumpers Tutorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Semi+Condensed:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @page { size: 297mm 420mm; margin: 0; }
+  :root {
+    --pink: #FD3971;
+    --magenta: #E3218C;
+    --cyan: #2FC3F0;
+    --ink: #111014;
+    --slate: #403D52;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 297mm; height: 420mm; background: #fff; }
+  body {
+    font-family: "Barlow Semi Condensed", sans-serif;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .poster { position: relative; width: 297mm; height: 420mm; overflow: hidden; background: #fff; }
+
+  /* Background shards */
+  .shards { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+
+  .content { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; }
+
+  /* Header */
+  header { text-align: center; padding-top: 9mm; }
+  header .logo { height: 52mm; display: block; margin: 0 auto; }
+  .tagline {
+    font-family: "Anton", sans-serif; font-size: 13.2mm; line-height: 1; letter-spacing: 0.2mm;
+    text-transform: uppercase; margin-top: 4mm;
+  }
+  .tagline .hot { color: var(--pink); }
+  .sub {
+    font-weight: 700; font-size: 5mm; letter-spacing: 1.6mm; text-transform: uppercase; margin-top: 2.5mm;
+  }
+
+  /* Controls */
+  .controls {
+    margin: 6mm 14mm 0; background: var(--ink); color: #fff; border-radius: 7mm 0 7mm 0; corner-shape: bevel;
+    padding: 5mm 6mm 5.5mm;
+  }
+  .section-title {
+    font-family: "Anton", sans-serif; font-size: 8.5mm; line-height: 1; text-transform: uppercase;
+    display: flex; align-items: center; gap: 3mm;
+  }
+  .section-title .gem { width: 6mm; height: 7.5mm; flex: none; }
+  .controls .section-title { margin-bottom: 4mm; }
+  .ctrl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3mm; }
+  .ctrl {
+    background: #1F1D27; border-radius: 3mm; corner-shape: bevel; padding: 3mm 2mm 3.2mm; text-align: center;
+    border-top: 0.8mm solid var(--pink);
+  }
+  .ctrl .name { font-family: "Anton", sans-serif; font-size: 6mm; text-transform: uppercase; line-height: 1.05; }
+  .ctrl .name small { display: block; font-family: "Barlow Semi Condensed"; font-weight: 600; font-size: 3.4mm; color: #BDB8CC; text-transform: none; letter-spacing: 0; margin-top: 0.6mm; }
+  .ctrl .inputs { display: flex; align-items: center; justify-content: center; gap: 2mm; margin-top: 3mm; height: 9mm; }
+  .ctrl .or { font-size: 3.4mm; font-weight: 700; color: #8E88A3; }
+  .key {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 8.5mm; height: 8.5mm; padding: 0 2mm; border-radius: 2mm; corner-shape: bevel;
+    background: #fff; color: var(--ink); font-weight: 800; font-size: 4.2mm;
+    box-shadow: 0 0.9mm 0 #9C98AE;
+  }
+  .wasd { display: inline-grid; grid-template-columns: repeat(3, 4.4mm); grid-template-rows: 4.1mm 4.1mm; gap: 0.5mm; }
+  .wasd .key { min-width: 0; width: 4.4mm; height: 4.1mm; padding: 0; font-size: 2.6mm; border-radius: 1mm; corner-shape: bevel; box-shadow: 0 0.5mm 0 #9C98AE; }
+  .wasd .w { grid-column: 2; }
+  .wasd .a { grid-column: 1; grid-row: 2; }
+  .wasd .s { grid-column: 2; grid-row: 2; }
+  .wasd .d { grid-column: 3; grid-row: 2; }
+  .pad {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 8.5mm; height: 8.5mm; border-radius: 2.5mm; corner-shape: bevel; background: var(--slate);
+    font-weight: 800; font-size: 4.6mm; box-shadow: 0 0.9mm 0 #24222F;
+  }
+  .pad.a { color: #6FD34A; } .pad.x { color: #4AA8FF; }
+  .pad.pill { width: auto; padding: 0 2.4mm; border-radius: 0 2.5mm; corner-shape: bevel; color: #fff; font-size: 3.8mm; }
+  .pad.stick { color: #fff; font-size: 3.6mm; border: 0.7mm solid #8E88A3; }
+  .autofire {
+    margin-top: 4mm; display: flex; align-items: center; gap: 3mm;
+    background: var(--pink); color: #fff; border-radius: 0 4mm; corner-shape: bevel; padding: 2.6mm 4mm;
+    font-size: 5mm; font-weight: 600;
+  }
+  .autofire b { font-family: "Anton", sans-serif; font-weight: 400; font-size: 5.8mm; text-transform: uppercase; letter-spacing: 0.2mm; }
+  .autofire svg { width: 9mm; height: 6mm; flex: none; }
+
+  /* Run */
+  .run { margin: 6mm 14mm 0; }
+  .run-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .run-head .section-title { font-size: 10mm; }
+  .run-head .time {
+    font-family: "Anton", sans-serif; font-size: 6mm; background: var(--ink); color: #fff;
+    padding: 1.2mm 3.5mm; transform: skewX(-10deg); display: inline-block;
+  }
+  .run-head .time span { display: inline-block; transform: skewX(10deg); }
+  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; margin-top: 4.5mm; }
+  .step {
+    position: relative; background: rgba(255,255,255,0.94); border: 0.8mm solid var(--ink); border-radius: 8mm 0 8mm 0; corner-shape: bevel;
+    padding: 4mm 5mm 4.5mm; min-height: 67mm; overflow: hidden;
+  }
+  .step .art {
+    position: absolute; right: -3mm; bottom: -3mm; width: 42mm; mix-blend-mode: multiply; z-index: 0;
+  }
+  .step > *:not(.art) { position: relative; z-index: 1; }
+  .step-title { display: flex; align-items: center; gap: 3mm; margin-bottom: 2.8mm; }
+  .step-num {
+    font-family: "Anton", sans-serif; font-size: 8mm; color: #fff; background: var(--pink);
+    width: 11mm; height: 11mm; display: flex; align-items: center; justify-content: center;
+    clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+    width: 12.5mm; padding-top: 0.6mm;
+  }
+  .step:nth-child(even) .step-num { background: var(--cyan); }
+  .dur {
+    font-family: "Anton", sans-serif; font-size: 5.6mm; line-height: 1; color: #fff; background: var(--ink);
+    padding: 1.2mm 2.8mm 1.1mm; transform: skewX(-10deg); margin-left: 1.5mm; align-self: center;
+  }
+  .dur span { display: inline-block; transform: skewX(10deg); }
+  .step-name { font-family: "Anton", sans-serif; font-size: 11mm; line-height: 1; letter-spacing: 0.3mm; }
+  .step p { font-size: 4.5mm; line-height: 1.32; font-weight: 500; }
+  .step p + p, .step p + ul, .step ul + p { margin-top: 2mm; }
+  .step b { font-weight: 800; }
+  .step .term { font-weight: 800; color: var(--magenta); }
+  .step ul { list-style: none; }
+  .step li { font-size: 4.5mm; line-height: 1.32; font-weight: 500; padding-left: 5mm; position: relative; margin-top: 1mm; }
+  .step li::before {
+    content: ""; position: absolute; left: 0.4mm; top: 1.2mm; width: 2.6mm; height: 3.2mm;
+    background: var(--pink); clip-path: polygon(50% 0, 100% 40%, 50% 100%, 0 40%);
+  }
+  .step .narrow { max-width: 84mm; }
+  .callout {
+    display: inline-block; margin-top: 2.4mm; background: var(--ink); color: #fff; font-weight: 700;
+    font-size: 4mm; padding: 1.4mm 3.4mm; border-radius: 0 2.5mm; corner-shape: bevel;
+  }
+  .callout .term { color: #FF8FB0; }
+
+  /* Tips */
+  .boss-deco { position: relative; z-index: 3; }
+  .boss-deco img {
+    position: absolute; width: 124mm; right: -24mm; bottom: -20mm;
+  }
+  .step.explore { z-index: 4; }
+  .row2 { grid-column: 1 / -1; display: grid; grid-template-columns: 172mm 1fr; gap: 5mm; }
+  .step.explore {
+    background: var(--ink); color: #fff; border: 1.2mm solid var(--pink); min-height: 80mm;
+    box-shadow: 2.4mm 2.4mm 0 var(--cyan); overflow: visible;
+  }
+  .explore .zara { position: absolute; width: 54mm; right: -9mm; top: -5mm; z-index: 2; }
+  .explore .step-num { background: var(--pink); }
+  .explore .step-title { margin-bottom: 0; }
+  .explore .badge {
+    display: inline-block; margin: 2.4mm 0 0; background: var(--pink); color: #fff;
+    font-family: "Anton", sans-serif; font-size: 5mm; text-transform: uppercase; letter-spacing: 0.3mm;
+    padding: 1mm 3mm; transform: skewX(-10deg);
+  }
+  .explore .lead { margin-top: 2.6mm; font-size: 4.8mm; font-weight: 700; max-width: 108mm; }
+  .explore .finds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; margin-top: 4mm; }
+  .explore .find { background: #1F1D27; border-radius: 0 0 4mm 0; corner-shape: bevel; border-top: 0.9mm solid var(--cyan); padding: 2.6mm 3mm 3mm; }
+  .explore .find:nth-child(2) { border-color: var(--pink); }
+  .explore .find-name { font-family: "Anton", sans-serif; font-size: 5.6mm; text-transform: uppercase; letter-spacing: 0.2mm; line-height: 1.1; margin-bottom: 1.2mm; color: #fff; }
+  .explore .find:nth-child(2) .find-name { color: #FF8FB0; }
+  .explore .find p { font-size: 4mm; line-height: 1.3; }
+  .explore .term { color: #FF8FB0; }
+  .tips { position: relative; z-index: 2; }
+  .tips {
+    margin-top: auto; flex: none; background: var(--ink); color: #fff; padding: 6mm 14mm 7mm;
+    clip-path: polygon(0 4mm, 100% 0, 100% 100%, 0 100%);
+  }
+  .tips .section-title { margin: 1.5mm 0 4mm; }
+  .tip-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; }
+  .tip { border-left: 0.9mm solid var(--pink); padding-left: 3mm; font-size: 4.1mm; line-height: 1.3; font-weight: 500; }
+  .tip:nth-child(even) { border-color: var(--cyan); }
+  .tip b { font-family: "Anton", sans-serif; font-weight: 400; font-size: 5.4mm; display: block; text-transform: uppercase; letter-spacing: 0.2mm; margin-bottom: 0.8mm; color: #fff; }
+  .tip .term { color: #FF8FB0; font-weight: 700; }
+  .footer-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5.5mm; padding-top: 4mm; border-top: 0.3mm solid #34313F; }
+  .footer-row .tag { font-weight: 700; font-size: 3.8mm; letter-spacing: 1.2mm; text-transform: uppercase; color: #BDB8CC; }
+  .footer-row .tag i { font-style: normal; color: var(--pink); }
+  .footer-row img { height: 11mm; filter: invert(1); }
+</style>
+</head>
+<body>
+<div class="poster">
+  <!-- Rift shards, echoing the key art -->
+  <svg class="shards" viewBox="0 0 297 420" preserveAspectRatio="none" aria-hidden="true">
+    <polygon points="0,0 70,0 18,58 0,40" fill="#FD3971"/>
+    <polygon points="0,62 30,48 0,110" fill="#2FC3F0"/>
+    <polygon points="40,0 92,0 54,30" fill="#2FC3F0" opacity="0.85"/>
+    <polygon points="297,0 222,0 280,60 297,44" fill="#FD3971"/>
+    <polygon points="297,66 266,50 297,118" fill="#2FC3F0"/>
+    <polygon points="258,0 206,0 244,32" fill="#2FC3F0" opacity="0.85"/>
+    <polygon points="14,40 34,34 22,58" fill="#111014"/>
+    <polygon points="283,40 263,34 275,58" fill="#111014"/>
+    <polygon points="0,124 14,118 0,150" fill="#FD3971"/>
+    <polygon points="297,128 283,122 297,156" fill="#FD3971"/>
+    <polygon points="0,250 10,240 0,300" fill="#2FC3F0"/>
+    <polygon points="297,240 287,250 297,300" fill="#FD3971"/>
+  </svg>
+
+  <div class="content">
+    <header>
+      <img class="logo" src="img/RiftJumpersLogoHorizontal.png" alt="Rift Jumpers">
+      <div class="tagline">Enter the <span class="hot">Rift.</span> Survive. <span class="hot">Get stronger.</span></div>
+      <div class="sub">How to play · quick guide</div>
+    </header>
+
+    <section class="controls">
+      <div class="section-title">
+        <svg class="gem" viewBox="0 0 10 12"><polygon points="5,0 10,4 5,12 0,4" fill="#FD3971"/></svg>
+        Controls
+      </div>
+      <div class="ctrl-grid">
+        <div class="ctrl">
+          <div class="name">Move<small>&nbsp;</small></div>
+          <div class="inputs">
+            <span class="wasd"><span class="key w">W</span><span class="key a">A</span><span class="key s">S</span><span class="key d">D</span></span>
+            <span class="or">/</span><span class="pad stick">LS</span>
+          </div>
+        </div>
+        <div class="ctrl">
+          <div class="name">Dash<small>&nbsp;</small></div>
+          <div class="inputs"><span class="key">Shift</span><span class="or">/</span><span class="pad a">A</span></div>
+        </div>
+        <div class="ctrl">
+          <div class="name">Skill<small>hero ability</small></div>
+          <div class="inputs"><span class="key">E</span><span class="or">/</span><span class="pad x">X</span></div>
+        </div>
+        <div class="ctrl">
+          <div class="name">Interact<small>near objects</small></div>
+          <div class="inputs"><span class="key">E</span><span class="or">/</span><span class="pad x">X</span></div>
+        </div>
+        <div class="ctrl">
+          <div class="name">Map<small>&nbsp;</small></div>
+          <div class="inputs"><span class="key">M</span><span class="or">/</span><span class="pad pill">R2</span></div>
+        </div>
+      </div>
+      <div class="autofire">
+        <svg viewBox="0 0 18 12"><path d="M1 3h12l2-2h2v5h-4l-1 1H8l-1 4H3l1-4H1z" fill="#fff"/></svg>
+        <span><b>Your weapon fires on its own.</b> Just focus on positioning, dodging and using your Skill.</span>
+      </div>
+    </section>
+
+    <section class="run">
+      <div class="run-head">
+        <div class="section-title">
+          <svg class="gem" viewBox="0 0 10 12"><polygon points="5,0 10,4 5,12 0,4" fill="#2FC3F0"/></svg>
+          How a run works
+        </div>
+        <div class="time"><span>~15 MIN</span></div>
+      </div>
+
+      <div class="steps">
+        <article class="step">
+          <img class="art" src="img/max.png" alt="" style="width:46mm">
+          <div class="step-title"><div class="step-num">1</div><div class="step-name">SURVIVE</div><div class="dur"><span>3 MIN</span></div></div>
+          <p class="narrow">Enemies never stop coming. Defeated ones drop <span class="term">XP</span> and <span class="term">Coins</span>.</p>
+          <p class="narrow" style="max-width:80mm">Every level up, the game <b>pauses</b> and you pick <b>1 of 3 cards</b>: upgrades for your <span class="term">Skill</span>, your stats or a new weapon.</p>
+          <div class="callout">Low on health? Find a <span class="term">Healing Shrine</span>.</div>
+        </article>
+
+        <article class="step">
+          <img class="art" src="img/CapyAction2.png" alt="" style="width:54mm; right:-7mm; bottom:-7mm">
+          <div class="step-title"><div class="step-num">2</div><div class="step-name">BREAK</div><div class="dur"><span>1 MIN</span></div></div>
+          <p class="narrow">Every so often the waves stop. Clear the enemies left until <span class="term">AREA&nbsp;SECURED</span> shows up. Then it's time to:</p>
+          <ul class="narrow" style="max-width:78mm">
+            <li>Buy weapons at the <span class="term">Store</span></li>
+            <li>Add weapon <span class="term">Perks</span> at the <span class="term">Blacksmith</span></li>
+            <li>Risk a <span class="term">Cursed Rift</span> for rewards</li>
+          </ul>
+        </article>
+
+        <div class="row2">
+          <article class="step explore">
+            <img class="zara" src="img/Zara_sticker.png" alt="">
+            <div class="step-title"><div class="step-num">3</div><div class="step-name">EXPLORE</div></div>
+            <div class="badge">★ More rewards</div>
+            <p class="lead">The map hides secrets. Go off the beaten path and hunt them down!</p>
+            <div class="finds">
+              <div class="find">
+                <div class="find-name">Challenges</div>
+                <p>Races against the clock or an extra round of combat. Find one and start it.</p>
+              </div>
+              <div class="find">
+                <div class="find-name">Rift Mutations</div>
+                <p>Clear a <span class="term">Challenge</span> to earn a rare reward that changes your whole run.</p>
+              </div>
+              <div class="find">
+                <div class="find-name">Chests</div>
+                <p>Scattered across the map. Open the <span class="term">Map</span> (M&nbsp;/&nbsp;R2) to find them all.</p>
+              </div>
+            </div>
+          </article>
+          <div class="boss-deco"><img src="img/World1Boss_fade.png" alt=""></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tips">
+      <div class="section-title">
+        <svg class="gem" viewBox="0 0 10 12"><polygon points="5,0 10,4 5,12 0,4" fill="#FD3971"/></svg>
+        Quick tips
+      </div>
+      <div class="tip-grid">
+        <div class="tip"><b>Keep moving</b>Out of health? The run is over.</div>
+        <div class="tip"><b>Use your Dash</b><span class="term">Dash</span> goes through attacks and over gaps.</div>
+        <div class="tip"><b>Switch heroes</b>Every hero has a unique <span class="term">Skill</span>: try another one next run.</div>
+        <div class="tip"><b>First time?</b>Play the <span class="term">Training Zone</span> from the menu (2&nbsp;min).</div>
+      </div>
+      <div class="footer-row">
+        <div class="tag">Top-down <i>·</i> Survivors roguelite <i>·</i> 6 heroes</div>
+        <img src="img/PachaGamesLogo.png" alt="Pacha Games">
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

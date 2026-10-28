@@ -338,12 +338,18 @@ namespace Quantum
         // mutated its Health/run its death branch yet. Without this, the blast's own OverlapShape
         // re-catches that same target and re-enters ApplyDamage on it while its outer call is still
         // mid-flight, double-firing EntityDied/OnEntityKilled and every on-kill drop (chest included)
-        // for one kill. Defaults to EntityRef.None so every existing caller (Cataclysm Round/Explosive
-        // Sequence, which fire AFTER their own triggering ApplyDamage call has already returned, so
-        // re-catching that target is legitimate splash on an already-resolved hit) is unaffected.
+        // for one kill. Explosive Sequence passes the enemy its shot ended on too (a perk explosion
+        // splashes the enemies AROUND the hit, it doesn't hit the same enemy twice); only Cataclysm
+        // Round deliberately re-catches its own target, as the last bullet's big payoff.
+        // bypassOutgoingResolution: damage is ALREADY a final, resolved number (a fraction of a crit
+        // that rolled, an Overkill excess) - apply it as-is instead of running it through
+        // ResolveOutgoingDamage a second time, which would square every owner multiplier, re-roll
+        // crit on a number that already carries one, and let that new crit fire another on-crit
+        // explosion. Target-side mitigation (Rupture, armor, shield) still applies.
         public static void ApplyDamageInRadius(Frame f, FPVector3 center, FP radius, EntityRef owner, FP damage,
             DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Both,
-            bool isChainedExplosion = false, bool isExplosion = false, EntityRef excludeTarget = default)
+            bool isChainedExplosion = false, bool isExplosion = false, EntityRef excludeTarget = default,
+            bool bypassOutgoingResolution = false)
         {
             Shape3D sphere = Shape3D.CreateSphere(radius);
             var hits = f.Physics3D.OverlapShape(center, FPQuaternion.Identity, sphere, ResolveQueryLayerMask(f, targetMask), QueryOptions.HitAll);
@@ -375,7 +381,7 @@ namespace Quantum
                     DemolitionMasteryUtility.ApplyProximityEffects(f, owner, target, center, radius, targetTransform->Position, ref resolvedDamage);
                 }
 
-                DamageUtility.ApplyDamage(f, target, resolvedDamage, owner, source,
+                DamageUtility.ApplyDamage(f, target, resolvedDamage, owner, source, bypassOutgoingResolution: bypassOutgoingResolution,
                     isChainedExplosion: isChainedExplosion, isExplosion: isExplosion);
             }
         }
@@ -429,11 +435,12 @@ namespace Quantum
         // it raises ExplosiveRoundDetonated instead, so the view can play her pink blast for it.
         public static void ApplyExplosion(Frame f, FPVector3 center, FP radius, EntityRef owner, FP damage,
             DamageSource source, DamageTargetMask targetMask = DamageTargetMask.Enemies, EntityRef excludeTarget = default,
-            bool isExplosiveSequence = false)
+            bool isExplosiveSequence = false, bool bypassOutgoingResolution = false)
         {
             // Hardcoded true, not a caller param - anything calling ApplyExplosion at all (weapon-perk
             // explosions) is definitionally a genuine explosion.
-            ApplyDamageInRadius(f, center, radius, owner, damage, source, targetMask, isExplosion: true, excludeTarget: excludeTarget);
+            ApplyDamageInRadius(f, center, radius, owner, damage, source, targetMask, isExplosion: true, excludeTarget: excludeTarget,
+                bypassOutgoingResolution: bypassOutgoingResolution);
 
             if (isExplosiveSequence == true && f.Has<PixieExplosiveWeapon>(owner) == true)
                 f.Events.ExplosiveRoundDetonated(owner, center, radius);

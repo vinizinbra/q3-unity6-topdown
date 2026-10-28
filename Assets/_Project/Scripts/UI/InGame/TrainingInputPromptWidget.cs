@@ -9,8 +9,9 @@ using UnityEngine;
 // thicker bottom lip around a flat face. Keycaps are white with a dark letter, pad buttons slate with the
 // Xbox letter colour. Children of the label, so TrainingZoneGuideWidget's pop scales them with it; built in
 // Start, after the guide has collected (and hidden) the station labels in Awake. Everything animates: buttons and
-// keys press (face sinks onto the lip) on a loop, the stick cap circles its well, and the W A S D cluster presses
-// each key as the stick passes its direction.
+// keys press (face sinks onto the lip) on a loop. The stick is a cap over a stem: the cap tilts up / left / down /
+// right in turn (a glowing arrow lights the pushed side), then sweeps a full circle, and the W A S D cluster presses
+// the key matching the stick's direction on the same clock.
 public class TrainingInputPromptWidget : MonoBehaviour
 {
     public enum GamepadGlyph
@@ -55,13 +56,24 @@ public class TrainingInputPromptWidget : MonoBehaviour
     [SerializeField] private int sortingOrder = -8;
     [Tooltip("Seconds for one press loop of a button / key.")]
     [SerializeField] private float pressPeriod = 1.4f;
-    [Tooltip("Seconds for one full circle of the stick (and one W A S D round).")]
-    [SerializeField] private float stickCircleDuration = 2.4f;
-    [Tooltip("How far the stick cap leaves the centre, as a fraction of the glyph height.")]
-    [SerializeField] private float stickTravel = 0.14f;
+    [Tooltip("Stick cap diameter as a multiple of the glyph height.")]
+    [SerializeField] private float stickSize = 1.5f;
+    [Tooltip("Seconds per direction tap (up, left, down, right - also W A S D).")]
+    [SerializeField] private float stickStepDuration = 0.6f;
+    [Tooltip("Seconds of the full-circle sweep after the four taps.")]
+    [SerializeField] private float stickSweepDuration = 1.4f;
+    [Tooltip("How far the stick cap tilts, as a fraction of its diameter.")]
+    [SerializeField] private float stickTravel = 0.16f;
+
+    private static readonly Color StickRimColor = new Color32(0x6E, 0x6A, 0x85, 0xFF);
+    private static readonly Color GlowColor = Color.white;
+    // Up, left, down, right - the tap order, the counter-clockwise sweep order, and the W A S D key order.
+    private static readonly Vector2[] MoveDirections = { Vector2.up, Vector2.left, Vector2.down, Vector2.right };
 
     private static Sprite _circle;
     private static Sprite _roundedRect;
+    private static Sprite _triangle;
+    private static Sprite _glow;
 
     private TextMeshPro _label;
     private Transform _keyboardGroup;
@@ -70,8 +82,11 @@ public class TrainingInputPromptWidget : MonoBehaviour
     private float _gamepadWidth;
     private float _height;
     private Transform _stick;
+    private float _stickDiameter;
+    private readonly SpriteRenderer[] _arrows = new SpriteRenderer[4];
+    private readonly SpriteRenderer[] _glows = new SpriteRenderer[4];
     // Every pressable face (face + letter). For a W A S D cluster these are in key order: W, A, S, D, which is
-    // also the order the counter-clockwise stick circle passes up / left / down / right.
+    // also MoveDirections' order.
     private readonly List<Transform> _tops = new List<Transform>();
 
     private void Start()
@@ -100,31 +115,59 @@ public class TrainingInputPromptWidget : MonoBehaviour
             return;
 
         float time = Time.unscaledTime;
-
-        if (_stick != null)
-        {
-            float angle = Mathf.PI * 0.5f + time / stickCircleDuration * Mathf.PI * 2f; // from up, counter-clockwise
-            _stick.localPosition = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * (stickTravel * _height);
-        }
-
         float depth = _height * lip * 0.7f;
 
-        if (keyCluster && _tops.Count == 4)
+        if (_stick != null || keyCluster)
         {
-            // One key per quarter circle, offset so it's fully down as the stick points its way.
-            float quarters = time / stickCircleDuration * 4f + 0.3f;
-            int active = Mathf.FloorToInt(quarters) % 4;
+            StickState(time, out Vector2 direction, out float amount, out int active);
 
-            for (int i = 0; i < _tops.Count; i++)
-                _tops[i].localPosition = new Vector3(0f, i == active ? -Press(quarters % 1f) * depth : 0f, 0f);
+            if (_stick != null)
+            {
+                _stick.localPosition = direction * (amount * stickTravel * _stickDiameter);
 
-            return;
+                for (int i = 0; i < _arrows.Length; i++)
+                {
+                    float lit = i == active ? amount : 0f;
+                    _arrows[i].color = new Color(GlowColor.r, GlowColor.g, GlowColor.b, lit);
+                    _glows[i].color = new Color(GlowColor.r, GlowColor.g, GlowColor.b, lit * 0.55f);
+                }
+            }
+
+            if (keyCluster && _tops.Count == 4)
+            {
+                for (int i = 0; i < _tops.Count; i++)
+                    _tops[i].localPosition = new Vector3(0f, i == active ? -amount * depth : 0f, 0f);
+
+                return;
+            }
         }
 
         float press = Press(time / pressPeriod % 1f) * depth;
 
         foreach (Transform top in _tops)
             top.localPosition = new Vector3(0f, -press, 0f);
+    }
+
+    // The move loop: four taps (push to the edge, hold, back) up / left / down / right, then one full-tilt sweep
+    // counter-clockwise from up. `active` is the cardinal direction nearest the push (MoveDirections index).
+    private void StickState(float time, out Vector2 direction, out float amount, out int active)
+    {
+        float taps = stickStepDuration * 4f;
+        float t = time % (taps + stickSweepDuration);
+
+        if (t < taps)
+        {
+            active = Mathf.Min(Mathf.FloorToInt(t / stickStepDuration), 3);
+            direction = MoveDirections[active];
+            amount = Press(t / stickStepDuration % 1f);
+            return;
+        }
+
+        float sweep = (t - taps) / stickSweepDuration;
+        float angle = 90f + sweep * 360f;
+        direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+        amount = Mathf.SmoothStep(0f, 1f, Mathf.Min(sweep, 1f - sweep) / 0.12f);
+        active = Mathf.RoundToInt(sweep * 4f) % 4;
     }
 
     // 0..1 press depth over one loop: quick push, hold, release, rest.
@@ -247,16 +290,7 @@ public class TrainingInputPromptWidget : MonoBehaviour
 
             case GamepadGlyph.LeftStick:
             case GamepadGlyph.RightStick:
-                // Stick: a base well with the thumbstick cap (dark ring + face + letter) on top - the cap is what
-                // circles in Update.
-                width = h * 1.15f;
-                Circle(group, "Lip", new Vector2(0f, -l), width, OutlineColor, 0);
-                Circle(group, "Outline", Vector2.zero, width, OutlineColor, 0);
-                Circle(group, "Face", Vector2.zero, width - t * 2f, PadFaceColor, 1);
-                _stick = CreateGroup("Stick", group);
-                Circle(_stick, "Ring", Vector2.zero, width - t * 5f, OutlineColor, 2);
-                Circle(_stick, "Cap", Vector2.zero, width - t * 7f, PadFaceColor, 3);
-                Letter(_stick, gamepadButton == GamepadGlyph.LeftStick ? "LS" : "RS", h, PadLetterColor, 4);
+                BuildStick(group, out width);
                 return group;
 
             default:
@@ -268,6 +302,41 @@ public class TrainingInputPromptWidget : MonoBehaviour
                 Letter(button, gamepadButton.ToString(), h, FaceButtonColor(gamepadButton));
                 return group;
         }
+    }
+
+    // Thumbstick seen from above at an angle: a dark stem showing under a big cap (outline, light rim, dark face,
+    // letter). Update tilts the cap; the stem stays, which reads as the tilt. Glowing arrows sit just outside the
+    // cap, one per direction, lit while the cap pushes that way.
+    private void BuildStick(Transform group, out float width)
+    {
+        float d = _height * stickSize;
+        float t = _height * outline;
+        _stickDiameter = d;
+        width = d;
+
+        Circle(group, "Stem", new Vector2(0f, -d * 0.3f), d * 0.62f, OutlineColor, 0);
+
+        float arrowSize = d * 0.24f;
+        float arrowRadius = d * 0.5f + d * stickTravel + arrowSize * 0.55f;
+
+        for (int i = 0; i < MoveDirections.Length; i++)
+        {
+            Vector2 at = MoveDirections[i] * arrowRadius;
+            float rotation = Vector2.SignedAngle(Vector2.up, MoveDirections[i]);
+
+            _glows[i] = Shape(group, "Glow" + i, GlowSprite, at, 0);
+            _glows[i].transform.localScale = Vector3.one * arrowSize * 2.6f;
+
+            _arrows[i] = Shape(group, "Arrow" + i, TriangleSprite, at, 1);
+            _arrows[i].transform.localScale = Vector3.one * arrowSize;
+            _arrows[i].transform.localRotation = Quaternion.Euler(0f, 0f, rotation);
+        }
+
+        _stick = CreateGroup("Stick", group);
+        Circle(_stick, "Outline", Vector2.zero, d, OutlineColor, 2);
+        Circle(_stick, "Rim", Vector2.zero, d - t * 2f, StickRimColor, 3);
+        Circle(_stick, "Face", Vector2.zero, d * 0.7f, PadFaceColor, 4);
+        Letter(_stick, gamepadButton == GamepadGlyph.LeftStick ? "L" : "R", _height, PadLetterColor, 5, stickSize);
     }
 
     private static Color FaceButtonColor(GamepadGlyph glyph)
@@ -331,7 +400,7 @@ public class TrainingInputPromptWidget : MonoBehaviour
         renderer.transform.localScale = Vector3.one * radius;
     }
 
-    private void Letter(Transform parent, string text, float height, Color color, int layer = 2)
+    private void Letter(Transform parent, string text, float height, Color color, int layer = 2, float sizeScale = 1f)
     {
         var go = new GameObject("Letter");
         go.transform.SetParent(parent, false);
@@ -340,7 +409,7 @@ public class TrainingInputPromptWidget : MonoBehaviour
         var tmp = go.AddComponent<TextMeshPro>();
         tmp.font = _label.font;
         tmp.text = text;
-        tmp.fontSize = _label.fontSize * letterScale * (text.Length > 1 ? 0.8f : 1f);
+        tmp.fontSize = _label.fontSize * letterScale * sizeScale * (text.Length > 1 ? 0.8f : 1f);
         tmp.fontStyle = FontStyles.Bold;
         tmp.color = color;
         tmp.alignment = TextAlignmentOptions.Center;
@@ -385,6 +454,62 @@ public class TrainingInputPromptWidget : MonoBehaviour
                 _roundedRect = CreateShapeSprite(64, 24f, 24f, new Vector4(24f, 24f, 24f, 24f));
             return _roundedRect;
         }
+    }
+
+    // 1-unit triangle pointing up (+y).
+    private static Sprite TriangleSprite
+    {
+        get
+        {
+            if (_triangle == null)
+                _triangle = CreateSprite(64, 64f, (x, y) =>
+                {
+                    // Distance inside each of the three edges of (0.1,0.12) (0.9,0.12) (0.5,0.9); min = inside the triangle.
+                    float bottom = y - 0.12f;
+                    float left = Vector2.Dot(new Vector2(x - 0.1f, y - 0.12f), new Vector2(0.78f, -0.4f).normalized);
+                    float right = Vector2.Dot(new Vector2(x - 0.9f, y - 0.12f), new Vector2(-0.78f, -0.4f).normalized);
+                    return Mathf.Min(bottom, Mathf.Min(left, right)) * 64f + 0.5f;
+                });
+            return _triangle;
+        }
+    }
+
+    // 1-unit soft radial glow.
+    private static Sprite GlowSprite
+    {
+        get
+        {
+            if (_glow == null)
+                _glow = CreateSprite(64, 64f, (x, y) =>
+                {
+                    float r = Mathf.Clamp01(Vector2.Distance(new Vector2(x, y), new Vector2(0.5f, 0.5f)) * 2f);
+                    return (1f - r) * (1f - r);
+                });
+            return _glow;
+        }
+    }
+
+    // White sprite whose alpha is `alpha(u, v)` (0..1 texture coords, clamped).
+    private static Sprite CreateSprite(int size, float pixelsPerUnit, System.Func<float, float, float> alpha)
+    {
+        var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        {
+            name = "TrainingPromptShape",
+            wrapMode = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Bilinear,
+        };
+
+        var pixels = new Color32[size * size];
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+                pixels[y * size + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(alpha((x + 0.5f) / size, (y + 0.5f) / size)) * 255f));
+        }
+
+        texture.SetPixels32(pixels);
+        texture.Apply(false, true);
+        return Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), pixelsPerUnit);
     }
 
     // White anti-aliased rounded square (a circle when radius = half the size), tinted per renderer.

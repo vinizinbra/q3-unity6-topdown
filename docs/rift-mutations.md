@@ -369,6 +369,11 @@ kills can never blast again.
 It also fires strictly AFTER `OnEntityKilled`/`EntityDied`, so normal kill attribution, drops and
 on-kill reactions all resolve against the original hit first.
 
+The excess is already a final number (crit and every owner multiplier included), so the blast is
+applied with `bypassOutgoingResolution: true`. Re-resolving it applied those multipliers twice and let
+it crit again, which also set off Hellfire/Flashpoint (2026-10-28, see `docs/weapon-perks.md`
+"Explosion damage rules").
+
 ### Prerequisite gating
 
 `IsEligible(Frame, EntityRef)` now exists on `GlobalUpgradeData` and `RiftMutationData` too, matching

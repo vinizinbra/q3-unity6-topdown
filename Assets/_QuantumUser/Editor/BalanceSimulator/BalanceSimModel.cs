@@ -138,6 +138,11 @@ namespace QuantumUser.Editor.BalanceSimulator
         // target Burning almost permanently (native element applies on every hit) while anything
         // else relies on a teammate/perk to light it.
         public const double ChainBounceConnectChance = 0.5;
+
+        // Enemies a perk explosion (Hellfire, Explosive Sequence) catches besides the one the shot
+        // hit - both skip that enemy, so their whole value is splash. Same placeholder as
+        // WeaponDataAsset's DPS preview (EstimatedExplosionSplashTargets).
+        public const double ExplosionSplashTargets = 1;
         public const double BurnUptimeFireWeapon = 0.9;
         public const double BurnUptimeOtherWeapon = 0.3;
 
@@ -353,18 +358,18 @@ namespace QuantumUser.Editor.BalanceSimulator
             // placeholder the ramp bonus above uses).
             double splitShotFactor = 1 + SplitShotCount * SplitShotMultiplier;
 
-            // Hellshot's own baseline ExplosiveCritWeaponPerkData - procs on the same critChance
-            // roll as the hit itself (plus the guaranteed final-burst-shot crit above, if any),
-            // dealing an extra CritExplosionMultiplier x this hit's own damage.
+            // Hellshot's own baseline ExplosiveCritWeaponPerkData - on a crit, CritExplosionMultiplier
+            // x the crit's FINAL damage (applied as-is, no new crit roll) to each neighbour; the crit
+            // target itself is skipped. hit below already carries critFactor, so divide it back out.
             double critExplosionFactor = CritExplosionRadius > 0
-                ? 1 + critChance * CritExplosionMultiplier
+                ? 1 + ExplosionSplashTargets * critChance * critMultiplier * CritExplosionMultiplier / critFactor
                 : 1;
 
             // Cluster Launcher's own baseline ExplosiveSequenceWeaponPerkData (Interval 1 - every
-            // shot detonates) - 1/Interval of shots proc it, each for an extra
-            // ExplosiveSequenceDamageMultiplier x that shot's own damage.
+            // shot detonates) - 1/Interval of shots proc it, ExplosiveSequenceDamageMultiplier x that
+            // shot's own pre-crit damage (rolling its own crit) to each neighbour, never the target.
             double explosiveSequenceFactor = ExplosiveSequenceInterval > 0
-                ? 1 + ExplosiveSequenceDamageMultiplier / ExplosiveSequenceInterval
+                ? 1 + ExplosionSplashTargets * ExplosiveSequenceDamageMultiplier / ExplosiveSequenceInterval
                 : 1;
 
             // Storm Rifle's own baseline StormChainWeaponPerkData - 1/Interval of shots ricochet

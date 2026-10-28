@@ -33,7 +33,7 @@ the panel edge; sub-sections get the same shape in cyan with dark text.
    columns split by a faint divider, each row icon + label + value. Column headers are off
    (`showColumnHeaders`) since the STATS banner already titles them.
 2. **WEAPON** (top-right, 469x515) - `CurrentWeaponUiWidget`: icon frame, name (+level), tags line
-   (family | weight | element), a 4-cell stat strip (**Damage** per trigger pull, pellets summed with a gray "6x9" split, same rounding as the BuildStats Damage row; **Fire Rate** shots/s, **Reload** s, **Magazine** -
+   (family | weight | element), a 4-cell stat strip (**Damage** = the weapon's own damage per trigger pull - authored Damage x `Weapon.DamageMultiplier`, no hero damage bonuses (those stay in the STATS Damage row) - already final (10 damage + a 25% perk reads 13 - each pellet rounded up like the damage numbers, no separate %), pellets summed with a gray "6x9" split; the Damage cell is 1.3x wider than the others; **Fire Rate** shots/s, **Reload** s, **Magazine** -
    `fireRateText`/`reloadText`/`magazineText`, each tinted green/red vs the weapon's authored value),
    then a cyan **PERKS** header over the 5 perk rows - one "**Name** - effect" block per perk
    (`separatePerkTitles` off), wrapping to a second line when long, auto-sized 12-16 to stay inside the

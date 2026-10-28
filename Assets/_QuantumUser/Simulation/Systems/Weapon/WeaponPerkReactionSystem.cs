@@ -79,12 +79,16 @@ namespace Quantum
             // branch (was dropping 2 chests off one kill on any tier that lingers instead of
             // destroying immediately - Elite/Specialist/Boss). The target already took the full
             // direct-hit damage; this explosion's job is splashing whoever else is nearby.
+            // damage is the crit's own FINAL number (every owner multiplier and the crit multiplier
+            // already in), so the blast applies it as-is (bypassOutgoingResolution) - re-resolving it
+            // squared every multiplier, re-rolled crit on top of the crit, and every new crit set off
+            // another Hellfire explosion. A neighbour now takes exactly DamageMultiplier x the crit.
             if (reactions->HasExplosiveCrit == true
                 && f.Unsafe.TryGetPointer<Transform3D>(target, out var targetTransform) == true)
             {
                 HitEffectUtility.ApplyExplosion(f, targetTransform->Position, reactions->CriticalExplosionRadius,
                     owner, damage * reactions->CriticalExplosionDamageMultiplier, DamageSource.Weapon,
-                    excludeTarget: target);
+                    excludeTarget: target, bypassOutgoingResolution: true);
             }
 
             // Disruptor's signature (CritStunWeaponPerkData, baked via WeaponDataAsset.BaseTraits) -
@@ -134,7 +138,10 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Transform3D>(secondaryTarget, out var secondaryTransform) == false)
                 return;
 
-            FP reboundDamage = weaponData.Damage * weapon->DamageMultiplier * reactions->CriticalReboundDamageMultiplier;
+            // The shot's live damage (ramp, Final Round, Execution/Escalating Rounds), same base Split
+            // Shot/Explosive Sequence scale off - not the bare asset Damage. Pre-resolution, so the
+            // bounce resolves once like any other hit.
+            FP reboundDamage = WeaponSystem.ResolveCurrentShotDamage(f, owner, weapon, weaponData) * reactions->CriticalReboundDamageMultiplier;
 
             if (weaponData.FireType != WeaponFireType.Projectile || weaponData.ProjectileData.IsValid == false)
             {

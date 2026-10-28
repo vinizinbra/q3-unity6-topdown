@@ -105,6 +105,11 @@ so the Director never spawns enemies.
 ## Ground text and guide
 
 - The titles are Rift Pink (#FD3971) and the hints are white, all in Inter Medium Bold.
+- The Start pad points down the course with a **floor arrow**, not text.
+  - It is a flat Rift Pink SpriteRenderer using the Layer Lab `PictoIcon_Arrow_Right_1` (256), 2 units
+    long, with sorting order -8 so characters draw over it.
+  - `TrainingGroundArrowWidget` nudges it forward on a loop. The guide pops it in with the station's text.
+  - The builder adds it with `GroundArrow(...)`.
 - **Breathing room:** every station after Start begins with a 4-unit strip of plain floor
   (`BreathingRoom`, part of the same chunk) before its content. It gives a pause between lessons and
   lets the text pop in ahead of the player.
@@ -137,12 +142,17 @@ so the Director never spawns enemies.
 - Both devices share one look: a dark `#1E1C28` outline with a thicker bottom lip around a flat face.
   - Keycaps are white with a dark letter. Move is the W/ASD inverted-T cluster (`keyCluster`).
   - Pad buttons are slate `#403D52` with the Xbox letter colour (A green, B red, X blue, Y yellow).
-    LB/RB are slate pills; LS/RS circles have an inner ring.
+    LB/RB are slate pills.
+  - The stick (LS/RS) is a cap over a stem, `stickSize` × the glyph height: dark outline, light rim
+    `#6E6A85`, dark face, "L" / "R". Glowing white arrows sit just outside the cap, one per direction.
 - Sizes are relative to the label: `glyphScale` × line height, and `letterScale` × font size.
 - **Animation** (unscaled time):
   - Every button and keycap presses on a loop (`pressPeriod`): the face and letter sink onto the lip.
-  - The LS cap circles its well counter-clockwise from up (`stickCircleDuration`, `stickTravel`).
-  - The W A S D cluster presses W, A, S, D in turn, each as the stick passes that direction.
+  - Stick loop: the cap tilts up, left, down, right in turn (`stickStepDuration` each), then sweeps one
+    full circle at full tilt (`stickSweepDuration`). The stem stays put, so it reads as a tilt.
+    The arrow on the pushed side glows (`stickTravel` sets the reach).
+  - The W A S D cluster runs on the same clock and presses the key for the stick's current
+    direction.
 - `sortingOrder` is negative (-8), like the ping ripple, so heroes and enemies standing on a prompt draw
   over it. With a positive order the glyphs drew on top of the character.
 - The glyphs are children of the label and are built in `Start`, so `TrainingZoneGuideWidget`'s pop

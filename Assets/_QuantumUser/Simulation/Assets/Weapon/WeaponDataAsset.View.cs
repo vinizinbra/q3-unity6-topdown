@@ -307,6 +307,11 @@ namespace Quantum
         // AreaTargets/ChannelContactUptime knobs; retune once checked against real crowd density.
         private const float EstimatedExtraTargetConnectChance = 0.5f;
 
+        // Enemies a perk explosion (Hellfire, Explosive Sequence) catches BESIDES the one the shot hit -
+        // both skip that enemy, so they add nothing single-target and only feed estimatedTargets.
+        // Decisive placeholder, same value as BalanceSimModel.SimWeapon.ExplosionSplashTargets.
+        private const float EstimatedExplosionSplashTargets = 1f;
+
         private void ApplyBaseTraits(ref float damage, ref float fireRate, ref int magazineSize, ref float reloadDuration,
             ref float criticalChance, ref float criticalMultiplier, ref float perShotFactor, ref float estimatedTargets,
             ref string unmodelledTraits)
@@ -318,6 +323,8 @@ namespace Quantum
             float rampFireRateBonusPerStack = 0f;
             bool rampAdvancesPerShot = false;
             int extraHitOpportunities = 0;
+            float critExplosionMultiplier = 0f;
+            float explosiveSequencePerShot = 0f;
 
             for (int i = 0; i < BaseTraits.Count; i++)
             {
@@ -346,8 +353,8 @@ namespace Quantum
                         break;
                     case PiercingRoundsWeaponPerkData p: extraHitOpportunities += p.BonusPierce; break;
                     case RicochetWeaponPerkData p: extraHitOpportunities += p.BonusBounces; break;
-                    case ExplosiveCritWeaponPerkData p: perShotFactor *= 1f + criticalChance * p.DamageMultiplier.AsFloat; break;
-                    case ExplosiveSequenceWeaponPerkData p: perShotFactor *= 1f + p.DamageMultiplier.AsFloat / Mathf.Max(1, p.Interval); break;
+                    case ExplosiveCritWeaponPerkData p: critExplosionMultiplier = Mathf.Max(critExplosionMultiplier, p.DamageMultiplier.AsFloat); break;
+                    case ExplosiveSequenceWeaponPerkData p: explosiveSequencePerShot = Mathf.Max(explosiveSequencePerShot, p.DamageMultiplier.AsFloat / Mathf.Max(1, p.Interval)); break;
                     case RelentlessFireWeaponPerkData p:
                         rampMaxStacks = Mathf.Max(rampMaxStacks, p.MaxStacks);
                         rampDamageBonusPerStack += p.DamageBonusPerStack.AsFloat;
@@ -406,6 +413,14 @@ namespace Quantum
             }
 
             estimatedTargets += extraHitOpportunities * EstimatedExtraTargetConnectChance;
+
+            // Splash, in "extra targets" of one average hit (damage x expected crit factor). Explosive
+            // Sequence's blast is the shot's pre-crit damage and rolls its own crit, so it's worth
+            // DamageMultiplier/Interval of an average hit per neighbour. Hellfire applies DamageMultiplier
+            // x the crit's final number with no new roll: chance x critMult x DamageMultiplier per shot.
+            float expectedHitMultiplier = 1f + criticalChance * (criticalMultiplier - 1f);
+            estimatedTargets += EstimatedExplosionSplashTargets
+                * (explosiveSequencePerShot + criticalChance * criticalMultiplier * critExplosionMultiplier / expectedHitMultiplier);
         }
 
         // The weapon's OWN authored Hit data (ProjectileData.Hit, not a BaseTraits perk) - a baseline

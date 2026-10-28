@@ -127,6 +127,9 @@ namespace Quantum
             // bomb/skill blasts - 1x for anyone without it.
             FP radiusMultiplier = DamageUtility.ResolvePixieExplosionRadiusMultiplier(f, projectile->Owner) * StatUtility.GetAreaMultiplier(f, projectile->Owner);
 
+            // Cataclysm re-catches the enemy the shot ended on (the last bullet's big payoff);
+            // Explosive Sequence splashes the enemies around it and skips that one, so an exploding
+            // shot never deals its target direct hit + explosion.
             if (projectile->IsCataclysm == true)
             {
                 FP radius = procs->CataclysmRadius * radiusMultiplier;
@@ -137,7 +140,8 @@ namespace Quantum
             {
                 FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, projectile->Owner,
-                    projectile->Damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon, isExplosiveSequence: true);
+                    projectile->Damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon,
+                    excludeTarget: hitEntity, isExplosiveSequence: true);
             }
 
             if (procs->HasSplitShot == true && projectile->SpawnDepth < MaxSplitShotDepth)

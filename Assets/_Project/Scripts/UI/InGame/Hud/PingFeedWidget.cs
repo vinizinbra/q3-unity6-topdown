@@ -13,12 +13,18 @@ public class PingFeedWidget : MonoBehaviour
     private const int MaxLines = 5;
     private const float LineLifetime = 8f;
     private const float FadeTime = 1f;
+    // Lines slide in from (and out to) the left screen edge.
+    private const float SlideInTime = 0.35f;
+    private const float SlideOffset = 40f;
 
     private const float IconSize = 34f;
 
     private struct Line
     {
         public CanvasGroup Group;
+        public RectTransform Body;
+        public float Width;
+        public float SpawnedAt;
         public float ExpiresAt;
     }
 
@@ -114,11 +120,20 @@ public class PingFeedWidget : MonoBehaviour
         if (_lines.Count >= MaxLines)
             RemoveLine(0);
 
-        var go = new GameObject("PingLine", typeof(RectTransform));
-        go.transform.SetParent(_root, false);
-        // Left pivot: the ContentSizeFitter resizes the line after the feed has placed it, and a
-        // centre pivot would grow it both ways - pushing the first line half its width off to the left.
-        ((RectTransform)go.transform).pivot = new Vector2(0f, 0.5f);
+        // The slot is what the feed's VerticalLayoutGroup places; the visible body inside it is free of
+        // any layout group so it can slide horizontally without the layout snapping it back.
+        var slotGo = new GameObject("PingLine", typeof(RectTransform));
+        slotGo.transform.SetParent(_root, false);
+        var slot = (RectTransform)slotGo.transform;
+        slot.pivot = new Vector2(0f, 0.5f);
+        var slotLayout = slotGo.AddComponent<LayoutElement>();
+
+        var go = new GameObject("Body", typeof(RectTransform));
+        go.transform.SetParent(slot, false);
+        var body = (RectTransform)go.transform;
+        // Left pivot: the ContentSizeFitter resizes the body after it's placed, and a centre pivot
+        // would grow it both ways - pushing it half its width off to the left.
+        body.anchorMin = body.anchorMax = body.pivot = new Vector2(0f, 0.5f);
 
         var background = go.AddComponent<Image>();
         background.sprite = PingPresentation.GetFadeSprite();
@@ -134,6 +149,7 @@ public class PingFeedWidget : MonoBehaviour
 
         var fitter = go.AddComponent<ContentSizeFitter>();
         fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         if (icon != null)
         {
@@ -161,12 +177,19 @@ public class PingFeedWidget : MonoBehaviour
         text.outlineWidth = 0.2f;
         text.outlineColor = new Color32(0, 0, 0, 255);
 
-        var group = go.AddComponent<CanvasGroup>();
+        var group = slotGo.AddComponent<CanvasGroup>();
         group.interactable = group.blocksRaycasts = false;
+        group.alpha = 0f;
 
-        _lines.Add(new Line { Group = group, ExpiresAt = Time.unscaledTime + LineLifetime });
+        // Size the slot from the built body so the feed stacks it exactly as before.
+        LayoutRebuilder.ForceRebuildLayoutImmediate(body);
+        float width = body.rect.width;
+        slotLayout.preferredHeight = body.rect.height;
+        slot.sizeDelta = new Vector2(width, body.rect.height);
+        body.anchoredPosition = new Vector2(-(width + SlideOffset), 0f);
 
-        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)go.transform);
+        _lines.Add(new Line { Group = group, Body = body, Width = width, SpawnedAt = Time.unscaledTime, ExpiresAt = Time.unscaledTime + LineLifetime });
+
         LayoutRebuilder.ForceRebuildLayoutImmediate(_root);
     }
 
@@ -175,6 +198,14 @@ public class PingFeedWidget : MonoBehaviour
         if (_lines[index].Group != null)
             Destroy(_lines[index].Group.gameObject);
         _lines.RemoveAt(index);
+    }
+
+    private static float EaseOutBack(float t)
+    {
+        const float c1 = 1.2f;
+        const float c3 = c1 + 1f;
+        float u = t - 1f;
+        return 1f + c3 * u * u * u + c1 * u * u;
     }
 
     // Unscaled: Level-Up eases Time.timeScale to 0 and the feed should keep ageing out.
@@ -189,7 +220,18 @@ public class PingFeedWidget : MonoBehaviour
                 continue;
             }
 
-            _lines[i].Group.alpha = Mathf.Clamp01(remaining / FadeTime);
+            Line line = _lines[i];
+            float hidden = -(line.Width + SlideOffset);
+            float slideIn = Mathf.Clamp01((Time.unscaledTime - line.SpawnedAt) / SlideInTime);
+            float fadeOut = Mathf.Clamp01(remaining / FadeTime);
+
+            // Slide in with a small overshoot, then ease back out to the left while fading.
+            float x = Mathf.LerpUnclamped(hidden, 0f, EaseOutBack(slideIn));
+            if (fadeOut < 1f)
+                x = Mathf.Lerp(hidden, x, fadeOut * fadeOut);
+
+            line.Body.anchoredPosition = new Vector2(x, 0f);
+            line.Group.alpha = Mathf.Min(Mathf.Clamp01(slideIn * 2f), fadeOut);
         }
     }
 }

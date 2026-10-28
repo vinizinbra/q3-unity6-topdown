@@ -55,6 +55,16 @@ namespace Quantum
         // each prefab carrying its own independently-authored (and, before this config existed,
         // already-drifted) copy. Enemies/objects that also use HitFeedback leave this config
         // unassigned and keep their own local values untouched.
+        [Header("Immunity Glow (grace window)")]
+        [Tooltip("Soft glow sprite shown behind the hero (pulsing with the white flash, see HitFeedback.UpdateImmunityPulse) while the Invulnerable grace window is open. Leave empty to skip the glow sprite.")]
+        public Sprite ImmunityGlowSprite;
+        [Tooltip("Additive sprite-compatible material for the glow, e.g. ParticleGlowAdd.")]
+        public Material ImmunityGlowMaterial;
+        [Tooltip("Glow colour at its peak (alpha = peak strength).")]
+        public Color ImmunityGlowColor = new Color(0.7f, 0.95f, 1f, 0.7f);
+        [Tooltip("Glow diameter as a multiple of the hero's body height.")]
+        public float ImmunityGlowScale = 1.5f;
+
         [Header("Hit Flash")]
         [Tooltip("Used for a Neutral-element hit (plain weapon/skill damage) - everything without a more specific color below.")]
         public Color FlashColor = Color.white;

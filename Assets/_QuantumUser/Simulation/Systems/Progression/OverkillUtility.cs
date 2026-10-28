@@ -48,9 +48,11 @@ namespace Quantum
 
             // Enemies only: the blast is a payout for a kill, not a hazard to stand near. Also skips
             // the corpse itself for free - ApplyDamageInRadius refuses a target with no health left.
+            // The excess is already a final, resolved number (crit included), so it's applied as-is
+            // rather than re-resolved - see ApplyDamageInRadius's bypassOutgoingResolution.
             HitEffectUtility.ApplyDamageInRadius(f, transform->Position, stats->OverkillRadius, owner,
                 explosionDamage, source, DamageTargetMask.Enemies,
-                isChainedExplosion: true, isExplosion: true);
+                isChainedExplosion: true, isExplosion: true, bypassOutgoingResolution: true);
 
             f.Events.WeaponExplosionReleased(owner, transform->Position, stats->OverkillRadius);
 

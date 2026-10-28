@@ -780,6 +780,18 @@ namespace Quantum
             return (FP)shotsFiredIncludingThis / (FP)weapon->MagazineSize;
         }
 
+        // The live per-shot damage (base x weapon multiplier x magazine-position/ramp bonuses) for an
+        // effect that fires off a hit without the shot's own damage to hand - Critical Rebound reacts
+        // to OnCriticalHit, whose damage is the crit's FINAL number. Reads the magazine as it is now:
+        // exact for hitscan (hits land before Ammo decrements), at most one bullet late for a
+        // projectile still in flight - an accepted approximation.
+        public static FP ResolveCurrentShotDamage(Frame f, EntityRef owner, Weapon* weapon, WeaponDataAsset weaponData)
+        {
+            FP magazineFraction = FPMath.Min(FP._1, ResolveMagazineFraction(weapon));
+
+            return ResolveLiveDamage(f, owner, weaponData.Damage * weapon->DamageMultiplier, magazineFraction, weapon->Ammo <= 1);
+        }
+
         private static FP ResolveLiveDamage(Frame f, EntityRef owner, FP baseDamage, FP magazineFraction, bool isLastBullet)
         {
             FP bonus = FP._0;
@@ -1651,7 +1663,7 @@ namespace Quantum
                     }
                 }
 
-                ApplyHitscanTerminalPerks(f, owner, endPoint, damage, isExplosiveProc, isCataclysm);
+                ApplyHitscanTerminalPerks(f, owner, endPoint, segmentTarget, damage, isExplosiveProc, isCataclysm);
                 return;
             }
         }
@@ -1856,8 +1868,10 @@ namespace Quantum
         // Explosive Sequence/Cataclysm Round's Hitscan equivalent, fired once at wherever the pellet's
         // whole path ended - through every pierce and every Ricochet bounce, mirroring
         // DirectHitData.ApplyTerminalWeaponPerks, which only runs when the projectile is finally
-        // spent. Detonates on level geometry too, same as that one does.
-        private static void ApplyHitscanTerminalPerks(Frame f, EntityRef owner, FPVector3 point, FP damage,
+        // spent. Detonates on level geometry too, same as that one does. lastHit is the enemy the
+        // path ended on (None for geometry) - Explosive Sequence skips it, Cataclysm doesn't (see
+        // DirectHitData.ApplyTerminalWeaponPerks).
+        private static void ApplyHitscanTerminalPerks(Frame f, EntityRef owner, FPVector3 point, EntityRef lastHit, FP damage,
             bool isExplosiveProc, bool isCataclysm)
         {
             if (isExplosiveProc == false && isCataclysm == false)
@@ -1886,7 +1900,8 @@ namespace Quantum
             {
                 FP radius = procs->ExplosiveSequenceRadius * radiusMultiplier;
                 HitEffectUtility.ApplyExplosion(f, point, radius, owner,
-                    damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon, isExplosiveSequence: true);
+                    damage * procs->ExplosiveSequenceDamageMultiplier, DamageSource.Weapon,
+                    excludeTarget: lastHit, isExplosiveSequence: true);
             }
         }
 

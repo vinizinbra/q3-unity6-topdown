@@ -600,8 +600,16 @@ Two menu Upgrades lines feed this (see `docs/talents.md`, "Meta progression"). R
 
 ### Grace-window feedback
 
-`HitFeedback.UpdateImmunityPulse`: while `StatusEffects.ReviveImmunityRemaining > 0` (Alive players only), the
-hero **and equipped weapon** SpriteRenderers blink on/off (`renderer.enabled`, `immunityBlinkRate` 4 Hz) and are
-restored when the window closes. Skipped for Max's Cheat Death (`MaxImmortalView` aura) and Downed/KO.
-`immunityStartSound`/`immunityEndSound` are wired (`EntitySound.PlayAttached` on the window opening/closing) but
-unassigned - no audio authored yet.
+`HitFeedback.UpdateImmunityPulse`: while `StatusEffects.ReviveImmunityRemaining > 0` (Alive players only), every hero
+sprite - body (`sprites`), both hands and the spawned weapon (everything under `WeaponViewController.WeaponSocket`) -
+pulses a white flash (`immunityFlashColor`, alpha = peak strength; `immunityFlashRate` 2.5 Hz). The heroes' shader is
+`Sprites/SpriteColor`, which lerps `SpriteRenderer.color.rgb` over the sprite by `color.a` (it has no glow/colorize
+properties - an earlier property-block glow never rendered). Hands/weapon use other shaders (`Sprites/Default`, URP
+Sprite-Unlit), so for the window their material is swapped to the hero's and restored (with their colour) when it
+closes or the weapon changes. Only `SpriteRenderer.color` writes (~10 renderers/frame), no property blocks; a hit/heal
+flash tween in progress wins. Skipped for Max's Cheat Death (`MaxImmortalView` aura) and Downed/KO.
+A soft **glow sprite** also sits behind the hero for the window: one lazily-created `ImmunityGlow` SpriteRenderer child per hero
+(`HitFeedback.ShowImmunityGlow`), additive, sorted just behind the body, pulsing in sync (alpha 35-100% of its
+peak). Sprite/material/colour/scale come from the shared `PlayerFxConfig` (`ImmunityGlowSprite` = InGameGlow,
+`ImmunityGlowMaterial` = ParticleGlowAdd, `ImmunityGlowColor`, `ImmunityGlowScale`) - leave the sprite empty to skip it.
+`immunityStartSound`/`immunityEndSound` are wired (`EntitySound.PlayAttached`) but unassigned - no audio authored yet.

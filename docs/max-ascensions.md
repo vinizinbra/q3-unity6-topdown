@@ -164,7 +164,9 @@ components - same shared-component idiom `RevengeConfig` itself already establis
 8. **Flashpoint** (`FlashpointPassiveUpgradeData`, merges the old Hot Target + Flashpoint + Cremation
    picks) - rank 1 "Hot Target": `ConditionalCriticalModifier.CriticalChanceBonusVsBurning = 0.10`
    (existing mechanism, ranked); gated by `IsEligible` on `CanApplyBurn`. Rank 2 "Flashpoint":
-   `ExplosionOnConditionalHit` (Radius 3, DamageCoefficient 0.50, ProcCooldown 2s, MaxTargets 5). Rank
+   `ExplosionOnConditionalHit` (Radius 3, DamageCoefficient 0.50, ProcCooldown 2s, MaxTargets 5; 50% of
+   the crit's final damage, applied as-is to up to 5 enemies around the crit target, never the target
+   itself, since 2026-10-28, see `docs/weapon-perks.md` "Explosion damage rules"). Rank
    3 "Cremation": `ExecuteAgainstStatus` (Normal/Specialist 15%, Elite 10%) - `BossExecutionEnabled`
    is never set true by this line at all, dropping the old per-pick toggle entirely: Boss is never
    executable, full stop.

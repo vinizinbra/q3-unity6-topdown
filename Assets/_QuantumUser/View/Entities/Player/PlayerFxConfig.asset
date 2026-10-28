@@ -28,6 +28,10 @@ MonoBehaviour:
     ScaleMultiplier: 1
     PositionOffset: {x: 0, y: -0.5, z: 0}
   LandMinImpactSpeed: 0.1
+  ImmunityGlowSprite: {fileID: 21300000, guid: 79ccc992bd3fb4d74a150f8141bb9949, type: 3}
+  ImmunityGlowMaterial: {fileID: 2100000, guid: e440c42aaa01f4a6e8f162bb70ef3ae8, type: 2}
+  ImmunityGlowColor: {r: 0.7, g: 0.95, b: 1, a: 0.55}
+  ImmunityGlowScale: 1.5
   FlashColor: {r: 1, g: 1, b: 1, a: 1}
   BurnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 0.3254902}
   RecoverFlashColor: {r: 0, g: 1, b: 1, a: 1}

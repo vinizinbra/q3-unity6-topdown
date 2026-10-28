@@ -31,7 +31,7 @@ Cooldowns (per player): 0.5s general, 10s on StickTogether. `PlayerPing` is adde
 - `PingFeedWidget` (`UI/InGame/Hud`) - self-building chat feed, last 5 lines, 8s life, built by
   `GameplayUiController.QStart` via `PingFeedWidget.Ensure`. Each line = pinger's head icon
   (`PlayerPortraitUiWidget.ResolveHeadSprite`: `UIHead`, else live rig head) + text on a black
-  left-to-right fade backing (`PingPresentation.GetFadeSprite`) that hugs the text; fades via a CanvasGroup. `PingPresentation` holds text + per-slot colour.
+  left-to-right fade backing (`PingPresentation.GetFadeSprite`) that hugs the text. Each line is a layout slot holding a free `Body`, which slides in from the left edge (0.35s ease-out-back) and slides back out while fading over the last 1s (CanvasGroup). `PingPresentation` holds text + per-slot colour.
 - `MinimapWidget` - `OnPingPlaced`/`UpdatePingRadars`: pulsing ring + dot per player (one at a time,
   8s), counter-scaled like other overlays, so it shows on the corner and the expanded map. Runs after
   `CenterOnLocalPlayer`; a ping outside the masked viewport is pinned to its edge (same

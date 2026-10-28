@@ -31,8 +31,10 @@ namespace Quantum
         // explosion centered on it, on top of the crit's own direct damage. Uses AreaQueryUtility
         // directly (not HitEffectUtility.ApplyExplosion, which has no target cap) so MaxTargets is
         // actually honored, then fires the same WeaponExplosionReleased event ApplyExplosion would
-        // have for the VFX hookup. Doesn't exclude the crit's own target from the blast - matches
-        // HitEffectUtility.ApplyDamageInRadius's own convention of only ever excluding owner.
+        // have for the VFX hookup. Splashes the enemies AROUND the crit's target, not the target
+        // itself (same rule as Hellfire - it already took the crit). damage is the crit's FINAL
+        // number, so it's applied as-is (bypassOutgoingResolution) rather than re-resolved, which
+        // would square every owner multiplier and re-roll crit on top of the crit.
         public void OnCriticalHit(Frame f, EntityRef target, EntityRef owner, FP damage, DamageSource source)
         {
             if (f.Unsafe.TryGetPointer<ExplosionOnConditionalHit>(owner, out var explosion) == false
@@ -53,12 +55,12 @@ namespace Quantum
                 explosion->CooldownRemaining = explosion->ProcCooldown;
             }
 
-            var targets = AreaQueryUtility.FindEnemiesInRadius(f, transform->Position, explosion->Radius, owner, explosion->MaxTargets);
+            var targets = AreaQueryUtility.FindEnemiesInRadius(f, transform->Position, explosion->Radius, target, explosion->MaxTargets);
             FP explosionDamage = damage * explosion->DamageCoefficient;
 
             for (int i = 0; i < targets.Count; i++)
             {
-                DamageUtility.ApplyDamage(f, targets[i], explosionDamage, owner, source);
+                DamageUtility.ApplyDamage(f, targets[i], explosionDamage, owner, source, bypassOutgoingResolution: true);
             }
 
             f.Events.WeaponExplosionReleased(owner, transform->Position, explosion->Radius);

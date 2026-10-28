@@ -39,21 +39,24 @@ namespace QuantumUser.View.Util
         // docs/elemental-reactions.md's "Current status").
         private EnemyBlobAnimationView _enemyBlobAnimationView;
 
-        [Header("Immunity Blink (players)")]
-        [SerializeField, Tooltip("Blinks per second (hero + equipped weapon sprites toggle on/off) while the Invulnerable grace window is open - post-revive, post-pick, reviver.")]
-        private float immunityBlinkRate = 4f;
+        [Header("Immunity Flash (players)")]
+        [SerializeField, Tooltip("White flash pulsed on every hero sprite - body, hands, gun - while the Invulnerable grace window is open (post-revive, post-pick, reviver). RGB is the flash colour (keep white), alpha the strength at the peak. Hands/weapon on other shaders are switched to the hero's sprite shader for the window.")]
+        private Color immunityFlashColor = new Color(1f, 1f, 1f, 0.85f);
+        [SerializeField, Tooltip("Flashes per second.")]
+        private float immunityFlashRate = 2.5f;
         [SerializeField, SoundDataPicker, Tooltip("Played once when the grace window opens. Leave empty to skip (no sound authored yet).")]
         private SoundData immunityStartSound;
         [SerializeField, SoundDataPicker, Tooltip("Played once when the grace window closes. Leave empty to skip (no sound authored yet).")]
         private SoundData immunityEndSound;
 
         private bool _immunityActive;
-        private bool _immunityHidden;
-        private bool _immunityVisible = true;
         private GameObject _weaponInstance;
         private WeaponViewController _weaponController;
         private bool _weaponControllerSearched;
-        private readonly List<SpriteRenderer> _weaponRenderers = new List<SpriteRenderer>();
+        private readonly List<SpriteRenderer> _socketRenderers = new List<SpriteRenderer>();
+        private readonly List<Material> _socketMaterials = new List<Material>();
+        private readonly List<Color> _socketColors = new List<Color>();
+        private SpriteRenderer _immunityGlow;
 
         [Header("Hit Flash")]
         [SerializeField, HideIf(nameof(HasFxConfig)), Tooltip("Used for a Neutral-element hit (plain weapon/skill damage) - everything without a more specific color below. Ignored (hidden) once Fx Config above is assigned - see ApplyFxConfig.")]
@@ -305,9 +308,12 @@ namespace QuantumUser.View.Util
             UpdateImmunityPulse(frame);
         }
 
-        // Players only: blinks hero + equipped weapon sprites (renderer.enabled) while the grace window
+        // Players only: pulses a white flash over every hero sprite while the grace window
         // (StatusEffects.ReviveImmunityRemaining - post-revive, reviver, post-pick) is open. Skipped for
-        // Max's Cheat Death (MaxImmortalView has its own aura) and Downed/KO.
+        // Max's Cheat Death (MaxImmortalView has its own aura) and Downed/KO. Body sprites flash through
+        // SpriteRenderer.color (the hero shader mixes colour.rgb over the sprite by colour.a); the hands and
+        // weapon under the weapon socket are put on that same shader for the window, then restored. Colour
+        // writes only - no property blocks - and a hit/heal flash tween in progress always wins.
         private void UpdateImmunityPulse(Frame frame)
         {
             bool eligible = frame.Has<PlayerLink>(_entityRef) && frame.Has<StatusEffects>(_entityRef)
@@ -320,62 +326,156 @@ namespace QuantumUser.View.Util
             if (active != _immunityActive)
             {
                 _immunityActive = active;
+
                 SoundData sound = active ? immunityStartSound : immunityEndSound;
                 if (sound != null)
                     EntitySound.PlayAttached(sound, transform, _entityRef);
+
+                if (active)
+                {
+                    CollectSocketRenderers();
+                    ShowImmunityGlow();
+                }
+                else
+                {
+                    RestoreSocketRenderers();
+
+                    for (var i = 0; i < sprites.Length; i++)
+                        sprites[i].color = restColor;
+
+                    if (_immunityGlow != null)
+                        _immunityGlow.gameObject.SetActive(false);
+                }
+
+                if (active == false)
+                    return;
             }
-
-            if (active == false)
+            else if (active == false)
             {
-                if (_immunityHidden)
-                    SetImmunityVisible(true);
-
                 return;
             }
 
-            bool visible = Mathf.Sin(Time.unscaledTime * immunityBlinkRate * Mathf.PI * 2f) >= 0f;
-            SetImmunityVisible(visible);
+            // Hands/weapon replaced mid-window (weapon swap): bring the new renderers into the flash.
+            if (ResolveWeaponInstance() != _weaponInstance)
+            {
+                RestoreSocketRenderers();
+                CollectSocketRenderers();
+            }
+
+            float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * immunityFlashRate * Mathf.PI * 2f);
+            wave = Mathf.SmoothStep(0f, 1f, wave);
+
+            if (_immunityGlow != null && fxConfig != null)
+            {
+                Color glow = fxConfig.ImmunityGlowColor;
+                glow.a *= Mathf.Lerp(0.35f, 1f, wave);
+                _immunityGlow.color = glow;
+            }
+
+            if (_tweens != null && _tweens.Length > 0 && _tweens[0].isAlive)
+                return;
+
+            Color flash = immunityFlashColor;
+            flash.a = Mathf.Lerp(restColor.a, immunityFlashColor.a, wave);
+
+            for (var i = 0; i < sprites.Length; i++)
+                sprites[i].color = flash;
+
+            for (var i = 0; i < _socketRenderers.Count; i++)
+            {
+                if (_socketRenderers[i] != null)
+                    _socketRenderers[i].color = flash;
+            }
         }
 
-        // Only touches renderers when visibility actually flips (~20 writes/s total, no per-frame work);
-        // the weapon's renderers are re-collected only when the equipped weapon instance changes.
-        private void SetImmunityVisible(bool visible)
+        // One SpriteRenderer child per hero, created the first time a window opens: the shared glow sprite +
+        // additive material from PlayerFxConfig, sized to the body and sorted just behind it.
+        private void ShowImmunityGlow()
         {
-            GameObject weapon = null;
+            if (fxConfig == null || fxConfig.ImmunityGlowSprite == null || fxConfig.ImmunityGlowMaterial == null
+                || sprites == null || sprites.Length == 0)
+                return;
 
+            if (_immunityGlow == null)
+            {
+                Bounds body = sprites[0].bounds;
+                int lowestOrder = sprites[0].sortingOrder;
+
+                for (var i = 1; i < sprites.Length; i++)
+                {
+                    body.Encapsulate(sprites[i].bounds);
+                    lowestOrder = Mathf.Min(lowestOrder, sprites[i].sortingOrder);
+                }
+
+                var go = new GameObject("ImmunityGlow");
+                go.transform.SetParent(sprites[0].transform.parent != null ? sprites[0].transform.parent : transform, false);
+                go.transform.SetPositionAndRotation(body.center, sprites[0].transform.rotation);
+
+                float spriteWidth = fxConfig.ImmunityGlowSprite.bounds.size.x;
+                float diameter = Mathf.Max(body.size.y, body.size.x) * fxConfig.ImmunityGlowScale;
+                float parentScale = go.transform.lossyScale.x;
+                float scale = spriteWidth > 0f && parentScale > 0f ? diameter / spriteWidth / parentScale : 1f;
+                go.transform.localScale = new Vector3(scale, scale, 1f);
+
+                _immunityGlow = go.AddComponent<SpriteRenderer>();
+                _immunityGlow.sprite = fxConfig.ImmunityGlowSprite;
+                _immunityGlow.sharedMaterial = fxConfig.ImmunityGlowMaterial;
+                _immunityGlow.sortingLayerID = sprites[0].sortingLayerID;
+                _immunityGlow.sortingOrder = lowestOrder - 1;
+            }
+
+            _immunityGlow.gameObject.SetActive(true);
+        }
+
+        private GameObject ResolveWeaponInstance()
+        {
             if (_weaponControllerSearched == false)
             {
                 _weaponControllerSearched = true;
                 _weaponController = GetComponentInChildren<WeaponViewController>();
             }
 
-            if (_weaponController != null)
-                weapon = _weaponController.CurrentWeaponInstance;
+            return _weaponController != null ? _weaponController.CurrentWeaponInstance : null;
+        }
 
-            bool weaponChanged = weapon != _weaponInstance;
-            if (weaponChanged)
-            {
-                _weaponInstance = weapon;
-                _weaponRenderers.Clear();
+        // Everything under the weapon socket (hands + the spawned weapon): remember its material/colour and
+        // switch it to the hero's sprite shader so the colour mix works on it.
+        private void CollectSocketRenderers()
+        {
+            _weaponInstance = ResolveWeaponInstance();
 
-                if (weapon != null)
-                    weapon.GetComponentsInChildren(true, _weaponRenderers);
-            }
-
-            if (visible == _immunityVisible && weaponChanged == false)
+            if (_weaponController == null || sprites == null || sprites.Length == 0 || sprites[0].sharedMaterial == null)
                 return;
 
-            _immunityVisible = visible;
-            _immunityHidden = visible == false;
+            Material heroMaterial = sprites[0].sharedMaterial;
+            Transform socket = _weaponController.WeaponSocket;
+            if (socket == null)
+                return;
 
-            for (var i = 0; i < sprites.Length; i++)
-                sprites[i].enabled = visible;
-
-            for (var i = 0; i < _weaponRenderers.Count; i++)
+            var found = socket.GetComponentsInChildren<SpriteRenderer>(false);
+            for (var i = 0; i < found.Length; i++)
             {
-                if (_weaponRenderers[i] != null)
-                    _weaponRenderers[i].enabled = visible;
+                _socketRenderers.Add(found[i]);
+                _socketMaterials.Add(found[i].sharedMaterial);
+                _socketColors.Add(found[i].color);
+                found[i].sharedMaterial = heroMaterial;
             }
+        }
+
+        private void RestoreSocketRenderers()
+        {
+            for (var i = 0; i < _socketRenderers.Count; i++)
+            {
+                if (_socketRenderers[i] == null)
+                    continue;
+
+                _socketRenderers[i].sharedMaterial = _socketMaterials[i];
+                _socketRenderers[i].color = _socketColors[i];
+            }
+
+            _socketRenderers.Clear();
+            _socketMaterials.Clear();
+            _socketColors.Clear();
         }
 
         private void UpdateMarkMaterial(Frame frame)

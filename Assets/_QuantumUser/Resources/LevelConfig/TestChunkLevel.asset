@@ -79,6 +79,11 @@ MonoBehaviour:
           Value: 1297741456122245713
       Weight:
         RawValue: 65536
+    - Prototype:
+        Id:
+          Value: 1368575016412522922
+      Weight:
+        RawValue: 65536
     Count: 20
     MustHave: 0
     GroupId: 0
@@ -95,7 +100,7 @@ MonoBehaviour:
         Id:
           Value: 1444083847999717352
       Weight:
-        RawValue: 3276800
+        RawValue: 65536
     - Prototype:
         Id:
           Value: 1377333861254181133

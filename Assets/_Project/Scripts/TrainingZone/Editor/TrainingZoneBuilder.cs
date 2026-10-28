@@ -32,6 +32,7 @@ public static class TrainingZoneBuilder
     private const string TemplateChunkPath = "Assets/_QuantumUser/Entities/LevelChunk/TraversalChunk.prefab";
     private const string DummyEnemyDataPath = "Assets/_QuantumUser/Resources/Enemy/Training/TrainingDummy.asset";
     private const string FinishPoiPath = "Assets/_QuantumUser/Entities/LevelChunk/TrainingFinishPoi.prefab";
+    private const string ArrowSpritePath = "Assets/3rd-party/Layer Lab/GUI Pro-SuperCasual/ResourcesData/Sprites/Components/Icon_PictoIcons/256/PictoIcon_Arrow_Right_1.Png";
     private const string FontPath = "Assets/3rd-party/Layer Lab/GUI Pro-SuperCasual/ResourcesData/Fonts/Inter_18pt-Medium SDF.asset";
 
     // Chunk min corners must sit on LevelConfig.CellSize (2) multiples, inside the generation grid
@@ -142,7 +143,7 @@ public static class TrainingZoneBuilder
         Label(s, "TRAINING ZONE", 6, 9.5f, Floor, TitleSize * 1.2f, TitleColor);
         Label(s, "MOVE", 6, 3.2f, Floor, TitleSize, TitleColor);
         Prompt(Label(s, "WASD  /  Left Stick", 6, 1.8f, Floor, HintSize, HintColor), TrainingInputPromptWidget.GamepadGlyph.LeftStick, "", true, "W", "A", "S", "D");
-        Label(s, ">>>", 11, 6, Floor, TitleSize, TitleColor);
+        GroundArrow(s, 11, 6, Floor, 2f);
         return s;
     }
 
@@ -661,6 +662,34 @@ public static class TrainingZoneBuilder
         renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         renderer.receiveShadows = false;
         return go;
+    }
+
+    // Flat Rift Pink "this way" arrow on the floor, pointing +X (down the course), `length` world units long.
+    private static void GroundArrow(GameObject station, float x, float z, float top, float length)
+    {
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(ArrowSpritePath);
+
+        if (sprite == null)
+        {
+            LogHelper.Error("TrainingZone", $"Ground arrow sprite not found at {ArrowSpritePath}.");
+            return;
+        }
+
+        var go = new GameObject("GroundArrow");
+        go.transform.SetParent(station.transform, false);
+        go.transform.localPosition = new Vector3(x, top + 0.04f, z);
+        go.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        go.transform.localScale = Vector3.one * (length / sprite.bounds.size.x);
+
+        var renderer = go.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+        renderer.color = TitleColor;
+        // Under heroes/enemies standing on it, same as the key prompts and the ping ripple.
+        renderer.sortingOrder = -8;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        renderer.receiveShadows = false;
+
+        go.AddComponent<TrainingGroundArrowWidget>();
     }
 
     // Makes a key-hint label device-aware: at runtime TrainingInputPromptWidget replaces its text with keyboard

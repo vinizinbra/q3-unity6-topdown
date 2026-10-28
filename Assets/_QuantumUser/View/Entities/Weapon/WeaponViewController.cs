@@ -55,6 +55,9 @@ namespace Quantum
 
         private Transform Socket => weaponSocket != null ? weaponSocket : transform;
 
+        // WeaponLocator: the hands AND the spawned weapon live under it (HitFeedback's immunity flash tints them all).
+        public Transform WeaponSocket => Socket;
+
         public override void Awake()
         {
             base.Awake();

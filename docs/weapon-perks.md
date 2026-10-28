@@ -611,3 +611,59 @@ fire more than once per shot.
 
 The Inspector DPS preview and `BalanceSimModel` both read these assets and now agree exactly (neither has
 a hero base term anymore).
+
+## Explosion damage rules (2026-10-28)
+
+Hellfire (Hellshot's `HellshotExplosiveCrit`, an `ExplosiveCritWeaponPerkData`) was hitting nearby
+enemies far harder than the weapon. It took the crit's **final** damage (`OnCriticalHit`'s `damage`,
+crit multiplier and every owner multiplier already applied) and sent it through `ApplyDamage` again.
+That ran `ResolveOutgoingDamage` a second time: every owner multiplier was applied twice, the crit
+rolled again on a number that already had one, and each new crit set off another Hellfire explosion.
+Hellshot at level 20 with no upgrades dealt 479 to a neighbour without a second crit and 1198 with one,
+against a normal hit of 135 and a crit of 337. The same pattern was in Max's **Flashpoint** and the
+**Overkill** mutation.
+
+The rules now:
+
+- **An explosion built from an already-final number is applied as-is.** Hellfire, Flashpoint and
+  Overkill pass `bypassOutgoingResolution: true` (new optional param on `HitEffectUtility.ApplyExplosion`/
+  `ApplyDamageInRadius`). That means no second pass of owner multipliers, no new crit, no chain, and no
+  on-hit effects per enemy (`OnWeaponHitLanded`/ramp/Rage/stagger). Target-side mitigation (Rupture,
+  armor, shield) still applies. A neighbour takes exactly `DamageMultiplier` x what the crit target
+  took. Hellfire at 100% is still 2.5x a normal Hellshot hit (it equals the crit). Lower the asset if
+  that's still too strong.
+- **Perk explosions splash the enemies around the hit, not the hit enemy itself.** Hellfire,
+  Flashpoint (crit target passed as `FindEnemiesInRadius`'s `exclude`) and Explosive Sequence
+  (`excludeTarget` = the enemy the shot ended on, `DirectHitData.ApplyTerminalWeaponPerks` /
+  `WeaponSystem.ApplyHitscanTerminalPerks` via the final segment's `segmentTarget`). That covers
+  everything on the Explosive Sequence pipeline: Flare Burst, Cluster Launcher's blast and Pixie's
+  Explosive Rounds. **Cataclysm Round is the exception.** It still catches its own target, as the
+  last bullet's big payoff.
+- **Explosions built from the shot's pre-crit damage still resolve once.** That's Explosive Sequence,
+  Cataclysm, Quantum Rounds, Split Shot fragments and Critical Rebound. Each enemy hit rolls its own
+  crit, which can trigger Hellfire (now without a chain) and the other on-crit perks.
+- **Critical Rebound uses the shot's live damage.** That is `WeaponSystem.ResolveCurrentShotDamage`:
+  base x `Weapon.DamageMultiplier` x ramp / Final Round / Execution / Escalating, the same base Split
+  Shot and Explosive Sequence scale off. Before, it read the bare asset `Damage`. It reads the magazine
+  as it is now, which is exact for hitscan and at most one bullet late for a projectile still in
+  flight. Phantom Strike's one-shot bonus isn't included.
+
+Single-target damage lost by the explosion no longer hitting the shot's own target (Inspector
+single-target DPS): **Flare Pistol -25%** (every 3rd shot was 2x on its target), **Cluster Launcher
+-37.5%** (the 60% blast was on top of every direct hit), and Pixie's Explosive Rounds by its proc
+chance x 20-40%. Against a group that damage now lands on the neighbours instead. Flare Pistol's
+Damage 25 had been tuned to match Frost Revolver's 88 sustained DPS with the burst hitting the target,
+so retune it if single-target parity still matters.
+
+**DPS preview / Balance Simulator.** Both now value these two perks as splash only.
+`EstimatedExplosionSplashTargets` / `SimWeapon.ExplosionSplashTargets` is a placeholder of 1 extra
+enemy per blast. In the preview, Hellfire and Explosive Sequence no longer add to the single-target
+numbers. They feed `Est. targets/shot` instead: Explosive Sequence adds `DamageMultiplier/Interval`,
+and Hellfire adds `chance x critMult x DamageMultiplier / expected crit factor`. The simulator credits
+the same amounts to total DPS. Its Explosive Sequence value is numerically unchanged at 1 splash
+target. Its Hellfire value now includes the crit multiplier: Hellshot x1.385, was x1.2.
+
+Not changed: an explosion victim still counts as a weapon hit for `OnWeaponHitLanded` (ramp stacks per
+enemy for hit-advanced ramps) when the explosion comes from the shot's pre-crit damage (Explosive
+Sequence/Cataclysm). `OnExplosionCriticalHit` (Pixie's Volatile Payload) is still raised but has no
+subscriber.

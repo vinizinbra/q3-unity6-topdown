@@ -25,7 +25,7 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
     private UpgradeTooltipTriggerWidget weaponTooltipTrigger;
 
     [Header("Stats (optional - each left unassigned is skipped)")]
-    [SerializeField, Tooltip("Damage per trigger pull (all pellets summed), after perks and damage bonuses - same number as HeroBuildStatsWidget's Damage row.")]
+    [SerializeField, Tooltip("The weapon's own damage per trigger pull (all pellets summed) - authored Damage x the weapon's DamageMultiplier (level/perks), WITHOUT the hero's damage bonuses (those show in HeroBuildStatsWidget's Damage row).")]
     private TMP_Text damageText;
     [SerializeField, Tooltip("Shots per second, after perks, Attack Speed and timed Haste.")]
     private TMP_Text fireRateText;
@@ -120,11 +120,11 @@ public class CurrentWeaponUiWidget : QuantumGlobalMonoBehaviour
     {
         if (damageText != null)
         {
-            // Same rounding as HeroBuildStatsWidget.RefreshDamage: each pellet rounded up, then summed.
-            FP final = weaponData.Damage * weapon.DamageMultiplier * DamageUtility.ResolveBaselineDamageMultiplier(frame, _entityRef, DamageSource.Weapon);
-            int pellets = Mathf.Max(1, weaponData.PelletCount);
-            int perPellet = Mathf.CeilToInt(final.AsFloat);
+            // Weapon-only (no hero damage stats), already the final number - 10 damage with a +25% perk
+            // reads 13, no separate "+25%". Each pellet rounded up like DamageNumberUiWidget, then summed.
+            int perPellet = Mathf.CeilToInt((weaponData.Damage * weapon.DamageMultiplier).AsFloat);
             int basePerPellet = Mathf.CeilToInt(weaponData.Damage.AsFloat);
+            int pellets = Mathf.Max(1, weaponData.PelletCount);
             string total = Tint((perPellet * pellets).ToString(), perPellet, basePerPellet, true);
             damageText.text = pellets > 1 ? $"{total} <size=65%><color=#9AA0A6>{pellets}x{perPellet}</color></size>" : total;
         }

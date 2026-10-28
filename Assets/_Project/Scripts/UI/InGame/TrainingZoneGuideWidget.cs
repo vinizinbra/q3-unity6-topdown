@@ -27,7 +27,7 @@ public class TrainingZoneGuideWidget : QuantumGlobalMonoBehaviour
     {
         public Vector3 Min;
         public Vector2 Size;
-        public TextMeshPro[] Labels;
+        public Transform[] Labels;
         public Vector3[] LabelScales;
     }
 
@@ -50,15 +50,15 @@ public class TrainingZoneGuideWidget : QuantumGlobalMonoBehaviour
             {
                 Min = child.position,
                 Size = new Vector2(chunk.Prototype.ChunkSizeWidth, chunk.Prototype.ChunkSizeDepth),
-                Labels = child.GetComponentsInChildren<TextMeshPro>(true),
+                Labels = CollectLabels(child),
             };
 
             station.LabelScales = new Vector3[station.Labels.Length];
 
             for (int i = 0; i < station.Labels.Length; i++)
             {
-                station.LabelScales[i] = station.Labels[i].transform.localScale;
-                station.Labels[i].transform.localScale = Vector3.zero;
+                station.LabelScales[i] = station.Labels[i].localScale;
+                station.Labels[i].localScale = Vector3.zero;
             }
 
             _stations.Add(station);
@@ -68,6 +68,20 @@ public class TrainingZoneGuideWidget : QuantumGlobalMonoBehaviour
     private void OnDestroy()
     {
         QuantumEvent.UnsubscribeListener(this);
+    }
+
+    // Ground text plus the floor arrows, in hierarchy order.
+    private static Transform[] CollectLabels(Transform station)
+    {
+        var labels = new List<Transform>();
+
+        foreach (TextMeshPro text in station.GetComponentsInChildren<TextMeshPro>(true))
+            labels.Add(text.transform);
+
+        foreach (TrainingGroundArrowWidget arrow in station.GetComponentsInChildren<TrainingGroundArrowWidget>(true))
+            labels.Add(arrow.transform);
+
+        return labels.ToArray();
     }
 
     public override void QUpdate(QuantumGame game)
@@ -145,7 +159,7 @@ public class TrainingZoneGuideWidget : QuantumGlobalMonoBehaviour
     {
         for (int i = 0; i < station.Labels.Length; i++)
         {
-            StartCoroutine(Pop(station.Labels[i].transform, station.LabelScales[i]));
+            StartCoroutine(Pop(station.Labels[i], station.LabelScales[i]));
             yield return new WaitForSecondsRealtime(labelStagger);
         }
     }
