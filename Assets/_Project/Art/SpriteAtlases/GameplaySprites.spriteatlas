@@ -114,6 +114,10 @@ SpriteAtlas:
     - {fileID: 2800000, guid: c3f3c3c5a44474dec9a7faa717fbf41d, type: 3}
     - {fileID: 2800000, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
     - {fileID: 2800000, guid: 3ae565d5efcfc462d872eb3a4846e059, type: 3}
+    - {fileID: 2800000, guid: 52eea65ebb46a45e5bf2cdafb207ae52, type: 3}
+    - {fileID: 2800000, guid: 19e661a99be4c4c0f863633db08b07c9, type: 3}
+    - {fileID: 2800000, guid: 1c4cdd81990d14b08b5a4e80865ddb3b, type: 3}
+    - {fileID: 2800000, guid: 6e28971d1cebe4a97b16ff7b02f84772, type: 3}
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -294,6 +298,7 @@ SpriteAtlas:
     - ee2077291b7c2496cb37368d6baad8e1: 939350422
     - 49aaa7591cdf544f5bfa95c1c6432082: 1638579241
     - 49aaa7591cdf544f5bfa95c1c6432082: -1140960156
+    - 19e661a99be4c4c0f863633db08b07c9: 21300000
     - 7efd4fa9c49b243f8a1d20d07ab29e20: -471919903
     - 7efd4fa9c49b243f8a1d20d07ab29e20: -1377693834
     - 7efd4fa9c49b243f8a1d20d07ab29e20: -605909376
@@ -441,6 +446,7 @@ SpriteAtlas:
     - df32790e9645844e78a5aeffd21a1ffe: -1171294404
     - df32790e9645844e78a5aeffd21a1ffe: -1781487487
     - d926423e7ff4d4d0e8e300b652005f38: 21300000
+    - 52eea65ebb46a45e5bf2cdafb207ae52: 21300000
     - 11e8fcaeceabe4b3c8220e6bfa161095: -1988497972
     - 11e8fcaeceabe4b3c8220e6bfa161095: 250965891
     - 11e8fcaeceabe4b3c8220e6bfa161095: -247756672
@@ -636,6 +642,7 @@ SpriteAtlas:
   - {fileID: 939350422, guid: ee2077291b7c2496cb37368d6baad8e1, type: 3}
   - {fileID: 1638579241, guid: 49aaa7591cdf544f5bfa95c1c6432082, type: 3}
   - {fileID: -1140960156, guid: 49aaa7591cdf544f5bfa95c1c6432082, type: 3}
+  - {fileID: 21300000, guid: 19e661a99be4c4c0f863633db08b07c9, type: 3}
   - {fileID: -471919903, guid: 7efd4fa9c49b243f8a1d20d07ab29e20, type: 3}
   - {fileID: -1377693834, guid: 7efd4fa9c49b243f8a1d20d07ab29e20, type: 3}
   - {fileID: -605909376, guid: 7efd4fa9c49b243f8a1d20d07ab29e20, type: 3}
@@ -783,6 +790,7 @@ SpriteAtlas:
   - {fileID: -1171294404, guid: df32790e9645844e78a5aeffd21a1ffe, type: 3}
   - {fileID: -1781487487, guid: df32790e9645844e78a5aeffd21a1ffe, type: 3}
   - {fileID: 21300000, guid: d926423e7ff4d4d0e8e300b652005f38, type: 3}
+  - {fileID: 21300000, guid: 52eea65ebb46a45e5bf2cdafb207ae52, type: 3}
   - {fileID: -1988497972, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
   - {fileID: 250965891, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
   - {fileID: -247756672, guid: 11e8fcaeceabe4b3c8220e6bfa161095, type: 3}
@@ -977,6 +985,7 @@ SpriteAtlas:
   - riftRaidersSpaceShip_0
   - World1ChargerElite_0
   - World1ChargerElite_1
+  - RR_StoreMerchant
   - torso1
   - torso2
   - torso3
@@ -1124,6 +1133,7 @@ SpriteAtlas:
   - leviathan2_4
   - leviathan2_5
   - Shadow
+  - RR_StoreActive_NoMerchant
   - Weapon1
   - Minigun
   - RocketGun

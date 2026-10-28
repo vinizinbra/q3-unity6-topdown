@@ -100,6 +100,10 @@ public class InteractionPromptWidget : MonoBehaviour
     // text below whenever non-empty, same "second source can override the plain per-state text"
     // idiom _bleedOutDescription already establishes for Revive. See SetDescriptionOverride.
     private string _descriptionOverride = string.Empty;
+    // Set by an owning View to hide the prompt outright regardless of ContextInteractionState (e.g.
+    // TeamChallengeView while its challenge is running - the HUD banner already carries the live
+    // readout, so a world prompt on the POI is just noise). See SetSuppressed.
+    private bool _suppressed;
     private bool _isShown;
     // Diagnostics only - see the LogHelper calls in FollowTarget/UpdateFromState.
     private ContextInteractionState _loggedState = ContextInteractionState.None;
@@ -176,6 +180,7 @@ public class InteractionPromptWidget : MonoBehaviour
         ApplyReward(rewardIcon, rewardText);
 
         _isShown = false;
+        _suppressed = false;
 
         if (visualRoot != null)
         {
@@ -208,6 +213,13 @@ public class InteractionPromptWidget : MonoBehaviour
     public void SetDescriptionOverride(string description)
     {
         _descriptionOverride = description ?? string.Empty;
+    }
+
+    // Called by an owning View to force the prompt hidden (true) or hand visibility back to the
+    // normal per-state rules (false). Goes through the same SetShown tween as any other hide.
+    public void SetSuppressed(bool suppressed)
+    {
+        _suppressed = suppressed;
     }
 
     // Live replacement for the reward row Setup was given - for a POI whose reward is rolled by the
@@ -614,11 +626,12 @@ public class InteractionPromptWidget : MonoBehaviour
         bool lobbyIdle = state == ContextInteractionState.PhaseUnavailable
             && _game.Frames.Predicted.Global->CurrentState == GameState.Lobby;
 
-        bool shown = state == ContextInteractionState.Available
-            || (state == ContextInteractionState.PhaseUnavailable && lobbyIdle == false)
-            || state == ContextInteractionState.AlreadyUsed
-            || state == ContextInteractionState.NotNeeded
-            || state == ContextInteractionState.Occupied;
+        bool shown = _suppressed == false
+            && (state == ContextInteractionState.Available
+                || (state == ContextInteractionState.PhaseUnavailable && lobbyIdle == false)
+                || state == ContextInteractionState.AlreadyUsed
+                || state == ContextInteractionState.NotNeeded
+                || state == ContextInteractionState.Occupied);
 
         // Priority: Downed's live bleed-out countdown (see RefreshReviveTitle) first - a nearby
         // teammate should always see the clock, whether they're simply in range (Available) or

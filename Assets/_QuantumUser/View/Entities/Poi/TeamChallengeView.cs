@@ -53,6 +53,10 @@ namespace Quantum
         [SerializeField, Tooltip("A ground ring/decal scaled to TeamChallengeConfig.ReadyCancelRadius - shown only while State is WaitingForTeam or Starting. Left unassigned, this feature is simply off.")]
         private Transform readyRing;
 
+        [Header("Interaction Prompt")]
+        [SerializeField, Tooltip("Hide the world-space prompt entirely while State == ChallengeActive - the HUD banner already carries the live challenge readout, so the prompt on the POI is only noise mid-fight. Off = shows challengeActivePromptDescription instead.")]
+        private bool hidePromptWhileActive = true;
+
         [Header("Interaction Prompt - per-state description override")]
         [SerializeField, Tooltip("InteractionPromptWidget's own description while State == Starting - the inherited promptActiveDescription/promptAlreadyUsedDescription have no way to distinguish this from every other state, since ResolveInteractionState maps Starting to the generic AlreadyUsed bucket. Empty = fall back to the generic per-state text instead.")]
         private string startingPromptDescription = "STARTING...";
@@ -97,6 +101,10 @@ namespace Quantum
                 _lastRetrySeconds = -1;
                 PromptWidget?.SetDescriptionOverride(ResolvePromptDescriptionOverride(state));
             }
+
+            // Every frame, not just on the state edge - PromptWidget can resolve late (see
+            // InteractionPromptPoiView.Initialize's retry), after the edge has already passed.
+            PromptWidget?.SetSuppressed(hidePromptWhileActive && state == TeamChallengeState.ChallengeActive);
 
             // Live countdown - re-pushed only when the whole-second value changes.
             if (state == TeamChallengeState.Recharging)

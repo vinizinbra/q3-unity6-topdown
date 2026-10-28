@@ -290,6 +290,33 @@ Choice Window already locks input - movement/weapon/Dash/Hero-Skill gated, `Game
   `LevelUpConfig.cs`'s own class-level defaults). Deliberately does NOT touch `WeaponPool`/`PerkPool`
   (no safe way to locate the right assets), `RuntimeConfig`, hand-placed `EntityPrototype`s, or UI
   prefab wiring - same scope-limit every other generator in this codebase follows.
+- `Assets/_QuantumUser/Entities/LevelProps/Store.prefab` - open-state presentation (view only).
+  `PoiView.activeVisual` is an upright `StoreOpenVisual` container (scale 0.5 cancels the root's
+  ×2, so the FX numbers are world units). It holds:
+  - the 45°-tilted `StoreOpen` group. It keeps the OPEN sign and ground shadows planted, and has a
+    `Truck` child carrying the truck sprite, now `Store/RR_StoreActive_NoMerchant.png` (the merchant
+    painted out of the wall and counter). `Truck` runs a subtle `IdleCharacterAnimation` engine
+    idle: a 0.5% chug at 2.2/s, a 0.15° rock, and a tiny bump every 4-8s;
+  - a `Merchant` under `Truck`, so he rides along (`Store/RR_StoreMerchant.png`, pivot at the
+    counter line), running `IdleCharacterAnimation` (breathe, sway, a hop every 3-6s);
+  - `Fx_WindowLight` (warm breathing glow behind him), `Fx_NeonSign` (green glow with a tube
+    flicker every 3s), `Fx_GrillSmoke` (ETFX `SmokeWhiteSoft`, scaled down) and `Fx_GoodsSparkle`
+    (ETFX `SparkleSoloYellow` over the gun rack).
+
+  Sorting order: truck 0, glows/smoke 1, merchant 2, sparkles 3. Both new sprites are packed in
+  `GameplaySprites.spriteatlas`. The cut-out was made from `RR_StoreActive` in
+  `RiftRaiders_POI.png`, which is left untouched, so if that art changes, redo the cut-out.
+- `Assets/_QuantumUser/Entities/LevelProps/Blacksmith.prefab` - same treatment.
+  - The truck sprite under `StoreOpen` is renamed `Truck`, has its `JuicyEffects` idle wobble
+    removed, and now runs the same subtle engine-idle `IdleCharacterAnimation` as the Store truck.
+    Its sprite is `Blacksmith/RR_GunSmithActive_NoWorker.png`.
+  - A `Gunsmith` child (`Blacksmith/RR_GunSmithWorker.png`) is cut at the rifle's top edge, so the
+    rifle hides the seam, and runs the default character idle.
+  - `Fx_BackLight`: a cool cyan breathing glow behind her.
+  - `Fx_WorkSparks`: ETFX `SparkLoopYellow` turned into a 10-spark burst plus flash every 1.6s off
+    the rifle receiver.
+  - `Fx_ToolSparkle`: ETFX `SparkleSoloWhite` over the wall wrenches.
+  - The pre-existing `Center (1)/(2)` cube and canister glows are unchanged.
 
 ## Edge cases
 

@@ -200,7 +200,19 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
 - `Assets/_QuantumUser/View/Entities/Poi/TeamChallengeView.cs` - state-driven visuals + Ready/Cancel
   Area boundary ring; extends `InteractionPromptPoiView` directly (no sibling `PoiView` needed on
   this prefab - see that class's own header) and pushes a per-`TeamChallengeState` description
-  override onto its own `InteractionPromptWidget` via `SetDescriptionOverride`.
+  override onto its own `InteractionPromptWidget` via `SetDescriptionOverride`. While
+  `ChallengeActive` it also hides that prompt entirely (`hidePromptWhileActive`, default on, via
+  `InteractionPromptWidget.SetSuppressed`, which is re-pushed every frame so a late-resolved widget
+  still picks it up), because the HUD banner already shows the live challenge readout.
+  On the prefab, `rewardVisual` is an upright `TeamChallengeRewardVisual` container that holds the
+  45°-tilted `TeamChallengeReward` sprite plus `RewardLevelupCylinder`. That cylinder is the
+  heroes' Epic Toon FX `LevelupCylinderBlue`, reworked into an always-on loot beam. Every
+  system loops with prewarm and no bursts. The beam emits 2/s with a 1.5s life, fading in and
+  out at alpha 0.3, so overlapping copies hold a steady, shimmering beam. Dust (20/s) and Lines
+  (12/s) emit continuously from the ring. The beam stays on until someone claims the reward.
+  It's sized and placed to rise out of the drum's glowing top circle: local scale
+  (0.22, 0.75, 0.22), position (0, -0.17, 0.39), and particle sortingOrder 1 so it draws over the
+  sprite. If the POI sprite art changes, re-fit those numbers.
 - `Assets/_QuantumUser/View/Entities/Poi/InteractionPromptPoiView.cs` - shared base extracted out of
   `PoiView`, owning the world-space Base-Skill prompt (title/per-state description/reward preview,
   spawn/despawn off the sibling `Interactable`) with no dependency on `PoiActivation` - `PoiView`
