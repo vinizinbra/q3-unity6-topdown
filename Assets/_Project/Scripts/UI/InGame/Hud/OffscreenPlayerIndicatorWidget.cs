@@ -1,14 +1,17 @@
+using Photon.Deterministic;
 using PrimeTween;
 using Quantum;
 using QuantumUser.View.Managers;
+using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 // One off-screen teammate indicator (see OffscreenPlayerIndicatorManager / docs/offscreen-indicators.md):
 // a hex frame holding the hero's live in-game head (the rig's BlobAnimationView.Head sprite, NOT the
-// CharacterData.UIHead portrait; the torso sprite - the whole body - for a headless rig like Capy), a border + arrow tinted with the hero's RingColor (DownedColor while
-// Downed), and an optional distance label. The manager owns all placement; this only paints and pops.
+// CharacterData.UIHead portrait; the torso sprite - the whole body - for a headless rig like Capy), a border + arrow tinted with the hero's RingColor (pulsing
+// toward DownedColor at low HP, solid DownedColor while Downed - with a matching DownedColor glow behind the hex),
+// and an optional distance label. The manager owns all placement; this only paints and pops.
 // When that teammate pings while off-screen, hex rings ripple out from behind the frame in the border's
 // colour (PlayPingRipple) - the edge-of-screen counterpart of PingWorldRippleWidget.
 //
@@ -16,6 +19,8 @@ using UnityEngine.UI;
 // screen-centre side, so it never clips off the edge whichever edge the indicator is pinned to.
 public class OffscreenPlayerIndicatorWidget : MonoBehaviour
 {
+    private const string LogTag = "OffscreenIndicator";
+
     [SerializeField] private RectTransform selfRect;
     [SerializeField, Tooltip("Scaled for the pop-in/out - normally the visual root under selfRect.")]
     private RectTransform visualRoot;
@@ -55,6 +60,9 @@ public class OffscreenPlayerIndicatorWidget : MonoBehaviour
     private int _lastDistance = -1;
     private Tween _popTween;
     private float _pingStartTime = float.NegativeInfinity;
+    private float _lowHealthPhase;
+    private Image _glowImage;
+    private bool _glowMissing;
 
     public void Setup(OffscreenPlayerIndicatorManager manager, EntityRef entityRef, Transform followTarget)
     {
@@ -150,10 +158,11 @@ public class OffscreenPlayerIndicatorWidget : MonoBehaviour
 
         RefreshHead(frame);
 
-        bool downed = frame.TryGet<PlayerLifeState>(_entityRef, out var life) && life.State == PlayerLifeStateKind.Downed;
-        Color tint = downed ? _manager.DownedColor : _heroColor;
+        float urgency = ResolveUrgency(frame);
+        Color tint = Color.Lerp(_heroColor, _manager.DownedColor, urgency);
         borderImage.color = tint;
         arrowImage.color = tint;
+        RefreshGlow(urgency);
 
         if (distanceLabel != null && _manager.ShowDistance)
         {
@@ -166,6 +175,91 @@ public class OffscreenPlayerIndicatorWidget : MonoBehaviour
                 distanceLabel.SetText("{0}m", rounded);
             }
         }
+    }
+
+    // Three steps toward "go help", as 0..1 (0 = RingColor / no glow, 1 = DownedColor / full glow): 0 while
+    // healthy -> pulsing 0..1 below lowHealthPercent (faster as HP drops) -> solid 1 once Downed. The phase
+    // accumulates instead of using Time directly so the pulse doesn't jump when its period changes with HP.
+    private float ResolveUrgency(Frame frame)
+    {
+        if (frame.TryGet<PlayerLifeState>(_entityRef, out var life) && life.State == PlayerLifeStateKind.Downed)
+            return 1f;
+
+        if (_manager.LowHealthPercent <= 0f || frame.TryGet<Health>(_entityRef, out var health) == false || health.MaxHealth <= FP._0 || health.CurrentHealth <= FP._0)
+        {
+            _lowHealthPhase = 0f;
+            return 0f;
+        }
+
+        float ratio = (health.CurrentHealth / health.MaxHealth).AsFloat;
+        if (ratio > _manager.LowHealthPercent)
+        {
+            _lowHealthPhase = 0f;
+            return 0f;
+        }
+
+        float period = Mathf.Lerp(_manager.LowHealthPulseFast, _manager.LowHealthPulseSlow, ratio / _manager.LowHealthPercent);
+        _lowHealthPhase = (_lowHealthPhase + Time.unscaledDeltaTime / Mathf.Max(period, 0.05f)) % 1f;
+
+        // Starts at 0 (RingColor), peaks at 1 (DownedColor) mid-pulse.
+        return 0.5f - 0.5f * Mathf.Cos(_lowHealthPhase * 2f * Mathf.PI);
+    }
+
+    // Soft DownedColor halo hugging the hex, faded by urgency. The sprite is the border's pre-generated glow from
+    // FocusOutlineSet (Tools/RiftRaiders/UI/Generate Focus Outlines - RR_HexagonOutline is one of its extra
+    // sources), created lazily as the first child of visualRoot so it sits behind the frame and pops with it.
+    private void RefreshGlow(float urgency)
+    {
+        float alpha = urgency * _manager.LowHealthGlowAlpha;
+        if (alpha <= 0f)
+        {
+            if (_glowImage != null)
+                _glowImage.enabled = false;
+            return;
+        }
+
+        if (EnsureGlow() == false)
+            return;
+
+        Color c = _manager.DownedColor;
+        c.a = alpha;
+        _glowImage.color = c;
+        _glowImage.enabled = true;
+    }
+
+    private bool EnsureGlow()
+    {
+        if (_glowImage != null)
+            return true;
+        if (_glowMissing)
+            return false;
+
+        FocusOutlineSet set = FocusOutlineSet.Instance;
+        if (set == null || set.TryGet(borderImage.sprite, out FocusOutlineSet.Entry entry) == false || entry.focus == null)
+        {
+            _glowMissing = true;
+            LogHelper.Warn(LogTag, $"No glow sprite for '{(borderImage.sprite != null ? borderImage.sprite.name : "(no sprite)")}' - run Tools/RiftRaiders/UI/Generate Focus Outlines.");
+            return false;
+        }
+
+        var go = new GameObject("LowHealthGlow", typeof(RectTransform), typeof(CanvasRenderer));
+        var rect = (RectTransform)go.transform;
+        rect.SetParent(visualRoot, false);
+        rect.SetAsFirstSibling();
+
+        // Same centre as the border, grown by the sprite's padding converted to canvas units.
+        RectTransform border = borderImage.rectTransform;
+        float pad = entry.padding * border.rect.width / entry.source.rect.width;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = border.anchoredPosition;
+        rect.sizeDelta = border.rect.size + new Vector2(pad, pad) * 2f;
+
+        _glowImage = go.AddComponent<Image>();
+        _glowImage.sprite = entry.focus;
+        _glowImage.raycastTarget = false;
+        _glowImage.enabled = false;
+        return true;
     }
 
     public void SetShown(bool shown)

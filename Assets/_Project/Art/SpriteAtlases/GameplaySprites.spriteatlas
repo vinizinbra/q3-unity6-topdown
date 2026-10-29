@@ -147,6 +147,7 @@ SpriteAtlas:
     - 57e85e7087b3c45e7bb2695a453e0739: -312753833
     - 57e85e7087b3c45e7bb2695a453e0739: -1073922619
     - e7a641611c1e34b8c94669f1d2b0719d: 21300000
+    - 1c4cdd81990d14b08b5a4e80865ddb3b: 21300000
     - 6acdef52bcd4b462f992b7a3a203dfe5: 589618574
     - 6acdef52bcd4b462f992b7a3a203dfe5: -271987269
     - 6acdef52bcd4b462f992b7a3a203dfe5: -1978841605
@@ -405,6 +406,7 @@ SpriteAtlas:
     - 19acf56c49556470a8c80dca4d46ccf3: 1504846261
     - 937a9d6c28f144847a8dd71d3c155021: -2071894358
     - 937a9d6c28f144847a8dd71d3c155021: 340123834
+    - 6e28971d1cebe4a97b16ff7b02f84772: 21300000
     - a599c42dc8c0447599899ca786fa1dfc: -773563663
     - a599c42dc8c0447599899ca786fa1dfc: 1755836614
     - a599c42dc8c0447599899ca786fa1dfc: 114657108
@@ -491,6 +493,7 @@ SpriteAtlas:
   - {fileID: -312753833, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
   - {fileID: -1073922619, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
   - {fileID: 21300000, guid: e7a641611c1e34b8c94669f1d2b0719d, type: 3}
+  - {fileID: 21300000, guid: 1c4cdd81990d14b08b5a4e80865ddb3b, type: 3}
   - {fileID: 589618574, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
   - {fileID: -271987269, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
   - {fileID: -1978841605, guid: 6acdef52bcd4b462f992b7a3a203dfe5, type: 3}
@@ -749,6 +752,7 @@ SpriteAtlas:
   - {fileID: 1504846261, guid: 19acf56c49556470a8c80dca4d46ccf3, type: 3}
   - {fileID: -2071894358, guid: 937a9d6c28f144847a8dd71d3c155021, type: 3}
   - {fileID: 340123834, guid: 937a9d6c28f144847a8dd71d3c155021, type: 3}
+  - {fileID: 21300000, guid: 6e28971d1cebe4a97b16ff7b02f84772, type: 3}
   - {fileID: -773563663, guid: a599c42dc8c0447599899ca786fa1dfc, type: 3}
   - {fileID: 1755836614, guid: a599c42dc8c0447599899ca786fa1dfc, type: 3}
   - {fileID: 114657108, guid: a599c42dc8c0447599899ca786fa1dfc, type: 3}
@@ -834,6 +838,7 @@ SpriteAtlas:
   - EliteFlee_5
   - EliteFlee_4
   - ShadowSquare
+  - RR_GunSmithActive_NoWorker
   - Emoji_Robot_Cry
   - Emoji_Zara_Happy
   - Emoji_Brute_Happy
@@ -1092,6 +1097,7 @@ SpriteAtlas:
   - PixieSkills_0
   - ZaraSpeakerNew_Lights
   - ZaraSpeakerNew
+  - RR_GunSmithWorker
   - RiftDrillbreakerElite_Idle
   - RiftDrillbreakerElite_Windup
   - RiftDrillbreakerElite_Attack

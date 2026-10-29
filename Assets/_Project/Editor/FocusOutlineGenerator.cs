@@ -11,7 +11,7 @@ using UnityEngine.U2D;
 /// chamfered) - a thin crisp core hugging the edge plus a soft falloff out to <see cref="GlowRadius"/> px -
 /// painted white (tinted at runtime). 9-slice borders grow by the same amount, so the glow fits the element
 /// at any size. Sources are discovered from every FocusOutlineWidget in the open scene(s) and in the prefabs
-/// under Assets/_Project/Prefabs. Results are registered in Resources/FocusOutlineSet and added to the
+/// under Assets/_Project/Prefabs, plus <see cref="ExtraSourcePaths"/> for glows drawn from code. Results are registered in Resources/FocusOutlineSet and added to the
 /// UISprites atlas. Re-run after adding a widget or changing the constants below / the source art.
 /// </summary>
 public static class FocusOutlineGenerator
@@ -32,10 +32,10 @@ public static class FocusOutlineGenerator
     private const string SetPath = "Assets/_Project/Resources/FocusOutlineSet.asset";
     private const string AtlasPath = "Assets/_Project/Art/SpriteAtlases/UISprites.spriteatlas";
 
-    // Every background sprite that can hold focus (see FocusOutlineWidget users).
-    private static readonly string[] Sources =
+    // Sprites whose glow is drawn from code rather than by a FocusOutlineWidget, so CollectSources can't discover them.
+    private static readonly string[] ExtraSourcePaths =
     {
-        "RR_MenuButton", "RR_MenuButtonBottom", "RR_WhiteSquare", "RR_Icon_Settings", "RR_Icon_Mail"
+        "Assets/_Project/Art/Sprites/UI/RR_HexagonOutline.png" // OffscreenPlayerIndicatorWidget low-HP / Downed glow
     };
 
     [MenuItem("Tools/RiftRaiders/UI/Generate Focus Outlines")]
@@ -95,6 +95,15 @@ public static class FocusOutlineGenerator
 
             foreach (FocusOutlineWidget widget in prefab.GetComponentsInChildren<FocusOutlineWidget>(true))
                 AddBackground(widget, sprites);
+        }
+
+        foreach (string path in ExtraSourcePaths)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite != null)
+                sprites.Add(sprite);
+            else
+                Debug.LogWarning($"[FocusOutline] Extra source '{path}' is not a sprite.");
         }
 
         return sprites;

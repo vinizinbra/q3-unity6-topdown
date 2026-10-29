@@ -36,6 +36,14 @@ public class OffscreenPlayerIndicatorManager : MonoBehaviour
     [Header("Look")]
     [SerializeField, Tooltip("Border/arrow tint while the teammate is Downed (replaces the hero's RingColor).")]
     private Color downedColor = new Color(1f, 0.25f, 0.25f, 1f);
+    [SerializeField, Range(0f, 1f), Tooltip("At or below this HP fraction (Health only, not Shield - same rule as HurtOverlayUiWidget) the border/arrow pulse between RingColor and DownedColor. 0 = off.")]
+    private float lowHealthPercent = 0.3f;
+    [SerializeField, Tooltip("Seconds per pulse right at the threshold.")]
+    private float lowHealthPulseSlow = 0.8f;
+    [SerializeField, Tooltip("Seconds per pulse as HP approaches 0 - the pulse speeds up like a heartbeat as the teammate gets closer to Downed.")]
+    private float lowHealthPulseFast = 0.3f;
+    [SerializeField, Range(0f, 1f), Tooltip("Peak alpha of the DownedColor glow behind the hex - follows the low-HP pulse, steady while Downed. 0 = no glow.")]
+    private float lowHealthGlowAlpha = 0.85f;
     [SerializeField, Tooltip("Hide the indicator once that teammate is KO (dead end - nothing to go do there).")]
     private bool hideWhenKO = true;
     [SerializeField, Tooltip("Show the distance (world units, XZ) from local player one under the head.")]
@@ -47,6 +55,10 @@ public class OffscreenPlayerIndicatorManager : MonoBehaviour
     private Canvas _canvas;
 
     public Color DownedColor => downedColor;
+    public float LowHealthPercent => lowHealthPercent;
+    public float LowHealthPulseSlow => lowHealthPulseSlow;
+    public float LowHealthPulseFast => lowHealthPulseFast;
+    public float LowHealthGlowAlpha => lowHealthGlowAlpha;
     public bool HideWhenKO => hideWhenKO;
     public bool ShowDistance => showDistance;
 

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rift Jumpers Run Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Semi+Condensed:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* A4 sheet; the poster itself is a 100mm-wide card centred on it, with crop marks. */
+  @page { size: 210mm 297mm; margin: 0; }
+  :root {
+    --pink: #FD3971;
+    --magenta: #E3218C;
+    --cyan: #2FC3F0;
+    --ink: #111014;
+    --slate: #403D52;
+    --w: 100mm;
+    --h: 150mm;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 210mm; height: 297mm; background: #fff; }
+  body {
+    font-family: "Barlow Semi Condensed", sans-serif;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .sheet { position: relative; width: 210mm; height: 297mm; display: flex; align-items: center; justify-content: center; }
+
+  .poster { position: relative; width: var(--w); height: var(--h); background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* Crop marks, drawn just outside the card corners */
+  .crop { position: absolute; inset: 0; pointer-events: none; }
+  .crop i { position: absolute; background: #999; }
+  .crop .h { width: 6mm; height: 0.15mm; }
+  .crop .v { width: 0.15mm; height: 6mm; }
+
+  .shards { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .content { position: relative; z-index: 1; padding: 4.5mm 5mm 4mm; flex: 1; display: flex; flex-direction: column; }
+
+  /* Header */
+  header { text-align: center; }
+  header .logo { width: 44mm; display: block; margin: 0 auto; }
+  .title-row { display: flex; align-items: center; justify-content: center; gap: 2.2mm; margin-top: 2mm; }
+  .title {
+    font-family: "Anton", sans-serif; font-size: 7mm; line-height: 1; text-transform: uppercase; letter-spacing: 0.1mm;
+  }
+  .title .hot { color: var(--pink); }
+  .time {
+    font-family: "Anton", sans-serif; font-size: 3.6mm; line-height: 1; background: var(--ink); color: #fff;
+    padding: 0.9mm 1.9mm 0.8mm; transform: skewX(-10deg);
+  }
+  .time span { display: inline-block; transform: skewX(10deg); }
+
+  /* Steps */
+  .steps { display: flex; flex-direction: column; gap: 3.4mm; margin-top: 3.6mm; flex: 1; }
+  .steps .step { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+  .steps .step ul, .steps .step p { align-self: flex-start; }
+  .step {
+    position: relative; background: rgba(255,255,255,0.94); border: 0.6mm solid var(--ink);
+    border-radius: 5mm 0 5mm 0; corner-shape: bevel; padding: 2.4mm 3mm 2.8mm;
+  }
+  /* Full-figure cutouts: feet on the box floor, head popping out over the top edge */
+  .step .art { position: absolute; z-index: 2; bottom: 0.6mm; height: 28mm; width: auto; filter: drop-shadow(0.5mm 0.5mm 0 rgba(17,16,20,0.25)); }
+  .step > *:not(.art) { position: relative; z-index: 1; }
+  .step-title { display: flex; align-items: center; gap: 1.8mm; margin-bottom: 1.3mm; }
+  .step-num {
+    font-family: "Anton", sans-serif; font-size: 5.4mm; color: #fff; background: var(--pink);
+    width: 8.4mm; height: 7.4mm; padding-top: 0.4mm; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  }
+  .step.break .step-num { background: var(--cyan); }
+  .step-name { font-family: "Anton", sans-serif; font-size: 7.4mm; line-height: 1; letter-spacing: 0.2mm; }
+  .dur {
+    font-family: "Anton", sans-serif; font-size: 3.8mm; line-height: 1; color: #fff; background: var(--ink);
+    padding: 0.9mm 1.8mm 0.8mm; transform: skewX(-10deg); margin-left: 0.6mm;
+  }
+  .dur span { display: inline-block; transform: skewX(10deg); }
+  .step p, .step li { font-size: 4.1mm; line-height: 1.18; font-weight: 600; }
+  .step p + p, .step p + ul { margin-top: 1.2mm; }
+  .step b { font-weight: 800; }
+  .term { font-weight: 800; color: var(--magenta); }
+  .step ul { list-style: none; }
+  .step li { padding-left: 4mm; position: relative; margin-top: 0.7mm; }
+  .step li::before {
+    content: ""; position: absolute; left: 0.2mm; top: 1.1mm; width: 2.3mm; height: 2.7mm;
+    background: var(--pink); clip-path: polygon(50% 0, 100% 40%, 50% 100%, 0 40%);
+  }
+  .narrow { max-width: 54mm; }
+
+  .survive .art { right: 0.5mm; }
+  /* Break shows two heroes: Brute behind, Pixie overlapping in front */
+  .break .art.brute { right: 0.5mm; height: 27mm; }
+  .break .art.pixie { right: 15mm; height: 25mm; z-index: 3; }
+
+  /* Explore: the dark highlighted step */
+  .step.explore {
+    background: var(--ink); color: #fff; border: 0.8mm solid var(--pink);
+    box-shadow: 1.6mm 1.6mm 0 var(--cyan); overflow: visible; margin-right: 1.6mm;
+  }
+  /* Boss art is landscape with a faded base: let it rise out of the box floor */
+  .explore .art { right: -4.5mm; bottom: -1.5mm; height: 30mm; filter: none; }
+  .explore .narrow { max-width: 50mm; }
+  .explore .step-title { margin-bottom: 0; }
+  .explore .badge {
+    display: inline-block; margin-left: 0.6mm; background: var(--cyan); color: var(--ink);
+    font-family: "Anton", sans-serif; font-size: 3.8mm; text-transform: uppercase; letter-spacing: 0.2mm;
+    padding: 0.9mm 1.8mm 0.8mm; transform: skewX(-10deg);
+  }
+  .explore .badge span { display: inline-block; transform: skewX(10deg); }
+  .explore .term { color: #FF8FB0; }
+  .explore .step-num { font-size: 4.6mm; padding-top: 0; }
+  .explore p { margin-top: 1.4mm; }
+
+  /* Footer */
+  footer {
+    position: relative; z-index: 1; margin-top: auto; background: var(--ink); color: #fff;
+    padding: 4.4mm 5mm 3.4mm; display: flex; align-items: center; justify-content: space-between; gap: 3mm;
+    clip-path: polygon(0 2.4mm, 100% 0, 100% 100%, 0 100%);
+  }
+  footer .studio { height: 7mm; filter: invert(1); flex: none; }
+  footer .tag { font-family: "Anton", sans-serif; font-size: 4.6mm; line-height: 1; text-transform: uppercase; letter-spacing: 0.2mm; }
+  footer .tag .hot { color: var(--pink); }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="poster" id="poster">
+    <svg class="shards" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">
+      <polygon points="0,0 22,0 6,16 0,11" fill="#FD3971"/>
+      <polygon points="0,18 9,14 0,30" fill="#2FC3F0"/>
+      <polygon points="13,0 29,0 17,8" fill="#2FC3F0" opacity="0.85"/>
+      <polygon points="100,0 78,0 94,16 100,11" fill="#FD3971"/>
+      <polygon points="100,18 91,14 100,30" fill="#2FC3F0"/>
+      <polygon points="87,0 71,0 83,8" fill="#2FC3F0" opacity="0.85"/>
+    </svg>
+
+    <div class="content">
+      <header>
+        <img class="logo" src="img/RiftJumpersLogoHorizontal.png" alt="Rift Jumpers">
+        <div class="title-row">
+          <div class="title">How a <span class="hot">run</span> works</div>
+          <div class="time"><span>~15 MIN</span></div>
+        </div>
+      </header>
+
+      <div class="steps">
+        <article class="step survive">
+          <img class="art" src="img/max_cut.png" alt="">
+          <div class="step-title"><div class="step-num">1</div><div class="step-name">SURVIVE</div><div class="dur"><span>3 MIN</span></div></div>
+          <p class="narrow">Kill enemies, collect <span class="term">XP</span>.</p>
+          <p class="narrow">Level up = <b>pick an upgrade</b>.</p>
+        </article>
+
+        <article class="step break">
+          <img class="art brute" src="img/brute_cut.png" alt="">
+          <img class="art pixie" src="img/pixie_cut.png" alt="">
+          <div class="step-title"><div class="step-num">2</div><div class="step-name">BREAK</div><div class="dur"><span>1 MIN</span></div></div>
+          <p class="narrow">Clear the area, spend <span class="term">Coins</span>:</p>
+          <ul class="narrow">
+            <li><span class="term">Store</span>: Health, Weapons, Accessory</li>
+            <li><span class="term">Blacksmith</span>: Weapon perks</li>
+          </ul>
+        </article>
+
+        <article class="step explore">
+          <img class="art" src="img/World1Boss_fade.png" alt="">
+          <div class="step-title"><div class="step-num">★</div><div class="step-name">EXPLORE</div></div>
+          <p class="narrow">Find <span class="term">Chests</span> and <span class="term">Challenges</span> for rare rewards.</p>
+        </article>
+      </div>
+    </div>
+
+    <footer>
+      <div class="tag">Enter the <span class="hot">Rift.</span> Survive. <span class="hot">Get stronger.</span></div>
+      <img class="studio" src="img/PachaGamesLogo.png" alt="Pacha Games">
+    </footer>
+  </div>
+  <div class="crop" id="crop"></div>
+</div>
+<script>
+  // Place crop marks around the card once layout is known (card height is content-driven).
+  const p = document.getElementById('poster').getBoundingClientRect();
+  const crop = document.getElementById('crop');
+  const mm = 96 / 25.4, gap = 2 * mm, len = 6 * mm;
+  const mark = (cls, x, y) => { const i = document.createElement('i'); i.className = cls; i.style.left = x + 'px'; i.style.top = y + 'px'; crop.appendChild(i); };
+  for (const [x, sx] of [[p.left, -1], [p.right, 1]])
+    for (const [y, sy] of [[p.top, -1], [p.bottom, 1]]) {
+      mark('h', sx < 0 ? x - gap - len : x + gap, y);
+      mark('v', x, sy < 0 ? y - gap - len : y + gap);
+    }
+</script>
+</body>
+</html>

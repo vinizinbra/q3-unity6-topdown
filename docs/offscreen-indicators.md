@@ -14,6 +14,18 @@ no commands. Each client projects the other heroes' views itself.
   frame). It deliberately does **not** use the `CharacterData.UIHead` portrait. A rig with no separate head (Capy) falls back to its `BlobAnimationView.Torso` sprite, which is the whole body. The head sits fully inside the hex with no mask (a uGUI stencil `Mask` gives a jagged, un-antialiased edge) and always stays upright.
 - **Border + arrow** = the hero's `CharacterData.RingColor`, or `downedColor` (red) while that teammate is
   **Downed**. A **KO** teammate's indicator is hidden (`hideWhenKO`).
+- **Low HP pulse:** at or below `lowHealthPercent` (0.3, `Health` only, not Shield, the same rule as
+  `HurtOverlayUiWidget`) the border + arrow pulse `RingColor` ↔ `downedColor`. The period lerps from
+  `lowHealthPulseSlow` (0.8s, at the threshold) to `lowHealthPulseFast` (0.3s, near 0 HP), like a
+  heartbeat. That gives three steps toward "go help": normal → pulsing → solid red (Downed). The ping rings
+  read the border colour, so they pulse too. `lowHealthPercent = 0` turns it off.
+  One 0..1 "urgency" drives both the tint and a **`downedColor` glow** behind the hex: 0 while healthy, the pulse
+  at low HP, and a steady 1 while Downed. The glow's peak alpha is `lowHealthGlowAlpha` (0.85, 0 = no glow).
+  Its sprite is `Art/Sprites/UI/Focus/RR_HexagonOutline_Focus.png`, the border's halo from the focus-glow
+  generator (Tools ▸ RiftRaiders ▸ UI ▸ Generate Focus Outlines). `RR_HexagonOutline` sits in that
+  generator's `ExtraSourcePaths` because no `FocusOutlineWidget` uses it. The widget looks it up in
+  `FocusOutlineSet` and creates the `LowHealthGlow` Image lazily as the first child of `Visual`, so it sits
+  behind the frame and pops with it.
 - **Distance** = XZ world distance from local player one, as `"{n}m"`. The label sits on the side opposite the
   arrow so it never overlaps it, whichever edge the indicator is on.
 - **Ping ripple:** when that teammate pings (`PingPlaced`, matched on `Owner`) while their indicator is
@@ -29,7 +41,8 @@ no commands. Each client projects the other heroes' views itself.
 - `Scripts/UI/InGame/Hud/OffscreenPlayerIndicatorManager.cs`: singleton on the prefab root (full-stretch
   rect). `Register(entity, transform)` / `Unregister(entity)` clone/destroy the inactive `IndicatorTemplate`
   child. A single `LateUpdate` does all the projection, clamping and show/hide. Tuning: `edgePadding`,
-  `visibleMargin`, `worldOffset`, `downedColor`, `hideWhenKO`, `showDistance`.
+  `visibleMargin`, `worldOffset`, `downedColor`, `lowHealthPercent`, `lowHealthPulseSlow`/`Fast`,
+  `hideWhenKO`, `showDistance`.
 - `Scripts/UI/InGame/Hud/OffscreenPlayerIndicatorWidget.cs`: one indicator. It paints the head and tint, rotates
   `ArrowPivot`, places the label and runs the pop tweens (PrimeTween). It never decides its own position.
 - `CharView.Initialize` registers every non-local hero, and `DeInitialize` unregisters. This is the same
