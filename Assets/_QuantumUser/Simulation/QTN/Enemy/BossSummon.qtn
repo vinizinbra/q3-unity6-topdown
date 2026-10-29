@@ -1,0 +1,7 @@
+// Marks an enemy summoned by a boss's own ability (Riff Riot's speakers, SpawnPackDeliveryData adds cast by a
+// boss) - never a Director spawn. Lets hero effects tell "a boss's own minion" apart from a plain enemy of the
+// same tier, e.g. Yoru's Mirror Step never instant-kills one (MirrorStepSkillAction).
+component BossSummon
+{
+    EntityRef Boss;
+}

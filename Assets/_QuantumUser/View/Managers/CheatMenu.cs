@@ -133,6 +133,7 @@ namespace QuantumUser.View
             // EnemyDataAsset's own "Spawn Near Local Player" Inspector button (see
             // EnemyDataAsset.Debug.cs) - routed through here since this host always exists.
             EnemyDataAssetDebug.OnSpawnRequested += SendSpawnEnemy;
+            EnemyDataAssetDebug.OnJumpToBossRequested += SendJumpToBoss;
             CheatUnlock.Changed += OnUnlockChanged;
         }
 
@@ -147,12 +148,20 @@ namespace QuantumUser.View
         private void OnDestroy()
         {
             EnemyDataAssetDebug.OnSpawnRequested -= SendSpawnEnemy;
+            EnemyDataAssetDebug.OnJumpToBossRequested -= SendJumpToBoss;
             CheatUnlock.Changed -= OnUnlockChanged;
         }
 
         private void SendSpawnEnemy(AssetRef<EnemyDataAsset> enemy, int count)
         {
             Send(CheatActionKind.SpawnEnemy, enemy.Id.Value, count);
+        }
+
+        // Same as the "Jump to Boss (Lv24)" button, but fighting this specific boss.
+        private void SendJumpToBoss(AssetRef<BossDataAsset> boss)
+        {
+            InMatchTutorialManager.SkipTutorials = true;
+            Send(CheatActionKind.JumpToBoss, boss.Id.Value);
         }
 
         // QuantumGlobalMonoBehaviour requires this - only the hide-toggle hotkey is polled here

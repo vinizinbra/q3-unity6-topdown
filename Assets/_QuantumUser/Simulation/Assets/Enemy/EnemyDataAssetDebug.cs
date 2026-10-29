@@ -8,5 +8,8 @@ namespace Quantum
     public static class EnemyDataAssetDebug
     {
         public static Action<AssetRef<EnemyDataAsset>, int> OnSpawnRequested;
+
+        // BossDataAsset's "Jump To This Boss" button - see BossDataAsset.Debug.cs. Same subscriber.
+        public static Action<AssetRef<BossDataAsset>> OnJumpToBossRequested;
     }
 }

@@ -71,7 +71,9 @@ namespace Quantum
                                  // normal purchases AND phase-guaranteed spawns (the run clock keeps
                                  // running), so cheat-spawned enemies can be tested in isolation
         JumpToBoss,             // starts the run if still in the lobby, jumps to the first Boss-kind phase and
-                                // auto-resolves level-ups up to a late-run level - see CheatSystem.JumpToBoss
+                                // auto-resolves level-ups up to a late-run level - see CheatSystem.JumpToBoss.
+                                // AssetId = optional BossDataAsset guid (0 = the phase's own boss) -
+                                // spawns that boss's DebugPrototype instead
         RecoverFromBot,         // removes BotBrain from the sender's own entity (undo of BecomeBot) -
                                 // PlayerInputUtility.Resolve falls back to the real device input the
                                 // very next tick. No-op if the entity isn't a bot.

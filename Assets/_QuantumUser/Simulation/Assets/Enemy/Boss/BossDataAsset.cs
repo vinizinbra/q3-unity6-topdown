@@ -79,6 +79,11 @@ namespace Quantum
         public AssetRef<EnemyMovementData> MovementOverride;
         public EnemyHeightData HeightOverride;
         public BossStatModifiers Modifiers;
+
+        // Optional - forced the moment this phase is entered (e.g. an enrage roar), through
+        // BossSystem.TryForceAction (waits if the boss is mid-delivery). Must be listed in
+        // SkillActions. Unset = no entry beat (every existing boss).
+        public AssetRef<EnemyActionData> EntryAction;
     }
 
     [Serializable]
@@ -173,5 +178,16 @@ namespace Quantum
         // boss forever while the rest of the party free-fires. <= 0 (default) disables this
         // entirely, every existing/future boss unaffected unless authored.
         public FP RetargetInterval;
+
+        // False (default, every existing boss): a stagger break overrides whatever the boss is doing
+        // that very tick, even mid-delivery (see BossSystem.ForceBreakAction's known gap). True: if it
+        // lands while the boss is Active (e.g. airborne in a leap), the break waits until that delivery
+        // finishes - so a kinematic jump always lands before the Kneel starts.
+        public bool DeferForcedActionsWhileActive;
+
+        // Debug only - the boss's own one-off EntityPrototype (rig, BossRuntimeState...). Lets
+        // EnemyDataAsset's "Spawn Near Local Player" button spawn the real boss instead of the generic
+        // Director prototype (see CheatSystem.SpawnEnemy). Never read by normal gameplay.
+        public AssetRef<EntityPrototype> DebugPrototype;
     }
 }

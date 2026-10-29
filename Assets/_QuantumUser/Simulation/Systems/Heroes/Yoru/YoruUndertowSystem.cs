@@ -116,6 +116,8 @@ namespace Quantum
         // other Begin-baked upgrade's "resolved once at grant/refresh time" idiom. Does NOT fire
         // UndertowTriggered - the pull target (the second of the two enemies the visual feedback
         // needs) isn't known yet at hit time, only once TickUndertowPulls resolves it - see there.
+        // Bosses are immune (no pull, no Bound) - they can still be the nearest enemy others get
+        // pulled toward.
         public void OnWeaponHitLanded(Frame f, EntityRef target, EntityRef owner)
         {
             if (f.Unsafe.TryGetPointer<UndertowUpgrade>(owner, out var upgrade) == false)
@@ -126,6 +128,9 @@ namespace Quantum
             if (f.Unsafe.TryGetPointer<Enemy>(target, out var enemy) == true)
             {
                 EnemyDataAsset data = f.FindAsset(enemy->EnemyData);
+
+                if (data.Tier == EnemyTier.Boss)
+                    return;
 
                 if (data.Tier >= EnemyTier.Specialist)
                 {

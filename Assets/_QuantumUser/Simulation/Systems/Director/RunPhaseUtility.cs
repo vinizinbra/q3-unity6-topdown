@@ -285,13 +285,19 @@ namespace Quantum
         // that many copies of the same boss.
         private static void SpawnBoss(Frame f, SurvivalPhase phase, FPVector3 position)
         {
-            if (phase.BossPrototype.Id.IsValid == false)
+            // Debug-only: lets any world's Boss phase (e.g. via the Jump to Boss cheat) spawn a boss that
+            // isn't wired into a SurvivalConfig yet - see Global.DebugBossPrototypeOverride.
+            AssetRef<EntityPrototype> prototype = f.Global->DebugBossPrototypeOverride.IsValid == true
+                ? f.Global->DebugBossPrototypeOverride
+                : phase.BossPrototype;
+
+            if (prototype.Id.IsValid == false)
             {
                 Log.Error("[RunPhase] Boss phase began but SurvivalPhase.BossPrototype isn't assigned - no boss spawned");
                 return;
             }
 
-            EntityRef entity = f.Create(phase.BossPrototype);
+            EntityRef entity = f.Create(prototype);
 
             if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false)
             {

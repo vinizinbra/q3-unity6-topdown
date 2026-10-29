@@ -68,6 +68,9 @@ namespace Quantum
             FPVector3 anchor = action.Origin == EnemyActionOrigin.Self ? filter.Transform3D->Position : filter.Enemy->SkillTargetPosition;
             int groundLayerMask = EnemyMovementUtility.GetGroundLayerMask(f);
 
+            // A boss's adds are tagged BossSummon (see BossSummon.qtn); a non-boss spawner's (e.g. Scarab Nest) aren't.
+            EntityRef summoner = f.Has<BossRuntimeState>(filter.Entity) ? filter.Entity : EntityRef.None;
+
             int maxEnemies = ResolveMaxEnemies(f);
             int fullCycles = maxEnemies / validComposition.Count;
             int remainder = maxEnemies % validComposition.Count;
@@ -75,7 +78,7 @@ namespace Quantum
             for (int cycle = 0; cycle < fullCycles; cycle++)
             {
                 for (int i = 0; i < validComposition.Count; i++)
-                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, validComposition[i]);
+                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, validComposition[i], summoner);
             }
 
             if (remainder > 0)
@@ -86,13 +89,13 @@ namespace Quantum
 
                 AssetRef<EnemyDataAsset>[] picked = WeightedDrawUtility.Draw(f, candidates, remainder);
                 for (int i = 0; i < picked.Length; i++)
-                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, picked[i]);
+                    SpawnAtAnchor(f, directorConfig, anchor, groundLayerMask, picked[i], summoner);
             }
 
             return true;
         }
 
-        private void SpawnAtAnchor(Frame f, DirectorConfig directorConfig, FPVector3 anchor, int groundLayerMask, AssetRef<EnemyDataAsset> enemyDataRef)
+        private void SpawnAtAnchor(Frame f, DirectorConfig directorConfig, FPVector3 anchor, int groundLayerMask, AssetRef<EnemyDataAsset> enemyDataRef, EntityRef summoner)
         {
             FPVector3 point = RandomizeAroundAnchor(f, anchor);
 
@@ -100,12 +103,12 @@ namespace Quantum
                 ? foundGroundY
                 : point.Y;
 
-            SpawnMember(f, directorConfig, new FPVector3(point.X, groundY, point.Z), enemyDataRef);
+            SpawnMember(f, directorConfig, new FPVector3(point.X, groundY, point.Z), enemyDataRef, summoner);
         }
 
         // Mirrors GroupSpawnerUtility.SpawnMember's exact create -> seed sequence, minus the
         // EnemyLifecycle add - see class comment.
-        private static void SpawnMember(Frame f, DirectorConfig directorConfig, FPVector3 position, AssetRef<EnemyDataAsset> enemyDataRef)
+        private static void SpawnMember(Frame f, DirectorConfig directorConfig, FPVector3 position, AssetRef<EnemyDataAsset> enemyDataRef, EntityRef summoner)
         {
             EntityRef entity = f.Create(directorConfig.EnemyPrototype);
 
@@ -121,6 +124,9 @@ namespace Quantum
 
             EnemyDataAsset data = f.FindAsset(enemyDataRef);
             EnemySystem.SeedFromEnemyData(f, entity, data);
+
+            if (summoner != EntityRef.None)
+                f.Add(entity, new BossSummon { Boss = summoner });
 
             Log.Debug($"[Enemy] SpawnPackDeliveryData spawned {entity} ({data?.name ?? "NULL EnemyDataAsset"}) at {position}");
         }

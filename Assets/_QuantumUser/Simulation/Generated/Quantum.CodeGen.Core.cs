@@ -1645,7 +1645,7 @@ namespace Quantum {
   }
   [StructLayout(LayoutKind.Explicit)]
   public unsafe partial struct _globals_ {
-    public const Int32 SIZE = 1776;
+    public const Int32 SIZE = 1784;
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(0)]
     public AssetRef<Map> Map;
@@ -1674,7 +1674,7 @@ namespace Quantum {
     public BitSet6 PlayerLastConnectionState;
     [FieldOffset(1312)]
     public QBoolean LevelGenerated;
-    [FieldOffset(1656)]
+    [FieldOffset(1664)]
     public FPVector3 PlayerSpawnPosition;
     [FieldOffset(1308)]
     public QBoolean LevelGenStarted;
@@ -1684,7 +1684,7 @@ namespace Quantum {
     public Int32 LevelGenCursor;
     [FieldOffset(1280)]
     public Int32 LevelGenTotal;
-    [FieldOffset(1632)]
+    [FieldOffset(1640)]
     public FP TimeSinceLevelGenerated;
     [FieldOffset(1292)]
     public QBoolean DebugCheatsApplied;
@@ -1696,15 +1696,17 @@ namespace Quantum {
     public Int32 DebugPendingRiftMutationChoices;
     [FieldOffset(1296)]
     public QBoolean DebugDirectorSpawnsDisabled;
-    [FieldOffset(1680)]
+    [FieldOffset(1336)]
+    public AssetRef<EntityPrototype> DebugBossPrototypeOverride;
+    [FieldOffset(1688)]
     public DifficultySnapshot Difficulty;
-    [FieldOffset(1640)]
+    [FieldOffset(1648)]
     public FP TotalExperience;
     [FieldOffset(1268)]
     public Int32 Level;
     [FieldOffset(1316)]
     public QBoolean LevelUpScreenOpen;
-    [FieldOffset(1552)]
+    [FieldOffset(1560)]
     public FP LevelUpTimeRemaining;
     [FieldOffset(1320)]
     public QBoolean LevelUpScreenOpenLastTick;
@@ -1716,70 +1718,70 @@ namespace Quantum {
     public GameState CombatPhaseState;
     [FieldOffset(1242)]
     public GameState PreUpgradeState;
-    [FieldOffset(1480)]
+    [FieldOffset(1488)]
     public FP BreathingTimeRemaining;
     [FieldOffset(1252)]
     public Int32 BreathingIndex;
     [FieldOffset(1284)]
     public QBoolean BreathingAreaSecured;
-    [FieldOffset(1560)]
+    [FieldOffset(1568)]
     public FP OrbVacuumTimeRemaining;
-    [FieldOffset(1464)]
+    [FieldOffset(1472)]
     public FP BossPauseTimer;
     [FieldOffset(1288)]
     public QBoolean BreathingGraceActive;
-    [FieldOffset(1472)]
+    [FieldOffset(1480)]
     public FP BreathingGraceTimeRemaining;
-    [FieldOffset(1336)]
+    [FieldOffset(1344)]
     [FramePrinter.FixedArrayAttribute(typeof(AssetRef<RiftMutationData>), 16)]
     private fixed Byte _RunMutationPicks_[128];
-    [FieldOffset(1528)]
-    public FP EnemyMaxHealthBonus;
-    [FieldOffset(1520)]
-    public FP EnemyDamageBonus;
     [FieldOffset(1536)]
-    public FP EnemySpawnDensityBonus;
-    [FieldOffset(1512)]
-    public FP EliteGroupWeightMultiplier;
-    [FieldOffset(1592)]
-    public FP RiftShardGainBonus;
+    public FP EnemyMaxHealthBonus;
+    [FieldOffset(1528)]
+    public FP EnemyDamageBonus;
     [FieldOffset(1544)]
-    public FP EscalationEndBonus;
-    [FieldOffset(1616)]
-    public FP SurvivalTime;
+    public FP EnemySpawnDensityBonus;
+    [FieldOffset(1520)]
+    public FP EliteGroupWeightMultiplier;
     [FieldOffset(1600)]
+    public FP RiftShardGainBonus;
+    [FieldOffset(1552)]
+    public FP EscalationEndBonus;
+    [FieldOffset(1624)]
+    public FP SurvivalTime;
+    [FieldOffset(1608)]
     public FP RunTime;
     [FieldOffset(1256)]
     public Int32 CurrentPhaseIndex;
-    [FieldOffset(1584)]
+    [FieldOffset(1592)]
     public FP PhaseTimer;
     [FieldOffset(1243)]
     public SurvivalPhaseKind CurrentPhaseKind;
     [FieldOffset(1328)]
     public QBoolean PhaseGuaranteedSpawnDone;
-    [FieldOffset(1488)]
-    public FP DirectorBudget;
     [FieldOffset(1496)]
+    public FP DirectorBudget;
+    [FieldOffset(1504)]
     public FP DirectorPulseTimer;
     [FieldOffset(1304)]
     public QBoolean DirectorSplitActive;
-    [FieldOffset(1504)]
+    [FieldOffset(1512)]
     public FP DirectorSplitTimer;
-    [FieldOffset(1608)]
+    [FieldOffset(1616)]
     public FP SplitThreatMultiplier;
-    [FieldOffset(1576)]
+    [FieldOffset(1584)]
     public FP PerEnemyXpScale;
-    [FieldOffset(1568)]
+    [FieldOffset(1576)]
     public FP PerEnemyCoinScale;
     [FieldOffset(1332)]
     public QBoolean TalentsResolved;
     [FieldOffset(1244)]
     public Int32 ActiveTeamChallengeCount;
-    [FieldOffset(1624)]
+    [FieldOffset(1632)]
     public FP TeamChallengeTimeRemaining;
     [FieldOffset(1248)]
     public Int32 ActiveTraversalChallengeCount;
-    [FieldOffset(1648)]
+    [FieldOffset(1656)]
     public FP TraversalChallengeTimeRemaining;
     public readonly FixedArray<Input> input {
       get {
@@ -1818,6 +1820,7 @@ namespace Quantum {
         hash = hash * 31 + DebugLevelUpScreenOpenLastTick.GetHashCode();
         hash = hash * 31 + DebugPendingRiftMutationChoices.GetHashCode();
         hash = hash * 31 + DebugDirectorSpawnsDisabled.GetHashCode();
+        hash = hash * 31 + DebugBossPrototypeOverride.GetHashCode();
         hash = hash * 31 + Difficulty.GetHashCode();
         hash = hash * 31 + TotalExperience.GetHashCode();
         hash = hash * 31 + Level.GetHashCode();
@@ -1904,6 +1907,7 @@ namespace Quantum {
         QBoolean.Serialize(&p->PendingLevelUpScreen, serializer);
         QBoolean.Serialize(&p->PhaseGuaranteedSpawnDone, serializer);
         QBoolean.Serialize(&p->TalentsResolved, serializer);
+        AssetRef.Serialize(&p->DebugBossPrototypeOverride, serializer);
         FixedArray.Serialize(p->RunMutationPicks, serializer, Statics.SerializeAssetRef);
         FP.Serialize(&p->BossPauseTimer, serializer);
         FP.Serialize(&p->BreathingGraceTimeRemaining, serializer);
@@ -2637,7 +2641,7 @@ namespace Quantum {
     public const Int32 ALIGNMENT = 8;
     [FieldOffset(40)]
     public FP StaggerMeter;
-    [FieldOffset(1)]
+    [FieldOffset(2)]
     public Byte StaggerBreakCount;
     [FieldOffset(16)]
     public FP LastObservedHealth;
@@ -2645,7 +2649,7 @@ namespace Quantum {
     public Int32 CurrentPhaseIndex;
     [FieldOffset(24)]
     public FP PhaseTimer;
-    [FieldOffset(2)]
+    [FieldOffset(3)]
     public EnemyActionPhase LastObservedPhase;
     [FieldOffset(8)]
     public AssetRef<EnemyActionData> ActiveComboAction;
@@ -2653,6 +2657,8 @@ namespace Quantum {
     public Byte ComboRepeatsRemaining;
     [FieldOffset(32)]
     public FP RetargetTimer;
+    [FieldOffset(1)]
+    public Byte PendingForcedSlot;
     public override readonly Int32 GetHashCode() {
       unchecked { 
         var hash = 16001;
@@ -2665,12 +2671,14 @@ namespace Quantum {
         hash = hash * 31 + ActiveComboAction.GetHashCode();
         hash = hash * 31 + ComboRepeatsRemaining.GetHashCode();
         hash = hash * 31 + RetargetTimer.GetHashCode();
+        hash = hash * 31 + PendingForcedSlot.GetHashCode();
         return hash;
       }
     }
     public static void Serialize(void* ptr, FrameSerializer serializer) {
         var p = (BossRuntimeState*)ptr;
         serializer.Stream.Serialize(&p->ComboRepeatsRemaining);
+        serializer.Stream.Serialize(&p->PendingForcedSlot);
         serializer.Stream.Serialize(&p->StaggerBreakCount);
         serializer.Stream.Serialize((Byte*)&p->LastObservedPhase);
         serializer.Stream.Serialize(&p->CurrentPhaseIndex);
@@ -2679,6 +2687,82 @@ namespace Quantum {
         FP.Serialize(&p->PhaseTimer, serializer);
         FP.Serialize(&p->RetargetTimer, serializer);
         FP.Serialize(&p->StaggerMeter, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct BossSpeaker : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public EntityRef Owner;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 14891;
+        hash = hash * 31 + Owner.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (BossSpeaker*)ptr;
+        EntityRef.Serialize(&p->Owner, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct BossSpeakerStage : Quantum.IComponent {
+    public const Int32 SIZE = 48;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(8)]
+    public AssetRef<SpeakerStageDeliveryData> Config;
+    [FieldOffset(16)]
+    [FramePrinter.FixedArrayAttribute(typeof(EntityRef), 2)]
+    private fixed Byte _Speakers_[16];
+    [FieldOffset(40)]
+    public FP TimeRemaining;
+    [FieldOffset(32)]
+    public FP EmitTimer;
+    [FieldOffset(0)]
+    public Byte NextSpeaker;
+    public readonly FixedArray<EntityRef> Speakers {
+      get {
+        fixed (byte* p = _Speakers_) { return new FixedArray<EntityRef>(p, 8, 2); }
+      }
+    }
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 12743;
+        hash = hash * 31 + Config.GetHashCode();
+        hash = hash * 31 + HashCodeUtils.GetArrayHashCode(Speakers);
+        hash = hash * 31 + TimeRemaining.GetHashCode();
+        hash = hash * 31 + EmitTimer.GetHashCode();
+        hash = hash * 31 + NextSpeaker.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (BossSpeakerStage*)ptr;
+        serializer.Stream.Serialize(&p->NextSpeaker);
+        AssetRef.Serialize(&p->Config, serializer);
+        FixedArray.Serialize(p->Speakers, serializer, Statics.SerializeEntityRef);
+        FP.Serialize(&p->EmitTimer, serializer);
+        FP.Serialize(&p->TimeRemaining, serializer);
+    }
+  }
+  [StructLayout(LayoutKind.Explicit)]
+  public unsafe partial struct BossSummon : Quantum.IComponent {
+    public const Int32 SIZE = 8;
+    public const Int32 ALIGNMENT = 8;
+    [FieldOffset(0)]
+    public EntityRef Boss;
+    public override readonly Int32 GetHashCode() {
+      unchecked { 
+        var hash = 18617;
+        hash = hash * 31 + Boss.GetHashCode();
+        return hash;
+      }
+    }
+    public static void Serialize(void* ptr, FrameSerializer serializer) {
+        var p = (BossSummon*)ptr;
+        EntityRef.Serialize(&p->Boss, serializer);
     }
   }
   [StructLayout(LayoutKind.Explicit)]
@@ -9637,6 +9721,12 @@ namespace Quantum {
       BuildSignalsArrayOnComponentRemoved<Quantum.BossDefeatSequence>();
       BuildSignalsArrayOnComponentAdded<Quantum.BossRuntimeState>();
       BuildSignalsArrayOnComponentRemoved<Quantum.BossRuntimeState>();
+      BuildSignalsArrayOnComponentAdded<Quantum.BossSpeaker>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.BossSpeaker>();
+      BuildSignalsArrayOnComponentAdded<Quantum.BossSpeakerStage>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.BossSpeakerStage>();
+      BuildSignalsArrayOnComponentAdded<Quantum.BossSummon>();
+      BuildSignalsArrayOnComponentRemoved<Quantum.BossSummon>();
       BuildSignalsArrayOnComponentAdded<Quantum.BotBrain>();
       BuildSignalsArrayOnComponentRemoved<Quantum.BotBrain>();
       BuildSignalsArrayOnComponentAdded<Quantum.Breakable>();
@@ -10305,6 +10395,9 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum.BossArenaGate), Quantum.BossArenaGate.SIZE);
       typeRegistry.Register(typeof(Quantum.BossDefeatSequence), Quantum.BossDefeatSequence.SIZE);
       typeRegistry.Register(typeof(Quantum.BossRuntimeState), Quantum.BossRuntimeState.SIZE);
+      typeRegistry.Register(typeof(Quantum.BossSpeaker), Quantum.BossSpeaker.SIZE);
+      typeRegistry.Register(typeof(Quantum.BossSpeakerStage), Quantum.BossSpeakerStage.SIZE);
+      typeRegistry.Register(typeof(Quantum.BossSummon), Quantum.BossSummon.SIZE);
       typeRegistry.Register(typeof(Quantum.BotBrain), Quantum.BotBrain.SIZE);
       typeRegistry.Register(typeof(Quantum.BotGoal), 1);
       typeRegistry.Register(typeof(Quantum.Breakable), Quantum.Breakable.SIZE);
@@ -10616,7 +10709,7 @@ namespace Quantum {
       typeRegistry.Register(typeof(Quantum._globals_), Quantum._globals_.SIZE);
     }
     static partial void InitComponentTypeIdGen() {
-      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 202)
+      ComponentTypeId.Reset(ComponentTypeId.BuiltInComponentCount + 205)
         .AddBuiltInComponents()
         .Add<Quantum.AccessoryDropHint>(Quantum.AccessoryDropHint.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.AccessoryEmergencyReserve>(Quantum.AccessoryEmergencyReserve.Serialize, null, null, ComponentFlags.None)
@@ -10640,6 +10733,9 @@ namespace Quantum {
         .Add<Quantum.BossArenaGate>(Quantum.BossArenaGate.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BossDefeatSequence>(Quantum.BossDefeatSequence.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BossRuntimeState>(Quantum.BossRuntimeState.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.BossSpeaker>(Quantum.BossSpeaker.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.BossSpeakerStage>(Quantum.BossSpeakerStage.Serialize, null, null, ComponentFlags.None)
+        .Add<Quantum.BossSummon>(Quantum.BossSummon.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BotBrain>(Quantum.BotBrain.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.Breakable>(Quantum.Breakable.Serialize, null, null, ComponentFlags.None)
         .Add<Quantum.BreathingSkipVote>(Quantum.BreathingSkipVote.Serialize, null, null, ComponentFlags.None)

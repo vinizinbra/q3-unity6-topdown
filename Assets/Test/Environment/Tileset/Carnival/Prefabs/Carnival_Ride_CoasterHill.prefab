@@ -1,0 +1,211 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6723310541405722251
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6155349749019624785}
+  - component: {fileID: 5196892479950442859}
+  - component: {fileID: 3391025880973422831}
+  m_Layer: 0
+  m_Name: Carnival_Ride_CoasterHill
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6155349749019624785
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6723310541405722251}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3991474581609903286}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5196892479950442859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6723310541405722251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3eee989e9ab3e4a7582c50524b3c2d98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarnivalRideAnimator
+  part: {fileID: 3991474581609903286}
+  motion: 2
+  degreesPerSecond: 0
+  meshAxis: {x: 0, y: 0, z: 0}
+  hangerModels: []
+  hangerCount: 8
+  hangerRadius: 0
+  hangersRideThePart: 0
+  hangerBob: 0
+  hangerBobSpeed: 2.2
+  pathPoints:
+  - {x: -5.5, y: 1.2, z: 0}
+  - {x: -5.3, y: 1.3199999, z: 0}
+  - {x: -5.1, y: 1.44, z: 0}
+  - {x: -4.9, y: 1.5600001, z: 0}
+  - {x: -4.7, y: 1.6800002, z: 0}
+  - {x: -4.5, y: 1.8000001, z: 0}
+  - {x: -4.3, y: 1.92, z: 0}
+  - {x: -4.1, y: 2.0400002, z: 0}
+  - {x: -3.9, y: 2.16, z: 0}
+  - {x: -3.7, y: 2.28, z: 0}
+  - {x: -3.5, y: 2.4, z: 0}
+  - {x: -3.3, y: 2.5200002, z: 0}
+  - {x: -3.1, y: 2.64, z: 0}
+  - {x: -2.8999999, y: 2.7600002, z: 0}
+  - {x: -2.7, y: 2.88, z: 0}
+  - {x: -2.5, y: 3, z: 0}
+  - {x: -2.3, y: 3.1200001, z: 0}
+  - {x: -2.1, y: 3.2400002, z: 0}
+  - {x: -1.9, y: 3.3600001, z: 0}
+  - {x: -1.6999999, y: 3.4800003, z: 0}
+  - {x: -1.5, y: 3.6000001, z: 0}
+  - {x: -1.3, y: 3.5951693, z: 0}
+  - {x: -1.0999999, y: 3.5807157, z: 0}
+  - {x: -0.8999999, y: 3.5567555, z: 0}
+  - {x: -0.6999999, y: 3.5234818, z: 0}
+  - {x: -0.49999994, y: 3.4811628, z: 0}
+  - {x: -0.29999992, y: 3.4301386, z: 0}
+  - {x: -0.09999992, y: 3.3708205, z: 0}
+  - {x: 0.10000008, y: 3.303686, z: 0}
+  - {x: 0.30000007, y: 3.2292752, z: 0}
+  - {x: 0.5000001, y: 3.1481879, z: 0}
+  - {x: 0.7000001, y: 3.0610764, z: 0}
+  - {x: 0.9000001, y: 2.9686425, z: 0}
+  - {x: 1.1000001, y: 2.87163, z: 0}
+  - {x: 1.3000001, y: 2.7708204, z: 0}
+  - {x: 1.5000001, y: 2.667025, z: 0}
+  - {x: 1.7, y: 2.56108, z: 0}
+  - {x: 1.9000001, y: 2.4538376, z: 0}
+  - {x: 2.1000001, y: 2.3461623, z: 0}
+  - {x: 2.3000002, y: 2.23892, z: 0}
+  - {x: 2.5, y: 2.1329749, z: 0}
+  - {x: 2.7, y: 2.0291796, z: 0}
+  - {x: 2.9, y: 1.92837, z: 0}
+  - {x: 3.1000001, y: 1.8313575, z: 0}
+  - {x: 3.3000002, y: 1.7389235, z: 0}
+  - {x: 3.5000002, y: 1.6518121, z: 0}
+  - {x: 3.7, y: 1.570725, z: 0}
+  - {x: 3.9, y: 1.4963143, z: 0}
+  - {x: 4.1000004, y: 1.4291794, z: 0}
+  - {x: 4.3, y: 1.3698614, z: 0}
+  - {x: 4.5, y: 1.3188374, z: 0}
+  - {x: 4.7000003, y: 1.2765181, z: 0}
+  - {x: 4.9, y: 1.2432445, z: 0}
+  - {x: 5.1000004, y: 1.2192845, z: 0}
+  - {x: 5.3, y: 1.2048309, z: 0}
+  - {x: 5.5, y: 1.2, z: 0}
+  carModels:
+  - {fileID: 919132149155446097, guid: 8b391c53c05b7495cad664d9878e00d3, type: 3}
+  - {fileID: 919132149155446097, guid: 866caeda0669e4a4a9bc0fcad94ee4d5, type: 3}
+  - {fileID: 919132149155446097, guid: 56dd4bebfea094717948470460f318fe, type: 3}
+  carCount: 4
+  carGap: 0.72
+  pathSpeed: 2.2
+  lowOffset: -4.3
+  highOffset: 2.8
+  riseTime: 5
+  holdTime: 1.2
+  fallTime: 0.55
+  restTime: 2.2
+--- !u!114 &3391025880973422831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6723310541405722251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02a9adb8b5abc4d1ba0647a10ada4233, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaterFootprint
+  discs:
+  - {x: -5, y: 0.14000015, z: 0.0000000011462432}
+  - {x: -3, y: 0.14000002, z: -0.0000000011462432}
+  - {x: -1, y: 0.14000003, z: 0.0000000011462432}
+  - {x: 1, y: 0.14000003, z: 0.0000000011462432}
+  - {x: 3, y: 0.14000002, z: -0.0000000011462432}
+  - {x: 5, y: 0.14000015, z: 0.0000000011462432}
+  waterlineMaxY: 0.35
+  clusterCell: 0.6
+--- !u!1001 &3525801216068457309
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 6155349749019624785}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+      propertyPath: m_Name
+      value: Carnival_Prop_Coaster_Hill
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+--- !u!4 &3991474581609903286 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7e43ca8473ed3445db4880406c3a66ca, type: 3}
+  m_PrefabInstance: {fileID: 3525801216068457309}
+  m_PrefabAsset: {fileID: 0}

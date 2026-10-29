@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 884546c19f5ba44e1bf8a1d0aed3b642, type: 3}
+  m_Name: RiffRiot-SomNoTaloDelivery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.SpeakerStageDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/Neon/Boss/RiffRiot/RiffRiot-SomNoTaloDelivery
+    Guid:
+      Value: 274227115111849843
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  SpeakerEnemy:
+    Id:
+      Value: 408403975650317827
+  SpawnDistanceMin:
+    RawValue: 262144
+  SpawnDistanceMax:
+    RawValue: 458752
+  MinSeparation:
+    RawValue: 458752
+  MaxHeightDifference:
+    RawValue: 65536
+  MinPlayerDistance:
+    RawValue: 131072
+  MaxDuration:
+    RawValue: 917504
+  FirstEmitDelay:
+    RawValue: 65536
+  EmitInterval:
+    RawValue: 104858
+  ExposedAction:
+    Id:
+      Value: 318621747151081417
+  BlockedActionsWhileActive:
+  - Id:
+      Value: 330755404687909387
+  ClosingAction:
+    Id:
+      Value: 330755404687909387

@@ -40,4 +40,10 @@ component BossRuntimeState
     // every time a retarget actually fires, not on a fixed cadence, so tuning the interval later
     // doesn't leave a stale partial count behind.
     FP RetargetTimer;
+
+    // A forced action (stagger break with BossDataAsset.DeferForcedActionsWhileActive, a phase's
+    // EntryAction, a speaker-stage exposure - see BossSystem.TryForceAction) that arrived while the
+    // boss was mid-delivery (Active, e.g. airborne in a leap), stored as action slot + 1 (0 = none).
+    // BossSystem applies it the first tick the boss is out of Active.
+    Byte PendingForcedSlot;
 }

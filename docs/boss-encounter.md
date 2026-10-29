@@ -324,3 +324,12 @@ the card from `BossIntroSequenceDirector.Play`'s `onImpact` callback instead of 
 clear, then the card bangs in with the impact (its 4s `totalDuration` still ends with the ~5s pause). The
 card is centred on screen exactly where the camera centres the boss, so the impact/explosion happens just
 before it covers that spot.
+
+## Forced actions, phase entry beats, debug prototypes (2026-10-29, Riff Riot)
+
+Opt-in additions, defaults keep W1/W2 exactly as before - see `docs/riff-riot-boss.md`:
+`BossPhaseData.EntryAction` (forced on phase entry), `BossSystem.TryForceAction` +
+`BossRuntimeState.PendingForcedSlot` (forces a SkillAction, waiting out an Active delivery such as a leap instead of
+yanking the boss out mid-air), `BossDataAsset.DeferForcedActionsWhileActive` (routes the stagger break through it),
+`BossDataAsset.DebugPrototype` (the boss's own prototype for Spawn Near Local Player / Jump To This Boss) and
+`RuntimeConfig`/`Global.DebugBossPrototypeOverride` (any world's Boss phase spawns that prototype instead).

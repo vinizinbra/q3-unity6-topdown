@@ -155,7 +155,7 @@ namespace Quantum
                     break;
 
                 case CheatActionKind.JumpToBoss:
-                    JumpToBoss(f);
+                    JumpToBoss(f, new AssetRef<BossDataAsset>(new AssetGuid(cmd.AssetId)));
                     break;
 
                 case CheatActionKind.SetupTestRun:
@@ -275,7 +275,10 @@ namespace Quantum
                 if (EnemyMovementUtility.TryFindGroundHeight(f, point, groundLayerMask, out FP groundY))
                     point.Y = groundY;
 
-                EntityRef entity = f.Create(directorConfig.EnemyPrototype);
+                // A boss needs its own one-off prototype (rig, BossRuntimeState...) - the generic
+                // Director one would spawn a body with no boss behaviour. See BossDataAsset.DebugPrototype.
+                bool useBossPrototype = data is BossDataAsset bossData && bossData.DebugPrototype.IsValid == true;
+                EntityRef entity = useBossPrototype ? f.Create(((BossDataAsset)data).DebugPrototype) : f.Create(directorConfig.EnemyPrototype);
                 if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false)
                 {
                     Log.Error("[Cheat] DirectorConfig.EnemyPrototype has no Enemy component - destroying spawned enemy");
@@ -386,12 +389,26 @@ namespace Quantum
         // Boss-kind phase (CombatDirectorSystem.ApplyPhaseGameState then runs BeginBossEncounter off the
         // changed index next tick - arena seal, teleport, boss spawn), sets the run clock to match, and
         // levels the party to BossTargetDisplayLevel with every level-up screen auto-resolved, same as
-        // SetupTestRun's drain.
-        private static void JumpToBoss(Frame f)
+        // SetupTestRun's drain. A valid boss (BossDataAsset's "Jump To This Boss" button) fights that
+        // boss's DebugPrototype instead of the phase's own, via Global.DebugBossPrototypeOverride.
+        private static void JumpToBoss(Frame f, AssetRef<BossDataAsset> boss)
         {
             SurvivalConfig config = f.FindAsset(f.RuntimeConfig.SurvivalConfig);
             if (config == null || config.Phases == null)
                 return;
+
+            f.Global->DebugBossPrototypeOverride = default;
+            if (boss.Id.IsValid == true)
+            {
+                BossDataAsset bossData = f.FindAsset(boss);
+                if (bossData == null || bossData.DebugPrototype.IsValid == false)
+                {
+                    Log.Error($"[Cheat] JumpToBoss: {bossData?.name ?? "boss asset"} has no DebugPrototype assigned");
+                    return;
+                }
+
+                f.Global->DebugBossPrototypeOverride = bossData.DebugPrototype;
+            }
 
             int bossIndex = System.Array.FindIndex(config.Phases, p => p.Kind == SurvivalPhaseKind.Boss);
             if (bossIndex < 0)

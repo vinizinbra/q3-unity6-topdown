@@ -1,0 +1,42 @@
+// Riff Riot's "Som no Talo" sequence (SpeakerStageDeliveryData / BossSpeakerStageSystem). Added to the
+// BOSS by SpeakerStageDeliveryData.Begin and removed when the sequence ends (both speakers destroyed,
+// MaxDuration expired, or the boss died) - its presence alone is the "a pair is already up" gate, so a
+// boss can never stack a second pair.
+component BossSpeakerStage
+{
+    // The delivery asset that started this sequence - also its tuning.
+    AssetRef<SpeakerStageDeliveryData> Config;
+
+    // The two speakers (EntityRef.None / destroyed / Dead = gone).
+    array<EntityRef>[2] Speakers;
+
+    FP TimeRemaining;
+
+    // Counts down to the next forced emission.
+    FP EmitTimer;
+
+    // Index into Speakers that emits next - flips after every emission so the pair alternates.
+    Byte NextSpeaker;
+}
+
+// On each speaker - the boss that owns it. BossSpeakerStageSystem removes any speaker whose owner is
+// gone/dead or no longer running a sequence that lists it (boss death, encounter cleanup, debug kills).
+component BossSpeaker
+{
+    EntityRef Owner;
+}
+
+// View hooks (BossSpeakerStageFxDirector). Spawned: the spawn-in burst at the speaker's ground point.
+event BossSpeakerSpawned
+{
+    EntityRef Boss;
+    EntityRef Speaker;
+    FPVector3 Position;
+}
+
+// Both speakers destroyed - the boss is about to be exposed.
+synced event BossSpeakerStageBroken
+{
+    EntityRef Boss;
+    FPVector3 Position;
+}

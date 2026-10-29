@@ -67,6 +67,8 @@ public class TilesetDefinition : ScriptableObject
         public int MaxPerPlatform;
         [Range(0f, 1f), Tooltip("Surface scatter only: chance a platform allows this entry at all (0 = always) - makes it rare per building, not per cell.")]
         public float PlatformChance;
+        [Tooltip("Water scatter only: a big map-rim LANDMARK (Ferris wheel, roller coaster section): faces the camera (0 / 180 deg +- 15), only behind or beside the platforms (never on the camera side, where it would hide the play area), at least LandmarkSpacing cells from other landmarks, and no shore-foam disc.")]
+        public bool Landmark;
     }
 
     [Header("Surface scatter (props on top of platforms, see TilesetPlatformBuilder.SurfaceDecor)")]
@@ -103,6 +105,9 @@ public class TilesetDefinition : ScriptableObject
 
     [SerializeField, Tooltip("How far the tile profile rises ABOVE the cube top, as a fraction of the tile height (e.g. Favela's 2% brick coping). Tiles are Y-scaled to the wall height, so this becomes TopRaise x wall height in the world; OverBand runs (vines on the lip) are lifted by it so they stay on top of the coping.")]
     private float topRaise;
+
+    [SerializeField, Tooltip("Optional prop placed on EVERY convex corner, at the platform top, real size (not stretched with the wall) - e.g. Carnival's gold post cap sitting on the navy pillar baked into the corner tile. Authored in the corner tile's frame (pivot on the corner vertex, platform in the +X/+Z quarter).")]
+    private GameObject cornerCap;
 
     // A continuous modular run along a straight wall (pipeline, cable tray, fence...): 1-cell modules
     // laid side by side at one height, capped at both ends. Modules are authored 1 unit long along X
@@ -226,6 +231,9 @@ public class TilesetDefinition : ScriptableObject
     [SerializeField, Tooltip("Ring of water cells used, in cells from the nearest platform cell (x = min, y = max; 1 = right next to the wall).")]
     private Vector2Int waterRing = new(2, 5);
 
+    [SerializeField, Min(0), Tooltip("Water scatter: minimum distance (cells) between two Landmark entries of the same cluster.")]
+    private float landmarkSpacing = 10f;
+
     // A whole small raised platform drawn as one model (a stone block...) instead of autotiled tiles.
     [Serializable]
     public class SmallBlock
@@ -246,6 +254,7 @@ public class TilesetDefinition : ScriptableObject
     public IReadOnlyList<ScatterEntry> WaterScatter => waterScatter;
     public float WaterDensity => waterDensity;
     public Vector2Int WaterRing => waterRing;
+    public float LandmarkSpacing => landmarkSpacing;
 
     public IReadOnlyList<ScatterEntry> FacadeScatter => facadeScatter;
     public float FacadeDensity => facadeDensity;
@@ -256,6 +265,7 @@ public class TilesetDefinition : ScriptableObject
     public float WallPropInset => wallPropInset;
     public float WallPropSlope => wallPropSlope;
     public float TopRaise => topRaise;
+    public GameObject CornerCap => cornerCap;
     public Vector2 WallPropAvoidBand => wallPropAvoidBand;
     public float WallPropAvoidMargin => wallPropAvoidMargin;
     public IReadOnlyList<ScatterEntry> WallScatter => wallScatter;

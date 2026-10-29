@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Carnival_Toon
+  m_Shader: {fileID: 4800000, guid: c2dbcf3e0aa964dfe9aa16b1e46b0cee, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _HatchTex:
+        m_Texture: {fileID: 2800000, guid: 6e9a43ab951ce4df9b9bbf00edb86e1c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SurfaceTex:
+        m_Texture: {fileID: 2800000, guid: 204d97369b8e547c8a05ed7f564707fe, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WallTex:
+        m_Texture: {fileID: 2800000, guid: 67f65011f1b904b66a2f3c42c46c767f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AmbientStrength: 0.35
+    - _BorderOutlineStrength: 1
+    - _BorderOutlineWidth: 5
+    - _CastShadowStrength: 1
+    - _EdgeFadeEnd: 1
+    - _EdgeFadeNoise: 0.216
+    - _EdgeFadeStart: 0.71
+    - _EmissionMinY: -1000
+    - _EmissionStrength: 3
+    - _FadeColorPosition: 0.5
+    - _FadeColorWidth: 1
+    - _GradientDistance: 2
+    - _GradientStartY: -3.22
+    - _GradientStrength: 1
+    - _Hatch1Threshold: 0.428
+    - _Hatch2Threshold: 0.82
+    - _HatchScale: 4
+    - _HatchScreenScale: 6
+    - _HatchScreenSpace: 0
+    - _HatchSoftness: 0.331
+    - _HatchStrength: 0.399
+    - _PropLineStrength: 1
+    - _PropLineWidth: 1.6
+    - _RaisedFromY: 1.5
+    - _RaisedStrength: 1
+    - _RimOutlineStrength: 0
+    - _RimOutlineWidth: 10
+    - _ShadowSoftness: 0.04
+    - _ShadowThreshold: 0.5
+    - _StrataOutlineStrength: 1
+    - _StrataOutlineWidth: 8
+    - _SurfaceFullColor: 1
+    - _SurfaceHatchScale: 0
+    - _SurfaceScale: 16
+    - _SurfaceStrength: 0.7
+    - _TriplanarSharpness: 6
+    - _WallLineStrength: 1
+    - _WallLineThickness: 0.1
+    - _WallLineY: 0
+    - _WallScale: 5
+    m_Colors:
+    - _EdgeTint: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionOffColor: {r: 0, g: 0, b: 0, a: 1}
+    - _FadeColor: {r: 0.9647059, g: 0.9019608, b: 0.72156864, a: 0}
+    - _GradientBottomColor: {r: 0.10980392, g: 0.14509805, b: 0.2784314, a: 1}
+    - _GradientTopColor: {r: 1, g: 1, b: 1, a: 1}
+    - _HatchColor: {r: 0.101960786, g: 0.078431375, b: 0.1882353, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _RaisedAccentColor: {r: 0.8980392, g: 0.5411765, b: 0.43137255, a: 1}
+    - _RaisedDarkColor: {r: 0.56078434, g: 0.43529412, b: 0.4, a: 1}
+    - _RaisedLightColor: {r: 1, g: 0.827451, b: 0.8, a: 1}
+    - _ShadowTint: {r: 0.54999995, g: 0.52, b: 0.72, a: 1}
+    - _SurfaceAccentColor: {r: 0.5529412, g: 0.73333335, b: 0.6901961, a: 1}
+    - _SurfaceDarkColor: {r: 0.56078434, g: 0.49019608, b: 0.39215687, a: 1}
+    - _SurfaceLightColor: {r: 0.92941177, g: 0.8392157, b: 0.68235296, a: 1}
+    - _SurfaceTint: {r: 0.7133442, g: 0.754717, b: 0.29547882, a: 1}
+    - _WallDarkColor: {r: 0.16470589, g: 0.13725491, b: 0.26666668, a: 1}
+    - _WallGlowColor: {r: 0.04, g: 0.6, b: 0.82, a: 0}
+    - _WallLightColor: {r: 0.29411766, g: 0.24705882, b: 0.43137255, a: 1}
+    - _WallLineColor: {r: 1, g: 1, b: 1, a: 1}
+    - _WallTint: {r: 0.39215687, g: 0.28235295, b: 0.5019608, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

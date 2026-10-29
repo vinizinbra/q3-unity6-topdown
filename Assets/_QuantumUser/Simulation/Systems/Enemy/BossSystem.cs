@@ -24,6 +24,7 @@ namespace Quantum
                 return;
             }
 
+            TickPendingForcedAction(f, ref filter, bossData);
             TickPhase(f, ref filter, bossData);
             TickStagger(f, ref filter, bossData);
             TickComboChain(f, ref filter, bossData);
@@ -69,7 +70,76 @@ namespace Quantum
                 filter.BossRuntimeState->CurrentPhaseIndex = nextPhaseIndex;
                 filter.BossRuntimeState->PhaseTimer = FP._0;
                 Log.Debug($"[Boss] {filter.Entity} entered phase {nextPhaseIndex} ({nextPhase.EntryTrigger})");
+
+                if (nextPhase.EntryAction.IsValid == true)
+                    TryForceAction(f, filter.Entity, filter.Enemy, filter.BossRuntimeState, bossData, nextPhase.EntryAction);
             }
+        }
+
+        // Shared entry point for every scripted "the boss does THIS now" beat other than the legacy
+        // stagger path (phase EntryAction, a speaker-stage exposure, an opted-in deferred stagger
+        // break). Forces the action immediately - same direct Phase/StateTimer write as
+        // ForceBreakAction - unless the boss is mid-delivery (Active: airborne, burrowed, kneeling...),
+        // in which case it's parked in PendingForcedSlot and applied by TickPendingForcedAction the
+        // first tick the delivery has finished. Returns false only if the action isn't one of this
+        // boss's SkillActions (nothing to resolve a cooldown slot from).
+        public static bool TryForceAction(Frame f, EntityRef entity, AssetRef<EnemyActionData> actionRef)
+        {
+            if (f.Unsafe.TryGetPointer<Enemy>(entity, out var enemy) == false ||
+                f.Unsafe.TryGetPointer<BossRuntimeState>(entity, out var state) == false)
+                return false;
+
+            if (f.FindAsset(enemy->EnemyData) is not BossDataAsset bossData)
+                return false;
+
+            return TryForceAction(f, entity, enemy, state, bossData, actionRef);
+        }
+
+        private static bool TryForceAction(Frame f, EntityRef entity, Enemy* enemy, BossRuntimeState* state, BossDataAsset bossData, AssetRef<EnemyActionData> actionRef)
+        {
+            int skillIndex = FindSkillSlot(bossData, actionRef);
+
+            if (skillIndex < 0)
+            {
+                Log.Error($"[Boss] {entity} was asked to force an action that isn't in its SkillActions - ignored");
+                return false;
+            }
+
+            if (enemy->Phase == EnemyActionPhase.Dead)
+                return false;
+
+            if (enemy->Phase == EnemyActionPhase.Active)
+            {
+                state->PendingForcedSlot = (byte)(skillIndex + 2); // slot + 1, see PendingForcedSlot
+                return true;
+            }
+
+            ForceSlot(f, entity, enemy, skillIndex + 1);
+            return true;
+        }
+
+        private static void TickPendingForcedAction(Frame f, ref Filter filter, BossDataAsset bossData)
+        {
+            if (filter.BossRuntimeState->PendingForcedSlot == 0 || filter.Enemy->Phase == EnemyActionPhase.Active)
+                return;
+
+            int slot = filter.BossRuntimeState->PendingForcedSlot - 1;
+            filter.BossRuntimeState->PendingForcedSlot = 0;
+            ForceSlot(f, filter.Entity, filter.Enemy, slot);
+        }
+
+        private static void ForceSlot(Frame f, EntityRef entity, Enemy* enemy, int slot)
+        {
+            EnemyActionData action = EnemyDecisionUtility.ResolveAction(f, f.FindAsset(enemy->EnemyData), slot);
+
+            if (action == null)
+                return;
+
+            enemy->CurrentActionSlot = (byte)slot;
+            enemy->StateTimer = action.AnticipationTime;
+            enemy->Phase = EnemyActionPhase.Preparation;
+
+            Log.Debug($"[Boss] {entity} forced into action slot {slot} ({action.name})");
         }
 
         // Builds StaggerMeter from damage taken since last tick (diffed off Health.CurrentHealth -
@@ -181,6 +251,14 @@ namespace Quantum
             if (skillIndex < 0)
             {
                 Log.Error($"[Boss] {filter.Entity}'s OnBreakForcedAction isn't listed in SkillActions - can't resolve a cooldown slot for it");
+                return;
+            }
+
+            // Opt-in (see BossDataAsset.DeferForcedActionsWhileActive): never yank a boss out of a
+            // committed delivery - park the break until it finishes instead.
+            if (bossData.DeferForcedActionsWhileActive == true)
+            {
+                TryForceAction(f, filter.Entity, filter.Enemy, filter.BossRuntimeState, bossData, bossData.Stagger.OnBreakForcedAction);
                 return;
             }
 

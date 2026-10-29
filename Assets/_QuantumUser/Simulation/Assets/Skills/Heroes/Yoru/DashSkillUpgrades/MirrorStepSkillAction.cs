@@ -17,9 +17,11 @@ namespace Quantum
     // additionally refunds Vortex cooldown per successful reflection, capped per Dash (see
     // MirrorStepCooldownAccumulator, reset every Dash Begin).
     //
-    // Excluded against Elite/Boss-owned projectiles (reflecting a boss's own attack back at it would
-    // trivialize the fight) - same EnemyTier gate idiom used elsewhere in this roster (Pixie's Heavy
-    // Payload, Yoru's own Void Shards search).
+    // Excluded against Elite-owned projectiles - same EnemyTier gate idiom used elsewhere in this
+    // roster (Pixie's Heavy Payload, Yoru's own Void Shards search). Boss-owned shots and shots from a
+    // boss's own summons (BossSummon - e.g. Riff Riot's speaker rings) ARE reflected, but never
+    // executed and never scaled off the shooter's max Health (a boss/speaker would melt in one dash) -
+    // they deal BossSkillDamagePercent of Yoru's Vortex Skill Damage instead.
     public unsafe partial class MirrorStepSkillAction : SkillActionData
     {
         public FP[] Radius = { FP._3, FP.FromString("4.50"), FP.FromString("4.50") };
@@ -30,6 +32,10 @@ namespace Quantum
         // curves/co-op/difficulty HP scaling for free: "a reflect takes 60% of that enemy" stays true
         // at minute 1 and minute 20.
         public FP[] ShooterHealthPercent = { FP.FromString("0.40"), FP.FromString("0.60"), FP.FromString("0.80") };
+
+        // Boss / BossSummon-owned shots only: a fraction of Yoru's Vortex Skill Damage
+        // (YoruAscensionUtility.ResolveVortexSkillDamage) per reflected bolt, never an execute.
+        public FP[] BossSkillDamagePercent = { FP.FromString("0.25"), FP.FromString("0.35"), FP.FromString("0.50") };
 
         // Multiplies the reflected bolt's refreshed Lifetime and travel-distance cap (see
         // RefreshFlightBudget) - both "reset the budget so a late-flight bullet doesn't expire the
@@ -82,6 +88,7 @@ namespace Quantum
             // Skill Area - see StatUtility.GetAreaMultiplier.
             FP radius = Radius[index] * StatUtility.GetAreaMultiplier(f, filter.Entity);
             FP healthPercent = ShooterHealthPercent[index];
+            FP bossDamage = YoruAscensionUtility.ResolveVortexSkillDamage(f, filter.Entity) * BossSkillDamagePercent[index];
             FPVector3 position = filter.Transform3D->Position;
             var projectiles = f.Filter<Projectile, Transform3D>();
 
@@ -91,8 +98,11 @@ namespace Quantum
                 // covers the old separate "is this Enemy-owned" check - and naturally skips
                 // re-reflecting an already-reflected shot on a later tick of the same dash, since its
                 // Owner is no longer an Enemy by then.
-                if (TryResolveOwnerTier(f, projectile.Owner, out EnemyTier ownerTier) == false || ownerTier >= EnemyTier.Elite)
+                if (TryResolveOwnerTier(f, projectile.Owner, out EnemyTier ownerTier) == false || ownerTier == EnemyTier.Elite)
                     continue;
+
+                // A boss's own summons fire the boss's attack, so they're treated exactly like the boss.
+                bool bossOwned = ownerTier == EnemyTier.Boss || f.Has<BossSummon>(projectile.Owner) == true;
 
                 if ((projectileTransform.Position - position).SqrMagnitude > radius * radius)
                     continue;
@@ -113,9 +123,11 @@ namespace Quantum
                 live->MovementOverride = ReflectedMovement;
                 live->Owner = filter.Entity;
                 live->Source = DamageSource.Skill;
-                live->Damage = IsInstantKillTier(index, ownerTier)
-                    ? ResolveExecuteDamage(f, originalOwner)
-                    : ResolveShooterMaxHealth(f, originalOwner) * healthPercent;
+                live->Damage = bossOwned
+                    ? bossDamage
+                    : IsInstantKillTier(index, ownerTier)
+                        ? ResolveExecuteDamage(f, originalOwner)
+                        : ResolveShooterMaxHealth(f, originalOwner) * healthPercent;
 
                 RefreshFlightBudget(f, live);
 
@@ -152,10 +164,8 @@ namespace Quantum
             accumulator->AppliedThisDash += amount;
         }
 
-        // Tier of the enemy this projectile belongs to - resolved once and reused both to exclude
-        // Elite/Boss-owned shots (reflecting a boss's own attack back at it would trivialize the
-        // fight - same EnemyTier gate idiom used elsewhere in this roster, e.g. Yoru's own Void Shards
-        // search, Brute's old Iron Shoulder tier gate) and to decide instant-kill eligibility below.
+        // Tier of the enemy this projectile belongs to - resolved once and reused to exclude Elite-owned
+        // shots, route Boss-owned ones to BossSkillDamagePercent, and decide instant-kill eligibility below.
         private static bool TryResolveOwnerTier(Frame f, EntityRef owner, out EnemyTier tier)
         {
             tier = EnemyTier.Filler;

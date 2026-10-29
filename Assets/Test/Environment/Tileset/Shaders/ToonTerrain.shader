@@ -21,6 +21,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
         [Header(Surface)]
         _SurfaceTex ("Surface Texture (GRAYSCALE: white = Light, black = Dark)", 2D) = "white" {}
         _SurfaceLightColor ("Surface Light Color", Color) = (0.72, 0.76, 0.29, 1)
+        _SurfaceFullColor ("Surface Texture is FULL COLOUR (1 = its RGB is the albedo; Light/Dark/Accent unused, raised blocks multiplied by Raised Light)", Float) = 0
         _SurfaceAccentColor ("Surface Accent Color (painted marks = texture B channel; alpha = strength, 0 = off)", Color) = (0.91, 0.71, 0.15, 0)
         _SurfaceDarkColor ("Surface Dark Color", Color) = (0.6, 0.66, 0.22, 1)
         _SurfaceScale ("Surface World Size (m per tile)", Float) = 4
@@ -30,6 +31,7 @@ Shader "RiftRaiders/Test/ToonTerrain"
         // blocks = moss) so height reads at a glance. Strength 0 = off.
         _RaisedLightColor ("Raised Surface Light Color", Color) = (0.2, 0.55, 0.5, 1)
         _RaisedDarkColor ("Raised Surface Dark Color", Color) = (0.12, 0.35, 0.36, 1)
+        _RaisedAccentColor ("Raised Surface Accent Color (alpha = strength; 0 = raised blocks keep the Surface Accent)", Color) = (0.85, 0.2, 0.24, 0)
         _RaisedFromY ("Raised From World Y", Float) = 1.5
         _RaisedStrength ("Raised Tint Strength", Range(0, 1)) = 0
 
@@ -105,9 +107,11 @@ Shader "RiftRaiders/Test/ToonTerrain"
             float4 _WallTex_ST;
             half4 _SurfaceLightColor;
             half4 _SurfaceAccentColor;
+            half _SurfaceFullColor;
             half4 _SurfaceDarkColor;
             half4 _RaisedLightColor;
             half4 _RaisedDarkColor;
+            half4 _RaisedAccentColor;
             float _RaisedFromY;
             half _RaisedStrength;
             float _SurfaceScale;
@@ -271,14 +275,18 @@ Shader "RiftRaiders/Test/ToonTerrain"
                         half4 surfSample = SAMPLE_TEXTURE2D(_SurfaceTex, sampler_SurfaceTex, P.xz / _SurfaceScale);
                         half3 surfaceDark = _SurfaceDarkColor.rgb;
                         half3 surfaceLight = _SurfaceLightColor.rgb;
+                        half4 accent = _SurfaceAccentColor;
                         [branch] if (_RaisedStrength > 0.0h)
                         {
                             half raised = saturate((P.y - _RaisedFromY) * 8.0) * _RaisedStrength;
                             surfaceDark = lerp(surfaceDark, _RaisedDarkColor.rgb, raised);
                             surfaceLight = lerp(surfaceLight, _RaisedLightColor.rgb, raised);
+                            accent = lerp(accent, _RaisedAccentColor, raised * step(0.001h, _RaisedAccentColor.a));   // raised blocks: own accent (e.g. carnival red checker)
                         }
                         half3 surface = lerp(surfaceDark, surfaceLight, surfSample.r);
-                        surface = lerp(surface, _SurfaceAccentColor.rgb, surfSample.b * _SurfaceAccentColor.a);   // painted accent marks (B = mask)
+                        surface = lerp(surface, accent.rgb, surfSample.b * accent.a);   // painted accent marks (B = mask)
+                        [branch] if (_SurfaceFullColor > 0.5h)   // painted colour texture used as-is (Carnival floor)
+                            surface = surfSample.rgb * lerp((half3)1.0h, _RaisedLightColor.rgb, saturate((P.y - _RaisedFromY) * 8.0) * _RaisedStrength);
                         half fade = input.data.y;
                         half inward = smoothstep(_EdgeFadeStart, max(_EdgeFadeEnd, _EdgeFadeStart + 1e-3h), fade);
                         terrain = lerp(surface, lerp(_FadeColor.rgb, surface, inward), _FadeColor.a);

@@ -1,0 +1,214 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8396847218159974807
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4178587249457491461}
+  - component: {fileID: 1327535767933055780}
+  - component: {fileID: 1960752949103837424}
+  m_Layer: 0
+  m_Name: Carnival_Ride_Wheel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4178587249457491461
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8396847218159974807}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 574945743903011152}
+  - {fileID: 1314643902257834028}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1327535767933055780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8396847218159974807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3eee989e9ab3e4a7582c50524b3c2d98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarnivalRideAnimator
+  part: {fileID: 1314643902257834028}
+  motion: 0
+  degreesPerSecond: 14
+  meshAxis: {x: 0, y: 0, z: 0}
+  hangerModels:
+  - {fileID: 919132149155446097, guid: b798a077c7e5642198621467b4cb6170, type: 3}
+  - {fileID: 919132149155446097, guid: d644214a945744637a388bb69bcbc57c, type: 3}
+  - {fileID: 919132149155446097, guid: cf5d6d21b79a44df5a49f1bbb9af9993, type: 3}
+  - {fileID: 919132149155446097, guid: a9740e25f9132492491337876cb3ee5a, type: 3}
+  hangerCount: 8
+  hangerRadius: 3
+  hangersRideThePart: 0
+  hangerBob: 0
+  hangerBobSpeed: 2.2
+  pathPoints: []
+  carModels: []
+  carCount: 0
+  carGap: 0.72
+  pathSpeed: 2.2
+  lowOffset: -4.3
+  highOffset: 2.8
+  riseTime: 5
+  holdTime: 1.2
+  fallTime: 0.55
+  restTime: 2.2
+--- !u!114 &1960752949103837424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8396847218159974807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02a9adb8b5abc4d1ba0647a10ada4233, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaterFootprint
+  discs:
+  - {x: 0.00001691059, y: 1.8344724, z: -0.024472497}
+  waterlineMaxY: 0.35
+  clusterCell: 0.6
+--- !u!1001 &31568520203163323
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4178587249457491461}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+      propertyPath: m_Name
+      value: Carnival_Prop_Wheel
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+--- !u!4 &574945743903011152 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8e7b91d190efc4f288abd167b4d9192f, type: 3}
+  m_PrefabInstance: {fileID: 31568520203163323}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1563933058133610439
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4178587249457491461}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+      propertyPath: m_Name
+      value: Carnival_Prop_Wheel_Rotor
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+--- !u!4 &1314643902257834028 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 87e9483cabb9445c9be11112b92a29c4, type: 3}
+  m_PrefabInstance: {fileID: 1563933058133610439}
+  m_PrefabAsset: {fileID: 0}

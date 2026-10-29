@@ -233,6 +233,10 @@
                 // its own decision, rather than being immediately overwritten by it. Only touches
                 // entities that actually have BossRuntimeState (see that component's own comment).
                 new BossSystem(),
+                // Right after BossSystem - drives a running Riff Riot "Som no Talo" speaker sequence
+                // (BossSpeakerStage) off this tick's resolved boss/speaker state, and pops orphaned
+                // speakers. See BossSpeakerStageSystem.
+                new BossSpeakerStageSystem(),
                 // Boss/Elite-only equivalent of PlayerFallSystem (see its own header comment) -
                 // right after EnemySystem/BossSystem so it reads this tick's resolved
                 // Transform3D.Position before anything else acts on a freshly-respawned position.

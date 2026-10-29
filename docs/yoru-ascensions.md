@@ -121,6 +121,8 @@ Horizon rank 3 only.
 **6. Undertow** (`UndertowPassiveUpgradeData`, now ranked)
 - R1: a weapon hit pulls the struck enemy toward its nearest other enemy (`DamageUtility.ApplyPull`,
   never `ApplyKnockback` - doesn't stagger the victim, same idiom Vortex's own pull uses).
+  Bosses (`EnemyTier.Boss`) are immune - a hit on one grants no pull/Bound - but can still be the
+  "nearest other enemy" minions get pulled toward.
 - R2: stronger pull; +50% force specifically against Specialist+ targets (`HeavyTierMultiplier`).
 - R3 "Gravitational Bond": a landed pull also Binds the target for 2s (`StatusEffectUtility.
   ApplyBound` - a new GENERIC, not Yoru-named, status, same `TemporaryDamageReductionRemaining`-style
@@ -388,3 +390,12 @@ the instant kill was a flat `999999` sentinel. Reflect damage no longer uses Ski
   damage bonuses) still apply on top, and a `FrontalDamageReduction` enemy hit from the front can
   still survive an "instant kill".
 - Rank description text updated to match.
+
+# 2026-10-29 — Mirror Step vs. bosses: Skill Damage %, no execute
+
+Boss-owned projectiles and projectiles fired by a `BossSummon` (an enemy a boss's own ability spawned - Riff
+Riot's speaker stacks, `SpawnPackDeliveryData` adds cast by a boss) ARE reflected, but never instant-killed
+and never scaled off the shooter's max Health: each bolt deals `BossSkillDamagePercent` = **25% / 35% / 50%**
+of Yoru's Vortex Skill Damage (`YoruAscensionUtility.ResolveVortexSkillDamage`). The summoned speakers were
+Specialist-tier shooters, so R3 executed them, and even 80%-of-max-Health per bolt killed one in a single dash
+through its 18-pellet ring. Elite-owned shots are still not reflected. See `QTN/Enemy/BossSummon.qtn`.

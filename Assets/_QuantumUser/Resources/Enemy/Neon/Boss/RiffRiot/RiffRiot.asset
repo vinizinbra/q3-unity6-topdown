@@ -1,0 +1,365 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 285c1e1a94e184b25a7f521cd7fcd913, type: 3}
+  m_Name: RiffRiot
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.BossDataAsset
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/Neon/Boss/RiffRiot/RiffRiot
+    Guid:
+      Value: 403946068390686381
+  EnemyName: Riff Riot
+  Tier: 5
+  Economy:
+    Persistent: 0
+    SpawnProfile:
+      Id:
+        Value: 443472774672561949
+    CostMultiplier:
+      RawValue: 65536
+  Stats:
+    MoveSpeed:
+      RawValue: 327680
+    Height:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 131072
+      HoverCheckInterval:
+        RawValue: 65536
+      HoverSpringFrequency:
+        RawValue: 65536
+      HoverSpringDamping:
+        RawValue: 32768
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 1
+      ClimbProbeThreshold:
+        RawValue: 65536
+      GapProbeThreshold:
+        RawValue: 65536
+      ArcHeight:
+        RawValue: 131072
+      TraversalJumpSpeedMultiplier:
+        RawValue: 65536
+      CanClimbCliffs: 1
+      CliffHeight:
+        RawValue: 327680
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 1
+      TargetableByProjectiles: 1
+      CanJumpGaps: 1
+      GapDistance:
+        RawValue: 327680
+      CanFallFromCliff: 1
+      FallHeight:
+        RawValue: 327680
+    Movement:
+      Id:
+        Value: 3283391172210422552
+    Radius:
+      RawValue: 72090
+    ShieldMultiplier:
+      RawValue: 0
+    HealthMultiplier:
+      RawValue: 78643
+    Traits: 
+    FrontalDamageReductionAmount:
+      RawValue: 32768
+    FrontalDamageReductionArcDegrees:
+      RawValue: 7864320
+    AvoidWalls: 0
+    WallAvoidProbeDistance:
+      RawValue: 65536
+    UseWaypointDetour: 0
+    WaypointArrivalDistance:
+      RawValue: 65536
+  AI:
+    Targeting:
+      Id:
+        Value: 2227200805678239736
+    DetectionRange:
+      RawValue: 655360
+    LeashRange:
+      RawValue: 3276800
+    StopDistance:
+      RawValue: 0
+    StopSlowdownRange:
+      RawValue: 0
+    DetectionRangeMultiplier:
+      RawValue: 65536
+  Actions:
+    BasicAction:
+      Id:
+        Value: 0
+    SkillActions:
+    - Id:
+        Value: 375842340983382197
+    - Id:
+        Value: 330755404687909387
+    - Id:
+        Value: 348488912880248041
+    - Id:
+        Value: 318621747151081417
+    - Id:
+        Value: 314075427823632722
+  Passives: []
+  DeathLingerTime:
+    RawValue: 196608
+  ChestDrop:
+    Id:
+      Value: 0
+  ChestDropChance:
+    RawValue: 65536
+  Cost:
+    RawValue: 65536
+  Persistent: 0
+  SpawnProfile:
+    Id:
+      Value: 0
+  MoveSpeed:
+    RawValue: 196608
+  Radius:
+    RawValue: 65536
+  MaxHealth:
+    RawValue: 3276800
+  MaxShield:
+    RawValue: 0
+  ShieldRechargeDelay:
+    RawValue: 131072
+  ShieldRechargeRate:
+    RawValue: 327680
+  Traits: 
+  FrontalDamageReductionAmount:
+    RawValue: 32768
+  FrontalDamageReductionArcDegrees:
+    RawValue: 7864320
+  Height:
+    InitialState: 0
+    FlightHeight:
+      RawValue: 0
+    HoverCheckInterval:
+      RawValue: 0
+    HoverSpringFrequency:
+      RawValue: 0
+    HoverSpringDamping:
+      RawValue: 0
+    CanFly: 0
+    CanBeLaunched: 0
+    CanBeGrounded: 0
+    ClimbProbeThreshold:
+      RawValue: 0
+    GapProbeThreshold:
+      RawValue: 0
+    ArcHeight:
+      RawValue: 0
+    TraversalJumpSpeedMultiplier:
+      RawValue: 65536
+    CanClimbCliffs: 0
+    CliffHeight:
+      RawValue: 0
+    AffectedByGroundHazards: 0
+    AffectedByShockwaves: 0
+    TargetableByMelee: 0
+    TargetableByProjectiles: 0
+    CanJumpGaps: 0
+    GapDistance:
+      RawValue: 0
+    CanFallFromCliff: 0
+    FallHeight:
+      RawValue: 0
+  Movement:
+    Id:
+      Value: 0
+  Targeting:
+    Id:
+      Value: 0
+  DetectionRange:
+    RawValue: 655360
+  LeashRange:
+    RawValue: 983040
+  CanBeInterruptedByKnockback: 1
+  KnockbackRecoveryTime:
+    RawValue: 16384
+  BasicAction:
+    Id:
+      Value: 0
+  SkillActions: []
+  ExplosionColor: {r: 1, g: 0.18, b: 0.6, a: 1}
+  Faction: {fileID: 0}
+  Description: Neon's loudest punk. Swings a guitar-axe, drops the stage on you and
+    turns the speakers up to eleven.
+  ViewPrefab: {fileID: 0}
+  CatalogSubtitle: Neon Punk
+  Discovery: 0
+  Phases:
+  - EntryTrigger: 0
+    HealthPercentThreshold:
+      RawValue: 65536
+    TimerSeconds:
+      RawValue: 0
+    ActionPoolSlots: 
+    MovementOverride:
+      Id:
+        Value: 0
+    HeightOverride:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 0
+      HoverCheckInterval:
+        RawValue: 0
+      HoverSpringFrequency:
+        RawValue: 0
+      HoverSpringDamping:
+        RawValue: 0
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 0
+      ClimbProbeThreshold:
+        RawValue: 0
+      GapProbeThreshold:
+        RawValue: 0
+      ArcHeight:
+        RawValue: 0
+      TraversalJumpSpeedMultiplier:
+        RawValue: 0
+      CanClimbCliffs: 0
+      CliffHeight:
+        RawValue: 0
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 0
+      TargetableByProjectiles: 0
+      CanJumpGaps: 0
+      GapDistance:
+        RawValue: 0
+      CanFallFromCliff: 0
+      FallHeight:
+        RawValue: 0
+    Modifiers:
+      MoveSpeedMultiplier:
+        RawValue: 0
+      AnticipationMultiplier:
+        RawValue: 0
+      ActiveSpeedMultiplier:
+        RawValue: 0
+      ProjectileSpeedMultiplier:
+        RawValue: 0
+      RecoveryMultiplier:
+        RawValue: 0
+      QuantityMultiplier:
+        RawValue: 0
+      DamageMultiplier:
+        RawValue: 0
+      DamageTakenMultiplier:
+        RawValue: 0
+    EntryAction:
+      Id:
+        Value: 0
+  - EntryTrigger: 0
+    HealthPercentThreshold:
+      RawValue: 32768
+    TimerSeconds:
+      RawValue: 0
+    ActionPoolSlots: 
+    MovementOverride:
+      Id:
+        Value: 0
+    HeightOverride:
+      InitialState: 0
+      FlightHeight:
+        RawValue: 0
+      HoverCheckInterval:
+        RawValue: 0
+      HoverSpringFrequency:
+        RawValue: 0
+      HoverSpringDamping:
+        RawValue: 0
+      CanFly: 0
+      CanBeLaunched: 0
+      CanBeGrounded: 0
+      ClimbProbeThreshold:
+        RawValue: 0
+      GapProbeThreshold:
+        RawValue: 0
+      ArcHeight:
+        RawValue: 0
+      TraversalJumpSpeedMultiplier:
+        RawValue: 0
+      CanClimbCliffs: 0
+      CliffHeight:
+        RawValue: 0
+      AffectedByGroundHazards: 0
+      AffectedByShockwaves: 0
+      TargetableByMelee: 0
+      TargetableByProjectiles: 0
+      CanJumpGaps: 0
+      GapDistance:
+        RawValue: 0
+      CanFallFromCliff: 0
+      FallHeight:
+        RawValue: 0
+    Modifiers:
+      MoveSpeedMultiplier:
+        RawValue: 78643
+      AnticipationMultiplier:
+        RawValue: 0
+      ActiveSpeedMultiplier:
+        RawValue: 0
+      ProjectileSpeedMultiplier:
+        RawValue: 0
+      RecoveryMultiplier:
+        RawValue: 104858
+      QuantityMultiplier:
+        RawValue: 0
+      DamageMultiplier:
+        RawValue: 0
+      DamageTakenMultiplier:
+        RawValue: 0
+    EntryAction:
+      Id:
+        Value: 314075427823632722
+  GlobalActionSlots: 000000000100000002000000
+  Stagger:
+    ThresholdPercents:
+    - RawValue: 22938
+    RegenRatePercent:
+      RawValue: 655
+    MinHealthPercent:
+      RawValue: 13107
+    OnBreakForcedAction:
+      Id:
+        Value: 318621747151081417
+  DefeatSequenceDuration:
+    RawValue: 425984
+  DefeatBurstTime:
+    RawValue: 163840
+  DefeatRiftShardReward:
+    RawValue: 2949120
+  ComboChains:
+  - TriggerAction:
+      Id:
+        Value: 375842340983382197
+    RepeatCount: 2
+    RetargetEachRepeat: 0
+    ExposedDurationOnFinish:
+      RawValue: 0
+    ExposedDamageMultiplierOnFinish:
+      RawValue: 0
+  RetargetInterval:
+    RawValue: 6554
+  DeferForcedActionsWhileActive: 1
+  DebugPrototype:
+    Id:
+      Value: 1414848658287892554
+  Title: RIFF RIOT
+  Subtitle: Neon Punk
+  UiSprite: {fileID: 5668249372164566832, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}

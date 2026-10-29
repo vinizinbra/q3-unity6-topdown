@@ -53,6 +53,11 @@ namespace Quantum
                 if (action == null)
                     continue;
 
+                // A running speaker sequence (Riff Riot's Som no Talo) can lock specific boss actions
+                // out until it ends - see SpeakerStageDeliveryData.BlockedActionsWhileActive.
+                if (boss != null && IsBlockedBySpeakerStage(f, entity, ResolveActionRef(data, slot)) == true)
+                    continue;
+
                 if (sqrDistanceToTarget > action.EngageRange * action.EngageRange)
                     continue;
 
@@ -86,6 +91,15 @@ namespace Quantum
             }
 
             return found;
+        }
+
+        private static bool IsBlockedBySpeakerStage(Frame f, EntityRef entity, AssetRef<EnemyActionData> actionRef)
+        {
+            if (f.Unsafe.TryGetPointer<BossSpeakerStage>(entity, out var stage) == false)
+                return false;
+
+            SpeakerStageDeliveryData config = f.FindAsset(stage->Config);
+            return config != null && config.BlockedActionsWhileActive.Contains(actionRef);
         }
 
         // BasicAction (slot 0) is always eligible. A skill slot is eligible if it's either in

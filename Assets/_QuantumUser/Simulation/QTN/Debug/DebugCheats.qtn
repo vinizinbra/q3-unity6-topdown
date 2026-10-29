@@ -44,4 +44,9 @@ global
     // TryPulse and the phase-guaranteed spawns (a phase entered while disabled never fires its
     // guarantee, even after re-enabling) - the phase timeline itself keeps advancing as normal.
     Boolean DebugDirectorSpawnsDisabled;
+
+    // Set by CheatActionKind.JumpToBoss when it carries a BossDataAsset (its DebugPrototype), so a
+    // BossDataAsset's "Jump To This Boss" button can fight any boss, even one not in the world's
+    // SurvivalConfig. Wins over SurvivalPhase.BossPrototype; see RunPhaseUtility.SpawnBoss.
+    AssetRef<EntityPrototype> DebugBossPrototypeOverride;
 }

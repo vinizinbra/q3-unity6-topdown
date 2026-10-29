@@ -169,6 +169,48 @@ namespace Quantum.Prototypes.Unity {
     }
   }
   [System.SerializableAttribute()]
+  public unsafe partial class BossSpeakerPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.BossSpeakerPrototype> {
+    public Quantum.QuantumEntityPrototype Owner;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.BossSpeakerPrototype prototype);
+    public override Quantum.Prototypes.BossSpeakerPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.BossSpeakerPrototype();
+      converter.Convert(this.Owner, out result.Owner);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class BossSpeakerStagePrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.BossSpeakerStagePrototype> {
+    public AssetRef<SpeakerStageDeliveryData> Config;
+    [ArrayLengthAttribute(2)]
+    public Quantum.QuantumEntityPrototype[] Speakers = new Quantum.QuantumEntityPrototype[2];
+    public FP TimeRemaining;
+    public FP EmitTimer;
+    public Byte NextSpeaker;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.BossSpeakerStagePrototype prototype);
+    public override Quantum.Prototypes.BossSpeakerStagePrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.BossSpeakerStagePrototype();
+      converter.Convert(this.Config, out result.Config);
+      converter.Convert(this.Speakers, out result.Speakers);
+      converter.Convert(this.TimeRemaining, out result.TimeRemaining);
+      converter.Convert(this.EmitTimer, out result.EmitTimer);
+      converter.Convert(this.NextSpeaker, out result.NextSpeaker);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
+  public unsafe partial class BossSummonPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.BossSummonPrototype> {
+    public Quantum.QuantumEntityPrototype Boss;
+    partial void ConvertUser(Quantum.QuantumEntityPrototypeConverter converter, ref Quantum.Prototypes.BossSummonPrototype prototype);
+    public override Quantum.Prototypes.BossSummonPrototype Convert(Quantum.QuantumEntityPrototypeConverter converter) {
+      var result = new Quantum.Prototypes.BossSummonPrototype();
+      converter.Convert(this.Boss, out result.Boss);
+      ConvertUser(converter, ref result);
+      return result;
+    }
+  }
+  [System.SerializableAttribute()]
   public unsafe partial class BotBrainPrototype : Quantum.QuantumUnityPrototypeAdapter<Quantum.Prototypes.BotBrainPrototype> {
     public Quantum.Prototypes.InputPrototype Data;
     public Quantum.QEnum8<BotGoal> Goal;

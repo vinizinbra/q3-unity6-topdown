@@ -1,0 +1,6 @@
+PASS: root ParticleSystem; all systems non-looping; scale 1; local +Z.
+81 samples, 0.00–0.80 seconds; yaw 73 degrees; 687812 mesh vertices checked.
+Maximum radius: 6.5000 / 6.5 units. Maximum half-angle: 45.0000 / 45 degrees.
+Last sampled live particle: 0.52s. No particles at 0.8s.
+Preview: Unity 6 URP, FOV 14, camera (0,36,-32.5), rotation (45,0,0), asphalt (0.40,0.41,0.47).
+No post processing, Bloom or fog. Orange outline and 1-unit grid are preview-only.

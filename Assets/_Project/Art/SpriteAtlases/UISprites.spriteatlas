@@ -258,6 +258,7 @@ SpriteAtlas:
     - 017cb6454ed9743478842fb02d741366: -1067484093
     - 017cb6454ed9743478842fb02d741366: -1461962605
     - 017cb6454ed9743478842fb02d741366: -1669506346
+    - c9c8ca95797224e2f8cbe61f750eb35e: 21300000
     - 5841b8d51e12542169bb2a4b8d957af3: 21300000
     - 82d2870659311452c8dcc10f241a7cee: 21300000
     - 7982f90655cda4f9ea8dfade1b2a2786: -39329904
@@ -814,6 +815,7 @@ SpriteAtlas:
   - {fileID: -1067484093, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   - {fileID: -1461962605, guid: 017cb6454ed9743478842fb02d741366, type: 3}
   - {fileID: -1669506346, guid: 017cb6454ed9743478842fb02d741366, type: 3}
+  - {fileID: 21300000, guid: c9c8ca95797224e2f8cbe61f750eb35e, type: 3}
   - {fileID: 21300000, guid: 5841b8d51e12542169bb2a4b8d957af3, type: 3}
   - {fileID: 21300000, guid: 82d2870659311452c8dcc10f241a7cee, type: 3}
   - {fileID: -39329904, guid: 7982f90655cda4f9ea8dfade1b2a2786, type: 3}
@@ -1369,6 +1371,7 @@ SpriteAtlas:
   - LongBarrel
   - RelentlessFire
   - ChillPerk
+  - RR_HexagonOutline_Focus
   - Icon_Check03_l
   - RR_Hex32_OutlineShadowIn_Focus
   - ZaraLobby_0

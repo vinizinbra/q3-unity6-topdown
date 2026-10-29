@@ -8,9 +8,10 @@ namespace Quantum
 {
     // Worlds that have a WorldTheme + tileset. Values are EXPLICIT because Unity serializes the number:
     // never renumber an entry (every authored WorldTheme would silently switch world) - a new world
-    // takes the next unused number. 7-10 are free (unbuilt worlds removed 2026-09-24).
+    // takes the next unused number. 8-10 are free (unbuilt worlds removed 2026-09-24; 7 = Carnival).
     public enum WorldThemeName
     {
+        Carnival = 7, // theme park / festival / circus (pink cap slabs, purple brick, checker floor, canals)
         GrasslandOutpost = 0,
         DesertOilFields = 1, // aka Desert Oil Kingdom
         NeonFloodDistrict = 2,

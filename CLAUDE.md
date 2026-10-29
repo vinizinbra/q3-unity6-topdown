@@ -65,6 +65,8 @@ which one to open.
 
 - **Enemy Passives** — reusable `EnemyPassiveData` assets on `EnemyDataAsset.Passives` (recorded on `EnemyPassives`, single entry `EnemyPassiveUtility.Apply`) — groundwork for random Elite passive packs; first one: `GroundTrail` (Fuel Runner oil trail) + shared `StickySlow` ground hazards. → `docs/enemy-passives.md`
 
+- **Riff Riot (Neon boss)** — neon punk boss on the boss framework: directional cone Power Chord with sound-wave VFX, Quebra-Palco leap with locked landing mark, Som no Talo (two destructible speakers firing alternating gap rings; break both = exposure), phase-2 roar. Everything built by `Tools ▸ RiftRaiders ▸ Boss ▸ Build Riff Riot (Neon)` — edit the builder, not the assets. Opt-in framework additions: `BossPhaseData.EntryAction`, `BossSystem.TryForceAction`, `DeferForcedActionsWhileActive`, `BossDataAsset.DebugPrototype`, Leap `ResolveValidLanding`. No Neon world yet; test via the boss asset's **Jump To This Boss**. → `docs/riff-riot-boss.md`
+
 - **World 2 Enemy Roster** — 12 W2 enemies (BlackMoles / DesertSecurity / Wildlife), each a guid-independent clone of a W1 base (`W2-*` assets, placeholder view variants); Dune Crusher cone slam, Scarab Nest spawner. → `docs/world2-enemies.md`
 
 ## Heroes — Ascensions

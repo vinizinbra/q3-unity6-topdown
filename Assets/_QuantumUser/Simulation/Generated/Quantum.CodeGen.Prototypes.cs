@@ -527,6 +527,7 @@ namespace Quantum.Prototypes {
     public AssetRef<EnemyActionData> ActiveComboAction;
     public Byte ComboRepeatsRemaining;
     public FP RetargetTimer;
+    public Byte PendingForcedSlot;
     partial void MaterializeUser(Frame frame, ref Quantum.BossRuntimeState result, in PrototypeMaterializationContext context);
     public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
         Quantum.BossRuntimeState component = default;
@@ -543,7 +544,58 @@ namespace Quantum.Prototypes {
         result.ActiveComboAction = this.ActiveComboAction;
         result.ComboRepeatsRemaining = this.ComboRepeatsRemaining;
         result.RetargetTimer = this.RetargetTimer;
+        result.PendingForcedSlot = this.PendingForcedSlot;
         MaterializeUser(frame, ref result, in context);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.BossSpeaker))]
+  public unsafe class BossSpeakerPrototype : ComponentPrototype<Quantum.BossSpeaker> {
+    public MapEntityId Owner;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.BossSpeaker component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.BossSpeaker result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Owner, in context, out result.Owner);
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.BossSpeakerStage))]
+  public unsafe class BossSpeakerStagePrototype : ComponentPrototype<Quantum.BossSpeakerStage> {
+    public AssetRef<SpeakerStageDeliveryData> Config;
+    [ArrayLengthAttribute(2)]
+    public MapEntityId[] Speakers = new MapEntityId[2];
+    public FP TimeRemaining;
+    public FP EmitTimer;
+    public Byte NextSpeaker;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.BossSpeakerStage component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.BossSpeakerStage result, in PrototypeMaterializationContext context = default) {
+        result.Config = this.Config;
+        for (int i = 0, count = PrototypeValidator.CheckLength(Speakers, 2, in context); i < count; ++i) {
+          PrototypeValidator.FindMapEntity(this.Speakers[i], in context, out *result.Speakers.GetPointer(i));
+        }
+        result.TimeRemaining = this.TimeRemaining;
+        result.EmitTimer = this.EmitTimer;
+        result.NextSpeaker = this.NextSpeaker;
+    }
+  }
+  [System.SerializableAttribute()]
+  [Quantum.Prototypes.Prototype(typeof(Quantum.BossSummon))]
+  public unsafe class BossSummonPrototype : ComponentPrototype<Quantum.BossSummon> {
+    public MapEntityId Boss;
+    public override Boolean AddToEntity(FrameBase f, EntityRef entity, in PrototypeMaterializationContext context) {
+        Quantum.BossSummon component = default;
+        Materialize((Frame)f, ref component, in context);
+        return f.Set(entity, component) == SetResult.ComponentAdded;
+    }
+    public void Materialize(Frame frame, ref Quantum.BossSummon result, in PrototypeMaterializationContext context = default) {
+        PrototypeValidator.FindMapEntity(this.Boss, in context, out result.Boss);
     }
   }
   [System.SerializableAttribute()]

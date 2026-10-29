@@ -256,6 +256,9 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 {
                     if (SpawnPiece(placement, origin, bottom, top, platformRoot, template))
                         pieceCount++;
+                    if (set.CornerCap != null && placement.Key == TilesetAutotiler.CornerKey)   // real-size cap on every convex corner
+                        SpawnProp(set.CornerCap, new Vector3(origin.x + placement.Position.x * cellSize, top + verticalOffset, origin.z + placement.Position.y * cellSize),
+                            90f * placement.Rotation, cellSize, platformRoot, template);
                     if (placement.Key == TilesetAutotiler.EdgeKey || placement.Key == TilesetAutotiler.EdgeLongKey)
                         platformEdges.Add((placement, bottom));
                     else if (placement.Key == TilesetAutotiler.CornerKey || placement.Key == TilesetAutotiler.InnerCornerKey)
@@ -760,6 +763,7 @@ public class TilesetPlatformBuilder : MonoBehaviour
         var oz = Mathf.RoundToInt(origin.z / cellSize);
         var seen = new HashSet<Vector2Int>();
         var discs = new List<Vector3>();
+        var landmarks = new List<Vector3>();
         GameObject template = null;
         foreach (var cell in cells.Values)
         {
@@ -832,6 +836,34 @@ public class TilesetPlatformBuilder : MonoBehaviour
                 continue;
             var scale = entry.ScaleRange == Vector2.zero ? 1f : Mathf.Lerp(entry.ScaleRange.x, entry.ScaleRange.y, U(43));
             var pos = new Vector3(p.x + (U(44) - 0.5f) * 0.4f * cellSize, waterLevelY, p.z + (U(45) - 0.5f) * 0.4f * cellSize);
+            if (entry.Landmark)
+            {
+                // never on the camera side of its platform (a tall ride there hides the play area), spaced apart
+                var toCam = new Vector3(-cameraViewDirection.x, 0f, -cameraViewDirection.z).normalized;
+                if (Vector3.Dot(p - best.center, toCam) > Mathf.Max(best.extents.x * Mathf.Abs(toCam.x), best.extents.z * Mathf.Abs(toCam.z)) - 0.01f)
+                    continue;
+                var tooClose = false;
+                foreach (var l in landmarks)
+                    tooClose |= (l - pos).sqrMagnitude < set.LandmarkSpacing * set.LandmarkSpacing * cellSize * cellSize;
+                if (tooClose)
+                    continue;
+                landmarks.Add(pos);
+                var yaw = (U(46) < 0.5f ? 0f : 180f) + (U(47) - 0.5f) * 30f;
+                SpawnProp(entry.Model, pos, yaw, scale, waterRoot, template);
+                // shore foam only where it really meets the water: the prefab's pre-computed WaterFootprint discs
+                // (island, pylon footings); a landmark without one gets no disc
+                var footprint = entry.Model.GetComponent<WaterFootprint>();
+                if (footprint != null)
+                {
+                    var rot = Quaternion.Euler(0f, yaw, 0f);
+                    foreach (var disc in footprint.Discs)
+                    {
+                        var centre = pos + rot * new Vector3(disc.x, 0f, disc.z) * scale;
+                        discs.Add(new Vector3(centre.x, disc.y * scale, centre.z));
+                    }
+                }
+                continue;
+            }
             SpawnProp(entry.Model, pos, U(46) * 360f, scale, waterRoot, template);
             discs.Add(new Vector3(pos.x, PropFootprintRadius(entry.Model) * scale, pos.z));
         }

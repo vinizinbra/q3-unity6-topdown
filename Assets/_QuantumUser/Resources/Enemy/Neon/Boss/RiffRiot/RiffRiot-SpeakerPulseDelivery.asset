@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b5d13dba4ed541eeaa473a78fc90a26, type: 3}
+  m_Name: RiffRiot-SpeakerPulseDelivery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.GapRingProjectileDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/Neon/Boss/RiffRiot/RiffRiot-SpeakerPulseDelivery
+    Guid:
+      Value: 297879118810482371
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  ProjectileData:
+    Id:
+      Value: 537012504062262120
+  ProjectileSpeedMultiplier:
+    RawValue: 425984
+  ProjectileMaxDistanceMultiplier:
+    RawValue: 144179
+  PelletCount: 22
+  GapDegrees:
+    RawValue: 5242880
+  GapJitterDegrees:
+    RawValue: 3932160

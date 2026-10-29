@@ -19,6 +19,61 @@ namespace Quantum
         // where or when it lands.
         public FP JumpHeight = 3;
 
+        // 0 (default) keeps the original pure-sphere landing hit. Above zero, a player is only caught
+        // if the ACTUAL FLOOR under them is within this many units of the floor at the landing spot -
+        // same idiom/field name as GroundAreaDeliveryData/RingSlamDeliveryData.MaxHeightDifference -
+        // so a slam on the arena floor doesn't reach a player standing on a ledge above it.
+        public FP MaxHeightDifference = FP._0;
+
+        // False (default) keeps the original behavior: wherever SkillTargetPosition ends up, even over
+        // a void. True: every windup tick the (possibly still tracking) landing point is pulled back
+        // toward the leaper until it sits on real ground no more than MaxLandingHeightDifference away
+        // from the leaper's own floor - resolved in OnAnticipating, BEFORE the aim locks, so the
+        // telegraph (which reads SkillTargetPosition) always shows the spot it will really land on.
+        public bool ResolveValidLanding;
+
+        // Only read with ResolveValidLanding - how far up/down from its own floor the leaper may land.
+        public FP MaxLandingHeightDifference = 2;
+
+        // Only read with ResolveValidLanding - how many steps the pull-back search tries.
+        private const int LandingSearchSteps = 6;
+
+        public override void OnAnticipating(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target, FP elapsed)
+        {
+            base.OnAnticipating(f, ref filter, data, action, target, elapsed);
+
+            if (ResolveValidLanding == false || data.Stats.Height.InitialState != EnemyHeightState.Grounded)
+                return;
+
+            filter.Enemy->SkillTargetPosition = ResolveLandingSpot(f, filter.Transform3D->Position, filter.Enemy->SkillTargetPosition);
+        }
+
+        // Walks from the wanted landing spot back toward the leaper in even steps and returns the first
+        // point with ground at a reachable height; falls back to the leaper's own position (a jump in
+        // place) when nothing qualifies, so it never commits to a void.
+        private FPVector3 ResolveLandingSpot(Frame f, FPVector3 origin, FPVector3 wanted)
+        {
+            int groundMask = EnemyMovementUtility.GetGroundLayerMask(f);
+
+            if (EnemyMovementUtility.TryFindGroundHeight(f, origin, groundMask, out FP originGroundY) == false)
+                return wanted;
+
+            for (int i = 0; i <= LandingSearchSteps; i++)
+            {
+                FP t = FP._1 - (FP)i / LandingSearchSteps;
+                FPVector3 candidate = FPVector3.Lerp(origin, wanted, t);
+                candidate.Y = wanted.Y;
+
+                if (EnemyMovementUtility.TryFindGroundHeight(f, candidate, groundMask, out FP groundY) == true &&
+                    FPMath.Abs(groundY - originGroundY) <= MaxLandingHeightDifference)
+                {
+                    return candidate;
+                }
+            }
+
+            return new FPVector3(origin.X, wanted.Y, origin.Z);
+        }
+
         public override bool Begin(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action, EntityRef target)
         {
             // SkillTargetPosition is already the landing spot (established by OnAnticipating),
@@ -74,6 +129,9 @@ namespace Quantum
             // damage every player caught in the blast radius, not just the original target.
             filter.Transform3D->Position = filter.Enemy->SkillTargetPosition;
 
+            // Resolved once per landing, not per candidate - see MaxHeightDifference.
+            FP landingGroundY = MaxHeightDifference > FP._0 ? EnemyMovementUtility.ResolveGroundY(f, filter.Enemy->SkillTargetPosition) : default;
+
             Span<EntityRef> hits = stackalloc EntityRef[PlayerQueryUtility.MaxPlayerLayerCandidates];
             int hitsCount = EnemyMovementUtility.FindPlayersInRadius(f, filter.Enemy->SkillTargetPosition, action.DamageRange, hits);
             for (int i = 0; i < hitsCount; i++)
@@ -82,6 +140,10 @@ namespace Quantum
 
                 if (f.Unsafe.TryGetPointer<Transform3D>(hitEntity, out var hitTransform) == false)
                     continue;
+
+                if (MaxHeightDifference > FP._0 &&
+                    FPMath.Abs(EnemyMovementUtility.ResolveGroundY(f, hitTransform->Position) - landingGroundY) > MaxHeightDifference)
+                    continue; // standing on a different floor than the one the slam hits
 
                 // Radially outward from the landing spot, not toward wherever each player
                 // happens to be facing/moving - a blast pushes everyone away from its center.
