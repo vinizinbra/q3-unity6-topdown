@@ -548,6 +548,23 @@ NREs. **Not verified:** Deflection/Giant Slayer against real spawned enemies, an
 countdown visually (the hero-state data was checked, not the rendered widget). **No icons** for these 11 or
 the 3 from pass A (the atlas holds 28).
 
+## 2026-10-30 - three Run-scope mutations pulled from the pool (playtest)
+
+**Elite Territory**, **Escalation** and **Greed** were removed from `LevelUpConfig.RiftMutations` by
+hand (pool 42 -> 39). Classes and `.asset` files are untouched, so restoring is just re-adding the
+three ids - but **re-running `Generate Rift Mutation Assets` rebuilds the list and puts them back**.
+
+- **Elite Territory - broken against current content.** No Combat phase in W1/W2's SurvivalConfig has
+  an Elite-tier enemy in `AllowedGroups`/`AllowedEnemies`; Elites only arrive via
+  `GuaranteedEnemyData`, which the weighting never sees. The x2.5 did nothing, leaving a bare -30%
+  density (less XP/Coins/Shards) under a card that promised more Elites. Needs Elite entries in the
+  Director pools (or a hook on the guaranteed spawn) before it can come back.
+- **Escalation - works, plays badly.** Authored Combat phases are 10-50s segments, so the ramp is a
+  sawtooth resetting every segment and also inflates the 10s PreElite lulls to 1.75x. ~+37% average
+  density with no upside, and a mobile perf risk on the late segments.
+- **Greed - works, reward invisible in-run.** Shards only bank at run end, so mid-run it reads as +50%
+  enemy HP (Elites and Boss included) for nothing. Blood Tithe stays as the single shard-for-risk trade.
+
 ## Current status / known simplifications
 
 Every mutation in the roster above has a class and a `RiftMutationAssetGenerator` spec. **Nothing
