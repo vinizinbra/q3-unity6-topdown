@@ -6,9 +6,11 @@ description: |
   impacts and muzzle pops. Covers the radius-1 authoring contract (root scale = gameplay radius), Shuriken
   mesh particles with vertex-colour shapes, the project's mobile particle shaders, simple procedural meshes
   (ring, disc, wedge, dome, low-poly sphere, half cone / crown for slams), the juice layer recipe, mobile
-  budgets, code builders and gameplay-camera verification. Use whenever the user asks for a new or reworked
+  budgets, code builders (SlamBlastFxBuilder: per-hero slam vs blast styles, ToonSlam smoke swirl) and
+  gameplay-camera verification incl. old-vs-new comparison GIFs. Use whenever the user asks for a new or reworked
   particle / VFX / efeito / partícula / explosão / anel / cone / slam / shockwave / impact for a skill or
-  attack, or asks why an effect does not match its skill radius. Not VFX Graph: never use it here.
+  attack, asks for a GIF/recording of an effect, or asks why an effect does not match its skill radius.
+  Not VFX Graph: never use it here.
 ---
 
 # Mobile Juicy VFX
