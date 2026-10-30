@@ -123,6 +123,13 @@ namespace Quantum
         // now an optional extra top-up (authored 0 = off).
         public FP ShieldOnCastFraction = FP._1;
 
+        // While the channel is live, any unbroken Breakable (barrel/crate/breakable wall) whose center
+        // is within his KCC radius + this flat distance is smashed on contact - no Charge needed, no
+        // Health check (same instant BreakableUtility.TryBreak the focus-break path uses). Covers the
+        // barrel's own 0.5 half-extent plus a little slack, since the KCC stops him at its surface.
+        // 0 disables it.
+        public FP BreakableContactPadding = FP._0_75;
+
         // {0} = Duration, {1} = DamageReductionBonus as a percent - e.g. "Channel for {0} seconds,
         // reducing damage taken by {1}% and gaining Charge as you move - once fully Charged, touching
         // an enemy unleashes a knockback discharge that launches them into the air."
@@ -157,6 +164,8 @@ namespace Quantum
         public override bool Tick(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot)
         {
             slot->StateTimer -= f.DeltaTime;
+
+            BreakTouchedBreakables(f, filter.Entity, filter.Transform3D->Position);
 
             if (f.Unsafe.TryGetPointer<JuggernautCharge>(filter.Entity, out var charge) == true)
             {
@@ -200,6 +209,36 @@ namespace Quantum
         private static bool HoldsUntilDischarge(Frame f, EntityRef entity)
         {
             return f.Unsafe.TryGetPointer<MomentumUpgrade>(entity, out var momentum) == true && momentum->HoldUntilDischarge == true;
+        }
+
+        // Rams straight through props - see BreakableContactPadding. Filters Breakables by flat
+        // distance (like AimSystem.FindClosestBreakable) rather than a physics overlap: barrels sit
+        // on the Default layer alongside level geometry, so there's no cheap layer mask for them.
+        private void BreakTouchedBreakables(Frame f, EntityRef owner, FPVector3 center)
+        {
+            if (BreakableContactPadding <= FP._0)
+                return;
+
+            if (f.Unsafe.TryGetPointer<KCC>(owner, out var kcc) == false)
+                return;
+
+            FP range = f.FindAsset(kcc->Settings).Radius + BreakableContactPadding;
+            FP rangeSqr = range * range;
+
+            var breakables = f.Filter<Breakable, Transform3D>();
+
+            while (breakables.Next(out EntityRef entity, out Breakable breakable, out Transform3D transform))
+            {
+                if (breakable.Broken == true)
+                    continue;
+
+                FPVector3 delta = transform.Position - center;
+
+                if (delta.X * delta.X + delta.Z * delta.Z > rangeSqr)
+                    continue;
+
+                BreakableUtility.TryBreak(f, entity, owner);
+            }
         }
 
         public override void End(Frame f, ref SkillSystem.Filter filter, SkillSlot* slot)

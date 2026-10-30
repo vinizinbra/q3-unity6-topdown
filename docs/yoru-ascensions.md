@@ -86,6 +86,10 @@ the percentage basis every Ascension scales off" idiom already used by `Juggerna
 - R2: 200% Skill Damage, +25% blast radius.
 - R3 "Event Collapse": 250% Skill Damage, +50% radius total, plus one strong `ApplyPull` sweep
   immediately before detonating (`PreExplosionPullForce`).
+- VFX: Vortex Collapse and Compression's Implosion both use `Prefabs/Effects/Yoru/YoruVortexBlastFx` (the purple
+  Blast style of Brute's Aftershock builder: hot core + round shell + ring + airborne debris + ToonSlam's DriftSmoke
+  swirl, no slam wall; radius 1 = blast radius), built by `Tools ▸ RiftRaiders ▸ VFX ▸ Slam
+  Blast` (`SlamBlastFxBuilder`) - edit the builder, not the assets.
 
 **4. Void Shards** (`VoidShardsSkillAction`, repurposes `VortexHomingProjectileSkillAction`)
 - R1: fires 1 homing Void Shard every 1.0s for 30% Skill Damage, stops on the first enemy hit (revives

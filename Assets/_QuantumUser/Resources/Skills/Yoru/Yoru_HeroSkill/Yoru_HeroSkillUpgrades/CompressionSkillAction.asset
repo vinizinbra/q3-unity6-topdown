@@ -19,16 +19,23 @@ MonoBehaviour:
   Icon: {fileID: -5268158091054341551, guid: d148792d49a0a4f3a909cb27dbf12538, type: 3}
   DisplayName: Compression
   RankDescriptions:
-  - "Vortex deals <color=#FD3971>20%</color> Skill Damage to trapped enemies every <color=#FD3971>0.5s</color>."
-  - "Vortex deals <color=#FD3971>20%</color> Skill Damage to trapped enemies every <color=#FD3971>0.5s</color>, <color=#FD3971>+8%</color> for each extra enemy trapped (up to <color=#FD3971>8</color>)."
-  - "Vortex deals <color=#FD3971>20%</color> Skill Damage to trapped enemies every <color=#FD3971>0.5s</color>, <color=#FD3971>+8%</color> per extra enemy trapped. Every third pulse explodes at the center for <color=#FD3971>75%</color> Skill Damage."
+  - Vortex deals <color=#FD3971>20%</color> Skill Damage to trapped enemies every
+    <color=#FD3971>0.5s</color>.
+  - Vortex deals <color=#FD3971>20%</color> Skill Damage to trapped enemies every
+    <color=#FD3971>0.5s</color>, <color=#FD3971>+8%</color> for each extra enemy
+    trapped (up to <color=#FD3971>8</color>).
+  - Vortex deals <color=#FD3971>20%</color> Skill Damage to trapped enemies every
+    <color=#FD3971>0.5s</color>, <color=#FD3971>+8%</color> per extra enemy trapped.
+    Every third pulse explodes at the center for <color=#FD3971>75%</color> Skill
+    Damage.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: "Vortex damages trapped enemies, scaling up with how many are caught at once."
+  Description: Vortex damages trapped enemies, scaling up with how many are caught
+    at once.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -72,4 +79,4 @@ MonoBehaviour:
   ImplosionEveryNthPulse: 000003
   ImplosionRadiusFraction:
     RawValue: 32768
-  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 3c8a89bd438a4415c853189dd54add06, type: 3}
+  BlastEffectPrefab: {fileID: 220491040728416979, guid: 5b9304da927e648a0ada5b80af8f5456, type: 3}

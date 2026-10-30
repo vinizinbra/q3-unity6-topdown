@@ -81,6 +81,13 @@ deflected shot never reaches `DamageUtility` (no Accessory/Free Hit Guard/Shield
 `Destroy` path runs), plus a dedicated `JuggernautDeflect.prefab` (duplicate of `GenericProjectileDestroy`) played at the contact point via `deflectEffect` on `JuggernautDeflectSoundView`. Sound: `JuggernautProjectileDeflected` → `JuggernautDeflectSoundView` on the shared
 `CharFeedbacks.prefab` (`deflectSound` SoundData, played at the contact point). No haptics by design. Hitscan enemy attacks (if any) are not covered.
 
+Baseline prop smashing (2026-10-30): while Juggernaut is active, every tick
+`JuggernautSkillData.BreakTouchedBreakables` instantly breaks any unbroken `Breakable` (barrel/crate/
+breakable wall) whose center is within KCC radius + `BreakableContactPadding` (0.75; 0 = off) on the
+XZ plane - no Charge needed, no Health check, straight `BreakableUtility.TryBreak` (loot + break VFX +
+`OnDestructibleBroken` attributed to Brutus, same as the focus-break path). Uses a component filter +
+flat distance, not a physics overlap, because barrels sit on the Default layer with level geometry.
+
 > **Superseded in detail, unchanged in shape.** This was originally an **Overshield** (above-Max, 1.5x
 > cap) because player Shield refilled itself for free and a grant needed something to make it feel
 > meaningful. As of 2026-08-25 Shield is charge-only and Overshield is deleted outright — which makes
@@ -148,6 +155,9 @@ Building Pressure)
 - Rank 2: each enemy struck by Discharge during the cast adds +15% damage (max 6 stacks); +20% radius.
 - Rank 3: +20% per stack (max 8 stacks); if ≥5 stacks were built, also Stuns everyone caught.
 - See `JuggernautSkillData.TryEndExplosion`.
+- VFX: `BlastEffectPrefab` = `Prefabs/Effects/Brute/BruteAftershockFx` (blue energy dome + Groundbreaker-style
+  toon crown wall + ring/echo ring + ToonSlam's DriftSmoke swirl, radius 1 = blast radius; also replayed by the Earthquake `DelayedBlast`).
+  Built by `Tools ▸ RiftRaiders ▸ VFX ▸ Slam Blast` (`SlamBlastFxBuilder`) - edit the builder, not the assets.
 
 **4. Concussive Impact** (`ConcussiveImpactSkillAction` → `ConcussiveImpactUpgrade`, absorbs
 Heavy Impact + old Concussive Impact + Lasting Impact + Overwhelming Force + Crushing Blow)

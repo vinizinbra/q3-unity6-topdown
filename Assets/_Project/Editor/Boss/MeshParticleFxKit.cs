@@ -131,6 +131,120 @@ namespace RiftRaiders.Editor
             return BuildMesh(name, vertices, colors, indices);
         }
 
+        // Full 360 deg annulus on XZ, outer edge at 1: `across` is the alpha profile from `innerRadius` to 1 (one row each).
+        // Ground ring, shockwave front, telegraph edge.
+        public static Mesh Ring(string name, float innerRadius, float[] across, int segments = 48)
+        {
+            int rows = across.Length;
+            var vertices = new List<Vector3>();
+            var colors = new List<Color>();
+            var indices = new List<int>();
+
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = i / (float)segments * Mathf.PI * 2f;
+                for (int j = 0; j < rows; j++)
+                {
+                    float r = Mathf.Lerp(innerRadius, 1f, j / (float)(rows - 1));
+                    vertices.Add(new Vector3(Mathf.Sin(angle) * r, 0f, Mathf.Cos(angle) * r));
+                    colors.Add(new Color(1f, 1f, 1f, across[j]));
+                    if (i < segments && j < rows - 1)
+                        Quad(indices, i * rows + j, rows);
+                }
+            }
+
+            return BuildMesh(name, vertices, colors, indices);
+        }
+
+        // Filled circle of radius 1 on XZ: `centreAlpha` in the middle to 1 at `fadeStart`, then a soft rim to 0 at the edge.
+        // Ground flash, scorch, dust puff, area tint.
+        public static Mesh Disc(string name, float centreAlpha, float fadeStart, int segments = 32)
+        {
+            const int rings = 6;
+            var vertices = new List<Vector3>();
+            var colors = new List<Color>();
+            var indices = new List<int>();
+
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = i / (float)segments * Mathf.PI * 2f;
+                for (int r = 0; r <= rings; r++)
+                {
+                    float radius = r / (float)rings;
+                    float rim = Mathf.Clamp01((radius - fadeStart) / (1f - fadeStart));
+                    float alpha = Mathf.Lerp(centreAlpha, 1f, Mathf.Clamp01(radius / Mathf.Max(fadeStart, .0001f))) * (1f - rim * rim * (3f - 2f * rim));
+                    vertices.Add(new Vector3(Mathf.Sin(angle) * radius, 0f, Mathf.Cos(angle) * radius));
+                    colors.Add(new Color(1f, 1f, 1f, alpha));
+                    if (i < segments && r < rings)
+                        Quad(indices, i * (rings + 1) + r, rings + 1);
+                }
+            }
+
+            return BuildMesh(name, vertices, colors, indices);
+        }
+
+        // Low-poly hemisphere, radius 1 at the floor and `height` tall: alpha `rimAlpha` at the horizon to `topAlpha` at the
+        // top, so a top-down camera reads it as a shell (cheap vertex Fresnel) instead of a filled blob. Explosion bodies.
+        public static Mesh Dome(string name, float height, float rimAlpha, float topAlpha, int segments = 32, int rings = 5)
+        {
+            var vertices = new List<Vector3>();
+            var colors = new List<Color>();
+            var indices = new List<int>();
+
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = i / (float)segments * Mathf.PI * 2f;
+                for (int r = 0; r <= rings; r++)
+                {
+                    float latitude = r / (float)rings * Mathf.PI * .5f;
+                    float radius = Mathf.Cos(latitude);
+                    vertices.Add(new Vector3(Mathf.Sin(angle) * radius, Mathf.Sin(latitude) * height, Mathf.Cos(angle) * radius));
+                    colors.Add(new Color(1f, 1f, 1f, Mathf.Lerp(rimAlpha, topAlpha, r / (float)rings)));
+                    if (i < segments && r < rings)
+                        Quad(indices, i * (rings + 1) + r, rings + 1);
+                }
+            }
+
+            return BuildMesh(name, vertices, colors, indices);
+        }
+
+        // Open truncated cone (the rising wall of a slam / shockwave): `bottomRadius` at the floor flaring to radius 1 at
+        // `height`, `wall` the alpha profile from bottom to top (one row each). Scaled up over life it reads as a travelling
+        // wave from the top-down camera.
+        public static Mesh Crown(string name, float height, float bottomRadius, float[] wall, int segments = 32)
+        {
+            int rows = wall.Length;
+            var vertices = new List<Vector3>();
+            var colors = new List<Color>();
+            var indices = new List<int>();
+
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = i / (float)segments * Mathf.PI * 2f;
+                for (int j = 0; j < rows; j++)
+                {
+                    float t = j / (float)(rows - 1);
+                    float r = Mathf.Lerp(bottomRadius, 1f, t);
+                    vertices.Add(new Vector3(Mathf.Sin(angle) * r, t * height, Mathf.Cos(angle) * r));
+                    colors.Add(new Color(1f, 1f, 1f, wall[j]));
+                    if (i < segments && j < rows - 1)
+                        Quad(indices, i * rows + j, rows);
+                }
+            }
+
+            return BuildMesh(name, vertices, colors, indices);
+        }
+
+        // Small flat diamond, long axis on +Z (length 1, width `width`), solid core feathering to the tips. Debris, sparks.
+        public static Mesh Shard(string name, float width = .35f, float tipAlpha = .15f)
+        {
+            var tip = new Color(1f, 1f, 1f, tipAlpha);
+            return BuildMesh(name,
+                new List<Vector3> { Vector3.zero, new Vector3(-width * .5f, 0f, 0f), new Vector3(0f, 0f, .5f), new Vector3(width * .5f, 0f, 0f), new Vector3(0f, 0f, -.5f) },
+                new List<Color> { Color.white, tip, tip, tip, tip },
+                new List<int> { 0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 1, 4 });
+        }
+
         public static void ApplyMeshRenderer(ParticleSystem ps, Mesh mesh, Material material)
         {
             ParticleSystemRenderer renderer = ps.GetComponent<ParticleSystemRenderer>();
@@ -243,6 +357,127 @@ namespace RiftRaiders.Editor
                     UnityEngine.Object.DestroyImmediate(floorMaterial);
                 if (lineMaterial != null)
                     UnityEngine.Object.DestroyImmediate(lineMaterial);
+                EditorSceneManager.ClosePreviewScene(scene);
+            }
+        }
+
+        // Circle sibling of RenderConePreview for ground rings / explosions / slams: the prefab is played the way
+        // EffectsManager does it (root scale = Vector3.one * radius), the radius circle outlined in orange, a hero-sized
+        // capsule at the centre for scale, and one PNG per entry of `times` (ascending) at outputPath(index, time). Pack
+        // prefabs with auto random seeds get a fixed seed on the preview instance so frame sequences (GIFs) don't flicker.
+        public static void RenderCirclePreview(string prefabPath, float radius, Color floorColor, float[] times,
+            Func<int, float, string> outputPath, bool meterGrid = false, float mustBeDeadAt = -1f, int width = 1280, int height = 960)
+        {
+            Scene scene = EditorSceneManager.NewPreviewScene();
+            bool fog = RenderSettings.fog;
+            RenderTexture rt = null;
+            Material floorMaterial = null, lineMaterial = null, heroMaterial = null;
+
+            try
+            {
+                RenderSettings.fog = false;
+                GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                SceneManager.MoveGameObjectToScene(floor, scene);
+                floor.transform.localScale = Vector3.one * 12f;
+                floorMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = floorColor };
+                floor.GetComponent<Renderer>().sharedMaterial = floorMaterial;
+
+                GameObject hero = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                SceneManager.MoveGameObjectToScene(hero, scene);
+                hero.transform.SetPositionAndRotation(new Vector3(0f, .9f, 0f), Quaternion.identity);
+                hero.transform.localScale = new Vector3(.8f, .9f, .8f);
+                heroMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { color = new Color(.16f, .18f, .24f) };
+                hero.GetComponent<Renderer>().sharedMaterial = heroMaterial;
+
+                var cameraObject = new GameObject("Gameplay Camera");
+                SceneManager.MoveGameObjectToScene(cameraObject, scene);
+                Camera camera = cameraObject.AddComponent<Camera>();
+                camera.transform.SetPositionAndRotation(new Vector3(0f, 36f, -36f), Quaternion.Euler(45f, 0f, 0f));
+                camera.fieldOfView = 14f;
+                camera.nearClipPlane = 0.1f;
+                camera.farClipPlane = 120f;
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = floorColor;
+                camera.scene = scene;
+                camera.GetUniversalAdditionalCameraData().renderPostProcessing = false;
+                camera.allowHDR = false;
+                camera.allowMSAA = true;
+
+                lineMaterial = new Material(Shader.Find(AlphaBlendedShader)) { mainTexture = Texture2D.whiteTexture };
+                var outline = new Vector3[97];
+                for (int i = 0; i < outline.Length; i++)
+                {
+                    float a = i / 96f * Mathf.PI * 2f;
+                    outline[i] = new Vector3(Mathf.Sin(a) * radius, 0.012f, Mathf.Cos(a) * radius);
+                }
+                Line(scene, outline, lineMaterial, new Color(1f, 0.67f, 0.22f, 0.7f), 0.025f);
+
+                if (meterGrid == true)
+                {
+                    var gridColor = new Color(0.6f, 0.65f, 0.75f, 0.15f);
+                    for (int i = -8; i <= 8; i++)
+                    {
+                        Line(scene, new[] { new Vector3(i, 0.005f, -8f), new Vector3(i, 0.005f, 8f) }, lineMaterial, gridColor, 0.008f);
+                        Line(scene, new[] { new Vector3(-8f, 0.005f, i), new Vector3(8f, 0.005f, i) }, lineMaterial, gridColor, 0.008f);
+                    }
+                }
+
+                var fx = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath), scene);
+                fx.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                fx.transform.localScale = Vector3.one * radius;
+                foreach (ParticleSystem system in fx.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    if (system.useAutoRandomSeed == true)
+                    {
+                        system.useAutoRandomSeed = false;
+                        system.randomSeed = 4242;
+                    }
+                }
+                ParticleSystem ps = fx.GetComponent<ParticleSystem>();
+                rt = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+                rt.Create();
+                camera.targetTexture = rt;
+
+                for (int frame = 0; frame < times.Length; frame++)
+                {
+                    ps.Simulate(times[frame], true, true, false);
+                    ps.Pause(true);
+                    camera.Render();
+                    RenderTexture previous = RenderTexture.active;
+                    RenderTexture.active = rt;
+                    var png = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
+                    png.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+                    png.Apply();
+                    RenderTexture.active = previous;
+                    string path = outputPath(frame, times[frame]);
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                    File.WriteAllBytes(path, png.EncodeToPNG());
+                    UnityEngine.Object.DestroyImmediate(png);
+                }
+
+                if (mustBeDeadAt >= 0f)
+                {
+                    ps.Simulate(mustBeDeadAt, true, true, false);
+                    ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                    if (ps.IsAlive(true))
+                        throw new Exception($"{Path.GetFileNameWithoutExtension(prefabPath)} still has live particles at {mustBeDeadAt}s");
+                }
+            }
+            finally
+            {
+                RenderSettings.fog = fog;
+                if (rt != null)
+                {
+                    rt.Release();
+                    UnityEngine.Object.DestroyImmediate(rt);
+                }
+                if (floorMaterial != null)
+                    UnityEngine.Object.DestroyImmediate(floorMaterial);
+                if (lineMaterial != null)
+                    UnityEngine.Object.DestroyImmediate(lineMaterial);
+                if (heroMaterial != null)
+                    UnityEngine.Object.DestroyImmediate(heroMaterial);
                 EditorSceneManager.ClosePreviewScene(scene);
             }
         }

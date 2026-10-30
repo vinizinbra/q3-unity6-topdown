@@ -19,16 +19,23 @@ MonoBehaviour:
   Icon: {fileID: 758881055656447065, guid: 07442008a909a4b8c844b43a87d69372, type: 3}
   DisplayName: Aftershock
   RankDescriptions:
-  - "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger, up to <color=#FD3971>5</color> enemies."
-  - "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger and <color=#FD3971>+5%</color> larger, up to <color=#FD3971>5</color> enemies."
-  - "Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color> stronger and <color=#FD3971>+5%</color> larger, up to <color=#FD3971>5</color>. At <color=#FD3971>5</color> enemies, it repeats <color=#FD3971>0.5s</color> later for <color=#FD3971>60%</color> Damage."
+  - Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color>
+    stronger, up to <color=#FD3971>5</color> enemies.
+  - Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color>
+    stronger and <color=#FD3971>+5%</color> larger, up to <color=#FD3971>5</color>
+    enemies.
+  - Each enemy hit by Discharge makes Juggernaut's closing shockwave <color=#FD3971>+15%</color>
+    stronger and <color=#FD3971>+5%</color> larger, up to <color=#FD3971>5</color>.
+    At <color=#FD3971>5</color> enemies, it repeats <color=#FD3971>0.5s</color> later
+    for <color=#FD3971>60%</color> Damage.
   <MaxRank>k__BackingField: 3
   Priority: 0
   Phase: 1
   Interval:
     RawValue: 0
   Activated: 0
-  Description: "Juggernaut's closing shockwave grows with every enemy you strike during the channel."
+  Description: Juggernaut's closing shockwave grows with every enemy you strike during
+    the channel.
   BeginFx:
     ParticlePrefab: {fileID: 0}
     SpawnMode: 0
@@ -69,4 +76,4 @@ MonoBehaviour:
     RawValue: 65536
   EarthquakeDelay:
     RawValue: 32768
-  BlastEffectPrefab: {fileID: 6350743763286976369, guid: 28678772255de4e4e97b8aa30915b587, type: 3}
+  BlastEffectPrefab: {fileID: 109151586330149923, guid: 983442658caf54a37b769b046c6591ec, type: 3}
