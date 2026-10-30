@@ -47,7 +47,14 @@ namespace Quantum
         [SerializeField, Tooltip("How long the spin takes to ease down to 0 once the pop arc lands. It always finishes by continuing FORWARD to 0 rather than winding back, so it never visibly reverses. 0 snaps to 0 the instant it lands.")]
         private float landingSettleDuration = 0.25f;
 
+        [Header("Loot beam")]
+        [SerializeField, Tooltip("Looping loot beam (AccessoryBeamFx - built and assigned by Tools > RiftRaiders > VFX > Accessory Beam > Build) switched on once a RECOVERABLE accessory has landed, so it stands out from the XP/coin drops around it. Every ParticleSystem under it is tinted to the owner's CharacterData.RingColor, the same colour as their foot ring. Never shown on broken debris. Left unassigned the feature is off.")]
+        private GameObject landedBeam;
+
         private bool _resolved;
+        private bool _beamAllowed;
+        private ParticleSystem[] _beamSystems;
+        private Color[] _beamAuthoredColors;
 
         // The prototype's own authored sprite scale, captured before anything multiplies it - so a
         // per-hero CollectibleScale always composes with the prefab rather than compounding off a
@@ -83,6 +90,10 @@ namespace Quantum
             _resolved = false;
             _wasAirborne = false;
             _settling = false;
+            _beamAllowed = false;
+
+            if (landedBeam != null)
+                landedBeam.SetActive(false);
 
             if (spriteRenderer == null)
                 spriteRenderer = GetComponentInChildren<SpriteRenderer>(includeInactive: true);
@@ -126,6 +137,42 @@ namespace Quantum
                 TryResolveSprite(game);
 
             UpdateSpin(game);
+            UpdateBeam(game);
+        }
+
+        // On only once the arc has landed (PopVelocity gone - the same signal that makes it collectible),
+        // so the column never smears through the air.
+        private void UpdateBeam(QuantumGame game)
+        {
+            if (landedBeam == null)
+                return;
+
+            Frame frame = game?.Frames.Predicted;
+            bool shown = _beamAllowed && frame != null && frame.Has<PopVelocity>(_entityRef) == false;
+
+            if (landedBeam.activeSelf != shown)
+                landedBeam.SetActive(shown);
+        }
+
+        // Authored white (see AccessoryBeamFxBuilder) - the ring colour is multiplied in here, keeping
+        // each layer's own authored alpha. Captured once so a pooled view re-tints from the original.
+        private void TintBeam(Color ringColor)
+        {
+            if (_beamSystems == null)
+            {
+                _beamSystems = landedBeam.GetComponentsInChildren<ParticleSystem>(true);
+                _beamAuthoredColors = new Color[_beamSystems.Length];
+
+                for (int i = 0; i < _beamSystems.Length; i++)
+                    _beamAuthoredColors[i] = _beamSystems[i].main.startColor.color;
+            }
+
+            for (int i = 0; i < _beamSystems.Length; i++)
+            {
+                Color authored = _beamAuthoredColors[i];
+                var main = _beamSystems[i].main;
+                main.startColor = new Color(authored.r * ringColor.r, authored.g * ringColor.g, authored.b * ringColor.b, authored.a);
+            }
         }
 
         // PopVelocity is present for exactly as long as the accessory is genuinely in the air -
@@ -267,6 +314,12 @@ namespace Quantum
 
             CharacterData data = frame.FindAsset(stats->CharacterData);
             _resolved = true;
+
+            // Broken debris is never collectible, so it never gets a beam.
+            _beamAllowed = landedBeam != null && dropped->Broken == false;
+
+            if (_beamAllowed && data != null)
+                TintBeam(data.RingColor);
 
             if (data == null || data.Accessory.CollectibleSprite == null)
             {

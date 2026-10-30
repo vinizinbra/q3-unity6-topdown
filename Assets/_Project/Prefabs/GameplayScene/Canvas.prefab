@@ -18644,6 +18644,7 @@ MonoBehaviour:
   healthFill: {fileID: 0}
   lowHealthThreshold: 0.3
   lowHealthColor: {r: 1, g: 0.23, b: 0.23, a: 1}
+  minVisibleFraction: 0.12
 --- !u!1 &680041118512789097
 GameObject:
   m_ObjectHideFlags: 0
@@ -30202,7 +30203,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -4, y: -4}
+  m_SizeDelta: {x: 0, y: -4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2788596000835129686
 CanvasRenderer:
@@ -30385,6 +30386,12 @@ MonoBehaviour:
   button: {fileID: 731386566827856362}
   buttonLabelText: {fileID: 3771151404748126199}
   defaultButtonLabel: CHOOSE
+  keepCurrentOverlay: {fileID: 0}
+  keepCurrentOverlayLabel: KEEP CURRENT
+  keepCurrentOverlayColor: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  keepCurrentOverlayDim: 0.6
+  keepCurrentOverlayPopScale: 1.25
+  keepCurrentOverlayPopDuration: 0.25
 --- !u!114 &4339158670046794633
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33792,6 +33799,12 @@ MonoBehaviour:
   button: {fileID: 9116383915330863941}
   buttonLabelText: {fileID: 0}
   defaultButtonLabel: CHOOSE
+  keepCurrentOverlay: {fileID: 0}
+  keepCurrentOverlayLabel: KEEP CURRENT
+  keepCurrentOverlayColor: {r: 0.992, g: 0.224, b: 0.443, a: 1}
+  keepCurrentOverlayDim: 0.6
+  keepCurrentOverlayPopScale: 1.25
+  keepCurrentOverlayPopDuration: 0.25
 --- !u!114 &7758456355390234816
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -82703,6 +82716,7 @@ MonoBehaviour:
   healthFill: {fileID: 0}
   lowHealthThreshold: 0.3
   lowHealthColor: {r: 1, g: 0.23, b: 0.23, a: 1}
+  minVisibleFraction: 0.12
 --- !u!1 &5239370833377556734
 GameObject:
   m_ObjectHideFlags: 0
@@ -84524,6 +84538,7 @@ MonoBehaviour:
   weaponCardCount: 3
   currentWeaponCard: {fileID: 7182160187477634016}
   currentWeaponCardGap: 40
+  keepCurrentButtonLabel: KEEP CURRENT
   countdownText: {fileID: 5623871605865795705}
   currencyBalance: {fileID: 4600230267600468410}
   nextSurvivalRoot: {fileID: 6889648161317419325}
@@ -85530,7 +85545,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.25}
   m_AnchorMax: {x: 1, y: 0.75}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -4, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &5591435116644693110
 GameObject:
@@ -104730,6 +104745,7 @@ MonoBehaviour:
   healthFill: {fileID: 0}
   lowHealthThreshold: 0.3
   lowHealthColor: {r: 1, g: 0.23, b: 0.23, a: 1}
+  minVisibleFraction: 0.12
 --- !u!1 &7279231264760915296
 GameObject:
   m_ObjectHideFlags: 0
@@ -125190,6 +125206,7 @@ MonoBehaviour:
   healthFill: {fileID: 0}
   lowHealthThreshold: 0.3
   lowHealthColor: {r: 1, g: 0.23, b: 0.23, a: 1}
+  minVisibleFraction: 0.12
 --- !u!1 &8815806966068132321
 GameObject:
   m_ObjectHideFlags: 0
@@ -142148,6 +142165,18 @@ PrefabInstance:
     - target: {fileID: 922733737910776644, guid: 2e43ed01439c94f63819e07fa3e2027b, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1215573177467500469, guid: 2e43ed01439c94f63819e07fa3e2027b, type: 3}
+      propertyPath: accessoryMissingSizePx
+      value: 56
+      objectReference: {fileID: 0}
+    - target: {fileID: 1215573177467500469, guid: 2e43ed01439c94f63819e07fa3e2027b, type: 3}
+      propertyPath: accessoryMissingPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1215573177467500469, guid: 2e43ed01439c94f63819e07fa3e2027b, type: 3}
+      propertyPath: accessoryMissingPosition.y
+      value: -88
       objectReference: {fileID: 0}
     - target: {fileID: 1649961602886818121, guid: 2e43ed01439c94f63819e07fa3e2027b, type: 3}
       propertyPath: m_RaycastTarget

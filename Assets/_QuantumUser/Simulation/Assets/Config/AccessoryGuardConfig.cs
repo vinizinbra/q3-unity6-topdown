@@ -31,6 +31,9 @@ namespace Quantum
         [Tooltip("A hit dealing LESS than this passes straight through to Health and costs no durability - the guard only ever reacts to it. 0 (default) blocks every hit regardless of size, reproducing the original no-threshold behaviour. Exists so chip damage from Filler/Swarm enemies can't drain a durability point (worth real Coins to repair) for a hit that barely threatened the player's Health in the first place.")]
         public FP MinDamageToBlock = FP._0;
 
+        [Tooltip("Brief full-immunity window (seconds) opened by every block, so the rest of a multi-hit attack (shotgun pellets, overlapping areas, a second enemy swinging the same moment) can't land on Health right after the accessory took the hit. Reuses the post-revive grace Invulnerable window. 0 disables it.")]
+        public FP PostBlockInvulnerabilityDuration = FP._0_20;
+
         [Header("Drop / Pop")]
         [Tooltip("Ring around the owner that candidate landing spots are sampled from at the moment of the block.")]
         public FP MinDropOffset = FP._1;

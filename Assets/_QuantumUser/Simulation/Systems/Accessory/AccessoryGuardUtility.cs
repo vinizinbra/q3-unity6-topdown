@@ -74,13 +74,17 @@ namespace Quantum
             // to Health untouched (see AccessoryGuardConfig.MinDamageToBlock) - a Filler/Swarm enemy
             // tapping for 1 no longer costs the same Coin-priced durability point a Heavy's real hit
             // does. 0 (default) reproduces the original "block everything" behaviour exactly.
-            if (TryGetConfig(f, out AccessoryGuardConfig config) == true && config.MinDamageToBlock > FP._0
-                && damage < config.MinDamageToBlock)
-            {
+            bool hasConfig = TryGetConfig(f, out AccessoryGuardConfig config);
+            if (hasConfig == true && config.MinDamageToBlock > FP._0 && damage < config.MinDamageToBlock)
                 return false;
-            }
 
             guard->CurrentDurability--;
+
+            // Every path below is a successful block. Open a short i-frame window so the rest of the
+            // same attack (later pellets this tick, an overlapping area's next tick) is dropped by
+            // DamageUtility's Invulnerable check instead of landing on Health right after the block.
+            PlayerLifeStateUtility.GrantGraceInvulnerability(f, target,
+                hasConfig == true ? config.PostBlockInvulnerabilityDuration : FP._0_20);
 
             FPVector3 position = f.Unsafe.TryGetPointer<Transform3D>(target, out var transform)
                 ? transform->Position

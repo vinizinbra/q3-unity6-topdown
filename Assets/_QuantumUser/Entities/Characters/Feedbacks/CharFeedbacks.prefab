@@ -658,6 +658,19 @@ MonoBehaviour:
   glowPulseMaxAlpha: 1
   glowPulseDuration: 1.5
   glowPulseEase: 4
+  skillFillHueShift: 0.07
+  skillFillColor: {r: 0, g: 0, b: 0, a: 0}
+  skillFillGap: 0.04
+  skillFillWidth: 0.12
+  skillFillSegments: 96
+  skillShineSpeed: 0.9
+  skillShineWidth: 0.16
+  skillShineStrength: 0.9
+  skillFillTrackAlpha: 0.18
+  skillBlendDuration: 0.15
+  skillGlowScaleBoost: 0
+  skillPopStrength: 0.3
+  skillUrgentBlinkRate: 4
   moveArrowSprite: {fileID: 3650728448649125351}
   moveSpeedThreshold: 0.1
   moveTurnSpeed: 720
@@ -684,7 +697,7 @@ MonoBehaviour:
   accessoryIconOffsetDistance: 0.9
   accessoryArrowRotationOffset: -90
   accessoryShowWhileAirborne: 1
-  accessoryHideWithinDistance: 6
+  accessoryHideWithinDistance: 1.5
 --- !u!114 &4899901628646550216
 MonoBehaviour:
   m_ObjectHideFlags: 0

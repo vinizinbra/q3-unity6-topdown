@@ -16,6 +16,8 @@ public class HealthUiWidget : QuantumGlobalMonoBehaviour
     private Graphic healthFill;
     [SerializeField, Range(0f, 1f)] private float lowHealthThreshold = 0.3f;
     [SerializeField] private Color lowHealthColor = new Color(1f, 0.23f, 0.23f);
+    [SerializeField, Range(0f, 0.2f), Tooltip("While alive (health above zero) the bar never shows less than this fraction, so a nearly-dead player still has a visible red sliver instead of an empty-looking bar.")]
+    private float minVisibleFraction = 0.12f;
 
     [SerializeField] private EntityRef _entityRef;
 
@@ -50,7 +52,7 @@ public class HealthUiWidget : QuantumGlobalMonoBehaviour
         float ratio = (health.CurrentHealth / health.MaxHealth).AsFloat;
 
         if (healthSlider != null)
-            healthSlider.value = ratio;
+            healthSlider.value = ratio > 0f ? Mathf.Max(ratio, minVisibleFraction) : 0f;
 
         if (healthFill != null)
             healthFill.color = ratio <= lowHealthThreshold ? lowHealthColor : _normalFillColor;

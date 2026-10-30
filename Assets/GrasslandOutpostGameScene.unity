@@ -29715,8 +29715,8 @@ MonoBehaviour:
   LocalPlayers:
   - PlayerAvatar:
       Id:
-        Value: 1427283638148129588
-    PlayerNickname: Max
+        Value: 1472908484413352043
+    PlayerNickname: Yoru
     test:
       RawValue: 0
     IsBot: 0
@@ -31308,8 +31308,19 @@ MonoBehaviour:
   BakeAllMode: 112
   NavMeshSerializeType: 0
   StaticCollider2DReferences: []
-  StaticCollider3DReferences: []
-  MapEntityReferences: []
+  StaticCollider3DReferences:
+  - {fileID: 754104111}
+  - {fileID: 608019832}
+  - {fileID: 867538337}
+  - {fileID: 526727408}
+  - {fileID: 563218278}
+  - {fileID: 105302112}
+  MapEntityReferences:
+  - {fileID: 0}
+  - {fileID: 2016337776}
+  - {fileID: 998685466}
+  - {fileID: 1184524972}
+  - {fileID: 1484224991}
   Asset: {fileID: 0}
 --- !u!4 &1878324444
 Transform:

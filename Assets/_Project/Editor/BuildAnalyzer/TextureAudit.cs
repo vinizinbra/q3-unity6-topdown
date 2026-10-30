@@ -294,6 +294,19 @@ namespace Project.EditorTools.BuildAnalyzer
             AtlasReport gameplay = a.Atlases.FirstOrDefault(r => r.IsGameplayAtlas);
             bool wantsUi = info.Context == UsageContext.UI
                            || (info.Context != UsageContext.Gameplay && SuggestUiAtlas(info.Path));
+            if (!wantsUi)
+            {
+                // World atlases: same folder routing as the Sprite Optimizer (world / biome folder → Common).
+                var settings = SpriteOptimizer.SpriteOptimizerSettings.LoadOrCreate();
+                var routed = SpriteOptimizer.GameplayAtlasRouter.TargetFor(settings, info.Path, out string reason);
+                string routedPath = routed != null ? AssetDatabase.GetAssetPath(routed) : null;
+                AtlasReport routedReport = a.Atlases.FirstOrDefault(r => r.Path == routedPath);
+                if (routedReport != null)
+                {
+                    gameplay = routedReport;
+                    if (settings.HasScopedGameplayAtlases) info.ContextSource += $"; {routedReport.Name}: {reason}";
+                }
+            }
             target = wantsUi ? ui : gameplay;
             other = wantsUi ? gameplay : ui;
 

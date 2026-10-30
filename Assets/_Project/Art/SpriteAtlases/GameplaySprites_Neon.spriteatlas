@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GameplaySprites_Neon
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 4
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 4096
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 100
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 7fb21fc13a36c41daa8cc851ebebf921: 9204657379041436843
+    - 7fb21fc13a36c41daa8cc851ebebf921: -4221905992210016143
+    - 7fb21fc13a36c41daa8cc851ebebf921: 3750007449169228385
+    - 7fb21fc13a36c41daa8cc851ebebf921: -6768532526376657765
+    - 7fb21fc13a36c41daa8cc851ebebf921: -227765270225904141
+    - 7fb21fc13a36c41daa8cc851ebebf921: -8764752540703657732
+    - 7fb21fc13a36c41daa8cc851ebebf921: 5668249372164566832
+    - 7fb21fc13a36c41daa8cc851ebebf921: -215777573492101105
+    - 7fb21fc13a36c41daa8cc851ebebf921: -3957174552645830631
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 9204657379041436843, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  - {fileID: -4221905992210016143, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  - {fileID: 3750007449169228385, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  - {fileID: -6768532526376657765, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  - {fileID: -227765270225904141, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  - {fileID: -8764752540703657732, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  - {fileID: 5668249372164566832, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  - {fileID: -215777573492101105, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  - {fileID: -3957174552645830631, guid: 7fb21fc13a36c41daa8cc851ebebf921, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - RiffRiot_Stagger
+  - RiffRiot_Roar
+  - RiffRiot_LeapAir
+  - RiffRiot_LeapRecover
+  - RiffRiot_LeapPrep
+  - RiffRiot_PowerChord
+  - RiffRiot_Idle
+  - RiffRiot_LeapImpact
+  - RiffRiot_Speaker
+  m_RenderDataMap: {}
+  m_Tag: GameplaySprites_Neon
+  m_IsVariant: 0

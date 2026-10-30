@@ -133,12 +133,16 @@ choosing an upgrade FOR). `RollOptionsFor` resolves this once per roll, then:
   `UpgradeCardWidget` (see "View / presentation" below). `RecordHistory` excludes it from
   `UpgradeHistory`, same as `WeaponPerk` (a whole re-equipped weapon is even more visible on its own
   than a single perk).
-- **"Keep Current" decline (2026-08-07) - a separate button, not a 4th/replacement card.**
-  `RollChooseWeaponOptionsFor` always rolls the full `slots` (up to 3) distinct real weapons -
-  identical to before this feature, nothing reserved. Declining is a dedicated
-  `UpgradeWindow.keepCurrentButton`, shown only on a Choose-Weapon screen
-  (`RefreshWeaponChoice`, hidden during `Refresh`), sending a new zero-payload
-  `KeepCurrentWeaponCommand` (mirrors `RerollLevelUpOptionsCommand`'s shape). `LevelUpSystem.
+- **"Keep Current" decline (2026-08-07; UI reworked 2026-10-30) - the current-weapon card, not a
+  rolled slot.** `RollChooseWeaponOptionsFor` always rolls the full `slots` (up to 3) distinct real
+  weapons - nothing reserved. Declining is picking `ChooseWindow.currentWeaponCard` (the comparison
+  card beside the offers): `RefreshWeaponChoice` lifts its `ReadOnly`, labels it "KEEP CURRENT",
+  adds it to the card nav row, and its click raises `ChooseWindow.onKeepCurrentClicked`. While it is
+  focused/hovered `WeaponCardWidget` shows a "KEEP CURRENT" overlay (`keepCurrentOverlay`, built at
+  runtime as dim + Rift Pink label when not authored), pinned once `LevelUpChoice.KeptCurrent` is
+  set. `secondaryButton` is now hidden on every Level-Up (it only does Cancel/Close on the POI
+  screens), so gamepad B no longer keeps the current weapon. Blacksmith still shows the same card
+  read-only. The click sends a zero-payload `KeepCurrentWeaponCommand` (mirrors `RerollLevelUpOptionsCommand`'s shape). `LevelUpSystem.
   ProcessKeepCurrentCommands` -> `LevelUpUtility.ConfirmKeepCurrent` sets a new `LevelUpChoice.
   KeptCurrent` flag (not on `LevelUpOption` - it isn't tied to any of the 3 rolled slots) alongside
   `Confirmed`. `Resolve` checks `KeptCurrent` before calling `GrantOption` at all, so keeping the
@@ -181,8 +185,8 @@ Flow, mirroring `SelectLevelUpUpgradeCommand`'s shape end to end:
    `Confirmed`/`SelectedIndex` and overwrites `Options` in place via `f.AddOrGet` finding the
    existing component - a reroll needs no separate "clear" step, and dispatches to
    `RollChooseWeaponOptionsFor` internally exactly like the original roll did, so it works
-   identically for a Choose-Weapon screen - all 3 slots redraw as real weapons. `keepCurrentButton`
-   itself is untouched by a reroll (it isn't one of the rolled `Options`, see "Keep Current" above)
+   identically for a Choose-Weapon screen - all 3 slots redraw as real weapons. The Keep Current
+   card is untouched by a reroll (it isn't one of the rolled `Options`, see "Keep Current" above)
    and stays available throughout.
 3. **Shared pool (2026-10-27):** the same charges also reroll Cursed Rift (`RerollCursedRiftCommand`),
    the Store's rolled stock (`RerollStoreCommand`) and the Gunsmith (after its free L4 reroll) - helpers

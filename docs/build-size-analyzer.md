@@ -122,6 +122,13 @@ Shared code: `AddTextureToAtlasContextMenu` (atlas paths + add), `SpriteOptimize
   is not reported on WebGL (it isn't a lever there).
 - WebGL only plays **AAC**: every tier targets AAC there (ShortSfx = DecompressOnLoad AAC), never ADPCM/Vorbis.
 
+## World atlases
+
+Gameplay atlas candidates go to the atlas `GameplayAtlasRouter` picks from the texture's folder (world / biome / Common,
+see `docs/sprite-atlas-optimizer.md` ▸ World atlases).
+`MultiArchive` counts distinct archives only: `sharedassetsN.assets` + `sharedassetsN.resource` is one copy (header +
+streamed payload). Before 2026-10-30 that pair was reported as a duplicate (~9.5 MB of false positives, all music).
+
 ## Known simplifications
 
 - Sizes are the serialized sizes from the report, not the compressed download (Brotli/LZ4). Rankings hold.

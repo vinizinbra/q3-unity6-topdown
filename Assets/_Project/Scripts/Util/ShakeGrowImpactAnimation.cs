@@ -53,6 +53,7 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
         _impactPunchTween.isAlive || _impactShakeTween.isAlive || _impactRotationTween.isAlive;
 
     private Vector3 _originalScale;
+    private bool _originalScaleCaptured;
 
     private Tween _delayTween;
     private Tween _growTween;
@@ -64,6 +65,18 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
 
     private void Awake()
     {
+        CaptureOriginalScale();
+    }
+
+    // Play can run on a still-inactive object (ChooseWindow plays its hidden current-weapon card with
+    // the row) - Awake hasn't run yet then, and running it later would capture the flattened scale
+    // Play just wrote, so the card would grow to (and stay at) zero. Whichever runs first captures.
+    private void CaptureOriginalScale()
+    {
+        if (_originalScaleCaptured)
+            return;
+
+        _originalScaleCaptured = true;
         _originalScale = transform.localScale;
     }
 
@@ -73,6 +86,7 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
     [Button]
     public void Play(float extraDelay = 0f)
     {
+        CaptureOriginalScale();
         StopAll();
 
         Vector3 flatScale = Vector3.Scale(_originalScale, startScale);
@@ -104,6 +118,7 @@ public class ShakeGrowImpactAnimation : MonoBehaviour
     // ChooseWindow's introParticles) still triggers.
     public void PlayInstant()
     {
+        CaptureOriginalScale();
         StopAll();
         transform.localScale = _originalScale;
         onImpact?.Invoke();

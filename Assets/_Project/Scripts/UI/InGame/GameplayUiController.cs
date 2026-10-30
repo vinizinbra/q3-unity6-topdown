@@ -56,6 +56,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
     private Action<int>[] _weaponCardClickedHandlers;
     private Action[] _rerollClickedHandlers;
     private Action[] _secondaryButtonClickedHandlers;
+    private Action[] _keepCurrentClickedHandlers;
     private Tween _timeScaleTween;
 
     // Cached per slot every QUpdate tick (see UpdateWindowOwners) - every click handler needs to
@@ -90,6 +91,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         _weaponCardClickedHandlers = new Action<int>[choiceWindows.Length];
         _rerollClickedHandlers = new Action[choiceWindows.Length];
         _secondaryButtonClickedHandlers = new Action[choiceWindows.Length];
+        _keepCurrentClickedHandlers = new Action[choiceWindows.Length];
         _windowOwner = new ChoiceWindowOwner[choiceWindows.Length];
         _storeCardSlots = new StoreCardSlot[choiceWindows.Length][];
 
@@ -110,6 +112,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
             _secondaryButtonClickedHandlers[i] = () => OnSecondaryButtonClicked(slotIndex);
             choiceWindows[i].onSecondaryButtonClicked += _secondaryButtonClickedHandlers[i];
+
+            _keepCurrentClickedHandlers[i] = () => OnKeepCurrentClicked(slotIndex);
+            choiceWindows[i].onKeepCurrentClicked += _keepCurrentClickedHandlers[i];
         }
     }
 
@@ -143,6 +148,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
 
             if (_secondaryButtonClickedHandlers[i] != null)
                 choiceWindows[i].onSecondaryButtonClicked -= _secondaryButtonClickedHandlers[i];
+
+            if (_keepCurrentClickedHandlers[i] != null)
+                choiceWindows[i].onKeepCurrentClicked -= _keepCurrentClickedHandlers[i];
         }
     }
 
@@ -336,7 +344,7 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
                 }
 
                 choiceWindows[i].RefreshWeaponChoice(title, frame.Global->LevelUpTimeRemaining.AsFloat, weaponCardData, confirmedIndex,
-                    currentWeapon: BuildCurrentWeaponCardData(frame, slots[i].EntityRef, levelUpConfig));
+                    currentWeapon: BuildCurrentWeaponCardData(frame, slots[i].EntityRef, levelUpConfig), keptCurrent: choice->KeptCurrent);
             }
             else
             {
@@ -914,19 +922,15 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         }
     }
 
-    // ChooseWindow.secondaryButton is ONE button reused for four mutually-exclusive purposes -
-    // "KEEP CURRENT" on a Choose-Weapon screen, "CANCEL" on Cursed Rift's Sacrifice stage/a
-    // Blacksmith pick screen, "CLOSE" on the Store screen - dispatched the same way OnCardClicked
-    // is. A plain (non-weapon) Level-Up never shows this button at all (Refresh's allowCancel
-    // defaults false there), so LevelUp's own case here only ever means Choose-Weapon in practice.
+    // ChooseWindow.secondaryButton is ONE button reused for three mutually-exclusive purposes -
+    // "CANCEL" on Cursed Rift's Sacrifice stage/a Blacksmith pick screen, "CLOSE" on the Store
+    // screen - dispatched the same way OnCardClicked is. A Level-Up (plain or Choose-Weapon) never
+    // shows it: Choose-Weapon's Keep Current is the current-weapon card itself
+    // (ChooseWindow.onKeepCurrentClicked -> OnKeepCurrentClicked).
     private void OnSecondaryButtonClicked(int slotIndex)
     {
         switch (_windowOwner[slotIndex])
         {
-            case ChoiceWindowOwner.LevelUp:
-                OnKeepCurrentClicked(slotIndex);
-                break;
-
             case ChoiceWindowOwner.CursedRift:
                 _game.SendCommand(slotIndex, new CancelCursedRiftCommand());
                 break;
@@ -1095,8 +1099,9 @@ public class GameplayUiController : QuantumGlobalMonoBehaviour
         };
     }
 
-    // The weapon the player is holding right now, shown read-only beside a Choose-Weapon screen's
-    // offers so they can be compared. Same stat basis as the offers (asset base stats + Level's
+    // The weapon the player is holding right now, shown beside a Choose-Weapon screen's offers so
+    // they can be compared (and picked there as Keep Current - ChooseWindow.RefreshWeaponChoice
+    // lifts ReadOnly; Blacksmith keeps it as a read-only reference). Same stat basis as the offers (asset base stats + Level's
     // damage bonus, perks listed as rows rather than folded in) so the numbers line up like-for-like.
     private static unsafe WeaponCardWidget.CardData BuildCurrentWeaponCardData(Frame frame, EntityRef entity, LevelUpConfig levelUpConfig)
     {

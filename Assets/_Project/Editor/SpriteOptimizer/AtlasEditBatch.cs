@@ -58,6 +58,16 @@ namespace Project.EditorTools.SpriteOptimizer
             }
         }
 
+        /// <summary>Packs a whole folder (every sprite texture under it, now and later).</summary>
+        public void AddFolder(SpriteAtlas atlas, string folderPath)
+        {
+            if (atlas == null) return;
+            var folder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(folderPath);
+            if (folder == null || !AssetDatabase.IsValidFolder(folderPath)) return;
+            For(atlas).Add.Add(folder);
+            _log.Add($"+ {folderPath}/ (folder) → {atlas.name}");
+        }
+
         /// <summary>Removes the texture entry and every individual sprite entry of that texture.</summary>
         public void RemoveTexture(SpriteAtlas atlas, string texturePath)
         {
@@ -192,6 +202,7 @@ namespace Project.EditorTools.SpriteOptimizer
                     Bound = binding != null && binding.Context != SpriteContext.Unknown,
                     Context = binding?.Context ?? SpriteContext.Unknown,
                     Primary = binding != null && settings.PrimaryFor(binding.Context) == atlas,
+                    Scope = binding?.ScopeLabel ?? "",
                     MaxSize = MaxSizeFor(atlas, platform),
                     Padding = atlas.GetPackingSettings().padding,
                 };

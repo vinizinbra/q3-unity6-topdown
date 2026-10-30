@@ -51,6 +51,8 @@ public class CharacterUiWidget : MonoBehaviour
     [SerializeField, Tooltip("Heroes only. At or below this health fraction the fill turns healthCriticalColor.")]
     private float healthCriticalThreshold = 0.25f;
     [SerializeField] private Color healthCriticalColor = new Color(0.95f, 0.15f, 0.15f);
+    [SerializeField, Range(0f, 0.2f), Tooltip("While alive (health above zero) the bar never shows less than this fraction, so a nearly-dead entity still has a visible red sliver instead of an empty-looking bar.")]
+    private float healthMinVisibleFraction = 0.12f;
 
     [Header("Shield")]
     [SerializeField, Tooltip("Shown only while the entity carries a Shield component with a Max above zero.")]
@@ -154,6 +156,20 @@ public class CharacterUiWidget : MonoBehaviour
 
     private SkillUrgentCountdownWidget _skillCountdown;
 
+    [Header("Accessory missing marker")]
+    [SerializeField, Tooltip("Ghosted accessory + pink \"!\" bobbing by the head while this hero's accessory is off them but still recoverable (Airborne/Dropped) - see AccessoryMissingWidget. Built at runtime, so nothing needs authoring on the prefab.")]
+    private bool showAccessoryMissingMarker = true;
+
+    [SerializeField, Tooltip("On: only this client's own local hero(es) show the marker - it is your errand. Off: teammates' markers show too.")]
+    private bool accessoryMissingLocalOnly = true;
+
+    [SerializeField, Tooltip("Where the marker sits, from this widget's centre in canvas units (negative Y = down toward the head).")]
+    private Vector2 accessoryMissingPosition = new Vector2(0f, -88f);
+
+    [SerializeField, Min(8f)] private float accessoryMissingSizePx = 56f;
+
+    private AccessoryMissingWidget _accessoryMissing;
+
     private Canvas _canvas;
     private Camera _worldCamera;
     private QuantumGame _game;
@@ -252,6 +268,9 @@ public class CharacterUiWidget : MonoBehaviour
 
         if (skillStatusLabel != null)
             skillStatusLabel.ResetForPool();
+
+        if (_accessoryMissing != null)
+            _accessoryMissing.HideImmediate();
 
         if (_shieldShineRoutine != null)
         {
@@ -400,13 +419,51 @@ public class CharacterUiWidget : MonoBehaviour
         int maxDurability = hasGuard ? guard.MaxDurability : 0;
         int currentDurability = hasGuard ? guard.CurrentDurability : 0;
 
+        // Off the hero but still recoverable - the one state the old readout hid: lit pips said
+        // "protected" while the charges were actually lying on the floor.
+        bool dropped = hasGuard && (guard.State == AccessoryGuardState.Airborne || guard.State == AccessoryGuardState.Dropped);
+
+        UpdateAccessoryMissing(frame, dropped);
+
         if (accessoryGuardPipTemplate != null)
         {
-            UpdateSpawnedAccessoryPips(maxDurability, currentDurability);
+            UpdateSpawnedAccessoryPips(maxDurability, currentDurability, dropped);
             return;
         }
 
         UpdateAuthoredAccessoryPips(hasGuard, maxDurability, currentDurability);
+    }
+
+    // The marker by the head (AccessoryMissingWidget) - created the first time this hero's accessory
+    // actually comes off, so enemy widgets and untouched heroes never build one.
+    private void UpdateAccessoryMissing(Frame frame, bool dropped)
+    {
+        bool shown = showAccessoryMissingMarker && dropped
+            && (accessoryMissingLocalOnly == false
+                || (MyLocalPlayer.Instance != null && MyLocalPlayer.Instance.IsLocalEntity(_entityRef)));
+
+        if (shown == false)
+        {
+            if (_accessoryMissing != null)
+                _accessoryMissing.SetShown(false);
+
+            return;
+        }
+
+        if (_accessoryMissing == null)
+            _accessoryMissing = AccessoryMissingWidget.Create(selfRect, nameText, accessoryMissingPosition, accessoryMissingSizePx, ResolveAccessorySprite(frame), ResolveRingColor(frame));
+
+        _accessoryMissing.SetShown(true);
+    }
+
+    // Same art the world pickup and the ring's radar icon show (CharacterData.Accessory.CollectibleSprite).
+    private Sprite ResolveAccessorySprite(Frame frame)
+    {
+        if (frame.TryGet<CharacterStats>(_entityRef, out var stats) == false)
+            return null;
+
+        CharacterData data = frame.FindAsset(stats.CharacterData);
+        return data != null ? data.Accessory.CollectibleSprite : null;
     }
 
     // Two different quantities drive the strip, which is why the pip is its own widget:
@@ -414,7 +471,7 @@ public class CharacterUiWidget : MonoBehaviour
     //   - whether each one reads as available tracks CurrentDurability (every frame, cheap)
     // A spent pip therefore leaves its empty frame behind instead of vanishing, so the player can
     // still see how much durability a full repair would give back.
-    private void UpdateSpawnedAccessoryPips(int maxDurability, int currentDurability)
+    private void UpdateSpawnedAccessoryPips(int maxDurability, int currentDurability, bool dropped)
     {
         if (_spawnedAccessoryPips.Count != maxDurability)
             RebuildAccessoryPips(maxDurability);
@@ -424,7 +481,7 @@ public class CharacterUiWidget : MonoBehaviour
             if (_spawnedAccessoryPips[i] == null)
                 continue;
 
-            _spawnedAccessoryPips[i].SetAvailable(i < currentDurability);
+            _spawnedAccessoryPips[i].SetState(i < currentDurability, dropped);
         }
     }
 
@@ -552,10 +609,12 @@ public class CharacterUiWidget : MonoBehaviour
         UpdateSkillCountdown(frame);
     }
 
+    private Color ResolveCountdownColor(Frame frame) => skillCountdownUsesRingColor ? ResolveRingColor(frame) : Color.white;
+
     // The hero's own ring colour (same source MovementRingView tints the foot ring from), or white.
-    private Color ResolveCountdownColor(Frame frame)
+    private Color ResolveRingColor(Frame frame)
     {
-        if (skillCountdownUsesRingColor && frame.TryGet<CharacterStats>(_entityRef, out var stats))
+        if (frame.TryGet<CharacterStats>(_entityRef, out var stats))
         {
             CharacterData data = frame.FindAsset(stats.CharacterData);
 
@@ -633,7 +692,8 @@ public class CharacterUiWidget : MonoBehaviour
 
         float fraction = (health.CurrentHealth / health.MaxHealth).AsFloat;
 
-        SetSliderValue(healthSlider, fraction);
+        // Display only - the colour thresholds below still read the real fraction.
+        SetSliderValue(healthSlider, fraction > 0f ? Mathf.Max(fraction, healthMinVisibleFraction) : 0f);
         SetValueText(healthText, health.CurrentHealth, health.MaxHealth, ref _lastHealthText, ref _lastHealthMaxText);
 
         if (frame.Has<PlayerLink>(_entityRef) == true)

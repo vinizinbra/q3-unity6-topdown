@@ -454,7 +454,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0.5}
-  m_SizeDelta: {x: -4, y: -3}
+  m_SizeDelta: {x: 0, y: -3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1069103783107161862
 CanvasRenderer:
@@ -604,7 +604,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0.5}
-  m_SizeDelta: {x: -4, y: -3}
+  m_SizeDelta: {x: 0, y: -3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4894803815680057465
 CanvasRenderer:
@@ -679,7 +679,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -4, y: -2}
+  m_SizeDelta: {x: 0, y: -2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1792354892814540398
 CanvasRenderer:
@@ -920,21 +920,28 @@ MonoBehaviour:
   nameText: {fileID: 998855663100162644}
   healthSlider: {fileID: 8852939556738254143}
   healthText: {fileID: 6300055425397026155}
+  healthFillImage: {fileID: 0}
+  healthLowThreshold: 0.5
+  healthLowColor: {r: 1, g: 0.85, b: 0.1, a: 1}
+  healthCriticalThreshold: 0.25
+  healthCriticalColor: {r: 0.95, g: 0.15, b: 0.15, a: 1}
+  healthMinVisibleFraction: 0.12
   shieldSlider: {fileID: 4383217480492034175}
   shieldText: {fileID: 388985746260587110}
   shieldFillImage: {fileID: 6391512920297060712}
   shieldShineColor: {r: 1, g: 1, b: 1, a: 1}
   shieldShineDuration: 0.4
+  shieldWarningThreshold: 1.5
+  shieldWarningColor: {r: 1, g: 0.55, b: 0.1, a: 1}
+  shieldWarningPulseSpeed: 6
   ammoSlider: {fileID: 3984403169306300072}
   reloadSlider: {fileID: 8618044172969640538}
   reloadPunchTarget: {fileID: 6638756857600494744}
+  reloadPunchStrength: {x: 0.15, y: 1, z: 0}
   reloadPunchDuration: 0.45
-  weaponRowRect: {fileID: 6638756857600494744}
+  reloadPunchFrequency: 7
   burnIndicator:
     root: {fileID: 3323662003187796770}
-    timerText: {fileID: 0}
-  riftMarkIndicator:
-    root: {fileID: 162505595992743771}
     timerText: {fileID: 0}
   iceIndicator:
     root: {fileID: 6601192887029928563}
@@ -947,6 +954,15 @@ MonoBehaviour:
     timerText: {fileID: 0}
   rootIndicator:
     root: {fileID: 3102862569948980303}
+    timerText: {fileID: 0}
+  freezeIndicator:
+    root: {fileID: 0}
+    timerText: {fileID: 0}
+  electrifiedIndicator:
+    root: {fileID: 0}
+    timerText: {fileID: 0}
+  staggerIndicator:
+    root: {fileID: 0}
     timerText: {fileID: 0}
   ruptureIndicator:
     root: {fileID: 4204702669108756187}
@@ -966,6 +982,24 @@ MonoBehaviour:
   juggernautChannelIndicator:
     root: {fileID: 1336212899615874294}
     timerText: {fileID: 0}
+  accessoryEquippedRoot: {fileID: 0}
+  accessoryGuardRoot: {fileID: 0}
+  accessoryGuardPipTemplate: {fileID: 0}
+  accessoryGuardPipContainer: {fileID: 0}
+  accessoryGuardPips: []
+  freeHitGuardRoot: {fileID: 0}
+  freeHitGuardFill: {fileID: 0}
+  contextInteractionRoot: {fileID: 0}
+  heroWidgets: []
+  showHeroHexBadges: 0
+  skillStatusLabel: {fileID: 0}
+  skillCountdownPosition: {x: 0, y: -90}
+  skillCountdownFontPx: 30
+  skillCountdownUsesRingColor: 1
+  showAccessoryMissingMarker: 1
+  accessoryMissingLocalOnly: 1
+  accessoryMissingPosition: {x: 0, y: -88}
+  accessoryMissingSizePx: 56
 --- !u!1 &2289383765099678334
 GameObject:
   m_ObjectHideFlags: 0
@@ -1580,7 +1614,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -4, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &3661584933710756751
 GameObject:
@@ -1692,7 +1726,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -4, y: -2}
+  m_SizeDelta: {x: 0, y: -2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1077055897412810819
 CanvasRenderer:
@@ -1916,7 +1950,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -4, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &4298586406412792421
 GameObject:
@@ -2683,7 +2717,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -4, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &6456213739463953652
 GameObject:
@@ -2974,7 +3008,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -4, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &7427848394646248886
 GameObject:

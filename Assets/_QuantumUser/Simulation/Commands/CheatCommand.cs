@@ -82,9 +82,12 @@ namespace Quantum
                                 // (KCC.Teleport + velocity reset) - see CheatSystem.TeleportToTraversal
         ActivateTraversal,      // starts every Idle Traversal Challenge (TraversalChallengeUtility.TryActivate,
                                 // as if the sender pressed Base Skill on it) - spawns platforms + reward
-        ForceBossAction         // AssetId = EnemyActionData guid from the live boss's SkillActions, forced via
+        ForceBossAction,        // AssetId = EnemyActionData guid from the live boss's SkillActions, forced via
                                 // BossSystem.TryForceAction; Amount > 0 first teleports the sender Amount
                                 // decimetres from the boss (same side) - for testing/recording one attack
+        KnockAccessoryOff       // the sender's Accessory Guard blocks a hit as if struck (AccessoryGuardUtility.TryBlock):
+                                // one durability point spent, the accessory pops off (or breaks at 0) - for testing
+                                // the dropped-accessory feedback without waiting for an enemy to land a hit
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

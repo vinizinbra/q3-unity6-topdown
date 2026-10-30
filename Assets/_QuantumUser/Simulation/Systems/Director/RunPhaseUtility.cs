@@ -97,7 +97,8 @@ namespace Quantum
             // Same freeze PhaseTimer's own advance already gets from an active Traversal Challenge
             // or Optional Team Challenge (see SurvivalProgressionUtility.Tick) - a grace hold
             // shouldn't start or drain underneath either one.
-            if (f.Global->ActiveTraversalChallengeCount > 0 || f.Global->ActiveTeamChallengeCount > 0)
+            if (f.Global->ActiveTraversalChallengeCount > 0 || f.Global->ActiveTeamChallengeCount > 0
+                || TeamChallengeUtility.AnyBannerActive(f))
                 return true;
 
             bool anyWindowOpen = AnyConnectedPlayerHasChoiceWindowOpen(f);

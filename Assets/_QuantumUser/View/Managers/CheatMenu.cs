@@ -389,6 +389,7 @@ namespace QuantumUser.View
         {
             ButtonGrid player = new ButtonGrid(rt, GridColumns);
             GridButton(player, "Buy Accessory", CheatActionKind.BuyAccessory);
+            GridButton(player, "Knock Accessory Off", CheatActionKind.KnockAccessoryOff);
             GridButton(player, "Heal Full", CheatActionKind.HealFull);
             GridButton(player, "God Mode", CheatActionKind.ToggleGodMode);
             GridButton(player, "Reset God Mode", CheatActionKind.ResetGodMode);

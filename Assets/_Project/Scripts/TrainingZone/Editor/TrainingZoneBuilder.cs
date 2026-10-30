@@ -33,7 +33,7 @@ public static class TrainingZoneBuilder
     private const string DummyEnemyDataPath = "Assets/_QuantumUser/Resources/Enemy/Training/TrainingDummy.asset";
     private const string FinishPoiPath = "Assets/_QuantumUser/Entities/LevelChunk/TrainingFinishPoi.prefab";
     private const string ArrowSpritePath = "Assets/3rd-party/Layer Lab/GUI Pro-SuperCasual/ResourcesData/Sprites/Components/Icon_PictoIcons/256/PictoIcon_Arrow_Right_1.Png";
-    private const string FontPath = "Assets/3rd-party/Layer Lab/GUI Pro-SuperCasual/ResourcesData/Fonts/Inter_18pt-Medium SDF.asset";
+    private const string FontPath = "Assets/3rd-party/Layer Lab/GUI Pro-SuperCasual/ResourcesData/Fonts/Cairo SDF.asset";
 
     // Chunk min corners must sit on LevelConfig.CellSize (2) multiples, inside the generation grid
     // (origin 0,0 with no Boss Arena in the scene).

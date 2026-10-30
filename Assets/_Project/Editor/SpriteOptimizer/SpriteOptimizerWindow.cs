@@ -85,6 +85,7 @@ namespace Project.EditorTools.SpriteOptimizer
                 return;
             }
 
+            WorldReachIndex.Invalidate();
             ScanResult scan = SpriteUsageScanner.Run(_settings);
             if (scan.Cancelled) return;
             _scan = scan;
@@ -303,6 +304,8 @@ namespace Project.EditorTools.SpriteOptimizer
                 {
                     GUILayout.Label(binding.Atlas == _settings.PrimaryFor(context) ? "★" : " ", GUILayout.Width(14f));
                     EditorGUILayout.ObjectField(binding.Atlas, typeof(SpriteAtlas), false, GUILayout.Width(200f));
+                    if (binding.ScopeLabel.Length > 0)
+                        GUILayout.Label(binding.ScopeLabel, EditorStyles.miniBoldLabel, GUILayout.Width(170f));
                     if (info != null)
                     {
                         string pages = info.PreviewPages >= 0 ? $"{info.PreviewPages} page(s) packed" : $"~{info.EstimatedPages} page(s) est.";
@@ -663,15 +666,23 @@ namespace Project.EditorTools.SpriteOptimizer
                         if (_settings.Atlases.Count(b => b.Context == context && b.Primary) != 1) _settings.SetPrimary(binding);
                     }
 
-                    using (new EditorGUI.DisabledScope(binding.Context != SpriteContext.UI && binding.Context != SpriteContext.Gameplay))
+                    using (new EditorGUI.DisabledScope(binding.Context != SpriteContext.UI && binding.Context != SpriteContext.Gameplay || binding.IsScoped))
                     {
                         bool primary = GUILayout.Toggle(binding.Primary, "Primary", GUILayout.Width(65f));
                         if (primary && !binding.Primary) _settings.SetPrimary(binding);
                     }
                     if (GUILayout.Button("✕", GUILayout.Width(22f))) remove = binding;
                 }
+
+                if (binding.Context == SpriteContext.Gameplay)
+                    DrawGameplayScope(binding);
             }
             if (remove != null) _settings.Atlases.Remove(remove);
+
+            EditorGUILayout.LabelField(
+                "Gameplay atlases split by world: a texture whose sprites are only used by one world's spawn graph (World) goes to " +
+                "that world's atlas; one no world reaches but that lives under a binding's Folders goes there; everything else to the " +
+                "primary (Common) atlas.", _wrap);
 
             using (new EditorGUILayout.HorizontalScope())
             {
@@ -706,6 +717,31 @@ namespace Project.EditorTools.SpriteOptimizer
             {
                 _settings.MarkDirty();
                 EditorApplication.delayCall += Reanalyze;
+            }
+        }
+
+        private void DrawGameplayScope(AtlasBinding binding)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Space(16f);
+                var world = (Quantum.WorldDefinition)EditorGUILayout.ObjectField(
+                    new GUIContent("World", "Sprites only this world uses are packed here."), binding.World, typeof(Quantum.WorldDefinition), false);
+                if (world != binding.World)
+                {
+                    binding.World = world;
+                    WorldReachIndex.Invalidate();
+                    if (binding.IsScoped) binding.Primary = false;
+                }
+
+                string folders = EditorGUILayout.DelayedTextField(
+                    new GUIContent("Folders", "';'-separated. Sprites no world reaches whose texture is under one of these folders are packed here."),
+                    string.Join(";", binding.Folders ?? new List<string>()));
+                if (folders != string.Join(";", binding.Folders ?? new List<string>()))
+                {
+                    binding.Folders = folders.Split(';').Select(f => f.Trim().TrimEnd('/')).Where(f => f.Length > 0).ToList();
+                    if (binding.IsScoped) binding.Primary = false;
+                }
             }
         }
 

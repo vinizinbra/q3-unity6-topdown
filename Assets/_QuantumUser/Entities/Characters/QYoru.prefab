@@ -697,6 +697,26 @@ MonoBehaviour:
   skateboardAngleApexDegrees: 0
   skateboardAngleDownDegrees: -15
   skateboardSpeedThreshold: 2
+  skateboardDeck: {fileID: 0}
+  ollieAngleDegrees: 35
+  ollieTailPivot: {x: -0.15, y: -0.04}
+  olliePopDuration: 0.07
+  ollieLevelDuration: 0.2
+  ollieLift: 0.05
+  ollieCrouchAngleDegrees: -6
+  skateboardTrickChance: 1
+  skateboardTricks:
+  - name: Kickflip
+    spinDegrees: {x: 360, y: 0, z: 0}
+  - name: Heelflip
+    spinDegrees: {x: -360, y: 0, z: 0}
+  - name: Shove-it
+    spinDegrees: {x: 0, y: 360, z: 0}
+  - name: Tre Flip
+    spinDegrees: {x: 360, y: 360, z: 0}
+  skateboardTrickDuration: 0.65
+  skateboardTrickDropDistance: 0.12
+  skateboardTrickCatchDuration: 0.08
   useFlip: 1
   jumpFlipDuration: 0.6
   invertFlipDirection: 1
@@ -710,6 +730,9 @@ MonoBehaviour:
   maxLandingSquash: 1
   landingSpringFrequency: 3
   landingSpringDamping: 0.35
+  heavyLandingSquash: 0.8
+  heavyLandingHoldDuration: 0.09
+  heavyLandingMatchWindow: 0.25
   bodyRoot: {fileID: 1973933749131681354}
   downedRoot: {fileID: 921315042055089785}
   koRoot: {fileID: 7270003797950095372}
@@ -877,6 +900,10 @@ MonoBehaviour:
   - {fileID: 2478946807483062429}
   fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
   mainBodySprite: {fileID: 0}
+  immunityFlashColor: {r: 1, g: 1, b: 1, a: 0.85}
+  immunityFlashRate: 2.5
+  immunityStartSound: {fileID: 0}
+  immunityEndSound: {fileID: 0}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
@@ -885,6 +912,10 @@ MonoBehaviour:
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.2
+  fullFlashHealthFraction: 0.1
+  minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
+  minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
   joltPunchScaleFrequency: 20
@@ -1140,8 +1171,6 @@ MonoBehaviour:
       RawValue: 0
     ReloadSpeedMultiplier:
       RawValue: 0
-    ProjectileSpeedMultiplier:
-      RawValue: 0
     AreaRadiusMultiplier:
       RawValue: 0
     NearDamageMultiplier:
@@ -1151,6 +1180,8 @@ MonoBehaviour:
     DashCooldownMultiplier:
       RawValue: 0
     SkillCooldownMultiplier:
+      RawValue: 0
+    DashDistanceMultiplier:
       RawValue: 0
     SkillDurationMultiplier:
       RawValue: 0
@@ -1202,6 +1233,8 @@ MonoBehaviour:
     MagazineSizeBonus:
       RawValue: 0
     MagazineSizeOverride: 0
+    WeaponRangeMultiplier:
+      RawValue: 0
     LongRangePierceBonus: 0
     WeaponStaggerChance:
       RawValue: 0
@@ -1277,6 +1310,78 @@ MonoBehaviour:
     - RawValue: 0
     - RawValue: 0
     - RawValue: 0
+    HitDamageCapFraction:
+      RawValue: 0
+    RangedDamageTakenMultiplier:
+      RawValue: 0
+    CloseDamageTakenMultiplier:
+      RawValue: 0
+    LifesaverCharges: 0
+    LifesaverDuration:
+      RawValue: 0
+    LifesaverRemaining:
+      RawValue: 0
+    LifesaverSurviveHealFraction:
+      RawValue: 0
+    DashRewindFraction:
+      RawValue: 0
+    DashRewindWindow:
+      RawValue: 0
+    RecentDamageAmounts:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    RecentDamageTimes:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    RecentDamageHead: 0
+    DashMoveSpeedBonus:
+      RawValue: 0
+    DashMoveSpeedDuration:
+      RawValue: 0
+    DashRefundInterval: 0
+    DashRefundProgress: 0
+    ComboDamagePerStack:
+      RawValue: 0
+    ComboMaxStacks: 0
+    ComboStacks: 0
+    ComboDecayTime:
+      RawValue: 0
+    ComboTimer:
+      RawValue: 0
+    ComboStackInterval:
+      RawValue: 0
+    ComboGainCooldown:
+      RawValue: 0
+    CurrentHealthDamageFraction:
+      RawValue: 0
+    CurrentHealthDamageBossFraction:
+      RawValue: 0
+    CurrentHealthBonusHitCap:
+      RawValue: 0
+    LifeStealCapPerSecond:
+      RawValue: 0
+    LifeStealWindowTimer:
+      RawValue: 0
+    LifeStealHealedInWindow:
+      RawValue: 0
+    ElementHealFraction:
+      RawValue: 0
+    ElementHealCooldown:
+      RawValue: 0
+    ElementHealCooldownRemaining:
+      RawValue: 0
 --- !u!114 &8215253040534427600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1596,31 +1701,6 @@ MonoBehaviour:
       RawValue: 0
     ShatterCooldownRemaining:
       RawValue: 0
-    OverloadChainHopTimer:
-      RawValue: 0
-    OverloadChainHopsRemaining: 0
-    OverloadChainOwner: {fileID: 0}
-    OverloadChainSource:
-      Value: 0
-    OverloadChainPosition:
-      X:
-        RawValue: 0
-      Y:
-        RawValue: 0
-      Z:
-        RawValue: 0
-    OverloadChainVisited:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    OverloadChainVisitedCount: 0
-    OverloadChainCurrentDamage:
-      RawValue: 0
     IceRemaining:
       RawValue: 0
     IceBuildup:
@@ -1716,6 +1796,10 @@ MonoBehaviour:
     TempMoveSpeedRemaining:
       RawValue: 0
     TempMoveSpeedMultiplier:
+      RawValue: 0
+    StickySlowRemaining:
+      RawValue: 0
+    StickySlowMultiplier:
       RawValue: 0
     ReviveImmunityRemaining:
       RawValue: 0

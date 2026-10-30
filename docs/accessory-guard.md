@@ -116,9 +116,14 @@ Placement is load-bearing in three ways:
    would drop into the pit the player just fell into) and `SentryDecaySystem`'s self-drain. No
    special-casing needed for any of them.
 
-**Multi-hit sources are self-limiting, with no cooldown or i-frame window.** `TryBlock` only ever
-fires while `Equipped`; the first pellet of a shotgun blast pops the accessory off, and every later
-pellet in that same tick finds `State != Equipped` and lands normally.
+**Every block opens a short i-frame window** (`AccessoryGuardConfig.PostBlockInvulnerabilityDuration`,
+0.2s default, 0 disables). `TryBlock` only ever fires while `Equipped`, so without it the first
+pellet of a shotgun blast popped the accessory off and every later pellet - or an overlapping area's
+next tick, or a second enemy swinging the same moment - landed straight on Health: the block read as
+"I got hit anyway". The window reuses `PlayerLifeStateUtility.GrantGraceInvulnerability` (the
+post-revive/post-pick grace timer, strongest-wins, removed via `RemoveInvulnerableIfUnjustified`), so
+it composes with Cheat Death/Downed without owning the tag, and the player stays targetable. It
+applies to every successful block - recoverable pop, Broken, and a Spare Parts rescue alike.
 
 ---
 
@@ -243,7 +248,7 @@ fetched it themselves) purely so the View can credit the right person.
 **Why automatic rather than a deliberate press:** the spatial cost the mechanic is built on is
 *travel*, and that cost is paid in full either way - somebody had to physically go to the spot. Making
 a teammate press a button on arrival adds ceremony without adding a decision, and the accessory lands
-1-3 units from where the owner was hit, so anyone near enough to reach it is already in that fight.
+a short throw from where the owner was hit (`MinDropOffset`/`MaxDropOffset`, authored 7-10 units), so anyone near enough to reach it is already in that fight.
 Automatic just means the team doesn't lose a defensive resource when the owner can't safely go back
 for it, which is exactly what co-op assistance should do.
 
@@ -251,7 +256,7 @@ for it, which is exactly what co-op assistance should do.
 options were considered and rejected:
 
 *Requiring the owner to be nearby* was built and then reverted. The scenario barely occurs (the
-accessory lands 1-3 units from where the owner was hit, so a teammate standing on it while the owner
+accessory lands a short throw (authored 7-10 units) from where the owner was hit, so a teammate standing on it while the owner
 is far away means the owner ran a long way after dropping it), and the gate's failure mode is worse
 than either extreme: a teammate walks over the hat and *nothing happens*, with no feedback explaining
 why. Doing it properly would need a prompt for that case. And what it protects against isn't a
@@ -398,8 +403,9 @@ exact drift this codebase has already been bitten by more than once.
 - Direction and distance are **XZ only**: an accessory that landed on a ledge above shouldn't read as
   further away than one at your feet.
 - `accessoryShowWhileAirborne` (on) points at it during the pop arc too - that is exactly when you
-  most want to see where it is heading - and `accessoryHideWithinDistance` (6) drops the arrow once
-  it's close enough that the pickup speaks for itself.
+  most want to see where it is heading - and `accessoryHideWithinDistance` (1.5, was 6) drops the arrow
+  only once you are practically on top of it. At 6 the arrow was hidden in a large share of drops, so a
+  lost accessory often showed no pointer at all; the loot beam (below) now covers the last stretch.
 
 Local-player-only comes for free: `MovementRingView` already sets `executeOnlyOnLocal` and activates
 its sprites only for the local player. Ally recovery is allowed (`AllowAllyRecovery`), but a
@@ -467,6 +473,50 @@ Deliberately allowed. Service eligibility is derived purely from durability, nev
 the shop doesn't refuse to help until you've walked back for it. `AccessoryGuardUtility.Restore`
 reconciles it by destroying the outstanding collectible, which is what upholds the
 never-both-worn-and-on-the-floor invariant below.
+
+---
+
+## Missing-accessory feedback (2026-10-30)
+
+Playtest finding: players often didn't notice they had lost the accessory, or that it was still lying
+in the level waiting for them. Every existing cue was either a one-frame impact (block flash, hit stop,
+haptic) or something *disappearing* (the worn visual, `CharacterUiWidget`'s faint
+`accessoryEquippedRoot` glow), and nobody notices an absence. The fix adds three signals that stay up
+for as long as the accessory is off the hero but recoverable (`Airborne`/`Dropped`). None of them
+shows for `Broken`, which keeps its toast and dark pips.
+
+- **Token by the head - `AccessoryMissingWidget`.** A white disc with a rim in the hero's `RingColor`,
+  the hero's own `CollectibleSprite` on it, and a Rift Pink "!" badge. It pops in (OutBack), bobs,
+  breathes, punch-scales every 1.6s, and pops away on recovery. Same shape as
+  `SkillUrgentCountdownWidget`: built at runtime under `CharacterUiWidget`'s nameplate rect on first
+  need, so the shared prefab needs no authoring and enemies never build one. The disc sprite is
+  generated in code, because accessory art ranges from a white cap to a black mask and the dark ones
+  vanish on the ground without a backing. Tuned on `CharacterUiWidget`: `showAccessoryMissingMarker`,
+  `accessoryMissingLocalOnly` (on: only your own hero shows it - teammates read the beam instead),
+  `accessoryMissingPosition` (0, -88, between the bars and the head, the same gap the 3-2-1 countdown
+  uses), `accessoryMissingSizePx` (56). Unscaled time throughout, so it keeps moving over a paused sim.
+- **Blinking pips - `AccessoryGuardPipWidget.SetState(available, dropped)`.** Before, "2 of 3 lit" read
+  as "protected" while those charges were actually lying on the floor. Now available pips blink
+  (alpha down to `droppedMinAlpha`) and throb (`droppedScalePulse`) while dropped. They keep their own
+  colour because the pip art is a coloured shield sprite (`EmojiOne_1`), so a hue tint can only darken
+  it. `droppedTint` is there if the art is ever swapped for a white one. `SetAvailable` still works for
+  old callers.
+- **Loot beam - `AccessoryBeamFx`.** A looping effect nested in `AccessoryOrb.prefab` and assigned to
+  `DroppedAccessoryView.landedBeam`: a soft ground glow, a ring pulse every 0.8s, an open light column
+  (2.6 tall), and rising sparkles. That's 4 systems, 2 materials and about 20 particles. It switches on
+  only once the pop arc has landed (`PopVelocity` gone, the same signal that makes the accessory
+  collectible), never for broken debris. Every layer is authored white, and `DroppedAccessoryView`
+  multiplies the owner's `CharacterData.RingColor` into each system's start colour, so the beam matches
+  the hero's foot ring. Built by `Tools > RiftRaiders > VFX > Accessory Beam > Build`
+  (`Editor/Vfx/AccessoryBeamFxBuilder.cs`), which also nests and assigns it on the orb. **Edit the
+  builder, not the assets.**
+- **Radar hide distance** lowered from 6 to 1.5 (see Radar above).
+
+Testing: the cheat menu's Player tab has **Knock Accessory Off** (`CheatActionKind.KnockAccessoryOff`).
+It calls `AccessoryGuardUtility.TryBlock` on the sender as if they had been struck, so it spends a
+durability point and the accessory pops off (or breaks at 0). **Buy Accessory** is the matching
+recovery. For HUD recordings, `PlayModeFrameRecorder.StartScreen(folder, seconds, fps)` grabs the
+composited Game view (Screen Space - Overlay UI included), which the camera-only `Start` misses.
 
 ---
 

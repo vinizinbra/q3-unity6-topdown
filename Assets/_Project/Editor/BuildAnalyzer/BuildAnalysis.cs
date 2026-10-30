@@ -580,9 +580,11 @@ namespace Project.EditorTools.BuildAnalyzer
                 stat.Count++;
                 ByCategory[entry.Category] = stat;
 
-                if (entry.PackedFiles.Count >= 2 && entry.TotalPackedSize >= 64 * 1024)
+                // "sharedassets3.assets" + "sharedassets3.resource" is ONE copy: the object header and its streamed
+                // payload (audio / texture data). Only distinct archives are real duplicates.
+                int copies = entry.PackedFiles.Select(f => System.IO.Path.GetFileNameWithoutExtension(f)).Distinct().Count();
+                if (copies >= 2 && entry.TotalPackedSize >= 64 * 1024)
                 {
-                    int copies = entry.PackedFiles.Count;
                     long savings = entry.TotalPackedSize - entry.TotalPackedSize / copies;
                     Add(Severity.Info, FindingKind.MultiArchive, entry.Path,
                         $"Copied into {copies} archives",

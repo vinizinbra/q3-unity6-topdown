@@ -1,0 +1,134 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GameplaySprites_Favela
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 4
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 4096
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 100
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 252f661d0c86e4b94bdd529da72d4a67, type: 3}
+    - {fileID: 2800000, guid: 1ba9828e6d9f24a8dbd90a1de1e0a186, type: 3}
+    - {fileID: 2800000, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+    - {fileID: 2800000, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+    - {fileID: 2800000, guid: 205e57149efc24952823216eb62b670a, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: -8111076662009289815
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: 3161031980160354964
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: -245757131287942249
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: -363692720538445596
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: 5918451088030676456
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: -2002674642185411653
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: -1112046870535816952
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: 6796910604205594992
+    - d41005b1c1dcb4ef6a1cc7c1f1bf98f6: 8270741229145847914
+    - 205e57149efc24952823216eb62b670a: 2839662488508126167
+    - 205e57149efc24952823216eb62b670a: -5653868679367830215
+    - 205e57149efc24952823216eb62b670a: -6730739192745933246
+    - 205e57149efc24952823216eb62b670a: -4891135759864434647
+    - 252f661d0c86e4b94bdd529da72d4a67: 21300000
+    - 1ba9828e6d9f24a8dbd90a1de1e0a186: 21300000
+    - 4e56dfffc543e494b96b284dd8c2aebc: -2922238226451787260
+    - 4e56dfffc543e494b96b284dd8c2aebc: 7288022480478702253
+    - 4e56dfffc543e494b96b284dd8c2aebc: 1692558161438819729
+    - 4e56dfffc543e494b96b284dd8c2aebc: -2905745129493452824
+    - 4e56dfffc543e494b96b284dd8c2aebc: 9146390438066378768
+    - 4e56dfffc543e494b96b284dd8c2aebc: 1832488127952607292
+    - 4e56dfffc543e494b96b284dd8c2aebc: 2374636256391175552
+    - 4e56dfffc543e494b96b284dd8c2aebc: -2459483574181176537
+    - 4e56dfffc543e494b96b284dd8c2aebc: 5335579609868586912
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: -8111076662009289815, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: 3161031980160354964, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: -245757131287942249, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: -363692720538445596, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: 5918451088030676456, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: -2002674642185411653, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: -1112046870535816952, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: 6796910604205594992, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: 8270741229145847914, guid: d41005b1c1dcb4ef6a1cc7c1f1bf98f6, type: 3}
+  - {fileID: 2839662488508126167, guid: 205e57149efc24952823216eb62b670a, type: 3}
+  - {fileID: -5653868679367830215, guid: 205e57149efc24952823216eb62b670a, type: 3}
+  - {fileID: -6730739192745933246, guid: 205e57149efc24952823216eb62b670a, type: 3}
+  - {fileID: -4891135759864434647, guid: 205e57149efc24952823216eb62b670a, type: 3}
+  - {fileID: 21300000, guid: 252f661d0c86e4b94bdd529da72d4a67, type: 3}
+  - {fileID: 21300000, guid: 1ba9828e6d9f24a8dbd90a1de1e0a186, type: 3}
+  - {fileID: -2922238226451787260, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  - {fileID: 7288022480478702253, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  - {fileID: 1692558161438819729, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  - {fileID: -2905745129493452824, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  - {fileID: 9146390438066378768, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  - {fileID: 1832488127952607292, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  - {fileID: 2374636256391175552, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  - {fileID: -2459483574181176537, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  - {fileID: 5335579609868586912, guid: 4e56dfffc543e494b96b284dd8c2aebc, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - DonoDoCeu_Falling
+  - DonoDoCeu_SwoopPrep
+  - DonoDoCeu_StaggerHit
+  - DonoDoCeu_KneelRecover
+  - DonoDoCeu_SwoopDive
+  - DonoDoCeu_LandingRecover
+  - DonoDoCeu_FeatherRelease
+  - DonoDoCeu_KneelHold
+  - DonoDoCeu_FeatherPrep
+  - DonoDoCeu_TrashBottle
+  - DonoDoCeu_TrashPaper
+  - DonoDoCeu_TrashCan
+  - DonoDoCeu_TrashCup
+  - DonoDoCeu_FeatherLanesFaded
+  - DonoDoCeu_FeatherLanesOpaque
+  - DonoDoCeu_WhistlePrep
+  - DonoDoCeu_TornadoRelease
+  - DonoDoCeu_TornadoPrep
+  - DonoDoCeu_Idle
+  - DonoDoCeu_WhistleBlow
+  - DonoDoCeu_HoverDown
+  - DonoDoCeu_TornadoRecover
+  - DonoDoCeu_HoverUp
+  - DonoDoCeu_TakeoffPrep
+  m_RenderDataMap: {}
+  m_Tag: GameplaySprites_Favela
+  m_IsVariant: 0

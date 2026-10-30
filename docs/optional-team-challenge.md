@@ -59,10 +59,12 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
   freeze. Checked at the exact same call sites `ActiveTraversalChallengeCount` already is
   (`SurvivalProgressionUtility.Tick`'s two clock advances, `RunPhaseUtility.TickBreathingGraceHold`,
   `CombatDirectorSystem.Update`'s spawn gate), incremented only once `ChallengeActive` truly begins
-  (not at `Starting`) - the Survival clock keeps running through the countdown, per spec. Director
-  *spawning* is the exception: `CombatDirectorSystem.Update` also holds its pulses while any
-  challenge is `Starting` (`TeamChallengeUtility.AnyBannerActive`), because the map is wiped the
-  moment the team commits (see below) and the countdown must stay empty.
+  (not at `Starting`). The clocks and spawning don't wait for it though: `SurvivalProgressionUtility.
+  Tick` (both clocks), `TickBreathingGraceHold` and `CombatDirectorSystem.Update`'s pulses also hold
+  while any challenge is `Starting` (`TeamChallengeUtility.AnyBannerActive`). The map is wiped the
+  moment the team commits (see below), so the countdown must stay empty, and a Breathing phase
+  reads as cleared during it - before 2026-10-30 its `PhaseTimer` kept running, so readying up in
+  the last seconds of the final Break started the Boss mid-countdown.
 - **No enemy list of its own - borrowed from the run's `SurvivalConfig`.** `ChallengeDefinition`
   authors only pacing (`BudgetPerPulse`/`PulseInterval`/`TargetPressure`/`MaxAliveEnemies`).
   `TeamChallengeUtility.TryResolveEnemySourcePhase` builds the deduped UNION of every `Combat`
@@ -186,9 +188,10 @@ from both `BeginChallengeActive`'s wipe and `DestroyChallengeSpawns`) - they use
 - `Assets/_QuantumUser/Simulation/Systems/Player/SkillSystem.cs` - new `TeamChallengeUtility.
   TryInteract` dispatch case.
 - `Assets/_QuantumUser/Simulation/Systems/Director/SurvivalProgressionUtility.cs` - `SurvivalTime`/
-  `PhaseTimer` advances also gated on `ActiveTeamChallengeCount <= 0`.
+  `PhaseTimer` advances also gated on `ActiveTeamChallengeCount <= 0` and no challenge `Starting`
+  (`AnyBannerActive`).
 - `Assets/_QuantumUser/Simulation/Systems/Director/RunPhaseUtility.cs` - `TickBreathingGraceHold`
-  also holds while `ActiveTeamChallengeCount > 0`.
+  also holds while `ActiveTeamChallengeCount > 0` or a challenge is `Starting`.
 - `Assets/_QuantumUser/Simulation/Systems/Director/CombatDirectorSystem.cs` - `Update`'s spawn gate
   + `ApplyEffectiveState`'s (was `ApplyHudBanner`) `TeamChallenge` precedence (via
   `TeamChallengeUtility.AnyBannerActive`, since the countdown itself precedes the pause counter

@@ -50,14 +50,17 @@ public class ChooseWindow : UiWindow
     [SerializeField] private WeaponCardWidget weaponCardPrefab;
     [SerializeField] private int weaponCardCount = 3;
 
-    // Read-only comparison card showing the weapon the player holds right now, visible only on a
-    // Choose-Weapon screen. Optional - when left empty, Awake clones weaponCardPrefab and parks the
+    // Card showing the weapon the player holds right now. On a Choose-Weapon screen it is the Keep
+    // Current pick (clicking it raises onKeepCurrentClicked, focusing it shows the card's own Keep
+    // Current overlay); on Blacksmith it is a read-only reference. Optional - when left empty, Awake clones weaponCardPrefab and parks the
     // clone just left of the offer row (outside its layout group); assign your own card (a
     // WeaponCardWidget placed wherever you like) to control the position.
     [Header("Current Weapon (comparison)")]
     [SerializeField] private WeaponCardWidget currentWeaponCard;
     [SerializeField, Tooltip("Gap between the auto-created current-weapon card and the offer row. Only used when currentWeaponCard is not assigned.")]
     private float currentWeaponCardGap = 40f;
+    [SerializeField, Tooltip("Button label on the current-weapon card when it is the Keep Current pick (Choose-Weapon screen).")]
+    private string keepCurrentButtonLabel = "KEEP CURRENT";
 
     [SerializeField] private TMP_Text countdownText;
 
@@ -138,16 +141,12 @@ public class ChooseWindow : UiWindow
     [SerializeField] private Button rerollButton;
     [SerializeField] private TMP_Text rerollChargesText;
 
-    // ONE button, reused for two mutually-exclusive "decline this screen" actions that never both
-    // apply at once (RefreshWeaponChoice vs. Refresh's allowCancel are two different card families
-    // - only one is ever active): "KEEP CURRENT" on a Choose-Weapon screen (declining picks
-    // nothing, still counts as confirmed - see LevelUpUtility.ConfirmKeepCurrent/
-    // KeepCurrentWeaponCommand) or "CANCEL" on Cursed Rift's own screen (the one place walking away
-    // without paying anything needs to be possible - see CancelCursedRiftCommand). Field kept
-    // named secondaryButton (was keepCurrentButton before Cursed Rift needed the same button for a
-    // second purpose - FormerlySerializedAs preserves the scene's existing wiring). Hidden entirely
-    // for a plain Level-Up (neither call site applies there).
-    [Header("Secondary Action (Keep Current / Cancel)")]
+    // ONE button for the POI screens' "walk away" action: "CANCEL" on Cursed Rift/Blacksmith (see
+    // CancelCursedRiftCommand), "CLOSE" on Store. Field kept named secondaryButton (was
+    // keepCurrentButton before Cursed Rift needed it - FormerlySerializedAs preserves the scene's
+    // existing wiring). Hidden on every Level-Up, Choose-Weapon included - Keep Current there is
+    // the current-weapon card itself (see onKeepCurrentClicked).
+    [Header("Secondary Action (Cancel / Close)")]
     [SerializeField, FormerlySerializedAs("keepCurrentButton")] private Button secondaryButton;
     private TMP_Text _secondaryButtonText;
 
@@ -211,10 +210,14 @@ public class ChooseWindow : UiWindow
     public Action onRerollClicked;
 
     // Raised when secondaryButton is clicked - GameplayUiController forwards this into whichever
-    // command matches the currently-active flow (KeepCurrentWeaponCommand on a Choose-Weapon
-    // screen, CancelCursedRiftCommand on Cursed Rift's own screen - see
-    // GameplayUiController.OnSecondaryButtonClicked). No index needed either way.
+    // command matches the currently-active flow (CancelCursedRiftCommand on Cursed Rift's own
+    // screen, CloseStoreCommand on Store - see GameplayUiController.OnSecondaryButtonClicked).
     public Action onSecondaryButtonClicked;
+
+    // Raised when the current-weapon card is clicked on a Choose-Weapon screen - GameplayUiController
+    // forwards it into a KeepCurrentWeaponCommand (declining picks nothing, still counts as
+    // confirmed - see LevelUpUtility.ConfirmKeepCurrent). Read-only elsewhere, so never raised there.
+    public Action onKeepCurrentClicked;
 
     private UpgradeCardWidget[] cards;
     private WeaponCardWidget[] weaponCards;
@@ -298,6 +301,12 @@ public class ChooseWindow : UiWindow
         {
             currentWeaponCardIntro = currentWeaponCard.GetComponent<ShakeGrowImpactAnimation>();
             currentWeaponCard.gameObject.SetActive(false);
+            currentWeaponCard.onClicked += clickedCard =>
+            {
+                PlayCardChoose();
+                _lastClickedSelectable = clickedCard.ActiveSelectable;
+                onKeepCurrentClicked?.Invoke();
+            };
         }
 
         weaponCardPrefab.gameObject.SetActive(false);
@@ -383,7 +392,7 @@ public class ChooseWindow : UiWindow
         if (EventSystem.current == null || (InMatchPopupManager.instance != null && InMatchPopupManager.instance.currentPopup != null))
             return;
 
-        // Gamepad Cancel (B) takes the screen's way out - Keep Current / Cancel / Close - when it offers one.
+        // Gamepad Cancel (B) takes the screen's way out - Cancel / Close - when it offers one.
         if (Quantum.GamepadControls.CancelPressed && secondaryButton != null
             && secondaryButton.gameObject.activeInHierarchy && secondaryButton.interactable)
         {
@@ -619,27 +628,32 @@ public class ChooseWindow : UiWindow
         // pick), but a purchase card (e.g. a Blacksmith perk offer - see BuildPerkOfferCardData)
         // also factors its own CanAfford into interactable independently of confirmedIndex, so one
         // card can go non-interactable on its own while siblings stay pickable. secondaryButton
-        // (Cancel/Keep Current) is the fallback for when that leaves every card non-interactable
+        // (Cancel/Close) is the fallback for when that leaves every card non-interactable
         // at once - it's still a valid, always-safe target even though the window is about to close.
         UiSelectionUtility.ReselectIfNoLongerInteractable(_lastClickedSelectable, transform, secondaryButton);
     }
 
     // Same shape as Refresh above, for a screen whose options are all LevelUpPoolKind.ChooseWeapon
-    // (see GameplayUiController.UpdateUpgradeScreen). secondaryButton always shows here ("KEEP
-    // CURRENT") - all 3 weaponCards stay real rolled weapons (see
-    // LevelUpUtility.RollChooseWeaponOptionsFor), the button is the sole way to decline them.
-    // Reroll always shows too.
-    public void RefreshWeaponChoice(string title, float timeRemaining, WeaponCardWidget.CardData[] cardData, int? confirmedIndex, string subtitle = null, WeaponCardWidget.CardData currentWeapon = default)
+    // (see GameplayUiController.UpdateUpgradeScreen). All 3 weaponCards stay real rolled weapons
+    // (see LevelUpUtility.RollChooseWeaponOptionsFor); declining them is picking the current-weapon
+    // card beside the row, now selectable (keptCurrent pins its Keep Current overlay once that
+    // pick is locked in). Reroll always shows too.
+    public void RefreshWeaponChoice(string title, float timeRemaining, WeaponCardWidget.CardData[] cardData, int? confirmedIndex, string subtitle = null, WeaponCardWidget.CardData currentWeapon = default, bool keptCurrent = false)
     {
+        bool interactable = confirmedIndex.HasValue == false;
+
+        currentWeapon.ReadOnly = false;
+        currentWeapon.KeepCurrent = true;
+        currentWeapon.KeptCurrent = keptCurrent;
+        currentWeapon.ButtonLabel = keepCurrentButtonLabel;
+
         SetCardFamilyActive(showCards: false, showWeaponCards: true);
-        RefreshCurrentWeaponCard(currentWeapon);
+        RefreshCurrentWeaponCard(currentWeapon, interactable);
         RefreshTitle(title);
         RefreshSubtitle(subtitle);
         RefreshCountdown(timeRemaining, true);
-        SetSecondaryButtonActive(true, "KEEP CURRENT");
+        SetSecondaryButtonActive(false, string.Empty);
         SetRerollButtonActive(true);
-
-        bool interactable = confirmedIndex.HasValue == false;
 
         for (int i = 0; i < weaponCards.Length; i++)
         {
@@ -649,24 +663,22 @@ public class ChooseWindow : UiWindow
 
         ReplayCardsIfRerolled(BuildSignature(cardData));
 
-        if (secondaryButton != null)
-            secondaryButton.interactable = interactable;
-
         ApplyNavigation();
         SelectFirstInteractableOnce();
     }
 
-    private void RefreshCurrentWeaponCard(WeaponCardWidget.CardData data)
+    private void RefreshCurrentWeaponCard(WeaponCardWidget.CardData data, bool interactable = false)
     {
         if (currentWeaponCard == null)
             return;
 
-        currentWeaponCard.gameObject.SetActive(data.HasOption);
+        if (currentWeaponCard.gameObject.activeSelf != data.HasOption)
+            currentWeaponCard.gameObject.SetActive(data.HasOption);
 
         if (data.HasOption == false)
             return;
 
-        currentWeaponCard.Setup(data, interactable: false);
+        currentWeaponCard.Setup(data, interactable);
     }
 
     private void SetSecondaryButtonActive(bool active, string label)
@@ -886,9 +898,9 @@ public class ChooseWindow : UiWindow
         for (int i = 0; i < weaponCards.Length; i++)
             weaponCards[i].gameObject.SetActive(showWeaponCards);
 
-        // Only RefreshWeaponChoice turns this back on - every other screen (Level-Up, Store, ...) hides it.
-        if (currentWeaponCard != null)
-            currentWeaponCard.gameObject.SetActive(false);
+        // currentWeaponCard is NOT toggled here - every Refresh* sets it once via
+        // RefreshCurrentWeaponCard. Hiding it here and re-showing it a line later disabled it every
+        // tick, which wiped its hover/focus state (no Keep Current overlay, no focus glow).
     }
 
     // Store's own screen - food/utility offers (cards[]) AND weapon offers (weaponCards[]) shown
@@ -903,6 +915,7 @@ public class ChooseWindow : UiWindow
     public void RefreshStore(string title, UpgradeCardWidget.CardData[] foodData, WeaponCardWidget.CardData[] weaponData, string subtitle = null)
     {
         SetCardFamilyActive(showCards: true, showWeaponCards: true);
+        RefreshCurrentWeaponCard(default);
         RefreshTitle(title);
         RefreshSubtitle(subtitle);
         RefreshCountdown(0f, false);
@@ -962,6 +975,10 @@ public class ChooseWindow : UiWindow
         foreach (WeaponCardWidget card in weaponCards)
             if (card != null && card.gameObject.activeInHierarchy)
                 AddIfNavigable(_navCards, card.ActiveSelectable);
+
+        // Read-only (Blacksmith) has its Button disabled, so only the Keep Current pick joins the row.
+        if (currentWeaponCard != null && currentWeaponCard.gameObject.activeInHierarchy && currentWeaponCard.ActiveSelectable is { enabled: true })
+            AddIfNavigable(_navCards, currentWeaponCard.ActiveSelectable);
 
         AddIfNavigable(_navButtons, rerollButton);
         AddIfNavigable(_navButtons, secondaryButton);
@@ -1050,13 +1067,17 @@ public class ChooseWindow : UiWindow
         UiSelectionUtility.SelectFirstInteractable(target);
     }
 
-    // First interactable card (either family), or the screen's own guaranteed escape hatch
-    // (secondaryButton - Close/Cancel/Keep Current) when no card is affordable/pickable at all
+    // First interactable offer card (either family; the Keep Current card only if no offer is
+    // pickable), or the screen's own guaranteed escape hatch (secondaryButton - Close/Cancel)
+    // when no card is affordable/pickable at all
     // (e.g. opening Store/Blacksmith with no money). Shared by SelectFirstInteractableOnce (on
     // open) and the recovery check below (nav input with nothing selected).
     private Selectable ResolveDefaultTarget()
     {
         Selectable target = FindFirstInteractable(cards) ?? FindFirstInteractable(weaponCards);
+
+        if (target == null && currentWeaponCard != null)
+            target = FindFirstInteractable(new[] { currentWeaponCard });
 
         if (target == null && secondaryButton != null && secondaryButton.interactable && secondaryButton.gameObject.activeInHierarchy)
             target = secondaryButton;

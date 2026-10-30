@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GameplaySprites_Arctic
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 4
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 4096
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 100
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+    - {fileID: 2800000, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 0ddd8da1923194324bc4907536a72d51: -6050444703645774184
+    - 0ddd8da1923194324bc4907536a72d51: 596405691753514323
+    - 0ddd8da1923194324bc4907536a72d51: 5038876853821952661
+    - 0ddd8da1923194324bc4907536a72d51: -8224302487471706662
+    - 0ddd8da1923194324bc4907536a72d51: -1086900660123739686
+    - 0ddd8da1923194324bc4907536a72d51: 5780934211701210292
+    - 0ddd8da1923194324bc4907536a72d51: 3615022826361477867
+    - 0ddd8da1923194324bc4907536a72d51: 8095416352647598292
+    - 0ddd8da1923194324bc4907536a72d51: 7477278919537310844
+    - 5c558ae3c816e47d2adfb2743035a102: -8433375482889815361
+    - 5c558ae3c816e47d2adfb2743035a102: 1237736105097403003
+    - 5c558ae3c816e47d2adfb2743035a102: -180437029961916201
+    - 5c558ae3c816e47d2adfb2743035a102: 2848036621450631139
+    - 5c558ae3c816e47d2adfb2743035a102: 6216596668512204413
+    - 5c558ae3c816e47d2adfb2743035a102: 7084105352988661760
+    - 5c558ae3c816e47d2adfb2743035a102: -7795112797540189287
+    - 5c558ae3c816e47d2adfb2743035a102: -6905906019040957007
+    - 5c558ae3c816e47d2adfb2743035a102: -5512404938739769789
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: -6050444703645774184, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: 596405691753514323, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: 5038876853821952661, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: -8224302487471706662, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: -1086900660123739686, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: 5780934211701210292, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: 3615022826361477867, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: 8095416352647598292, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: 7477278919537310844, guid: 0ddd8da1923194324bc4907536a72d51, type: 3}
+  - {fileID: -8433375482889815361, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  - {fileID: 1237736105097403003, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  - {fileID: -180437029961916201, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  - {fileID: 2848036621450631139, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  - {fileID: 6216596668512204413, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  - {fileID: 7084105352988661760, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  - {fileID: -7795112797540189287, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  - {fileID: -6905906019040957007, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  - {fileID: -5512404938739769789, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - FrostPatriarch_IcebreakerRecover
+  - FrostPatriarch_WalkA
+  - FrostPatriarch_SwipeRecover
+  - FrostPatriarch_WalkB
+  - FrostPatriarch_IcebreakerPrep
+  - FrostPatriarch_Idle
+  - FrostPatriarch_SwipePrep
+  - FrostPatriarch_IcebreakerImpact
+  - FrostPatriarch_SwipeRelease
+  - FrostPatriarch_BreathRecover
+  - FrostPatriarch_BreathPrep
+  - FrostPatriarch_LeapLand
+  - FrostPatriarch_LeapPrep
+  - FrostPatriarch_BreathActive
+  - FrostPatriarch_StaggerHit
+  - FrostPatriarch_KneelHold
+  - FrostPatriarch_KneelRise
+  - FrostPatriarch_LeapJump
+  m_RenderDataMap: {}
+  m_Tag: GameplaySprites_Arctic
+  m_IsVariant: 0

@@ -494,6 +494,10 @@ MonoBehaviour:
       RawValue: 0
     AirborneSource:
       Value: 0
+    WasManualJump:
+      Value: 0
+    WaterEdgeHesitationTimer:
+      RawValue: 0
 --- !u!114 &-3971490095111579385
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -587,6 +591,25 @@ MonoBehaviour:
   skateboardAngleDownDegrees: -15
   skateboardSpeedThreshold: 10
   skateboardDeck: {fileID: 5950866833420020253}
+  ollieAngleDegrees: 35
+  ollieTailPivot: {x: -0.15, y: -0.04}
+  olliePopDuration: 0.07
+  ollieLevelDuration: 0.2
+  ollieLift: 0.05
+  ollieCrouchAngleDegrees: -6
+  skateboardTrickChance: 1
+  skateboardTricks:
+  - name: Kickflip
+    spinDegrees: {x: 360, y: 0, z: 0}
+  - name: Heelflip
+    spinDegrees: {x: -360, y: 0, z: 0}
+  - name: Shove-it
+    spinDegrees: {x: 0, y: 360, z: 0}
+  - name: Tre Flip
+    spinDegrees: {x: 360, y: 360, z: 0}
+  skateboardTrickDuration: 0.65
+  skateboardTrickDropDistance: 0.12
+  skateboardTrickCatchDuration: 0.08
   useFlip: 0
   jumpFlipDuration: 0.5
   invertFlipDirection: 0
@@ -600,6 +623,9 @@ MonoBehaviour:
   maxLandingSquash: 0.6
   landingSpringFrequency: 6
   landingSpringDamping: 0.35
+  heavyLandingSquash: 0.8
+  heavyLandingHoldDuration: 0.09
+  heavyLandingMatchWindow: 0.25
   bodyRoot: {fileID: 1973933749131681354}
   downedRoot: {fileID: 954697355508439073}
   koRoot: {fileID: 910732170708175988}
@@ -618,6 +644,7 @@ MonoBehaviour:
   landSoundFullImpactSpeed: 12
   footstepSound: {fileID: 11400000, guid: f45b5bdb36bed489aba3b5ebc3737d42, type: 2}
   footstepDistance: 2.2
+  charView: {fileID: 0}
 --- !u!114 &3238834508286719383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -691,6 +718,8 @@ MonoBehaviour:
       RawValue: 0
     FireCooldownMultiplier:
       RawValue: 0
+    CheatManualFire:
+      Value: 0
     Level: 0
     FireCooldownTimer:
       RawValue: 0
@@ -698,6 +727,10 @@ MonoBehaviour:
     ReloadTimer:
       RawValue: 0
     TimeSinceFireReleased:
+      RawValue: 0
+    IsAnticipating:
+      Value: 0
+    AnticipationTimer:
       RawValue: 0
     RangeMultiplier:
       RawValue: 0
@@ -761,6 +794,11 @@ MonoBehaviour:
   - {fileID: 6343645197026065336}
   - {fileID: 8109971775430793504}
   fxConfig: {fileID: 11400000, guid: 31188256ea82a4f46b281957faaa078d, type: 2}
+  mainBodySprite: {fileID: 0}
+  immunityFlashColor: {r: 1, g: 1, b: 1, a: 0.85}
+  immunityFlashRate: 2.5
+  immunityStartSound: {fileID: 0}
+  immunityEndSound: {fileID: 0}
   flashColor: {r: 1, g: 1, b: 1, a: 1}
   burnFlashColor: {r: 1, g: 0.45, b: 0.1, a: 1}
   recoverFlashColor: {r: 0, g: 1, b: 1, a: 1}
@@ -769,18 +807,27 @@ MonoBehaviour:
   frontalReducedFlashColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   restColor: {r: 1, g: 1, b: 1, a: 0}
   duration: 0.3
+  fullFlashHealthFraction: 0.1
+  minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
+  minFlashDurationScale: 0.5
+  joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
+  joltPunchScaleDuration: 0.15
+  joltPunchScaleFrequency: 20
   healFlashColor: {r: 0.4, g: 1, b: 0.4, a: 1}
   shieldFlashColor: {r: 0.4, g: 0.75, b: 1, a: 1}
   deathColor: {r: 0, g: 0, b: 0, a: 0.5}
-  riftMarkMaterial: {fileID: 0}
-  riftMarkApplicationFlashColor: {r: 0.99215686, g: 0.22352941, b: 0.44313726, a: 1}
-  riftMarkApplicationFlashDuration: 0.08
   expPickupFlashColor: {r: 0.3, g: 0.55, b: 1, a: 0.35}
   coinPickupFlashColor: {r: 1, g: 0.84, b: 0.2, a: 0.35}
   riftShardPickupFlashColor: {r: 1, g: 0.35, b: 0.75, a: 0.35}
   scrapPickupFlashColor: {r: 0.95, g: 0.6, b: 0.25, a: 0.35}
   pickupFlashDuration: 0.35
+  fireRestTint: {r: 1, g: 0.55, b: 0.2, a: 1}
+  iceRestTint: {r: 0.4, g: 0.9, b: 1, a: 1}
+  lightningRestTint: {r: 1, g: 0.9, b: 0.3, a: 1}
+  frozenTint: {r: 0.55, g: 0.85, b: 1, a: 1}
   freezeMaterial: {fileID: 0}
+  hardFreezeMaterial: {fileID: 0}
 --- !u!114 &8110188611109955938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1019,8 +1066,6 @@ MonoBehaviour:
       RawValue: 0
     ReloadSpeedMultiplier:
       RawValue: 0
-    ProjectileSpeedMultiplier:
-      RawValue: 0
     AreaRadiusMultiplier:
       RawValue: 0
     NearDamageMultiplier:
@@ -1030,6 +1075,8 @@ MonoBehaviour:
     DashCooldownMultiplier:
       RawValue: 0
     SkillCooldownMultiplier:
+      RawValue: 0
+    DashDistanceMultiplier:
       RawValue: 0
     SkillDurationMultiplier:
       RawValue: 0
@@ -1067,6 +1114,12 @@ MonoBehaviour:
       RawValue: 0
     RiftShards:
       RawValue: 0
+    RiftShardsEarned:
+      RawValue: 0
+    MonstersKilled: 0
+    DamageDealt:
+      RawValue: 0
+    TimesDowned: 0
     WeaponTalentLevel: 0
     ShopWeaponOfferCount: 0
     RerollQuantity: 0
@@ -1075,6 +1128,8 @@ MonoBehaviour:
     MagazineSizeBonus:
       RawValue: 0
     MagazineSizeOverride: 0
+    WeaponRangeMultiplier:
+      RawValue: 0
     LongRangePierceBonus: 0
     WeaponStaggerChance:
       RawValue: 0
@@ -1084,7 +1139,9 @@ MonoBehaviour:
       RawValue: 0
     NearKillMoveSpeedDuration:
       RawValue: 0
-    SkillCenterFocusBonus:
+    FocusedPowerNonCritDamagePenalty:
+      RawValue: 0
+    FocusedPowerCritDamageBonus:
       RawValue: 0
     CritFocusThreshold: 0
     CritFocusProgress: 0
@@ -1114,50 +1171,111 @@ MonoBehaviour:
       RawValue: 0
     OverkillRadius:
       RawValue: 0
-    ScavengerRequiredPickups: 0
-    ScavengerWindow:
-      RawValue: 0
     ScavengerBuffDuration:
       RawValue: 0
     ScavengerMoveSpeedBonus:
       RawValue: 0
     ScavengerFireRateBonus:
       RawValue: 0
-    ScavengerPickupCount: 0
-    ScavengerWindowRemaining:
-      RawValue: 0
     CoinLossPercentOnHpDamage:
       RawValue: 0
     SecondWindHealPercent:
+      RawValue: 0
+    SecondWindMoveSpeedBonus:
+      RawValue: 0
+    SecondWindMoveSpeedDuration:
       RawValue: 0
     DashChargeHardCap: 0
     AccessoryBlockResetsDash:
       Value: 0
     AccessoryBlockSkillCooldownFraction:
       RawValue: 0
-    HasCriticalFractureMutation:
-      Value: 0
-    HasSkillFractureMutation:
-      Value: 0
-    HasRiftDashMutation:
-      Value: 0
-    HasHeavyFractureMutation:
-      Value: 0
-    HasCloseFractureMutation:
-      Value: 0
-    HasLongFractureMutation:
-      Value: 0
-    HasExecutionFractureMutation:
-      Value: 0
-    HasFirstContactMutation:
-      Value: 0
-    HasFracturedPresenceMutation:
-      Value: 0
-    HasOverflowingRiftMutation:
-      Value: 0
-    HasLastStandMutation:
-      Value: 0
-    LastStandCooldownRemaining:
+    BroMutationBaseDamageBonus:
+      RawValue: 0
+    BroMutationPerOwnerDamageBonus:
+      RawValue: 0
+    BossDestroyerHeavyDamageBonus:
+      RawValue: 0
+    BossDestroyerLightDamagePenalty:
+      RawValue: 0
+    ExecutionThresholds:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    HitDamageCapFraction:
+      RawValue: 0
+    RangedDamageTakenMultiplier:
+      RawValue: 0
+    CloseDamageTakenMultiplier:
+      RawValue: 0
+    LifesaverCharges: 0
+    LifesaverDuration:
+      RawValue: 0
+    LifesaverRemaining:
+      RawValue: 0
+    LifesaverSurviveHealFraction:
+      RawValue: 0
+    DashRewindFraction:
+      RawValue: 0
+    DashRewindWindow:
+      RawValue: 0
+    RecentDamageAmounts:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    RecentDamageTimes:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    RecentDamageHead: 0
+    DashMoveSpeedBonus:
+      RawValue: 0
+    DashMoveSpeedDuration:
+      RawValue: 0
+    DashRefundInterval: 0
+    DashRefundProgress: 0
+    ComboDamagePerStack:
+      RawValue: 0
+    ComboMaxStacks: 0
+    ComboStacks: 0
+    ComboDecayTime:
+      RawValue: 0
+    ComboTimer:
+      RawValue: 0
+    ComboStackInterval:
+      RawValue: 0
+    ComboGainCooldown:
+      RawValue: 0
+    CurrentHealthDamageFraction:
+      RawValue: 0
+    CurrentHealthDamageBossFraction:
+      RawValue: 0
+    CurrentHealthBonusHitCap:
+      RawValue: 0
+    LifeStealCapPerSecond:
+      RawValue: 0
+    LifeStealWindowTimer:
+      RawValue: 0
+    LifeStealHealedInWindow:
+      RawValue: 0
+    ElementHealFraction:
+      RawValue: 0
+    ElementHealCooldown:
+      RawValue: 0
+    ElementHealCooldownRemaining:
       RawValue: 0
 --- !u!114 &8215253040534427600
 MonoBehaviour:
@@ -1201,56 +1319,39 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Quantum.Unity::Quantum.QPrototypeStatusEffects
   Prototype:
+    FirstElementApplied:
+      Value: 0
     BurnRemaining:
       RawValue: 0
     BurnTickTimer:
       RawValue: 0
-    BurnDamagePerTick:
-      RawValue: 0
+    BurnStackCount: 0
+    BurnStackDamagePerTick:
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
+    - RawValue: 0
     BurnOwner: {fileID: 0}
     BurnSource:
       Value: 0
-    RiftMarkStacks: 0
-    RiftMarkRemaining:
+    ElectrifiedRemaining:
       RawValue: 0
-    RiftMarkReactionLockoutRemaining:
+    StaggerRemaining:
       RawValue: 0
-    DetonationCooldownRemaining:
-      RawValue: 0
-    DeepFreezeCooldownRemaining:
+    ThermalShockCooldownRemaining:
       RawValue: 0
     OverloadCooldownRemaining:
       RawValue: 0
-    RuptureCooldownRemaining:
+    ShatterCooldownRemaining:
       RawValue: 0
-    SingularityCooldownRemaining:
-      RawValue: 0
-    MarkApplicationCooldowns:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    FirstContactTriggered:
-      Value: 0
-    OverflowingRiftCooldownRemaining:
-      RawValue: 0
-    FracturedPresenceExposedBy:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-    FracturedPresenceExposureTime:
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
-    - RawValue: 0
     IceRemaining:
       RawValue: 0
-    IceSpeedMultiplier:
+    IceBuildup:
+      RawValue: 0
+    FreezeRemaining:
+      RawValue: 0
+    FreezeRecoveryRemaining:
       RawValue: 0
     StunRemaining:
       RawValue: 0
@@ -1333,6 +1434,10 @@ MonoBehaviour:
     TempMoveSpeedRemaining:
       RawValue: 0
     TempMoveSpeedMultiplier:
+      RawValue: 0
+    StickySlowRemaining:
+      RawValue: 0
+    StickySlowMultiplier:
       RawValue: 0
     ReviveImmunityRemaining:
       RawValue: 0
@@ -1713,10 +1818,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0723c21be28454a039f7ffebd04176e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JuicyEffects
+  enableSound: {fileID: 0}
   scaleInOnEnable: 0
   scaleInDelay: 0
   scaleInDuration: 0.45
   scaleInEase: 27
+  glitchInOnEnable: 0
+  glitchInDuration: 0.25
+  glitchInTickInterval: 0.03
+  glitchInOffset: {x: 0.15, y: 0.15, z: 0}
+  glitchInScaleJitter: {x: 0.08, y: 0.08, z: 0}
+  glitchGhostSource: {fileID: 0}
+  glitchGhostRedColor: {r: 1, g: 0.1, b: 0.3, a: 0.6}
+  glitchGhostCyanColor: {r: 0.1, g: 1, b: 1, a: 0.6}
   punchScaleStrength: {x: 0.4, y: 0.4, z: 0}
   punchScaleDuration: 0.4
   punchScaleFrequency: 16

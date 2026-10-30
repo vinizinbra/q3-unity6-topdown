@@ -16,12 +16,48 @@ MonoBehaviour:
   - Atlas: {fileID: 4343727234628468602, guid: 8e61ef1c9314d4db9a34941be8cfbb5e, type: 2}
     Context: 2
     Primary: 1
+    World: {fileID: 0}
+    Folders: []
   - Atlas: {fileID: 4343727234628468602, guid: 11da54cdda8544d7bb5cce45c96ad2ee, type: 2}
     Context: 1
     Primary: 1
+    World: {fileID: 0}
+    Folders: []
   - Atlas: {fileID: 4343727234628468602, guid: 8b26844b5ed8b4c74a95da9af065f559, type: 2}
     Context: 3
     Primary: 0
+    World: {fileID: 0}
+    Folders: []
+  - Atlas: {fileID: 4343727234628468602, guid: cbb77ad0f2cbf4c64adee6b488323e87, type: 2}
+    Context: 2
+    Primary: 0
+    World: {fileID: 11400000, guid: ab2f23e2c8dd249fdbfa965d85630c9f, type: 2}
+    Folders:
+    - Assets/_Project/Art/Enemy/World1
+  - Atlas: {fileID: 4343727234628468602, guid: deb0c44a759ff440abe85f62050cae31, type: 2}
+    Context: 2
+    Primary: 0
+    World: {fileID: 11400000, guid: e2396528a0b834e3295743bb1230c84e, type: 2}
+    Folders:
+    - Assets/_Project/Art/Enemy/World2
+  - Atlas: {fileID: 4343727234628468602, guid: dc7961d8028a742b48d2f9f35cae1995, type: 2}
+    Context: 2
+    Primary: 0
+    World: {fileID: 0}
+    Folders:
+    - Assets/_Project/Art/Sprites/Enemy/Arctic
+  - Atlas: {fileID: 4343727234628468602, guid: 5613d4a82ad254b96982acce4f056b3b, type: 2}
+    Context: 2
+    Primary: 0
+    World: {fileID: 0}
+    Folders:
+    - Assets/_Project/Art/Sprites/Enemy/Favela
+  - Atlas: {fileID: 4343727234628468602, guid: a0b967103212b4a00ad85fc2ccb0c02f, type: 2}
+    Context: 2
+    Primary: 0
+    World: {fileID: 0}
+    Folders:
+    - Assets/_Project/Art/Sprites/Enemy/Neon
   ExcludedUsageFolders:
   - Assets/3rd-party
   - Assets/Photon
@@ -30,6 +66,22 @@ MonoBehaviour:
   - Assets/Samples
   - Assets/0_Refs
   - Assets/_Delete
+  CommonRootFolders:
+  - Assets/_QuantumUser/Resources/Configs
+  - Assets/_QuantumUser/Resources/Accessory
+  - Assets/_QuantumUser/Resources/Chunk
+  - Assets/_QuantumUser/Resources/Generic
+  - Assets/_QuantumUser/Resources/HitEffects
+  - Assets/_QuantumUser/Resources/LevelConfig
+  - Assets/_QuantumUser/Resources/LevelUp
+  - Assets/_QuantumUser/Resources/Passives
+  - Assets/_QuantumUser/Resources/Poi
+  - Assets/_QuantumUser/Entities/Characters
+  - Assets/_QuantumUser/Entities/Collectables
+  - Assets/_QuantumUser/Entities/LevelChunk
+  - Assets/_QuantumUser/Entities/LevelProps
+  UnpackedFolders:
+  - Assets/_Project/Art/Enemy/_Unused
   ScanAllScenes: 0
   UiDuplicateFolder: Assets/_Project/Art/Sprites/_AtlasSplit/UI
   GameplayDuplicateFolder: Assets/_Project/Art/Sprites/_AtlasSplit/Gameplay

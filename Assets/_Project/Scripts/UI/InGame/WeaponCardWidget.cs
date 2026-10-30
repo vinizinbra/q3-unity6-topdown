@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using PrimeTween;
 using QuantumUser.View.Util;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -13,7 +15,7 @@ using UnityEngine.UI;
 // rarity'd rolled perks, which needs its own small per-perk row (see WeaponCardPerkRowWidget). Pure
 // view: takes plain data in via Setup(), no Quantum dependency (GameplayUiController.
 // BuildWeaponCardData is the one place that reads a LevelUpOption and turns it into a CardData).
-public class WeaponCardWidget : MonoBehaviour
+public class WeaponCardWidget : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Serializable]
     public struct CardData
@@ -65,6 +67,13 @@ public class WeaponCardWidget : MonoBehaviour
         // Display-only card (e.g. ChooseWindow's CURRENT WEAPON comparison card) - hides the button
         // and purchase row so it can't be clicked or selected.
         public bool ReadOnly;
+
+        // This card is the "keep my current weapon" pick (ChooseWindow's current-weapon card on a
+        // Choose-Weapon screen) - keepCurrentOverlay shows while it is focused/hovered.
+        public bool KeepCurrent;
+
+        // The Keep Current pick has been locked in - pins keepCurrentOverlay on regardless of focus.
+        public bool KeptCurrent;
     }
 
     [Serializable]
@@ -136,6 +145,17 @@ public class WeaponCardWidget : MonoBehaviour
     [SerializeField, Tooltip("Fallback buttonLabelText value whenever CardData.ButtonLabel is empty.")]
     private string defaultButtonLabel = "CHOOSE";
 
+    [Header("Keep Current overlay")]
+    [SerializeField, Tooltip("Shown over the card while it is the Keep Current pick (CardData.KeepCurrent) and focused/hovered, and pinned once that pick is locked in (CardData.KeptCurrent). Optional - a dim + label overlay is built at runtime when left empty.")]
+    private GameObject keepCurrentOverlay;
+    [SerializeField] private string keepCurrentOverlayLabel = "KEEP CURRENT";
+    [SerializeField, Tooltip("Label colour of the runtime-built overlay - Rift Pink.")]
+    private Color keepCurrentOverlayColor = new Color(0.992f, 0.224f, 0.443f, 1f);
+    [SerializeField, Range(0f, 1f), Tooltip("Black dim alpha behind the label of the runtime-built overlay.")]
+    private float keepCurrentOverlayDim = 0.6f;
+    [SerializeField] private float keepCurrentOverlayPopScale = 1.25f;
+    [SerializeField] private float keepCurrentOverlayPopDuration = 0.25f;
+
     public event Action<WeaponCardWidget> onClicked;
 
     // A single button for the whole card - Setup drives its label ("CHOOSE"/"BUY" via
@@ -152,14 +172,49 @@ public class WeaponCardWidget : MonoBehaviour
 
     private bool _perkRowsInitialized;
 
+    private bool _keepCurrent;
+    private bool _keptCurrent;
+    private bool _hovered;
+    private Transform _keepCurrentPopTarget;
+    private Tween _keepCurrentPopTween;
+
     private void Awake()
     {
         if (button != null)
             button.onClick.AddListener(() => onClicked?.Invoke(this));
     }
 
+    // Polled rather than ISelectHandler: selection events only reach the Button's own GameObject,
+    // and gamepad focus can move without any pointer event. Only the Keep Current card does work.
+    private void Update()
+    {
+        if (_keepCurrent == false)
+            return;
+
+        bool focused = button != null && button.enabled && button.interactable && (_hovered ||
+            (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == button.gameObject));
+
+        SetKeepCurrentOverlayVisible(_keptCurrent || focused);
+    }
+
+    private void OnDisable()
+    {
+        _hovered = false;
+        SetKeepCurrentOverlayVisible(false);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData) => _hovered = true;
+
+    public void OnPointerExit(PointerEventData eventData) => _hovered = false;
+
     public void Setup(CardData data, bool interactable)
     {
+        _keepCurrent = data.HasOption && data.KeepCurrent;
+        _keptCurrent = data.KeptCurrent;
+
+        if (_keepCurrent == false)
+            SetKeepCurrentOverlayVisible(false);
+
         if (root != null)
             root.SetActive(data.HasOption);
 
@@ -252,6 +307,83 @@ public class WeaponCardWidget : MonoBehaviour
 
         if (data.ReadOnly && purchaseRoot != null)
             purchaseRoot.SetActive(false);
+    }
+
+    private void SetKeepCurrentOverlayVisible(bool visible)
+    {
+        if (visible && keepCurrentOverlay == null)
+            keepCurrentOverlay = BuildKeepCurrentOverlay();
+
+        if (keepCurrentOverlay == null || keepCurrentOverlay.activeSelf == visible)
+            return;
+
+        keepCurrentOverlay.SetActive(visible);
+        _keepCurrentPopTween.Stop();
+
+        if (visible == false)
+            return;
+
+        keepCurrentOverlay.transform.SetAsLastSibling();
+
+        // Unscaled - the Level-Up screen ramps Time.timeScale down.
+        Transform target = _keepCurrentPopTarget != null ? _keepCurrentPopTarget : keepCurrentOverlay.transform;
+        _keepCurrentPopTween = Tween.Scale(target, Vector3.one * keepCurrentOverlayPopScale, Vector3.one,
+            keepCurrentOverlayPopDuration, Ease.OutBack, useUnscaledTime: true);
+    }
+
+    // Fallback for a card with no authored keepCurrentOverlay: a dim over the whole card (same
+    // sprite as the card background so the corners match) with a centred label in the card's own
+    // name font. Never a raycast target, so it can't steal the hover/click from the card under it.
+    private GameObject BuildKeepCurrentOverlay()
+    {
+        var overlay = new GameObject("KeepCurrentOverlay", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        overlay.SetActive(false);
+        overlay.GetComponent<LayoutElement>().ignoreLayout = true;
+        Stretch((RectTransform)overlay.transform, transform, 0f);
+
+        var dim = overlay.GetComponent<Image>();
+        dim.color = new Color(0f, 0f, 0f, keepCurrentOverlayDim);
+        dim.raycastTarget = false;
+
+        if (button != null && button.targetGraphic is Image background && background.sprite != null)
+        {
+            dim.sprite = background.sprite;
+            dim.type = background.type;
+            dim.pixelsPerUnitMultiplier = background.pixelsPerUnitMultiplier;
+        }
+
+        var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+        Stretch((RectTransform)labelObject.transform, overlay.transform, 16f);
+
+        var label = labelObject.GetComponent<TextMeshProUGUI>();
+
+        if (weaponName != null)
+        {
+            label.font = weaponName.font;
+            label.fontSharedMaterial = weaponName.fontSharedMaterial;
+        }
+
+        label.text = keepCurrentOverlayLabel;
+        label.color = keepCurrentOverlayColor;
+        label.fontStyle = FontStyles.Bold;
+        label.alignment = TextAlignmentOptions.Center;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 18f;
+        label.fontSizeMax = 56f;
+        label.raycastTarget = false;
+
+        _keepCurrentPopTarget = labelObject.transform;
+        return overlay;
+    }
+
+    private static void Stretch(RectTransform rect, Transform parent, float padding)
+    {
+        rect.SetParent(parent, false);
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = new Vector2(padding, padding);
+        rect.offsetMax = new Vector2(-padding, -padding);
+        rect.localScale = Vector3.one;
     }
 
     // Grows _perkRows to at least `count`, cloning perkRows[0] into its own parent for anything the

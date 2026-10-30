@@ -70,7 +70,16 @@ namespace Quantum
             bool freezeSurvivalTime = currentPhase.Kind == SurvivalPhaseKind.Breathing
                 || (currentPhase.Kind == SurvivalPhaseKind.Elite && encounterCleared == false);
 
-            if (freezeSurvivalTime == false && f.Global->ActiveTraversalChallengeCount <= 0 && f.Global->ActiveTeamChallengeCount <= 0)
+            // Team Challenge freezes from the Starting countdown on, not just once
+            // ActiveTeamChallengeCount increments at ChallengeActive - the map is wiped the moment the
+            // team commits, so during the countdown a Breathing phase reads as cleared and its
+            // PhaseTimer would run out underneath it (readying up in the last seconds of the final
+            // Break started the Boss mid-countdown).
+            bool challengePaused = f.Global->ActiveTraversalChallengeCount > 0
+                || f.Global->ActiveTeamChallengeCount > 0
+                || TeamChallengeUtility.AnyBannerActive(f);
+
+            if (freezeSurvivalTime == false && challengePaused == false)
                 f.Global->SurvivalTime += f.DeltaTime;
 
             bool wasSecured = f.Global->BreathingAreaSecured;
@@ -106,7 +115,7 @@ namespace Quantum
             // Traversal Challenge. Applies to every phase kind, not just Breathing: the point is the
             // WHOLE Director pauses while a challenge is active, matching SurvivalTime's own
             // unconditional freeze.
-            if (encounterCleared == true && f.Global->ActiveTraversalChallengeCount <= 0 && f.Global->ActiveTeamChallengeCount <= 0)
+            if (encounterCleared == true && challengePaused == false)
                 f.Global->PhaseTimer += f.DeltaTime;
 
             bool isLastPhase = f.Global->CurrentPhaseIndex >= config.Phases.Length - 1;

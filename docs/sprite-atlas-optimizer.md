@@ -39,6 +39,45 @@ Gameplay Sprites / Sprite Atlas Conflicts**: one window, tabs **UI · Gameplay �
    emits issues with fixes. Only atlases bound to **UI** or **Gameplay** are managed; **Ignore**/unbound atlases
    (e.g. `IntroAtlas`) are left alone, but still count for "in several atlases".
 
+## World atlases (Gameplay split per world)
+
+Monsters never sit in the Common atlas: each world's enemy art lives in **its world's folder** and that world's atlas packs
+the folder. **Where a file lives decides its atlas** (`GameplayAtlasRouter.TargetFor`): the Gameplay binding whose
+`Folders` contain it (deepest wins), else the primary (Common) `GameplaySprites`. Textures under
+`UnpackedFolders` (`Art/Enemy/_Unused`) are treated as Ignore and never packed.
+
+**Which folder** an enemy sheet belongs in is decided by **Tools ▸ RiftRaiders ▸ Optimize ▸ Organize Enemy Sprites by
+World** (`EnemySpriteOrganizer`): Analyze → review → Apply. For every Sprite texture under `Art/Enemy` and
+`Art/Sprites/Enemy` it asks `WorldReachIndex` which worlds draw it:
+
+| Result | Placement |
+|---|---|
+| one world | `Art/Enemy/World<N>/` (the world binding's folder) |
+| several worlds | the **first** world (its home); the report names the borrowing world + chain (e.g. W2 SecurityBot → `ScavengerRaidersNotUsed`) — give that enemy its own art to split it |
+| also heroes / shared configs / chunks / gameplay scene / HUD | left in place (Common), reported |
+| no world, no shared content | `Art/Enemy/_Unused/` (never packed) |
+| no world, under a biome binding folder | left in its biome atlas (debug bosses) |
+
+Apply moves files with `AssetDatabase.MoveAsset` (GUIDs → references kept), creates a world atlas if missing, sets each
+world binding's `Folders`, adds the folder packable and drops the sheets' explicit entries from every Gameplay atlas.
+
+`WorldReachIndex` walks from each `WorldDefinition` (SurvivalConfig → enemies / groups / bosses → actions / deliveries →
+prototypes → views) and, for "shared", from every `CharacterData`, `CommonRootFolders` (configs, collectables, chunks,
+props, POIs…) and the enabled Build Settings scenes. It walks **objects, not files** — the traps that made a file-level walk
+wrong: (1) W2 views are **prefab variants** of W1 views, so file dependencies (and `m_PrefabInstance` /
+`m_CorrespondingSourceObject`) point at the W1 base even where the sprite is overridden — prefabs are read flattened
+instead; (2) W2 enemies reference **sub-assets inside W1 files** (a delivery inside `W1-Charger.asset`) — only that object is
+visited, not the whole file; (3) entity prototypes live in **`.qprototype`** files.
+
+| Atlas | Packs |
+|---|---|
+| `GameplaySprites` | Common (heroes, weapons, projectiles, chests, telegraphs…) — no enemy sheets |
+| `GameplaySprites_W1_GrasslandOutpost` / `_W2_DesertSky` | folder `Art/Enemy/World1` / `World2` |
+| `GameplaySprites_Arctic` / `_Favela` / `_Neon` | `Art/Sprites/Enemy/Arctic|Favela|Neon` (debug-only bosses) |
+
+All Gameplay atlases: Default max **4096** (8192 pages aren't safe on mobile), Compressed + Crunch. New world: add it to the
+WorldCatalog, run the organizer (it creates the atlas and folder).
+
 ## Scene filter
 
 Toolbar popup: **All scenes / each scanned scene / Not in any scene (code / Resources)**. The scan records, per
@@ -98,6 +137,8 @@ Default folders: `Assets/_Project/Art/Sprites/_AtlasSplit/UI` and `…/Gameplay`
 | `AtlasEditBatch.cs` | `AtlasEditBatch` (queued add/remove/dedupe applied in one pass per atlas through `m_EditorData.packables`, handles Sprite packables) + `AtlasReader` (memberships, folder packables, max size for active platform, pack preview). |
 | `SpriteDuplicator.cs` | Duplicate & reassign. |
 | `RuntimeSpriteRecorder.cs` | Play-mode sampler. |
+| `WorldReachIndex.cs` | `WorldReachIndex` (which worlds / shared content draw each sprite, object-level walk) + `GameplayAtlasRouter` (folder → atlas). |
+| `EnemySpriteOrganizer.cs` | Organize Enemy Sprites by World: plan + apply (moves, world atlases, folder packables) and its window. |
 | `SpriteOptimizerWindow.cs` | The window. Scan cached statically (lost on domain reload → Rescan). Reuses `BuildAnalyzer/PagedListDrawer`. |
 
 Supersedes `SpriteAtlasScannerWindow` (Tools ▸ Art, open-scenes only) and complements the Build Size Analyzer's
@@ -120,6 +161,14 @@ Compiles; scan + analysis verified in the live Editor on this project (1424 refs
 Shadow, HandCircle…), 4 split sheets, 105 UI / 24 Gameplay textures not in their atlas (mostly Layer Lab UI),
 `minimapCharacters` in UISprites but used by gameplay, 8 non-Sprite ETFX textures + raw-material-only textures
 packed in GameplaySprites, EmojiOne (TMP) in UISprites, UISprites ≈ 2 pages at 4096. `IntroAtlas` bound to Ignore.
-**Not yet exercised in-Editor:** Sync, Duplicate & reassign, Pack Preview, the runtime recorder.
+**Not yet exercised in-Editor:** Duplicate & reassign, the runtime recorder.
+
+**2026-10-30:** world atlases added and the organizer applied in the live Editor: W1 folder 6 sheets, W2 folder 11, 7 dead
+sheets → `_Unused` (RukkEnemies, RukkBaseEnemies, World1Enemies (1), World1ChargerElite, RukkEliteFlee,
+DuneLeviathanBurrowSpriteSheet, crystalEruption), Common has no enemy sheets; Guns/Projectiles/telegraphs packed into
+Common, raw-material-only + junk entries removed. ⚠ **Pack Preview
+(`AtlasReader.PackAndCountPages` → `SpriteAtlasUtility.PackAtlases`) crashed the Editor natively** (Unity 6000.3.6,
+`GenerateTextureAndSpriteRectDataFromAtlasMask`) right after that Sync — not yet known which atlas triggers it; confirm with
+a build before relying on Pack Preview.
 
 **Plan 2 (later):** TMP/UI draw-order optimization (text vs image interleaving that breaks batches).

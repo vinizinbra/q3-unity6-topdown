@@ -1,0 +1,154 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GameplaySprites_W1_GrasslandOutpost
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 4
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 4096
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 100
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: aab23ec3d531341aeae5d0abb2e1b9ef, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 57e85e7087b3c45e7bb2695a453e0739: -548692695
+    - 57e85e7087b3c45e7bb2695a453e0739: 1990226494
+    - 57e85e7087b3c45e7bb2695a453e0739: -1551491386
+    - 57e85e7087b3c45e7bb2695a453e0739: -1543196533
+    - 57e85e7087b3c45e7bb2695a453e0739: -312753833
+    - 57e85e7087b3c45e7bb2695a453e0739: -1073922619
+    - 2ccd5da319632411aa432cca9e5eeb15: 853282321
+    - 2ccd5da319632411aa432cca9e5eeb15: -785842562
+    - 2ccd5da319632411aa432cca9e5eeb15: -1643857865
+    - 2ccd5da319632411aa432cca9e5eeb15: 351123828
+    - 2ccd5da319632411aa432cca9e5eeb15: 1480530641
+    - 2ccd5da319632411aa432cca9e5eeb15: -1114255281
+    - 2ccd5da319632411aa432cca9e5eeb15: 577574060
+    - 2ccd5da319632411aa432cca9e5eeb15: -199887510
+    - 2ccd5da319632411aa432cca9e5eeb15: 348937486
+    - 2ccd5da319632411aa432cca9e5eeb15: 1550856225
+    - 414c7fe531867433e9e397ec12cedb2e: -2200405082034451777
+    - 414c7fe531867433e9e397ec12cedb2e: 2969079090545882148
+    - 414c7fe531867433e9e397ec12cedb2e: 3791912869728078214
+    - 414c7fe531867433e9e397ec12cedb2e: -2902663509325438561
+    - 414c7fe531867433e9e397ec12cedb2e: 1780748329695835414
+    - dec25668cd2bb4d09a77f8196c943b34: -147604254
+    - dec25668cd2bb4d09a77f8196c943b34: 1909996209
+    - dec25668cd2bb4d09a77f8196c943b34: -1822871292
+    - dec25668cd2bb4d09a77f8196c943b34: -756073540
+    - dec25668cd2bb4d09a77f8196c943b34: -1896583010
+    - dec25668cd2bb4d09a77f8196c943b34: -232438133
+    - dec25668cd2bb4d09a77f8196c943b34: 203894394
+    - dec25668cd2bb4d09a77f8196c943b34: -865403094
+    - d2ee3b1fbe1e94f87943e96a7d2bef99: 983202667
+    - d2ee3b1fbe1e94f87943e96a7d2bef99: -496500279
+    - d2ee3b1fbe1e94f87943e96a7d2bef99: 1532041238
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: -548692695, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
+  - {fileID: 1990226494, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
+  - {fileID: -1551491386, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
+  - {fileID: -1543196533, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
+  - {fileID: -312753833, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
+  - {fileID: -1073922619, guid: 57e85e7087b3c45e7bb2695a453e0739, type: 3}
+  - {fileID: 853282321, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: -785842562, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: -1643857865, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: 351123828, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: 1480530641, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: -1114255281, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: 577574060, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: -199887510, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: 348937486, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: 1550856225, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+  - {fileID: -2200405082034451777, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+  - {fileID: 2969079090545882148, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+  - {fileID: 3791912869728078214, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+  - {fileID: -2902663509325438561, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+  - {fileID: 1780748329695835414, guid: 414c7fe531867433e9e397ec12cedb2e, type: 3}
+  - {fileID: -147604254, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+  - {fileID: 1909996209, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+  - {fileID: -1822871292, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+  - {fileID: -756073540, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+  - {fileID: -1896583010, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+  - {fileID: -232438133, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+  - {fileID: 203894394, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+  - {fileID: -865403094, guid: dec25668cd2bb4d09a77f8196c943b34, type: 3}
+  - {fileID: 983202667, guid: d2ee3b1fbe1e94f87943e96a7d2bef99, type: 3}
+  - {fileID: -496500279, guid: d2ee3b1fbe1e94f87943e96a7d2bef99, type: 3}
+  - {fileID: 1532041238, guid: d2ee3b1fbe1e94f87943e96a7d2bef99, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - EliteFlee_1
+  - EliteFlee_0
+  - EliteFlee_3
+  - EliteFlee_2
+  - EliteFlee_5
+  - EliteFlee_4
+  - World1FinalEnemies_3
+  - World1FinalEnemies_2
+  - World1FinalEnemies_1
+  - World1FinalEnemies_0
+  - World1FinalEnemies_7
+  - World1FinalEnemies_6
+  - World1FinalEnemies_5
+  - World1FinalEnemies_4
+  - World1-hargerAction
+  - World1-ChargerIdle
+  - Rukk_01
+  - Rukk_03
+  - Rukk_02
+  - Rukk_05
+  - Rukk_04
+  - WORLD1BOSS (1)_2
+  - WORLD1BOSS (1)_3
+  - WORLD1BOSS (1)_0
+  - WORLD1BOSS (1)_1
+  - WORLD1BOSS (1)_6
+  - WORLD1BOSS (1)_7
+  - WORLD1BOSS (1)_4
+  - WORLD1BOSS (1)_5
+  - World1FinalRukkSlammer_1
+  - World1FinalRukkSlammer_0
+  - World1FinalRukkSlammer_2
+  m_RenderDataMap: {}
+  m_Tag: GameplaySprites_W1_GrasslandOutpost
+  m_IsVariant: 0

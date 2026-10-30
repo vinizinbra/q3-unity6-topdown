@@ -87,6 +87,8 @@ namespace Project.EditorTools.SpriteOptimizer
             foreach (TextureInfo texture in Scan.Textures.Values)
             {
                 texture.Override = Settings.OverrideFor(texture.Path);
+                if (texture.Override == SpriteContext.Unknown && Settings.IsUnpacked(texture.Path))
+                    texture.Override = SpriteContext.Ignore;
 
                 foreach (AtlasMembership m in texture.Memberships)
                     foreach (SpriteInfo s in texture.Sprites.Values)
@@ -242,7 +244,11 @@ namespace Project.EditorTools.SpriteOptimizer
             SpriteContext other = context == SpriteContext.UI ? SpriteContext.Gameplay : SpriteContext.UI;
             List<AtlasInfo> own = tex.Atlases.Where(a => a.Context == context).ToList();
             List<AtlasInfo> wrong = tex.Atlases.Where(a => a.Context == other).ToList();
-            SpriteAtlas target = own.FirstOrDefault()?.Atlas ?? Settings.PrimaryFor(context);
+            bool routed = context == SpriteContext.Gameplay && Settings.HasScopedGameplayAtlases;
+            string routeReason = null;
+            SpriteAtlas target = routed
+                ? GameplayAtlasRouter.TargetFor(Settings, tex.Path, out routeReason)
+                : own.FirstOrDefault()?.Atlas ?? Settings.PrimaryFor(context);
 
             List<SpriteInfo> missing = sprites.Where(s => s.PackedIn.All(a => a.Context != context)).ToList();
             bool crossBlocks = cross.Count > 0;
@@ -269,11 +275,35 @@ namespace Project.EditorTools.SpriteOptimizer
                 return;
             }
 
+            List<AtlasInfo> misplaced = routed && target != null ? own.Where(a => a.Atlas != target).ToList() : new List<AtlasInfo>();
+            if (misplaced.Count > 0)
+            {
+                bool perSprite = tex.Memberships.Any(m => m.Kind == PackKind.Sprite && misplaced.Contains(m.Atlas));
+                bool targetHasIt = own.Any(a => a.Atlas == target);
+                NewIssue(IssueKind.WrongWorldAtlas, Severity.Warning, context, tex,
+                        message: $"Belongs in {target.name} ({routeReason}) but is packed in {Names(misplaced)}. " +
+                                 "Any of its sprites loads that atlas's whole page set, so a world that never shows it pays for it.")
+                    .Fixes.Add(new IssueFix
+                    {
+                        Label = $"Move → {target.name}",
+                        Safe = true,
+                        Plan = b =>
+                        {
+                            foreach (AtlasInfo m in misplaced) b.RemoveTexture(m.Atlas, tex.Path);
+                            if (targetHasIt) return; // e.g. the target already packs its folder
+                            if (perSprite) b.AddSprites(target, sprites.Select(s => s.Load()));
+                            else b.AddTexture(target, tex.Path);
+                        },
+                    });
+                return;
+            }
+
             if (missing.Count > 0)
             {
                 var issue = NewIssue(IssueKind.MissingFromAtlas, Severity.Warning, context, tex,
                     message: $"{missing.Count}/{tex.Sprites.Count} sprite(s) used by {context} are in no {context} atlas " +
-                             $"({Usages(missing)}); each draws from its own texture and breaks the batch.");
+                             $"({Usages(missing)}); each draws from its own texture and breaks the batch." +
+                             (routeReason != null ? $" Target {target?.name}: {routeReason}." : ""));
                 if (target != null)
                 {
                     issue.Fixes.Add(new IssueFix
@@ -296,7 +326,9 @@ namespace Project.EditorTools.SpriteOptimizer
         private void AddSplit(TextureInfo tex, List<SpriteInfo> uiOnly, List<SpriteInfo> gpOnly, List<SpriteInfo> cross)
         {
             SpriteAtlas uiAtlas = tex.Atlases.FirstOrDefault(a => a.Context == SpriteContext.UI)?.Atlas ?? Settings.PrimaryFor(SpriteContext.UI);
-            SpriteAtlas gpAtlas = tex.Atlases.FirstOrDefault(a => a.Context == SpriteContext.Gameplay)?.Atlas ?? Settings.PrimaryFor(SpriteContext.Gameplay);
+            SpriteAtlas gpAtlas = Settings.HasScopedGameplayAtlases
+                ? GameplayAtlasRouter.TargetFor(Settings, tex.Path, out _)
+                : tex.Atlases.FirstOrDefault(a => a.Context == SpriteContext.Gameplay)?.Atlas ?? Settings.PrimaryFor(SpriteContext.Gameplay);
 
             bool alreadyOk =
                 uiOnly.All(s => s.PackedIn.Count == 1 && s.PackedIn[0].Context == SpriteContext.UI) &&
@@ -407,7 +439,13 @@ namespace Project.EditorTools.SpriteOptimizer
                          "(and warns about it), so the other copy is wasted memory and the choice of page is arbitrary — batches break." +
                          (needed != SpriteContext.Unknown ? $" Used only by {needed}." : ""));
 
-            foreach (AtlasInfo keep in atlases.OrderByDescending(a => a.Context == needed))
+            // With world atlases, two Gameplay atlases both "match" — only the routed one is the right keep.
+            SpriteAtlas routed = needed == SpriteContext.Gameplay && Settings.HasScopedGameplayAtlases
+                ? GameplayAtlasRouter.TargetFor(Settings, tex.Path, out _)
+                : null;
+            bool IsRight(AtlasInfo a) => a.Context == needed && (routed == null || a.Atlas == routed);
+
+            foreach (AtlasInfo keep in atlases.OrderByDescending(IsRight))
             {
                 AtlasInfo k = keep;
                 bool canRemoveOthers = atlases.Where(a => a != k)
@@ -415,8 +453,8 @@ namespace Project.EditorTools.SpriteOptimizer
                 if (!canRemoveOthers) continue;
                 issue.Fixes.Add(new IssueFix
                 {
-                    Label = $"Keep in {k.Name}" + (k.Context == needed ? " ★" : ""),
-                    Safe = k.Context == needed && k.Managed,
+                    Label = $"Keep in {k.Name}" + (IsRight(k) ? " ★" : ""),
+                    Safe = IsRight(k) && k.Managed,
                     Plan = b =>
                     {
                         foreach (AtlasInfo other in atlases.Where(a => a != k)) b.RemoveTexture(other.Atlas, tex.Path);

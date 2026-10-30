@@ -200,6 +200,12 @@ namespace Quantum
                 case CheatActionKind.ForceBossAction:
                     ForceBossAction(f, player, new AssetRef<EnemyActionData>(new AssetGuid(cmd.AssetId)), cmd.Amount);
                     break;
+
+                // Big enough to clear AccessoryGuardConfig.MinDamageToBlock; nothing else reads it, since
+                // a block returns before any damage resolution.
+                case CheatActionKind.KnockAccessoryOff:
+                    AccessoryGuardUtility.TryBlock(f, player, EntityRef.None, (FP)1000);
+                    break;
             }
         }
 

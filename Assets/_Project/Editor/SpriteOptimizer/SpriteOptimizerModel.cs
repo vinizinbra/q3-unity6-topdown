@@ -140,6 +140,8 @@ namespace Project.EditorTools.SpriteOptimizer
         public string Name;
         public SpriteContext Context;
         public bool Primary;
+        /// <summary>"World: W1-…" / "Folders: …" / "Common" (see <see cref="AtlasBinding.ScopeLabel"/>).</summary>
+        public string Scope = "";
         public bool Bound;
         public int RawEntries;
         public int DistinctEntries;
@@ -159,6 +161,7 @@ namespace Project.EditorTools.SpriteOptimizer
     {
         MissingFromAtlas,
         WrongContextAtlas,
+        WrongWorldAtlas,
         MultipleAtlases,
         CrossContextSprite,
         SplitSheet,
@@ -208,6 +211,7 @@ namespace Project.EditorTools.SpriteOptimizer
         {
             IssueKind.MissingFromAtlas => "Not in atlas",
             IssueKind.WrongContextAtlas => "Wrong atlas",
+            IssueKind.WrongWorldAtlas => "Wrong world/biome atlas",
             IssueKind.MultipleAtlases => "In several atlases",
             IssueKind.CrossContextSprite => "UI + Gameplay",
             IssueKind.SplitSheet => "Split sheet",

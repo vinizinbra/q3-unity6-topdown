@@ -140,8 +140,8 @@ namespace Quantum
         private float accessoryArrowRotationOffset = -90f;
         [SerializeField, Tooltip("Point at it during the pop arc too (AccessoryGuardState.Airborne), not just once it has landed - that's exactly when you most want to see where it's heading.")]
         private bool accessoryShowWhileAirborne = true;
-        [SerializeField, Tooltip("Hide the arrow once the accessory is within this many world units - close enough that it's on screen and the pickup speaks for itself. 0 keeps it shown right up until collection.")]
-        private float accessoryHideWithinDistance = 6f;
+        [SerializeField, Tooltip("Hide the arrow once the accessory is within this many world units - practically on top of it, where the pickup's own loot beam speaks for itself. Keep this small: a block drops the accessory only 1-3 units away, so a large value (it used to be 6) meant the common case showed no pointer at all. 0 keeps it shown right up until collection.")]
+        private float accessoryHideWithinDistance = 1.5f;
 
         private float _baseRingAlpha;
         private float _baseGlowAlpha;
