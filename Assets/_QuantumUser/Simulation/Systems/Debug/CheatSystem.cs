@@ -196,6 +196,10 @@ namespace Quantum
                 case CheatActionKind.ActivateTraversal:
                     ActivateTraversal(f, player);
                     break;
+
+                case CheatActionKind.ForceBossAction:
+                    ForceBossAction(f, player, new AssetRef<EnemyActionData>(new AssetGuid(cmd.AssetId)), cmd.Amount);
+                    break;
             }
         }
 
@@ -226,6 +230,48 @@ namespace Quantum
             }
 
             Log.Debug($"[Cheat] {player} teleported to Traversal Challenge {challenge} at {to}");
+        }
+
+        // Forces one attack on the first live boss (BossSystem.TryForceAction, the same seam phase EntryActions use).
+        // distanceDecimetres > 0 first moves the sender that far from the boss on the side it already stands, so the
+        // attack aims at it from a known reach. The boss always targets the sender.
+        private static void ForceBossAction(Frame f, EntityRef player, AssetRef<EnemyActionData> action, int distanceDecimetres)
+        {
+            var bosses = f.Filter<BossRuntimeState, Transform3D>();
+            if (bosses.Next(out EntityRef boss, out BossRuntimeState _, out Transform3D bossTransform) == false)
+            {
+                Log.Warn("[Cheat] ForceBossAction: no boss alive");
+                return;
+            }
+
+            if (distanceDecimetres > 0 && f.Unsafe.TryGetPointer<Transform3D>(player, out var playerTransform) == true)
+            {
+                FPVector3 away = playerTransform->Position - bossTransform.Position;
+                away.Y = FP._0;
+                away = away.SqrMagnitude > FP.EN2 ? away.Normalized : FPVector3.Back;
+                FPVector3 to = bossTransform.Position + away * ((FP)distanceDecimetres / 10);
+                if (EnemyMovementUtility.TryFindGroundHeight(f, to + FPVector3.Up * FP._2, EnemyMovementUtility.GetGroundLayerMask(f), out FP groundY))
+                    to.Y = groundY;
+
+                if (f.Unsafe.TryGetPointer<KCC>(player, out var kcc) == true)
+                {
+                    kcc->Teleport(f, to);
+                    kcc->SetKinematicVelocity(FPVector3.Zero);
+                    kcc->SetDynamicVelocity(FPVector3.Zero);
+                }
+                else
+                {
+                    playerTransform->Position = to;
+                }
+            }
+
+            // A freshly spawned boss is still Idle with no target: without one the attack has no aim (no cone
+            // telegraph, swings along its old facing), so it targets the sender.
+            if (f.Unsafe.TryGetPointer<Enemy>(boss, out var enemy) == true)
+                enemy->Target = player;
+
+            bool forced = BossSystem.TryForceAction(f, boss, action);
+            Log.Debug($"[Cheat] ForceBossAction {action} on {boss}: {(forced ? "forced" : "rejected")}");
         }
 
         // Collected first, then activated - TryActivate f.Create's platforms/reward, which must not

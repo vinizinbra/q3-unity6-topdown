@@ -80,8 +80,11 @@ namespace Quantum
         ToggleDamageBoost,      // add/remove the sender's CheatDamageBoost tag (x10 outgoing damage, every source)
         TeleportToTraversal,    // teleports the sender next to the first Traversal Challenge activator
                                 // (KCC.Teleport + velocity reset) - see CheatSystem.TeleportToTraversal
-        ActivateTraversal       // starts every Idle Traversal Challenge (TraversalChallengeUtility.TryActivate,
+        ActivateTraversal,      // starts every Idle Traversal Challenge (TraversalChallengeUtility.TryActivate,
                                 // as if the sender pressed Base Skill on it) - spawns platforms + reward
+        ForceBossAction         // AssetId = EnemyActionData guid from the live boss's SkillActions, forced via
+                                // BossSystem.TryForceAction; Amount > 0 first teleports the sender Amount
+                                // decimetres from the boss (same side) - for testing/recording one attack
     }
 
     // Generic debug/cheat command. IMPORTANT: this command AND its handler (CheatSystem) compile on

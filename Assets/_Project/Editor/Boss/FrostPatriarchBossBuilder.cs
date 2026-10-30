@@ -164,6 +164,9 @@ namespace RiftRaiders.Editor
             // The W1 boss punch flash, in ice blue - the claw swipe's release.
             // Additive (the pack's own materials) and bright - it has to glow.
             ParticleSystem punchBlue = BuildOwnedEffect(PunchFlashPath, "FrostPatriarch_PunchFlash", _ => new ParticleSystem.MinMaxGradient(new Color(0.4f, 0.8f, 1f, 1f), new Color(0.85f, 0.97f, 1f, 1f)));
+            // Its muzzle meshes break into chunks over the second half of their 0.4s sheet; at the swipe's 1.6 scale that
+            // tail read as a solid white blob mid-cone (alpha-blended white on snow) - fade them out before it.
+            FadeOutBeforeBreakup(punchBlue, 0.25f, 0.5f);
             ParticleSystem eruption = BuildOwnedEffect(PillarBlastPath, "FrostPatriarch_IceEruption", _ => new ParticleSystem.MinMaxGradient(IceCyan, Color.white));
             // Saturated ice blue, not white - it has to read over the Arctic's snow floor.
             ParticleSystem breath = BuildOwnedEffect(FlamethrowerPath, "FrostPatriarch_Breath", _ => new ParticleSystem.MinMaxGradient(new Color(0.3f, 0.72f, 1f, 0.95f), new Color(0.66f, 0.9f, 1f, 0.95f)));
@@ -251,13 +254,15 @@ namespace RiftRaiders.Editor
             swipe.AimLockPercent = F("0.75");
             swipe.Telegraph = new AssetRef<TelegraphData>(swipeTelegraph.Guid);
             swipe.AnticipationStep = Step(AttackAnimationType.SwingBack, 0.9f, Sprite("FrostPatriarch_SwipePrep"));
-            // Release: the magenta claw slash and the paw's impact inside the cone (snow + cold flash). Each
-            // one sized from its measured particle reach to span the 8m cone (≈0.2-8m from the bear), not past it.
+            // Release: the magenta claw slash and the paw's impact inside the cone (snow + cold flash). They start at the
+            // paw/snout (≈3.4m from the body centre on the release sprite, measured in a gameplay recording), not ahead of
+            // it: flash and slash 1.4m further back than their old cone-spanning offsets, the ice slam centred where the
+            // paw lands.
             swipe.BeginStep = Step(AttackAnimationType.PunchScale, 0.3f, Sprite("FrostPatriarch_SwipeRelease"),
-                Directional(punchBlue, new Vector3(0f, -0.4f, 4.0f), 1.6f), shake: 2.2f, additional: new[]
+                Directional(punchBlue, new Vector3(0f, -0.4f, 2.6f), 1.6f), shake: 2.2f, additional: new[]
                 {
-                    Directional(swipeSlash, new Vector3(0f, -0.4f, 4.3f), 1.55f),
-                    Flat(iceSlam, new Vector3(0f, -1.4f, 4.1f), 1.35f),
+                    Directional(swipeSlash, new Vector3(0f, -0.4f, 2.9f), 1.55f),
+                    Flat(iceSlam, new Vector3(0f, -1.4f, 3.4f), 1.35f),
                 });
             swipe.OnGoingStep = Step(AttackAnimationType.None, 0.1f, null);
             swipe.EndStep = Step(AttackAnimationType.None, 1.0f, Sprite("FrostPatriarch_SwipeRecover")); // = DownTime: held, not snapped to idle
@@ -1457,6 +1462,31 @@ namespace RiftRaiders.Editor
             AttackVisualParticle particle = Particle(prefab, offset, scale, snap: true);
             particle.RotationOffset = new Vector3(270f, 0f, 0f);
             return particle;
+        }
+
+        // Alpha over life: full until `holdUntil`, gone by `goneAt` (every system of an owned effect copy).
+        private static void FadeOutBeforeBreakup(ParticleSystem effect, float holdUntil, float goneAt)
+        {
+            string path = AssetDatabase.GetAssetPath(effect);
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+
+            try
+            {
+                foreach (ParticleSystem system in root.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    var fade = system.colorOverLifetime;
+                    fade.enabled = true;
+                    var gradient = new Gradient();
+                    gradient.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                        new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, holdUntil), new GradientAlphaKey(0f, goneAt), new GradientAlphaKey(0f, 1f) });
+                    fade.color = gradient;
+                }
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
 
         private static void LayFlat(ParticleSystem effect)

@@ -21,6 +21,7 @@ MonoBehaviour:
   EndPhase: 1
   LiveTracking: 1
   LiveTrackingSmoothing: 15
+  ShrinkWhileMoving: 0
   TelegraphPrefab: {fileID: 3870463405479579449, guid: e66d48053909142348f8719729485fe7, type: 3}
   SnapToGround: 1
   LineLength: 0
