@@ -35,6 +35,9 @@ namespace RiftRaiders.Editor
         private const string StretchyTexturePath = "Assets/3rd-party/Epic Toon FX/Textures/circlestretchy.png";
         private const string RingMaterialPath = "Assets/3rd-party/Epic Toon FX/Materials/Basics/ring_ADD.mat";
         private const string SpeakerViewPath = "Assets/_Project/Prefabs/View/EnemyView/Neon/RiffRiotSpeaker.prefab";
+        // Distorted-guitar SFX generated from two reference takes (Source~/riff_riot_guitar_sfx.py) - clips + their SoundData.
+        private const string GuitarClipFolder = "Assets/_Project/Audio/Library/RiffRiot";
+        private const string SoundFolder = "Assets/_Project/Audio/Enemies";
 
         // Templates (read only).
         private const string W1BossPrefabPath = "Assets/_QuantumUser/Entities/Enemies/World1BossPrefab.prefab";
@@ -272,6 +275,17 @@ namespace RiftRaiders.Editor
                 Particle(waveRing, Vector3.zero, 1f, snap: true), shake: 0.4f,
                 additional: new[] { Extra(pinkBlast, new Vector3(0f, 0.8f, 0f), 1.1f) });
             pulse.OnGoingStep = Step(AttackAnimationType.None, 0.3f, null);
+
+            // ---------------------------------------------------------------- guitar SFX (EnemyActionSoundTable)
+            // Power chord on the slam, dive bomb on take-off (it spans the 0.9s air time), heavy chord on landing,
+            // palm-muted chugs (a riff walked in order) on each speaker pulse.
+            EnemyActionSoundTableAuthoring.Set(powerChord, AttackPhase.Begin, GuitarSound("RiffRiotPowerChord", 0.85f, 0.4f, 2));
+            EnemyActionSoundTableAuthoring.Set(leap, AttackPhase.Begin, GuitarSound("RiffRiotDiveBomb", 0.7f, 0.5f, 1));
+            EnemyActionSoundTableAuthoring.Set(leap, AttackPhase.End, GuitarSound("RiffRiotLandingChord", 0.9f, 0.5f, 1));
+            EnemyActionSoundTableAuthoring.Set(pulse, AttackPhase.Begin,
+                GuitarSound("RiffRiotAmpChug", 0.6f, 0.15f, 2, "RiffRiotAmpChug1", "RiffRiotAmpChug2", "RiffRiotAmpChug1", "RiffRiotAmpChug3"));
+            foreach (string retired in new[] { "PowerChord", "DiveBomb", "LandingChord", "AmpChug" })
+                AssetDatabase.DeleteAsset($"{VfxFolder}/RiffRiot_Sfx_{retired}.prefab"); // first pass carried them on silent particles
             pulse.EndStep = Step(AttackAnimationType.None, 0.3f, null);
 
             speakerMovement.ApplySeparation = false;
@@ -465,6 +479,26 @@ namespace RiftRaiders.Editor
             Material source = w1.GetComponentsInChildren<SpriteRenderer>(true).Select(r => r.sharedMaterial).First(m => m != null && m.name == W1BossMaterialName);
             AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(source), MaterialPath);
             return AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+        }
+
+        // ------------------------------------------------------------------ guitar SFX
+
+        // Enemies-group SoundData (Assets/_Project/Audio/Enemies/<name>) over the generated guitar clips, already trimmed/
+        // faded by the generator; `clips` default to the one named like the sound. Several clips = a riff: Sequential
+        // walks them in order.
+        private static SoundData GuitarSound(string name, float volume, float cooldown, int maxConcurrent, params string[] clips)
+        {
+            if (clips.Length == 0)
+                clips = new[] { name };
+
+            AudioClip[] audio = clips.Select(c => AssetDatabase.LoadAssetAtPath<AudioClip>($"{GuitarClipFolder}/{c}.wav")).ToArray();
+            SoundData sound = SoundDataCreator.CreateOrUpdate($"{SoundFolder}/{name}.asset", SoundGroup.Enemies, audio);
+            sound.pick = clips.Length > 1 ? SoundData.PickMode.Sequential : SoundData.PickMode.RandomNoRepeat;
+            sound.volume = new Vector2(volume, volume);
+            sound.pitch = new Vector2(0.98f, 1.02f);
+            sound.cooldown = cooldown;
+            sound.maxConcurrent = maxConcurrent;
+            return sound;
         }
 
         // ------------------------------------------------------------------ sound wave VFX

@@ -56,6 +56,40 @@ internal static class SoundDataCreator
             .ToArray();
 
         var asset = ScriptableObject.CreateInstance<SoundData>();
+        ApplyDefaults(asset, group, clips);
+
+        string folder = EnsureFolder(group);
+        string path = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(folder, ResolveName(clips, group) + ".asset"));
+
+        AssetDatabase.CreateAsset(asset, path);
+        AssetDatabase.SaveAssets();
+
+        // Selected and focused with the name field live, so it can be renamed immediately - the
+        // derived name below is a good guess, not a decision.
+        Selection.activeObject = asset;
+        EditorUtility.FocusProjectWindow();
+        ProjectWindowUtil.ShowCreatedAsset(asset);
+    }
+
+    // Scripted counterpart of the menu items, for builders that own their sounds (boss builders): the SoundData at
+    // `path`, created if missing, re-filled with `clips` and the group's defaults on every call - so a rebuild keeps the
+    // asset (and its guid) and the caller only sets what differs from the defaults (volume, cooldown, trims...).
+    internal static SoundData CreateOrUpdate(string path, SoundGroup group, params AudioClip[] clips)
+    {
+        var asset = AssetDatabase.LoadAssetAtPath<SoundData>(path);
+        if (asset == null)
+        {
+            asset = ScriptableObject.CreateInstance<SoundData>();
+            AssetDatabase.CreateAsset(asset, path);
+        }
+
+        ApplyDefaults(asset, group, clips);
+        EditorUtility.SetDirty(asset);
+        return asset;
+    }
+
+    private static void ApplyDefaults(SoundData asset, SoundGroup group, AudioClip[] clips)
+    {
         asset.group = group;
         asset.variants = clips.Select(c => new SoundClip(c)).ToArray();
 
@@ -87,18 +121,6 @@ internal static class SoundDataCreator
             asset.fadeOut = 1f;
             asset.maxConcurrent = 1;
         }
-
-        string folder = EnsureFolder(group);
-        string path = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(folder, ResolveName(clips, group) + ".asset"));
-
-        AssetDatabase.CreateAsset(asset, path);
-        AssetDatabase.SaveAssets();
-
-        // Selected and focused with the name field live, so it can be renamed immediately - the
-        // derived name below is a good guess, not a decision.
-        Selection.activeObject = asset;
-        EditorUtility.FocusProjectWindow();
-        ProjectWindowUtil.ShowCreatedAsset(asset);
     }
 
     private static string EnsureFolder(SoundGroup group)

@@ -201,6 +201,8 @@ namespace Quantum
         public bool SnapToGround;
         [Tooltip("Attaches to the anchor and follows it for the phase's duration (e.g. a charge trail), instead of a one-shot burst left behind at a fixed point.")]
         public bool Parented;
+        [Tooltip("Parented only: attach to the body sprite (the view rig) instead of the Gun/view root, so it flips and squashes with the drawn body - Offset is then a point on the sprite, in sprite units from its pivot (art facing right), e.g. a mouth.")]
+        public bool ParentToBody;
         [Tooltip("Rotate the particle to face the enemy's current Aim direction (world-flat, same facing convention the body/arm use) instead of spawning at identity rotation. RotationOffset below is applied on top either way.")]
         public bool AlignToEnemyDirection;
         [Tooltip("Additional Euler rotation applied on top of the base rotation (identity, or the enemy's facing direction if AlignToEnemyDirection is on).")]

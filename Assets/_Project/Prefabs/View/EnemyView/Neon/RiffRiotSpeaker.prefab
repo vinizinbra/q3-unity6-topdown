@@ -121,6 +121,8 @@ MonoBehaviour:
   dyingSprite: {fileID: 0}
   dyingSpriteTarget: {fileID: 0}
   dyingHidesOtherSprites: 1
+  walkSprites: []
+  walkFramesPerStride: 2
 --- !u!114 &3573261627643396496
 MonoBehaviour:
   m_ObjectHideFlags: 0

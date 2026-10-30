@@ -18,9 +18,10 @@ MonoBehaviour:
       Value: 744526805002196809
   Shape: 2
   StartPhase: 0
-  EndPhase: 1
+  EndPhase: 3
   LiveTracking: 1
   LiveTrackingSmoothing: 15
+  ShrinkWhileMoving: 1
   TelegraphPrefab: {fileID: 2468440791896092637, guid: 4f8787fca955742b995eeedd8d55d28c, type: 3}
   SnapToGround: 1
   LineLength: 1
@@ -221,6 +222,7 @@ MonoBehaviour:
   Description: Bursts out of the sand and rushes you.
   ViewPrefab: {fileID: 664242238683382212, guid: f53497f8ec4994d47883f606cb6e9f07, type: 3}
   CatalogSubtitle: Charger
+  Discovery: 0
 --- !u!114 &3660401815721977846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -282,6 +284,9 @@ MonoBehaviour:
     AnimationType: 3
     Duration: 0.9
     BodySprite: {fileID: -989579171, guid: 8b8109968f7934f50a53f8de4020e782, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -363,6 +368,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -444,6 +452,9 @@ MonoBehaviour:
     AnimationType: 1
     Duration: 0.5
     BodySprite: {fileID: -2043771626, guid: 8b8109968f7934f50a53f8de4020e782, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0.3, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 1
@@ -525,6 +536,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0

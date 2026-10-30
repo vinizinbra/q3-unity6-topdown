@@ -237,6 +237,11 @@
                 // (BossSpeakerStage) off this tick's resolved boss/speaker state, and pops orphaned
                 // speakers. See BossSpeakerStageSystem.
                 new BossSpeakerStageSystem(),
+                // Dono do Céu's hazards and flight safety net (docs/dono-do-ceu-boss.md): tornadoes and the crowd
+                // barrage act on this tick's resolved boss state; the safety net grounds any orphaned flight state.
+                new BossTornadoSystem(),
+                new BossCrowdBarrageSystem(),
+                new BossAirborneSafetySystem(),
                 // Boss/Elite-only equivalent of PlayerFallSystem (see its own header comment) -
                 // right after EnemySystem/BossSystem so it reads this tick's resolved
                 // Transform3D.Position before anything else acts on a freshly-respawned position.

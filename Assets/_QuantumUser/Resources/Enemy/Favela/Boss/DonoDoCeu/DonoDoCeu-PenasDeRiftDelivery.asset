@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d877e8a87b0304b14a571bbead02d130, type: 3}
+  m_Name: DonoDoCeu-PenasDeRiftDelivery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.FanProjectileDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/Favela/Boss/DonoDoCeu/DonoDoCeu-PenasDeRiftDelivery
+    Guid:
+      Value: 300982693356397950
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  ProjectileData:
+    Id:
+      Value: 439501568211154242
+  ProjectileSpeedMultiplier:
+    RawValue: 917504
+  ProjectileMaxDistanceMultiplier:
+    RawValue: 262144
+  LeadFactor:
+    RawValue: 0
+  MaxLeadDistance:
+    RawValue: 262144
+  SpawnAnchor: 0
+  SpawnOffset:
+    X:
+      RawValue: 0
+    Y:
+      RawValue: 0
+    Z:
+      RawValue: 32768
+  PelletCount: 7
+  SpreadAngle:
+    RawValue: 5898240
+  Radial: 0
+  UseArc: 0
+  LaunchAngle:
+    RawValue: 2949120
+  Gravity:
+    RawValue: 1310720

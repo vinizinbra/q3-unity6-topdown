@@ -185,6 +185,12 @@ namespace Quantum
         // finishes - so a kinematic jump always lands before the Kneel starts.
         public bool DeferForcedActionsWhileActive;
 
+        // False (default, every existing boss): only the top-scoring action is tried - if its delivery's
+        // CanBegin refuses (e.g. a mechanic gated while another is still running), the boss just chases and
+        // re-checks next tick, so a blocked high scorer can starve everything below it. True: it falls back
+        // to its next-best eligible action instead (EnemySystem, MaxSelectionFallbacks).
+        public bool FallBackWhenTopActionBlocked;
+
         // Debug only - the boss's own one-off EntityPrototype (rig, BossRuntimeState...). Lets
         // EnemyDataAsset's "Spawn Near Local Player" button spawn the real boss instead of the generic
         // Director prototype (see CheatSystem.SpawnEnemy). Never read by normal gameplay.

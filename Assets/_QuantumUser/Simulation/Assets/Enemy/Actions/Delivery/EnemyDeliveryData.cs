@@ -140,5 +140,15 @@ namespace Quantum
         public virtual void OnInterrupted(Frame f, ref EnemySystem.Filter filter, EnemyDataAsset data, EnemyActionData action)
         {
         }
+
+        // Asked by BossSystem.TryForceAction when a forced action (stagger break, phase entry, exposure) arrives
+        // while this delivery is Active. False (default, every existing delivery): the forced action waits for
+        // the delivery to finish (PendingForcedSlot). True: the delivery is cut short right now - OnInterrupted
+        // runs first, so it must leave the entity in a state the forced action can take over from (e.g. a
+        // hovering flyer left in the air for an AirborneKneelDeliveryData to bring down).
+        public virtual bool AllowsForcedPreemption(Frame f, EntityRef entity)
+        {
+            return false;
+        }
     }
 }

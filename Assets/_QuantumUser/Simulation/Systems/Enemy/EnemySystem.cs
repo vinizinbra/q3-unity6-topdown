@@ -32,6 +32,10 @@ namespace Quantum
         private static readonly SimProfilerMarker StuckRecoveryMarker = new SimProfilerMarker("EnemySystem.StuckRecovery");
         private static readonly SimProfilerMarker StatusQueryMarker = new SimProfilerMarker("EnemySystem.StatusQuery");
         private static readonly SimProfilerMarker KnockbackMarker = new SimProfilerMarker("EnemySystem.KnockbackRecovery");
+
+        // How many lower-ranked actions a BossDataAsset.FallBackWhenTopActionBlocked boss tries after its top pick's
+        // CanBegin refuses, per selection tick.
+        private const int MaxSelectionFallbacks = 3;
         private static readonly SimProfilerMarker IdleMarker = new SimProfilerMarker("EnemySystem.Idle");
         private static readonly SimProfilerMarker ChasingMarker = new SimProfilerMarker("EnemySystem.Chasing");
         private static readonly SimProfilerMarker PreparationMarker = new SimProfilerMarker("EnemySystem.Preparation");
@@ -810,6 +814,30 @@ namespace Quantum
             enemy->Phase = EnemyActionPhase.Recovery;
         }
 
+        // Runs the Active delivery's OnInterrupted WITHOUT the Recovery hand-off CancelActive does - for a caller
+        // that immediately forces the enemy into another action (BossSystem.TryForceAction's preemption path).
+        // Returns false if the delivery doesn't allow being preempted right now (see AllowsForcedPreemption).
+        internal static bool TryPreemptActive(Frame f, EntityRef entity, Enemy* enemy, EnemyDataAsset data)
+        {
+            EnemyActionData action = EnemyDecisionUtility.ResolveAction(f, data, enemy->CurrentActionSlot);
+            if (action == null)
+                return false;
+
+            EnemyDeliveryData delivery = f.FindAsset(action.Delivery);
+            if (delivery == null || delivery.AllowsForcedPreemption(f, entity) == false)
+                return false;
+
+            if (f.Unsafe.TryGetPointer<Transform3D>(entity, out var transform) == false ||
+                f.Unsafe.TryGetPointer<PhysicsBody3D>(entity, out var body) == false ||
+                f.Unsafe.TryGetPointer<Aim>(entity, out var aim) == false)
+                return false;
+
+            Filter filter = new Filter { Entity = entity, Enemy = enemy, Transform3D = transform, PhysicsBody3D = body, Aim = aim };
+            delivery.OnInterrupted(f, ref filter, data, action);
+            EnemyDecisionUtility.SetCooldownRemaining(f, entity, enemy, enemy->CurrentActionSlot, action.CooldownTime);
+            return true;
+        }
+
         private static void UpdateIdle(Frame f, ref Filter filter, EnemyDataAsset data)
         {
             EnemyMovementUtility.StopMovement(f, ref filter, data);
@@ -911,8 +939,25 @@ namespace Quantum
             }
 
             SelectActionMarker.Begin();
-            bool beginAction = EnemyDecisionUtility.TrySelectAction(f, filter.Entity, filter.Enemy, data, targetPosition, sqrDistance, out EnemyActionData action, out int slot) == true &&
-                f.FindAsset(action.Delivery).CanBegin(f, ref filter, data, action, filter.Enemy->Target) == true;
+            bool beginAction = false;
+            EnemyActionData action = null;
+            int slot = -1;
+            int excludedSlots = 0;
+            int attempts = data is BossDataAsset { FallBackWhenTopActionBlocked: true } ? MaxSelectionFallbacks + 1 : 1;
+
+            for (int attempt = 0; attempt < attempts; attempt++)
+            {
+                if (EnemyDecisionUtility.TrySelectAction(f, filter.Entity, filter.Enemy, data, targetPosition, sqrDistance, out action, out slot, excludedSlots) == false)
+                    break;
+
+                if (f.FindAsset(action.Delivery).CanBegin(f, ref filter, data, action, filter.Enemy->Target) == true)
+                {
+                    beginAction = true;
+                    break;
+                }
+
+                excludedSlots |= 1 << slot; // BossDataAsset.FallBackWhenTopActionBlocked: try the next best
+            }
             SelectActionMarker.End();
 
             if (beginAction == true)

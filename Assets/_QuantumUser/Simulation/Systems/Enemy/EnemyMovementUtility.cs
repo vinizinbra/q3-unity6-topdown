@@ -318,7 +318,8 @@ namespace Quantum
             FP gapProbeDistance = radius + data.Stats.Height.GapProbeThreshold;
 
             if (currentlyGrounded == true && data.Stats.Height.CanClimbCliffs == true &&
-                TryFindClimbLanding(f, groundPosition, flatDirection, data.Stats.Height.CliffHeight, climbProbeDistance, radius, groundLayerMask, out FPVector3 climbLanding) == true)
+                TryFindClimbLanding(f, groundPosition, flatDirection, data.Stats.Height.CliffHeight, climbProbeDistance, radius, groundLayerMask, out FPVector3 climbLanding) == true &&
+                CrossesBossArenaGate(f, groundPosition, climbLanding) == false)
             {
                 // Climbs a blocking obstacle up to CliffHeight tall instead of walking into it -
                 // mirrors the player's own auto-mantle (PlayerMovementProcessor.TryDetectMantle/
@@ -333,7 +334,8 @@ namespace Quantum
                 HasGroundAhead(f, groundPosition, flatDirection, gapProbeDistance, EdgeCheckDistance, groundLayerMask) == false)
             {
                 if (data.Stats.Height.CanJumpGaps == true &&
-                    TryFindGapLanding(f, groundPosition, flatDirection, gapProbeDistance, data.Stats.Height.GapDistance, GapScanStep, groundLayerMask, out FPVector3 gapLanding) == true)
+                    TryFindGapLanding(f, groundPosition, flatDirection, gapProbeDistance, data.Stats.Height.GapDistance, GapScanStep, groundLayerMask, out FPVector3 gapLanding) == true &&
+                    CrossesBossArenaGate(f, groundPosition, gapLanding) == false)
                 {
                     QueueTraversalJump(f, ref filter, data, gapLanding, speed);
                     return;
@@ -595,6 +597,30 @@ namespace Quantum
                     landingPoint = new FPVector3(samplePosition.X, groundY, samplePosition.Z);
                     return true;
                 }
+            }
+
+            return false;
+        }
+
+        // A traversal hop is a kinematic lerp that ignores collision, and the landing searches above
+        // only look for floor - so a ledge/gap right behind an enabled BossArenaGate would carry a boss
+        // straight out of its sealed arena (found with Dono do Céu hopping off a platform by the west
+        // gate). Rejects any hop whose straight path crosses one; the enemy then just walks/stops as if
+        // there were no landing. Raised a meter so the segment clears both floors; gates are tall boxes.
+        public static bool CrossesBossArenaGate(Frame f, FPVector3 from, FPVector3 to)
+        {
+            FPVector3 origin = from + FPVector3.Up;
+            FPVector3 delta = to + FPVector3.Up - origin;
+            FP distance = delta.Magnitude;
+
+            if (distance <= FP._0)
+                return false;
+
+            var hits = f.Physics3D.RaycastAll(origin, delta / distance, distance, -1, QueryOptions.HitStatics | QueryOptions.HitKinematics);
+            for (int i = 0; i < hits.Count; i++)
+            {
+                if (hits[i].Entity.IsValid == true && f.Has<BossArenaGate>(hits[i].Entity) == true)
+                    return true;
             }
 
             return false;

@@ -80,6 +80,8 @@ namespace QuantumUser.View.Util
         private float fullFlashHealthFraction = 0.1f;
         [SerializeField, Range(0f, 1f), Tooltip("Floor for the strength of a damage flash, so even a tiny hit stays visible.")]
         private float minFlashStrength = 0.15f;
+        [SerializeField, Range(0f, 1f), Tooltip("Strength floor used instead of Min Flash Strength when the target is a boss (has BossRuntimeState). A boss's huge Max Health puts almost every hit at the plain floor, so the flash barely shows - this keeps every hit on a boss clearly readable while big hits still scale up to full.")]
+        private float bossMinFlashStrength = 0.6f;
         [SerializeField, Tooltip("Fraction of the flash duration kept at Min Strength (duration scales Min..1 along with strength).")]
         private float minFlashDurationScale = 0.5f;
 
@@ -568,7 +570,8 @@ namespace QuantumUser.View.Util
         }
 
         // 1 for a hit worth fullFlashHealthFraction of the target's Max Health or more, down to
-        // minFlashStrength for a negligible one - see fullFlashHealthFraction's tooltip.
+        // minFlashStrength (bossMinFlashStrength on a boss) for a negligible one - see
+        // fullFlashHealthFraction's tooltip.
         private float ResolveDamageStrength(EventEntityDamaged e)
         {
             if (fullFlashHealthFraction <= 0f)
@@ -578,8 +581,9 @@ namespace QuantumUser.View.Util
             if (frame == null || frame.TryGet(_entityRef, out Health health) == false || health.MaxHealth <= 0)
                 return 1f;
 
+            float floor = frame.Has<BossRuntimeState>(_entityRef) ? bossMinFlashStrength : minFlashStrength;
             float fraction = e.Damage.AsFloat / health.MaxHealth.AsFloat;
-            return Mathf.Lerp(minFlashStrength, 1f, Mathf.Clamp01(fraction / fullFlashHealthFraction));
+            return Mathf.Lerp(floor, 1f, Mathf.Clamp01(fraction / fullFlashHealthFraction));
         }
 
         // Fire/Ice/Lightning only - see UpdateStatusRestTint.

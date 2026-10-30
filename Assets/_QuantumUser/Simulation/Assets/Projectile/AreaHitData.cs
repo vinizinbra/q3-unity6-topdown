@@ -49,7 +49,7 @@ namespace Quantum
             {
                 // Scenery that's ignored settles and waits out the fuse; an ignored enemy has
                 // nothing to rest against, so it just keeps flying instead.
-                if (IsCombatant(f, hitEntity) == false)
+                if (IsCombatant(f, hitEntity) == false && PassThroughScenery == false)
                     Settle(projectile);
 
                 return false;

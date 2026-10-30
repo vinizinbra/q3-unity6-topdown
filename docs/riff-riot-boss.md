@@ -24,6 +24,8 @@ W1 Gunner projectile, W2 Scarab Nest) are only read (`Object.Instantiate` + rese
 | Sound projectile (speakers) | `_QuantumUser/Entities/Projectile/RiffRiotSoundProjectile.prefab` (pink copy of the basic enemy bullet) |
 | Sound-wave VFX | `_Project/Prefabs/Effects/RiffRiot/RiffRiot_SoundWaveCone/Ring.prefab` |
 | Speaker spawn / broken FX | `_Project/Scripts/Boss/BossSpeakerStageFxDirector.cs` (self-installed) |
+| Guitar SFX clips | `_Project/Audio/Library/RiffRiot/RiffRiot*.wav` (+ generator `Source~/riff_riot_guitar_sfx.py`) |
+| Guitar SoundData + cue prefabs | `_Project/Audio/Enemies/RiffRiot*.asset`, `_Project/Prefabs/Effects/RiffRiot/RiffRiot_Sfx_*.prefab` |
 | New sim code | `GapRingProjectileDeliveryData`, `SpeakerStageDeliveryData`, `HoldPoseDeliveryData`, `BossSpeakerStageSystem`, `QTN/Enemy/BossSpeakerStage.qtn` |
 
 **Sprites.** The sheet is 3x3 with overlapping cell bounds, so each pose was isolated by connected component,
@@ -75,6 +77,23 @@ tightens the speaker cadence) and `MoveSpeedMultiplier` 1.15 - windups (= reacti
 - While up: the **leap is blocked** (`BlockedActionsWhileActive`), Power Chord still plays. One pair per boss
   (`BossSpeakerStage` presence gates `CanBegin`). Orphan sweep pops speakers whose boss died/vanished; the defeat
   cinematic's `ClearArena` also clears them.
+
+## Guitar SFX
+Distorted guitar, generated offline from two reference takes (a distorted F1 bass-string note = the tone, a dive-bomb
+take whose ~700 Hz feedback squeal tops the dive). `Source~/riff_riot_guitar_sfx.py <src> <out>` re-pitches the bass
+into power chords (root/fifth/octave, double-tracked), re-amps them (drive + cab curve) and adds pick/sub transients;
+`src` needs the two takes as `bass.wav` / `dive.wav`. Rerun it and overwrite the wavs to change a sound.
+
+| Moment | Clip | Step |
+|---|---|---|
+| Power Chord hit | `RiffRiotPowerChord` - F5, hard pick, ~1s ring | Power Chord `BeginStep` |
+| Leap take-off | `RiffRiotDiveBomb` - flutter, then a ~3.5-octave accelerating fall over 1s (the 0.9s air time) | Leap `BeginStep` |
+| Leap landing | `RiffRiotLandingChord` - lower D#5 + sub, boom, crash, 1.7s ring (stacks on the body-slam impact) | Leap `EndStep` |
+| Speaker pulse | `RiffRiotAmpChug1/2/1/3` - palm-muted stabs, `Sequential` = an F-G#-F-A# riff across the alternating pulses | Speaker Pulse `BeginStep` |
+
+Each SoundData rides a silent `RiffRiot_Sfx_*` cue effect (renderer off, one invisible particle so the pool keeps it
+alive long enough for its `ParticleSound` to fire) in the step's `AdditionalParticles` - the builder makes both.
+Enemies group, spatial. Verified in Play (all four fire; landing chord starts ~0.93s after the dive).
 
 ## Shared framework additions (opt-in, defaults = old behaviour)
 - `BossPhaseData.EntryAction` - forced on entering a phase.

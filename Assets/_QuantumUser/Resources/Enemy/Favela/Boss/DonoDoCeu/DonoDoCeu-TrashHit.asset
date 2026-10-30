@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bd27c6472ddf4108a0a905dc9d8a1c1, type: 3}
+  m_Name: DonoDoCeu-TrashHit
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.AreaHitData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/Favela/Boss/DonoDoCeu/DonoDoCeu-TrashHit
+    Guid:
+      Value: 476464259288369787
+  Effects:
+  - Id:
+      Value: 440091783757558214
+  RestOffset:
+    RawValue: 0
+  PassThroughScenery: 1
+  DetonateOnLevelGeometry: 0
+  DetonateOnEnemyHit: 0
+  DetonateOnAllyHit: 0
+  BlastRadius:
+    RawValue: 104858
+  TargetMask: 1
+  TriggersSpawnUpgrades: 0
+  PlantedFuseTime:
+    RawValue: 0
+  MaxHeightDifference:
+    RawValue: 78643
+  BlastEffectPrefab: {fileID: 19820956, guid: 0ddedfd94782e4f05b6c10d54f32d527, type: 3}

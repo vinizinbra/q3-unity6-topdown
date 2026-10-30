@@ -42,7 +42,9 @@ namespace Quantum
         }
 
         // Only enemy-owned projectiles are affected - Yoru's own field never slows a teammate's
-        // weapon fire passing through it.
+        // weapon fire passing through it. Boss attacks are exempt too: a boss's shots (and its
+        // BossSummon's, which fire the boss's attack - same rule MirrorStepSkillAction uses) keep
+        // their authored timing, so warned patterns stay exactly as telegraphed.
         private static void ApplyFieldsToProjectiles(Frame f)
         {
             var fields = f.Filter<ProjectileSlowField, Transform3D>();
@@ -53,7 +55,10 @@ namespace Quantum
 
                 while (projectiles.Next(out EntityRef projectileEntity, out Projectile projectile, out Transform3D projectileTransform))
                 {
-                    if (f.Has<Enemy>(projectile.Owner) == false)
+                    if (f.Unsafe.TryGetPointer<Enemy>(projectile.Owner, out var owner) == false)
+                        continue;
+
+                    if (IsBossOwned(f, projectile.Owner, owner) == true)
                         continue;
 
                     if ((projectileTransform.Position - fieldTransform.Position).SqrMagnitude > field.Radius * field.Radius)
@@ -68,6 +73,15 @@ namespace Quantum
                     live->SpeedMultiplier = FPMath.Min(live->SpeedMultiplier, field.SpeedMultiplier);
                 }
             }
+        }
+
+        private static bool IsBossOwned(Frame f, EntityRef ownerEntity, Enemy* owner)
+        {
+            if (f.Has<BossSummon>(ownerEntity) == true)
+                return true;
+
+            EnemyDataAsset data = f.FindAsset(owner->EnemyData);
+            return data != null && data.Tier == EnemyTier.Boss;
         }
 
         // Event Horizon rank 3 ("Void Pressure") only - a field with EnemyTimeDilationMultiplier still

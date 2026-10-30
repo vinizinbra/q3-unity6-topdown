@@ -1,0 +1,233 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bd62d9a0136947bda040bbc6ed3739b, type: 3}
+  m_Name: FrostPatriarch-GlacialLeapDelivery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.LeapWaveDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/Arctic/Boss/FrostPatriarch/FrostPatriarch-GlacialLeapDelivery
+    Guid:
+      Value: 401213375263065949
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  JumpDuration:
+    RawValue: 55706
+  JumpHeight:
+    RawValue: 655360
+  MaxHeightDifference:
+    RawValue: 78643
+  ResolveValidLanding: 1
+  MaxLandingHeightDifference:
+    RawValue: 98304
+  WaveEffects:
+  - Id:
+      Value: 483233777692988915
+  WaveRadius:
+    RawValue: 458752
+  WaveSpeed:
+    RawValue: 917504
+  WaveMaxHeightDifference:
+    RawValue: 78643
+  WaveVisual:
+    Id:
+      Value: 0
+  WaveHeightOffset:
+    RawValue: 6554
+  WarnLandingInAir: 1
+  StageSteps:
+  - AnimationType: 0
+    Duration: 0.7
+    BodySprite: {fileID: -5512404938739769789, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
+    ShakeImpact: 0
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
+      SinkAmount: 0.3
+    HopStrike:
+      Distance: 0.4
+      Height: 0.2
+      StrikeAt: 0.35
+      Hold: 0.1
+      LeanDegrees: 12
+      Stretch: 0.25
+      LandSquash: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 0}
+    Anchor: 0
+    Offset: {x: 0, y: 0, z: 0}
+    SnapToGround: 0
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: 1
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+    AdditionalParticles: []
+  - AnimationType: 7
+    Duration: 0.8
+    BodySprite: {fileID: -180437029961916201, guid: 5c558ae3c816e47d2adfb2743035a102, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
+    BodySpriteOffset: {x: 0, y: 0, z: 0}
+    BodySpriteScale: {x: 1, y: 1, z: 1}
+    AlignBodyToDirection: 0
+    AlignMaxDegrees: 60
+    ShakeImpact: 3
+    Shake:
+      Frequency: 18
+      RockDegrees: 6
+    SwingBack:
+      Degrees: 20
+    Pulse:
+      Frequency: 6
+      MaxSquash: 0.25
+    Crouch:
+      Squash: 0.5
+      SinkAmount: 0.15
+    Inflate:
+      Amount: 0.4
+    Lunge:
+      Stretch: 0.35
+    Slam:
+      Squash: 0.4
+      SinkAmount: 0.2
+    Snap:
+      Degrees: 35
+    Chomp:
+      Pulses: 2
+      Squash: 0.3
+    Spin:
+      Degrees: 360
+    ArmSwingBack:
+      Degrees: 25
+      BodyFollow: 0.3
+      ArmScale: 0
+    ArmSnap:
+      Degrees: 45
+      BodyFollow: 0.3
+      ArmScale: 0
+    PunchScale:
+      Strength: 0.2
+      Frequency: 3
+    ArmPunch:
+      Degrees: 30
+      ScaleStrength: 0.15
+      ScaleFrequency: 3
+      ImpactShakeDegrees: 4
+      ImpactShakeFrequency: 30
+      BodyFollow: 0.2
+    Jump:
+      Height: 0.4
+      LandSquash: 0.3
+    Dive:
+      JumpHeight: 0.3
+      FromRotateDegrees: 0
+      ToRotateDegrees: 90
+      SinkAmount: 0.3
+    HopStrike:
+      Distance: 0.4
+      Height: 0.2
+      StrikeAt: 0.35
+      Hold: 0.1
+      LeanDegrees: 12
+      Stretch: 0.25
+      LandSquash: 0.3
+    CenterPivot: 0
+    PivotHeightOverride: 0
+    ParticlePrefab: {fileID: 19820956, guid: 4638a1855cd3c4f58b6b42e286bb8c42, type: 3}
+    Anchor: 0
+    Offset: {x: 0, y: -1.4, z: 0}
+    SnapToGround: 1
+    Parented: 0
+    AlignToEnemyDirection: 0
+    RotationOffset: {x: 270, y: 0, z: 0}
+    Scale: 7
+    OverrideSortingOrder: 0
+    SortingOrder: 0
+    AdditionalParticles:
+    - ParticlePrefab: {fileID: 19820956, guid: 7743b78f53860481a8262ecd4e6d925e, type: 3}
+      Anchor: 0
+      Offset: {x: 0, y: -1.4, z: 0}
+      SnapToGround: 1
+      Parented: 0
+      AlignToEnemyDirection: 0
+      RotationOffset: {x: 270, y: 0, z: 0}
+      Scale: 4
+      OverrideSortingOrder: 0
+      SortingOrder: 0
+    - ParticlePrefab: {fileID: 8250260377293902628, guid: 45530878ee0a04b94a334de43117ba46, type: 3}
+      Anchor: 0
+      Offset: {x: 0, y: -1.4, z: 0}
+      SnapToGround: 1
+      Parented: 0
+      AlignToEnemyDirection: 0
+      RotationOffset: {x: 0, y: 0, z: 0}
+      Scale: 3.5
+      OverrideSortingOrder: 0
+      SortingOrder: 0

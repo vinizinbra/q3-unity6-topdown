@@ -224,7 +224,17 @@ MonoBehaviour:
     Scale: 4
     OverrideSortingOrder: 0
     SortingOrder: 0
-    AdditionalParticles: []
+    AdditionalParticles:
+    - ParticlePrefab: {fileID: 3816239534365745353, guid: a1c620f0995754f48a699de2538e23a5, type: 3}
+      Anchor: 0
+      Offset: {x: 0, y: 0, z: 0}
+      SnapToGround: 0
+      Parented: 0
+      AlignToEnemyDirection: 0
+      RotationOffset: {x: 0, y: 0, z: 0}
+      Scale: 1
+      OverrideSortingOrder: 0
+      SortingOrder: 0
   OnGoingStep:
     AnimationType: 0
     Duration: 0.9
@@ -424,5 +434,15 @@ MonoBehaviour:
       AlignToEnemyDirection: 0
       RotationOffset: {x: 0, y: 0, z: 0}
       Scale: 0.35
+      OverrideSortingOrder: 0
+      SortingOrder: 0
+    - ParticlePrefab: {fileID: 8791761188940011817, guid: 7aee8e46254c84cf8b95bd1512a1d859, type: 3}
+      Anchor: 0
+      Offset: {x: 0, y: 0, z: 0}
+      SnapToGround: 0
+      Parented: 0
+      AlignToEnemyDirection: 0
+      RotationOffset: {x: 0, y: 0, z: 0}
+      Scale: 1
       OverrideSortingOrder: 0
       SortingOrder: 0

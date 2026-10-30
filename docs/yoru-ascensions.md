@@ -102,7 +102,8 @@ the percentage basis every Ascension scales off" idiom already used by `Juggerna
 ### Passive (3 lines, all `PassiveUpgradeData` on `YoruCharacterData.PassiveUpgrades`)
 
 Base Void Field (`VoidFieldPassiveData`, Inspector-only, unpicked): radius 2.5m, slows enemy
-projectiles passing through to 60% speed. No enemy-attack-speed slow at baseline - that's Event
+projectiles passing through to 60% speed. Boss projectiles (owner `EnemyTier.Boss` or a `BossSummon`,
+same rule as Mirror Step) are never slowed - boss patterns keep their telegraphed timing. No enemy-attack-speed slow at baseline - that's Event
 Horizon rank 3 only.
 
 **5. Event Horizon** (`EventHorizonPassiveUpgradeData`, merges old `EventHorizonPassiveUpgradeData` +

@@ -931,6 +931,7 @@ MonoBehaviour:
   duration: 0.2
   fullFlashHealthFraction: 0.1
   minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
   minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15

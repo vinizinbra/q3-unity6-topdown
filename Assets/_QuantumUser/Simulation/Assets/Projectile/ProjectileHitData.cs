@@ -23,6 +23,12 @@ namespace Quantum
         // means is up to the subclass (AreaHitData settles and waits out its fuse; pierce-style hit
         // data would just keep flying) - this only decides whether the contact should register at
         // all. True (the default) is right for anything that should just hit whatever it touches.
+        // Only meaningful with DetonateOnLevelGeometry == false. False (default): an ignored scenery hit SETTLES the shot
+        // against it (it stops there and waits out its fuse/lifetime). True: it keeps flying straight through - for a lob
+        // thrown over walls from outside an arena that must land exactly where its warning says (Dono do Céu's crowd trash,
+        // which expires on its landing point - BossCrowdBarrageSystem).
+        public bool PassThroughScenery;
+
         public bool DetonateOnLevelGeometry = true;
 
         // Same idea as DetonateOnLevelGeometry, for a hit against an enemy specifically - false lets

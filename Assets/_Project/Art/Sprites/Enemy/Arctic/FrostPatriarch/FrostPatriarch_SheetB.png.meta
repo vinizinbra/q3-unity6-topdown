@@ -1,0 +1,375 @@
+fileFormatVersion: 2
+guid: 5c558ae3c816e47d2adfb2743035a102
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2848036621450631139
+    second: FrostPatriarch_LeapPrep
+  - first:
+      213: -5512404938739769789
+    second: FrostPatriarch_LeapJump
+  - first:
+      213: -180437029961916201
+    second: FrostPatriarch_LeapLand
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: FrostPatriarch_BreathPrep
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 880
+        width: 491
+        height: 330
+      alignment: 9
+      pivot: {x: 0.5125, y: 0.0121}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7a91060e625d2110800000000000000
+      internalID: 1237736105097403003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FrostPatriarch_BreathActive
+      rect:
+        serializedVersion: 2
+        x: 676
+        y: 880
+        width: 568
+        height: 267
+      alignment: 9
+      pivot: {x: 0.5214, y: 0.015}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d76fb8aabb9c54650800000000000000
+      internalID: 6216596668512204413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FrostPatriarch_BreathRecover
+      rect:
+        serializedVersion: 2
+        x: 1373
+        y: 880
+        width: 453
+        height: 296
+      alignment: 9
+      pivot: {x: 0.4746, y: 0.0135}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fba3dd42ea1a6fa80800000000000000
+      internalID: -8433375482889815361
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FrostPatriarch_LeapPrep
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 440
+        width: 485
+        height: 280
+      alignment: 9
+      pivot: {x: 0.4728, y: 0.0143}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e75ed8b732468720800000000000000
+      internalID: 2848036621450631139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FrostPatriarch_LeapJump
+      rect:
+        serializedVersion: 2
+        x: 758
+        y: 440
+        width: 403
+        height: 312
+      alignment: 9
+      pivot: {x: 0.4958, y: 0.0128}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34e9e480ae00083b0800000000000000
+      internalID: -5512404938739769789
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FrostPatriarch_LeapLand
+      rect:
+        serializedVersion: 2
+        x: 1384
+        y: 440
+        width: 431
+        height: 310
+      alignment: 9
+      pivot: {x: 0.4737, y: 0.0129}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d02bcc2a75fe7df0800000000000000
+      internalID: -180437029961916201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FrostPatriarch_StaggerHit
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 0
+        width: 541
+        height: 354
+      alignment: 9
+      pivot: {x: 0.4668, y: 0.0113}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 008155c094ccf4260800000000000000
+      internalID: 7084105352988661760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FrostPatriarch_KneelHold
+      rect:
+        serializedVersion: 2
+        x: 689
+        y: 0
+        width: 542
+        height: 278
+      alignment: 9
+      pivot: {x: 0.4741, y: 0.0144}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99bf38ef53232d390800000000000000
+      internalID: -7795112797540189287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FrostPatriarch_KneelRise
+      rect:
+        serializedVersion: 2
+        x: 1372
+        y: 0
+        width: 456
+        height: 337
+      alignment: 9
+      pivot: {x: 0.5154, y: 0.0119}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bde4d2901b4920a0800000000000000
+      internalID: -6905906019040957007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      FrostPatriarch_BreathActive: 6216596668512204413
+      FrostPatriarch_BreathPrep: 1237736105097403003
+      FrostPatriarch_BreathRecover: -8433375482889815361
+      FrostPatriarch_ChargeBrake: 9113885703805490573
+      FrostPatriarch_ChargePrep: -8436222055262789713
+      FrostPatriarch_ChargeRun: -5077049004866787969
+      FrostPatriarch_KneelHold: -7795112797540189287
+      FrostPatriarch_KneelRise: -6905906019040957007
+      FrostPatriarch_LeapJump: -5512404938739769789
+      FrostPatriarch_LeapLand: -180437029961916201
+      FrostPatriarch_LeapPrep: 2848036621450631139
+      FrostPatriarch_StaggerHit: 7084105352988661760
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

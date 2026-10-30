@@ -61,6 +61,9 @@ MonoBehaviour:
     AnimationType: 2
     Duration: 0.9
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -142,6 +145,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -223,6 +229,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 1
     BodySprite: {fileID: 348937486, guid: 2ccd5da319632411aa432cca9e5eeb15, type: 3}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -304,6 +313,9 @@ MonoBehaviour:
     AnimationType: 0
     Duration: 0.3
     BodySprite: {fileID: 0}
+    BodySpriteFrames: []
+    BodySpriteFrameRate: 0
+    BodySpriteLoop: 0
     BodySpriteOffset: {x: 0, y: 0, z: 0}
     BodySpriteScale: {x: 1, y: 1, z: 1}
     AlignBodyToDirection: 0
@@ -399,9 +411,10 @@ MonoBehaviour:
       Value: 2235394048011183765
   Shape: 2
   StartPhase: 0
-  EndPhase: 1
+  EndPhase: 3
   LiveTracking: 1
   LiveTrackingSmoothing: 15
+  ShrinkWhileMoving: 1
   TelegraphPrefab: {fileID: 2468440791896092637, guid: 4f8787fca955742b995eeedd8d55d28c, type: 3}
   SnapToGround: 1
   LineLength: 1
@@ -602,6 +615,7 @@ MonoBehaviour:
   Description: Winds up, then charges in a straight line.
   ViewPrefab: {fileID: 8476845490732343577, guid: 319b3a4f416114624b53cb03df10a735, type: 3}
   CatalogSubtitle: Charger
+  Discovery: 0
 --- !u!114 &3966869393339546562
 MonoBehaviour:
   m_ObjectHideFlags: 0

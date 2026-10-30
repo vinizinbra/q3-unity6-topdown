@@ -224,7 +224,17 @@ MonoBehaviour:
     Scale: 1
     OverrideSortingOrder: 0
     SortingOrder: 0
-    AdditionalParticles: []
+    AdditionalParticles:
+    - ParticlePrefab: {fileID: 5263158299709871840, guid: 41ebffe26f4dc482d89fc0555c9ec8fa, type: 3}
+      Anchor: 0
+      Offset: {x: 0, y: 0, z: 0}
+      SnapToGround: 0
+      Parented: 0
+      AlignToEnemyDirection: 0
+      RotationOffset: {x: 0, y: 0, z: 0}
+      Scale: 1
+      OverrideSortingOrder: 0
+      SortingOrder: 0
   OnGoingStep:
     AnimationType: 0
     Duration: 0.3

@@ -50,6 +50,15 @@ namespace Quantum
         [SerializeField, Tooltip("Hide every other body sprite while dying - for a dying pose drawn as the whole body on one sprite. Off = only the target's sprite changes (e.g. just a new face).")]
         private bool dyingHidesOtherSprites = true;
 
+        // Optional walk cycle for a whole-body sprite rig (e.g. the Frost Patriarch's two quadruped steps): while
+        // EnemyBlobAnimationView is in its Run state and no attack step is showing its own sprite, Reference Sprite
+        // cycles through these, paced by the run's own stride phase. Empty (default) = the procedural run only, as before.
+        [Header("Walk Cycle")]
+        [SerializeField, Tooltip("Frames shown in order while running (whole-body poses). Leave empty for the procedural run only.")]
+        private Sprite[] walkSprites = System.Array.Empty<Sprite>();
+        [SerializeField, Tooltip("Frames advanced per run stride cycle (EnemyBlobAnimationView.runStrideFrequency).")]
+        private float walkFramesPerStride = 2f;
+
         // EnemyViewRig sits on ViewPrefab's own root, so that root doubles as EnemyRoot - no
         // separate self-reference field to wire. This is the same transform EnemyView.SpawnSprite
         // positions/scales at spawn (bottom-pivot offset, radius scale), so
@@ -72,6 +81,8 @@ namespace Quantum
         public Sprite DyingSprite => dyingSprite;
         public SpriteRenderer DyingSpriteTarget => dyingSpriteTarget != null ? dyingSpriteTarget : ReferenceSprite;
         public bool DyingHidesOtherSprites => dyingHidesOtherSprites;
+        public Sprite[] WalkSprites => walkSprites;
+        public float WalkFramesPerStride => walkFramesPerStride;
 
         // Gun's authored rest pose, captured once here rather than read live by whichever sibling
         // needs it (EnemyArmAimView._gunBaseLocalPosition) - this GameObject is pooled

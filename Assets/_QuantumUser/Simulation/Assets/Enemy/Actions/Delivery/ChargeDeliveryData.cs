@@ -226,7 +226,9 @@ namespace Quantum
             filter.Enemy->StateTimer -= deltaTime;
 
             FP sqrDistanceToTarget = EnemyMovementUtility.FlatSqrDistance(selfPosition, filter.Enemy->SkillTargetPosition);
-            bool arrived = sqrDistanceToTarget <= effectiveRange * effectiveRange;
+            // Runs the whole DashDistance its lane telegraphs - MoveKinematicTowards lands exactly on the end point, so
+            // arrival needs only a hair of tolerance (not the hit range, which would stop it short of the drawn lane).
+            bool arrived = sqrDistanceToTarget <= FP._0_05 * FP._0_05;
             bool timedOut = filter.Enemy->StateTimer <= FP._0;
 
             if (arrived == true || timedOut == true)

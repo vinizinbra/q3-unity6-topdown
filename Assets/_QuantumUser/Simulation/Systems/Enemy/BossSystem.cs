@@ -108,7 +108,9 @@ namespace Quantum
             if (enemy->Phase == EnemyActionPhase.Dead)
                 return false;
 
-            if (enemy->Phase == EnemyActionPhase.Active)
+            // A delivery that opts in (EnemyDeliveryData.AllowsForcedPreemption - e.g. a flyer still hovering) is
+            // cut short now; everything else keeps the old wait-until-it-finishes behaviour.
+            if (enemy->Phase == EnemyActionPhase.Active && EnemySystem.TryPreemptActive(f, entity, enemy, bossData) == false)
             {
                 state->PendingForcedSlot = (byte)(skillIndex + 2); // slot + 1, see PendingForcedSlot
                 return true;

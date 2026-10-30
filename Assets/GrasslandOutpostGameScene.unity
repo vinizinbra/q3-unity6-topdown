@@ -647,6 +647,7 @@ MonoBehaviour:
   duration: 0.3
   fullFlashHealthFraction: 0.1
   minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
   minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
@@ -2179,6 +2180,7 @@ MonoBehaviour:
   duration: 0.3
   fullFlashHealthFraction: 0.1
   minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
   minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
@@ -8363,6 +8365,7 @@ MonoBehaviour:
   duration: 0.3
   fullFlashHealthFraction: 0.1
   minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
   minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
@@ -25819,6 +25822,7 @@ MonoBehaviour:
   duration: 0.3
   fullFlashHealthFraction: 0.1
   minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
   minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
@@ -27903,6 +27907,7 @@ MonoBehaviour:
   duration: 0.3
   fullFlashHealthFraction: 0.1
   minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
   minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
@@ -29011,6 +29016,7 @@ MonoBehaviour:
   duration: 0.3
   fullFlashHealthFraction: 0.1
   minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
   minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
@@ -29709,8 +29715,8 @@ MonoBehaviour:
   LocalPlayers:
   - PlayerAvatar:
       Id:
-        Value: 1472908484413352043
-    PlayerNickname: Yoru
+        Value: 1427283638148129588
+    PlayerNickname: Max
     test:
       RawValue: 0
     IsBot: 0
@@ -30787,6 +30793,7 @@ MonoBehaviour:
   duration: 0.3
   fullFlashHealthFraction: 0.1
   minFlashStrength: 0.15
+  bossMinFlashStrength: 0.6
   minFlashDurationScale: 0.5
   joltPunchScaleStrength: {x: 0.08, y: 0.08, z: 0}
   joltPunchScaleDuration: 0.15
@@ -40644,7 +40651,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3623793429818643822, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 185.15
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3623793429818643822, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_SizeDelta.y
@@ -40716,7 +40723,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3712384163460187817, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 32.7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3712384163460187817, guid: 9773b368233224e10af7ebbd990cacb2, type: 3}
       propertyPath: m_SizeDelta.y

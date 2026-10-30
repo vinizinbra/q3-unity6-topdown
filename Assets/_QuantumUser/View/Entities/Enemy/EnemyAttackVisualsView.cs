@@ -177,6 +177,10 @@ namespace Quantum
             // whenever no icon is currently held (the common case, most frames).
             UpdateAnticipationIcon(frame);
 
+            // Multi-stage deliveries (IStagedDeliveryVisuals - a swoop's rise/hover/aim/dive, an airborne stagger's
+            // fall) play their per-stage step the frame the simulation changes stage, independent of phase edges.
+            UpdateDeliveryStage(frame, enemy, enemyData);
+
             EnemyActionPhase? lastPhase = _lastEnemyPhase;
             FP? lastStateTimer = _lastStateTimer;
             byte? lastActionSlot = _lastActionSlot;
@@ -280,6 +284,15 @@ namespace Quantum
 
                 _lastShellIndex = enemy.PendingImpactIndex;
             }
+
+            // Safety net, every frame: the phase edges below need to SEE Recovery to fire firedEnd/projectileDestroyed, but
+            // Quantum can advance several ticks between two Unity frames - a short DownTime can mean Active -> Recovery ->
+            // Chasing all happen between samples, leaving a telegraph stuck. Once the enemy is anything other than
+            // windup/Active, the attack is over whichever phases got skipped (or whatever ended it), so clear it here.
+            // BodySprite is deliberately NOT force-reverted - a step's sprite stays up for its own authored Duration
+            // (EnemyBlobAnimationView's _bodySpriteTimeRemaining); DeInitialize still force-reverts on teardown.
+            if (IsAttackInProgress(enemyPhase) == false && _currentTelegraph != null)
+                ClearTelegraph();
 
             if (windupRestarted == false && (lastPhase.HasValue == false || lastPhase == enemyPhase))
                 return; // only react on actual phase changes (or a detected windup restart) - nothing else below needs mid-phase reactions
@@ -386,29 +399,11 @@ namespace Quantum
 
             if (projectileDestroyed == true)
                 PlayPhase(frame, enemy, enemyData, null, telegraph, actionData.IgnoreY, actionData.DamageRange.AsFloat, actionData.Origin == EnemyActionOrigin.Self, AttackPhase.Destroyed);
+        }
 
-            // Safety net: firedEnd/projectileDestroyed require observing enemyPhase ==
-            // Recovery on some QUpdate sample, but Quantum can advance several simulation
-            // ticks between two Unity frames - a short DownTime can mean Active -> Recovery
-            // -> Chasing all happen between samples, so Recovery is never actually seen and the
-            // specific EndPhase edge above never fires, leaving the telegraph stuck showing
-            // forever. Once the enemy is observed to be anything other than Preparation/Telegraph/
-            // Active, the attack is unambiguously over regardless of which discrete phases got
-            // skipped in between - clear it here if the phase-specific path above didn't already.
-            bool attackNoLongerActive = enemyPhase != EnemyActionPhase.Preparation
-                && enemyPhase != EnemyActionPhase.Telegraph
-                && enemyPhase != EnemyActionPhase.Active;
-
-            // BodySprite is deliberately NOT force-reverted here, unlike the telegraph below - a
-            // step's sprite should stay up for its own full authored Duration even if the attack
-            // itself (Enemy.Phase) already wrapped up first, so EnemyBlobAnimationView's own
-            // _bodySpriteTimeRemaining countdown is the only thing that reverts it (see
-            // ApplyStepSprite/QUpdate there). DeInitialize below still force-reverts on teardown -
-            // that's a pool-reuse safeguard, not a "cut the visual short" concern.
-            if (attackNoLongerActive == true && _currentTelegraph != null)
-            {
-                ClearTelegraph();
-            }
+        private static bool IsAttackInProgress(EnemyActionPhase phase)
+        {
+            return phase == EnemyActionPhase.Preparation || phase == EnemyActionPhase.Telegraph || phase == EnemyActionPhase.Active;
         }
 
         private void PlayPhase(Frame frame, Enemy enemy, EnemyDataAsset enemyData, AttackVisualStep step, TelegraphData telegraph, bool ignoreY, float damageRange, bool originIsSelf, AttackPhase phase)
@@ -420,6 +415,11 @@ namespace Quantum
                 SpawnStepParticle(frame, enemy, step);
                 TriggerStepShake(frame, enemy, step);
             }
+
+            // The action's sound for this phase, if any (view-side table - see EnemyActionSoundTable).
+            SoundData sound = EnemyActionSoundTable.Find(EnemyDecisionUtility.ResolveAction(frame, enemyData, enemy.CurrentActionSlot), phase);
+            if (sound != null)
+                AudioManager.PlayAt(sound, transform.position);
 
             if (telegraph != null && ResolveTelegraphPrefab(telegraph) != null)
             {
@@ -654,6 +654,32 @@ namespace Quantum
             return TryGetAnchorPosition(frame, enemy, out origin);
         }
 
+        private int _lastDeliveryStageSerial = int.MinValue;
+
+        private void UpdateDeliveryStage(Frame frame, Enemy enemy, EnemyDataAsset enemyData)
+        {
+            if (frame.TryGet<EnemyDeliveryStage>(_entityRef, out EnemyDeliveryStage stage) == false || stage.Serial == _lastDeliveryStageSerial)
+                return;
+
+            _lastDeliveryStageSerial = stage.Serial;
+
+            if (stage.Stage == 0)
+                return;
+
+            EnemyActionData action = EnemyDecisionUtility.ResolveAction(frame, enemyData, enemy.CurrentActionSlot);
+            if (action == null || frame.FindAsset(action.Delivery) is not IStagedDeliveryVisuals staged)
+                return;
+
+            AttackVisualStep step = staged.GetStageStep(stage.Stage);
+            if (step == null)
+                return;
+
+            blobAnimationView.PlayAttackStep(step);
+            blobAnimationView.ApplyStepSprite(step);
+            SpawnStepParticle(frame, enemy, step);
+            TriggerStepShake(frame, enemy, step);
+        }
+
         // Distance-falloff camera shake for AttackVisualStep.ShakeImpact - see FollowCamera.
         // ShakeAtPosition. No-ops for 0 (the default, meaning "no shake authored on this step") or
         // if this step's own anchor can't currently be resolved (e.g. SkillTargetPosition with a
@@ -688,7 +714,7 @@ namespace Quantum
             // the enemy indefinitely.
             ClearParentedParticle();
 
-            SpawnParticle(frame, enemy, step.ParticlePrefab, step.Anchor, step.Offset, step.SnapToGround, step.Parented, step.AlignToEnemyDirection, step.RotationOffset, step.Scale, step.OverrideSortingOrder, step.SortingOrder);
+            SpawnParticle(frame, enemy, step.ParticlePrefab, step.Anchor, step.Offset, step.SnapToGround, step.Parented, false, step.AlignToEnemyDirection, step.RotationOffset, step.Scale, step.OverrideSortingOrder, step.SortingOrder);
 
             if (step.AdditionalParticles == null)
                 return;
@@ -698,7 +724,7 @@ namespace Quantum
                 if (extra == null || extra.ParticlePrefab == null)
                     continue; // entry left empty on purpose - see AttackVisualParticle.ParticlePrefab's own tooltip
 
-                SpawnParticle(frame, enemy, extra.ParticlePrefab, extra.Anchor, extra.Offset, extra.SnapToGround, extra.Parented, extra.AlignToEnemyDirection, extra.RotationOffset, extra.Scale, extra.OverrideSortingOrder, extra.SortingOrder);
+                SpawnParticle(frame, enemy, extra.ParticlePrefab, extra.Anchor, extra.Offset, extra.SnapToGround, extra.Parented, extra.ParentToBody, extra.AlignToEnemyDirection, extra.RotationOffset, extra.Scale, extra.OverrideSortingOrder, extra.SortingOrder);
             }
         }
 
@@ -706,7 +732,7 @@ namespace Quantum
         // AdditionalParticles entries - both are just an independent anchor/offset/parent/alignment/
         // rotation/scale/sorting config, so there's nothing primary-specific left once the fields are
         // passed in directly instead of read off the step object.
-        private void SpawnParticle(Frame frame, Enemy enemy, ParticleSystem prefab, ParticleAnchor anchor, Vector3 offset, bool snapToGround, bool parented, bool alignToEnemyDirection, Vector3 rotationOffset, float scaleMultiplier, bool overrideSortingOrder, int sortingOrder)
+        private void SpawnParticle(Frame frame, Enemy enemy, ParticleSystem prefab, ParticleAnchor anchor, Vector3 offset, bool snapToGround, bool parented, bool parentToBody, bool alignToEnemyDirection, Vector3 rotationOffset, float scaleMultiplier, bool overrideSortingOrder, int sortingOrder)
         {
             if (prefab == null)
                 return;
@@ -747,7 +773,9 @@ namespace Quantum
             // not tracking anything).
             if (parented == true && anchor == ParticleAnchor.OnSelf)
             {
-                Transform parent = rig != null && rig.Gun != null ? rig.Gun : transform;
+                Transform parent = rig != null && parentToBody == true ? rig.transform
+                    : rig != null && rig.Gun != null ? rig.Gun
+                    : transform;
                 GameObject instance = Instantiate(prefab.gameObject, parent);
 
                 // SnapToGround replaces the authored local Offset with a found world height, so it
@@ -929,6 +957,11 @@ namespace Quantum
                 if (TryGetAnchorPosition(frame, enemy, out Photon.Deterministic.FPVector3 targetPosition) == false)
                     return false;
 
+                // ShrinkWhileMoving: committed dash - from the enemy's current position to the locked end it is running to.
+                bool consuming = IsConsumingLane(telegraph, enemy);
+                if (consuming == true)
+                    targetPosition = enemy.SkillTargetPosition;
+
                 // See EnemyActionData.IgnoreY above. When true, targetPosition.Y is flattened to
                 // selfPosition.Y so direction below ends up perfectly horizontal and the rotation
                 // math further down naturally lies flat. When false (e.g. Sniper), direction keeps
@@ -951,15 +984,15 @@ namespace Quantum
                 // distance, for showing a delivery's full potential reach (e.g. matching
                 // ChargeDeliveryData.DashDistance) rather than "however far the target happens to be."
                 // FromOffset/ToOffset nudge either endpoint along the direction afterward either way.
-                Vector3 endBase = telegraph.LineLength == TelegraphLineLength.FixedDistance
+                Vector3 endBase = telegraph.LineLength == TelegraphLineLength.FixedDistance && consuming == false
                     ? origin + direction * telegraph.FixedDistanceValue
                     : targetPosition.ToUnityVector3();
 
-                Vector3 fromPoint = origin + direction * telegraph.FromOffset;
-                Vector3 toPoint = endBase + direction * telegraph.ToOffset;
+                Vector3 fromPoint = consuming == true ? origin : origin + direction * telegraph.FromOffset;
+                Vector3 toPoint = consuming == true ? endBase : endBase + direction * telegraph.ToOffset;
                 float length = Vector3.Distance(fromPoint, toPoint);
 
-                if (length <= 0.0001f)
+                if (length <= 0.0001f || (consuming == true && length < ConsumedLaneLength))
                     return false;
 
                 Vector3 midpoint = (fromPoint + toPoint) * 0.5f;
@@ -1002,7 +1035,8 @@ namespace Quantum
         // follow the target through the whole windup). Silently holds the last pose if the anchor
         // can't currently be resolved (e.g. the target died mid-track) rather than snapping or
         // hiding - ClearTelegraph (driven by the phase-edge logic in QUpdate) is what actually
-        // tears it down once EndPhase is reached, this only ever repositions.
+        // tears it down once EndPhase is reached. One exception: a ShrinkWhileMoving lane with
+        // nothing left ahead of the dash is cleared here.
         //
         // Eases toward the freshly computed pose (LiveTrackingSmoothing) rather than snapping
         // straight to it - the anchor this reads only updates once per simulation tick, not per
@@ -1016,16 +1050,32 @@ namespace Quantum
             if (_currentTelegraph == null || _liveTelegraphData == null)
                 return;
 
-            if (ComputeTelegraphPose(frame, enemy, enemyData, _liveTelegraphData, _liveTelegraphIgnoreY, _liveTelegraphDamageRange, _liveTelegraphOriginIsSelf, out Vector3 position, out Quaternion rotation, out Vector3 scale) == false)
-                return;
+            bool consuming = IsConsumingLane(_liveTelegraphData, enemy);
 
-            float smoothT = 1f - Mathf.Exp(-_liveTelegraphData.LiveTrackingSmoothing * Time.deltaTime);
+            if (ComputeTelegraphPose(frame, enemy, enemyData, _liveTelegraphData, _liveTelegraphIgnoreY, _liveTelegraphDamageRange, _liveTelegraphOriginIsSelf, out Vector3 position, out Quaternion rotation, out Vector3 scale) == false)
+            {
+                // Nothing left of the lane ahead of the charger: drop it now rather than leave a stub up for the rest of the dash.
+                if (consuming == true)
+                    ClearTelegraph();
+                return;
+            }
+
+            // A lane being eaten by the dash snaps - easing would trail a metre or more behind a fast charger.
+            float smoothT = consuming == true ? 1f : 1f - Mathf.Exp(-_liveTelegraphData.LiveTrackingSmoothing * Time.deltaTime);
             Transform telegraphTransform = _currentTelegraph.transform;
 
             Vector3 smoothedPosition = Vector3.Lerp(telegraphTransform.position, position, smoothT);
             Quaternion smoothedRotation = Quaternion.Slerp(telegraphTransform.rotation, rotation, smoothT);
             telegraphTransform.SetPositionAndRotation(smoothedPosition, smoothedRotation);
             telegraphTransform.localScale = Vector3.Lerp(telegraphTransform.localScale, scale, smoothT);
+        }
+
+        private const float ConsumedLaneLength = 0.4f;
+
+        private static bool IsConsumingLane(TelegraphData telegraph, Enemy enemy)
+        {
+            return telegraph.ShrinkWhileMoving == true && enemy.Phase == EnemyActionPhase.Active
+                && (telegraph.Shape == TelegraphShape.ChargeLane || telegraph.Shape == TelegraphShape.Rectangle);
         }
 
         private void SpawnTelegraph(Frame frame, Enemy enemy, EnemyDataAsset enemyData, TelegraphData telegraph, bool ignoreY, float damageRange, bool originIsSelf)

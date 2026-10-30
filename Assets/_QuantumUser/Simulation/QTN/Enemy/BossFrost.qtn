@@ -1,0 +1,21 @@
+// Runtime state first built for the Arctic boss Frost Patriarch (docs/frost-patriarch-boss.md). Generic: nothing
+// here is boss-specific beyond "the enemy that owns it".
+
+// Live state of an IceChargeDeliveryData run. Hit is the per-PASS hit list (each player at most once per charge,
+// unlike ChargeDeliveryData's cooldown-based tracking); WallPause counts the stopped, exposed beat after slamming
+// into a wall.
+component IceChargeState
+{
+    array<EntityRef>[4] Hit;
+    Byte HitCount;
+    FPVector3 Direction;
+    FP Traveled;
+    FP WallPause;
+    Boolean HitWall;
+}
+
+// Marker: a spawned hazard (AreaOwner.Owner = the boss) that BossHazardUtility.CancelOwnedHazards removes
+// at once - stagger break, death - instead of letting it run out its lifetime (the Frost Patriarch's ice trail).
+component DissipateWithOwner
+{
+}

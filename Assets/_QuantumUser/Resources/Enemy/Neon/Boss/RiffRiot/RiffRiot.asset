@@ -357,6 +357,7 @@ MonoBehaviour:
   RetargetInterval:
     RawValue: 6554
   DeferForcedActionsWhileActive: 1
+  FallBackWhenTopActionBlocked: 0
   DebugPrototype:
     Id:
       Value: 1414848658287892554

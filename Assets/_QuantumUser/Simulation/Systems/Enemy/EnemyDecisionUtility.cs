@@ -25,7 +25,7 @@ namespace Quantum
         // (every action on cooldown, out of EngageRange, its Trigger condition unmet, or - for a
         // boss - not part of the current phase's pool).
         public static bool TrySelectAction(Frame f, EntityRef entity, Enemy* enemy, EnemyDataAsset data,
-            FPVector3 targetPosition, FP sqrDistanceToTarget, out EnemyActionData bestAction, out int bestSlot)
+            FPVector3 targetPosition, FP sqrDistanceToTarget, out EnemyActionData bestAction, out int bestSlot, int excludedSlotMask = 0)
         {
             bestAction = null;
             bestSlot = -1;
@@ -45,6 +45,9 @@ namespace Quantum
 
             for (int slot = 0; slot < slotCount; slot++)
             {
+                if ((excludedSlotMask & (1 << slot)) != 0)
+                    continue;
+
                 if (boss != null && IsEligibleThisPhase(bossData, boss, slot) == false)
                     continue;
 

@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6709b969393be45d1879f303198e28ac, type: 3}
+  m_Name: FrostPatriarch-IcebreakerDelivery
+  m_EditorClassIdentifier: Quantum.Simulation::Quantum.EruptionLineDeliveryData
+  Identifier:
+    Path: _QuantumUser/Resources/Enemy/Arctic/Boss/FrostPatriarch/FrostPatriarch-IcebreakerDelivery
+    Guid:
+      Value: 431998290512307730
+  MinRandomOffset:
+    RawValue: 0
+  MaxRandomOffset:
+    RawValue: 0
+  SlamHit:
+    Id:
+      Value: 412274167733496005
+  SlamDistance:
+    RawValue: 117965
+  EruptionHit:
+    Id:
+      Value: 450542274348537448
+  EruptionCount: 12
+  FirstDistance:
+    RawValue: 196608
+  Spacing:
+    RawValue: 176947
+  FirstDelay:
+    RawValue: 39322
+  Interval:
+    RawValue: 7864
+  MaxHeightDifference:
+    RawValue: 78643
+  SlamDamage:
+    RawValue: 1835008
+  LineCount: 1
+  LineSpreadDegrees:
+    RawValue: 1966080
+  RadiusGrowthPerStep:
+    RawValue: 0
+  WarningLead:
+    RawValue: 23593
+  WarningEffect: {fileID: 2354258005404414446, guid: 71870377c7ab9443ca061320697d947d, type: 3}

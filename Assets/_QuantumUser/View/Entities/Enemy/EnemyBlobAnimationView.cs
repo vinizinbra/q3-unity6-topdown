@@ -720,6 +720,38 @@ namespace Quantum
             }
 
             UpdatePose(dt);
+            UpdateWalkFrame();
+        }
+
+        // EnemyViewRig.WalkSprites: cycles them while running, paced by the run stride; back to the rig's own sprite when
+        // the walk stops. Never touches a sprite an attack step is showing (_bodySpriteTimeRemaining) or any other state.
+        private bool _showingWalkFrame;
+
+        private void UpdateWalkFrame()
+        {
+            if (rig == null || rig.ReferenceSprite == null || rig.WalkSprites == null || rig.WalkSprites.Length == 0)
+                return;
+
+            if (_bodySpriteTimeRemaining > 0f)
+            {
+                _showingWalkFrame = false;
+                return;
+            }
+
+            if (_state == State.Run)
+            {
+                int count = rig.WalkSprites.Length;
+                int index = Mathf.FloorToInt(_stridePhase * rig.WalkFramesPerStride) % count;
+                if (rig.WalkSprites[index] != null)
+                    rig.ReferenceSprite.sprite = rig.WalkSprites[index];
+
+                _showingWalkFrame = true;
+            }
+            else if (_showingWalkFrame == true)
+            {
+                rig.ReferenceSprite.sprite = _defaultBodySprite;
+                _showingWalkFrame = false;
+            }
         }
 
         private void UpdatePose(float dt)

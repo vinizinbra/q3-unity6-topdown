@@ -71,6 +71,11 @@ namespace Quantum
             if (f.Has<BossRuntimeState>(boss) == false || f.Has<BossDefeatSequence>(boss) == true)
                 return;
 
+            // A boss killed mid-flight (swoop / falling stagger) is put on the floor before the hard pause freezes it, and
+            // its own hazards (tornadoes, crowd barrage, ice trail) go with it - nothing pulses on the way out.
+            BossAirborneSafetySystem.GroundNow(f, boss);
+            BossHazardUtility.CancelOwnedHazards(f, boss);
+
             if (IsAnotherBossAlive(f, boss) == true)
                 return;
 

@@ -51,6 +51,9 @@ namespace Quantum
         [Tooltip("LiveTracking only - how quickly the telegraph eases toward its newly computed pose each frame, instead of snapping straight to it. The anchor it reads only updates once per simulation tick (not per render frame), so snapping directly to it reads as jittery/stepped at typical render framerates - this smooths that out the same way EnemyArmAimView smooths its own continuous aim. Higher = snappier/more jitter, lower = smoother/more lag.")]
         public float LiveTrackingSmoothing = 15f;
 
+        [Tooltip("ChargeLane/Rectangle + LiveTracking only: once the enemy is moving (Active - the dash is committed and Enemy.SkillTargetPosition holds its locked end), the lane runs from where the enemy is NOW to that end and snaps every frame, so it is eaten as the enemy travels instead of vanishing at take-off. Set EndPhase to End so it stays up for the whole dash. No extra queries - same pose math as the live tracking.")]
+        public bool ShrinkWhileMoving = false;
+
         [Tooltip("Ground indicator prefab - a SpriteRenderer facing the camera by default (like any 2D sprite); EnemyAttackVisualsView reorients the spawned instance to lie flat on the ground automatically, you don't need to pre-rotate it. Assumed unit-sized (1x1 at scale 1) - scaled by From/To/Width or RadiusMultiplier below. Leave empty for no telegraph.")]
         public GameObject TelegraphPrefab;
 

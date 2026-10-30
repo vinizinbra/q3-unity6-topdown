@@ -1,0 +1,105 @@
+// Boss-owned hazards first built for the Favela boss Dono do Céu (docs/dono-do-ceu-boss.md). Generic:
+// nothing here is boss-specific beyond "Owner/Boss is the enemy that created it".
+
+// A moving floor tornado (TornadoCastDeliveryData spawns it, BossTornadoSystem drives it). Player-only:
+// periodic floor-gated damage + a gentle escapable pull; at natural expiry a short compression tell then ONE
+// pulse. Cancelled (owner dead / staggered / cleanup) = dissipates with no pulse. Never a Yoru Vortex.
+component BossTornado
+{
+    EntityRef Owner;
+    AssetRef<TornadoCastDeliveryData> Config;
+
+    // Flat travel direction (unit XZ) and its constant turn rate (deg/s, signed) - a readable curve.
+    FPVector2 Heading;
+    FP TurnRate;
+
+    FP Age;
+    FP DamageTimer;
+    // The casting action's Damage, per tick (the expiry pulse uses Config.PulseDamage).
+    FP TickDamage;
+
+    // Hit an edge/wall/step: holds its spot (still harmful) until it expires.
+    Boolean Stopped;
+
+    // In the compression tell before the expiry pulse; CompressTimer counts it down.
+    Boolean Compressing;
+    FP CompressTimer;
+}
+
+// A player singled out by a boss's whistle (CrowdMarkEffectData). Visual + barrage target only - the
+// movement slow is a separate StickySlow on the same hit.
+component CrowdMark
+{
+    EntityRef Boss;
+    FP Remaining;
+}
+
+// On a BOSS while its crowd is throwing trash at marked players (BossCrowdBarrageSystem). Present = a
+// barrage is running; removed when done, cancelled (stagger) or the boss dies.
+component CrowdBarrage
+{
+    AssetRef<CrowdMarkEffectData> Config;
+    Byte SalvosRemaining;
+    Byte ThrowsLeftInSalvo;
+    FP Timer;
+
+    // Round-robin over the marked players (by entity index) - one target per salvo in co-op.
+    Int32 LastTargetIndex;
+    EntityRef SalvoTarget;
+
+    // Hard budget for the whole barrage, whatever the player count.
+    Int32 ThrowsRemaining;
+    Int32 ThrowCounter;
+}
+
+// Presentation hook for multi-stage deliveries (swoop: takeoff/hover/aim/dive/land; airborne stagger:
+// hit/fall/kneel/rise). The delivery writes the stage; EnemyAttackVisualsView polls it and plays the
+// delivery's own per-stage AttackVisualStep (IStagedDeliveryVisuals). 0 = no stage.
+component EnemyDeliveryStage
+{
+    Byte Stage;
+    // Bumped on every stage write so the view can replay a repeated stage value.
+    Int32 Serial;
+}
+
+// Live state of a SwoopDeliveryData run (added in Begin, removed on finish/interrupt).
+component SwoopState
+{
+    Byte Stage;
+    FP StageTimer;
+    // Takeoff floor and the body's resting pivot height above its floor (collider centre) - the swoop always
+    // positions the boss as floor + PivotOffset + its current altitude.
+    FP GroundY;
+    FP PivotOffset;
+    FP StageDuration;
+    FPVector3 HoverPoint;
+    FPVector3 DiveStart;
+    FPVector3 DiveEnd;
+    // Flat distance from DiveStart to where the straight dive meets the target's floor (then it skims to DiveEnd).
+    FP ImpactDistance;
+    array<EntityRef>[4] Hit;
+    Byte HitCount;
+}
+
+// Live state of an AirborneKneelDeliveryData run (stagger break that first falls out of the air).
+component AirborneKneelState
+{
+    Byte Stage;
+    FP StageTimer;
+    FPVector3 FallFrom;
+    FPVector3 FallTo;
+}
+
+// View hooks.
+event BossTornadoDissipated
+{
+    EntityRef Tornado;
+    FPVector3 Position;
+}
+
+synced event BossTornadoPulse
+{
+    EntityRef Tornado;
+    FPVector3 Position;
+    FP Radius;
+}

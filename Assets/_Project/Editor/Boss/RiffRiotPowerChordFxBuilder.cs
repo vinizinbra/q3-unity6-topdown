@@ -21,8 +21,8 @@ namespace RiftRaiders.Editor
         [MenuItem("Tools/RiftRaiders/Boss/Power Chord/Build independent prefab")]
         public static void Build()
         {
-            var additive = Material("_Neon", "Mobile/Particles/Additive");
-            var alpha = Material("_Pink", "Mobile/Particles/Alpha Blended");
+            var additive = MeshParticleFxKit.EnsureMaterial(Prefix + "_Neon.mat", MeshParticleFxKit.AdditiveShader);
+            var alpha = MeshParticleFxKit.EnsureMaterial(Prefix + "_Pink.mat", MeshParticleFxKit.AlphaBlendedShader);
             var aura = SaveMesh("_Aura", Arc(.28f, 1f));
             var halo = SaveMesh("_Halo", Arc(.18f, .95f));
             var body = SaveMesh("_Body", Arc(.07f, .895f));
@@ -30,7 +30,7 @@ namespace RiftRaiders.Editor
             var core = SaveMesh("_Core", Arc(.032f, .876f));
             var sector = SaveMesh("_Sector", Sector());
             var shard = SaveMesh("_Shard", Shard());
-            var flash = SaveMesh("_ConeFlash", SoftCone());
+            var flash = SaveMesh("_ConeFlash", MeshParticleFxKit.SoftCone("SoftFullConeImpactFlash", .6f, .78f));
             var root = new GameObject("RiffRiot_PowerChordFx");
             try
             {
@@ -85,7 +85,7 @@ namespace RiftRaiders.Editor
                 shape.mesh = sector; shape.meshShapeType = ParticleSystemMeshShapeType.Triangle;
                 shape.scale = new Vector3(5.9f, 1f, 5.9f);
                 var emission = sparks.emission; emission.SetBursts(new[] { new ParticleSystem.Burst(0, 24) });
-                Renderer(sparks, shard, additive);
+                MeshParticleFxKit.ApplyMeshRenderer(sparks, shard, additive);
                 PrefabUtility.SaveAsPrefabAsset(root, Prefab);
                 AssetDatabase.SaveAssets();
                 Validate(AssetDatabase.LoadAssetAtPath<GameObject>(Prefab));
@@ -154,27 +154,7 @@ namespace RiftRaiders.Editor
                         new GradientAlphaKey(.04f, .8f), new GradientAlphaKey(0, 1) });
                 fade.color = gradient;
             }
-            Renderer(ps, mesh, material);
-        }
-
-        static Mesh SoftCone()
-        {
-            const int angles = 64, rings = 16;
-            var v = new List<Vector3>(); var c = new List<Color>(); var t = new List<int>();
-            for (int a = 0; a <= angles; a++)
-            {
-                float angle = Mathf.Lerp(-45, 45, a / (float)angles) * Mathf.Deg2Rad;
-                float edge = Mathf.SmoothStep(0, 1, Mathf.Min(a, angles - a) / 4f);
-                for (int r = 0; r <= rings; r++)
-                {
-                    float radius = r / (float)rings;
-                    v.Add(new Vector3(Mathf.Sin(angle) * radius, 0, Mathf.Cos(angle) * radius));
-                    float alpha = Mathf.Lerp(1, .6f, radius) * (1 - Mathf.SmoothStep(.78f, 1, radius)) * edge;
-                    c.Add(new Color(1, 1, 1, alpha));
-                    if (a < angles && r < rings) Quad(t, a * (rings + 1) + r, rings + 1);
-                }
-            }
-            return Mesh("SoftFullConeImpactFlash", v, c, t);
+            MeshParticleFxKit.ApplyMeshRenderer(ps, mesh, material);
         }
 
         static Mesh Lightning(float width, int variant, bool hotCore)
@@ -236,55 +216,14 @@ namespace RiftRaiders.Editor
             }
         }
 
-        static void Renderer(ParticleSystem ps, Mesh mesh, Material material)
-        {
-            var r = ps.GetComponent<ParticleSystemRenderer>();
-            r.renderMode = ParticleSystemRenderMode.Mesh; r.mesh = mesh;
-            r.alignment = ParticleSystemRenderSpace.Local; r.sharedMaterial = material;
-            r.SetActiveVertexStreams(new List<ParticleSystemVertexStream> { ParticleSystemVertexStream.Position, ParticleSystemVertexStream.Normal, ParticleSystemVertexStream.Color, ParticleSystemVertexStream.UV });
-            r.shadowCastingMode = ShadowCastingMode.Off; r.receiveShadows = false;
-            r.lightProbeUsage = LightProbeUsage.Off; r.reflectionProbeUsage = ReflectionProbeUsage.Off;
-        }
-
-        static Material Material(string suffix, string shader)
-        {
-            string path = Prefix + suffix + ".mat";
-            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (!m) { m = new Material(Shader.Find(shader)); AssetDatabase.CreateAsset(m, path); }
-            // Use a persistent package texture; built-in whiteTexture does not survive asset serialization.
-            m.mainTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/3rd-party/Epic Toon FX/Textures/glow1.png");
-            m.renderQueue = shader == "Mobile/Particles/Additive" ? 3100 : 3000;
-            EditorUtility.SetDirty(m); return m;
-        }
-        static Mesh SaveMesh(string suffix, Mesh mesh)
-        {
-            string path = Prefix + suffix + ".asset";
-            var old = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if (old) { EditorUtility.CopySerialized(mesh, old); UnityEngine.Object.DestroyImmediate(mesh); EditorUtility.SetDirty(old); return old; }
-            AssetDatabase.CreateAsset(mesh, path); return mesh;
-        }
+        static Mesh SaveMesh(string suffix, Mesh mesh) => MeshParticleFxKit.SaveMesh(Prefix + suffix + ".asset", mesh);
 
         // Native mesh geometry with transparent feathered edges; no new raster textures or custom shaders.
-        static Mesh Arc(float thickness, float outerRadius = 1f)
-        {
-            const int segments = 96, rows = 7;
-            var vertices = new List<Vector3>(); var colors = new List<Color>(); var indices = new List<int>();
-            float[] a = { 0, .23f, .65f, 1, .65f, .23f, 0 };
-            for (int i = 0; i <= segments; i++)
-            {
-                float angle = Mathf.Lerp(-45, 45, i / (float)segments) * Mathf.Deg2Rad;
-                float edge = Mathf.SmoothStep(0, 1, Mathf.Min(i, segments - i) / 5f);
-                for (int j = 0; j < rows; j++)
-                {
-                    float r = outerRadius - thickness + thickness * j / (rows - 1);
-                    vertices.Add(new Vector3(Mathf.Sin(angle) * r, 0, Mathf.Cos(angle) * r));
-                    colors.Add(new Color(1, 1, 1, a[j] * edge));
-                    if (i < segments && j < rows - 1) Quad(indices, i * rows + j, rows);
-                }
-            }
-            return Mesh("Feathered90DegreeArc", vertices, colors, indices);
-        }
-        static void Quad(List<int> t, int k, int stride) { t.AddRange(new[] { k, k + stride, k + 1, k + 1, k + stride, k + stride + 1 }); }
+        static Mesh Arc(float thickness, float outerRadius = 1f) =>
+            MeshParticleFxKit.Arc("Feathered90DegreeArc", thickness, outerRadius, new[] { 0f, .23f, .65f, 1f, .65f, .23f, 0f }, 5f);
+        static void Quad(List<int> t, int k, int stride) => MeshParticleFxKit.Quad(t, k, stride);
+        static Mesh Mesh(string name, List<Vector3> v, List<Color> c, List<int> t) => MeshParticleFxKit.BuildMesh(name, v, c, t);
+
         static Mesh Sector()
         {
             var v = new List<Vector3>(); var c = new List<Color>(); var t = new List<int>();
@@ -301,15 +240,6 @@ namespace RiftRaiders.Editor
         {
             return Mesh("SoftStringSplinter", new List<Vector3> { Vector3.zero, new Vector3(-.22f, 0, 0), new Vector3(0, 0, .65f), new Vector3(.22f, 0, 0), new Vector3(0, 0, -.65f) },
                 new List<Color> { Color.white, Color.clear, Color.clear, Color.clear, Color.clear }, new List<int> { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1 });
-        }
-        static Mesh Mesh(string name, List<Vector3> v, List<Color> c, List<int> t)
-        {
-            var m = new Mesh { name = name }; m.SetVertices(v);
-            // Mesh particles require packed UNorm8 colors (Float32 colors are misread by Unity 6).
-            var packed = new Color32[c.Count]; for (int i = 0; i < c.Count; i++) packed[i] = c[i];
-            m.colors32 = packed; m.SetTriangles(t, 0);
-            var uv = new Vector2[v.Count]; for (int i = 0; i < uv.Length; i++) uv[i] = new Vector2(.5f, .5f);
-            m.uv = uv; m.RecalculateBounds(); m.RecalculateNormals(); return m;
         }
 
         static void Validate(GameObject prefab)
@@ -377,73 +307,10 @@ namespace RiftRaiders.Editor
         [MenuItem("Tools/RiftRaiders/Boss/Power Chord/Render gameplay preview")]
         public static void RenderPreview()
         {
-            string output = Path.GetFullPath("docs/previews/riff-riot-power-chord"); Directory.CreateDirectory(output);
-            var scene = EditorSceneManager.NewPreviewScene();
-            bool fog = RenderSettings.fog;
-            RenderTexture rt = null; Material floorMat = null, lineMat = null;
-            try
-            {
-                RenderSettings.fog = false;
-                var floor = GameObject.CreatePrimitive(PrimitiveType.Plane); SceneManager.MoveGameObjectToScene(floor, scene);
-                floor.transform.localScale = Vector3.one * 12;
-                floorMat = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-                floorMat.color = new Color(.40f, .41f, .47f); floor.GetComponent<Renderer>().sharedMaterial = floorMat;
-                var cg = new GameObject("Gameplay Camera"); SceneManager.MoveGameObjectToScene(cg, scene);
-                var camera = cg.AddComponent<Camera>(); camera.transform.position = new Vector3(0, 36, -32.5f);
-                camera.transform.rotation = Quaternion.Euler(45, 0, 0); camera.fieldOfView = 14;
-                camera.nearClipPlane = .1f; camera.farClipPlane = 120;
-                camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = floorMat.color;
-                camera.scene = scene;
-                var data = camera.GetUniversalAdditionalCameraData(); data.renderPostProcessing = false;
-                camera.allowHDR = false; camera.allowMSAA = true;
-                lineMat = new Material(Shader.Find("Mobile/Particles/Alpha Blended")); lineMat.mainTexture = Texture2D.whiteTexture;
-                var boundary = new List<Vector3> { new Vector3(0, .012f, 0) };
-                for (int i = 0; i <= 90; i++)
-                {
-                    float a = (-45 + i) * Mathf.Deg2Rad;
-                    boundary.Add(new Vector3(Mathf.Sin(a) * 6.5f, .012f, Mathf.Cos(a) * 6.5f));
-                }
-                boundary.Add(new Vector3(0, .012f, 0));
-                Line(scene, "90 degrees x 6.5 units", boundary.ToArray(), lineMat, new Color(1, .67f, .22f, .7f), .025f);
-                for (int i = -7; i <= 7; i++)
-                {
-                    Line(scene, "MeterGrid", new[] { new Vector3(i, .005f, -1), new Vector3(i, .005f, 9) }, lineMat, new Color(.6f, .65f, .75f, .15f), .008f);
-                    Line(scene, "MeterGrid", new[] { new Vector3(-7, .005f, i), new Vector3(7, .005f, i) }, lineMat, new Color(.6f, .65f, .75f, .15f), .008f);
-                }
-                var fx = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Prefab), scene);
-                var ps = fx.GetComponent<ParticleSystem>();
-                rt = new RenderTexture(1280, 960, 24, RenderTextureFormat.ARGB32); rt.antiAliasing = 4; rt.Create(); camera.targetTexture = rt;
-                foreach (float time in new[] { 0f, .025f, .05f, .1f, .25f, .4f, .8f })
-                {
-                    ps.Simulate(time, true, true, false);
-                    ps.Pause(true);
-                    camera.Render();
-                    var previous = RenderTexture.active; RenderTexture.active = rt;
-                    var png = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
-                    png.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0); png.Apply(); RenderTexture.active = previous;
-                    File.WriteAllBytes(Path.Combine(output, "power-chord-" + Mathf.RoundToInt(time * 1000).ToString("000") + "ms.png"), png.EncodeToPNG());
-                    UnityEngine.Object.DestroyImmediate(png);
-                }
-                ps.Simulate(.8f, true, true, false);
-                ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-                if (ps.IsAlive(true)) throw new Exception("Effect still has live particles at 0.8s");
-                Debug.Log("Power Chord: preview rendered without post processing; one-shot validation passed.");
-            }
-            finally
-            {
-                RenderSettings.fog = fog;
-                if (rt) { rt.Release(); UnityEngine.Object.DestroyImmediate(rt); }
-                if (floorMat) UnityEngine.Object.DestroyImmediate(floorMat);
-                if (lineMat) UnityEngine.Object.DestroyImmediate(lineMat);
-                EditorSceneManager.ClosePreviewScene(scene);
-            }
-        }
-        static void Line(Scene scene, string name, Vector3[] points, Material material, Color color, float width)
-        {
-            var go = new GameObject(name); SceneManager.MoveGameObjectToScene(go, scene);
-            var r = go.AddComponent<LineRenderer>(); r.sharedMaterial = material; r.useWorldSpace = true;
-            r.positionCount = points.Length; r.SetPositions(points); r.startWidth = r.endWidth = width;
-            r.startColor = r.endColor = color;
+            MeshParticleFxKit.RenderConePreview(Prefab, 6.5f, new Color(.40f, .41f, .47f), 0f, new[] { 0f, .025f, .05f, .1f, .25f, .4f, .8f },
+                time => "docs/previews/riff-riot-power-chord/power-chord-" + Mathf.RoundToInt(time * 1000).ToString("000") + "ms.png",
+                meterGrid: true, mustBeDeadAt: .8f);
+            Debug.Log("Power Chord: preview rendered without post processing; one-shot validation passed.");
         }
     }
 }
